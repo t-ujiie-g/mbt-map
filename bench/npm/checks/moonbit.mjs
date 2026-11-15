@@ -1,4 +1,4 @@
-// The MoonBit API (mooncakes t-ujiie-g/moonmap) from a MoonBit app (bench/moonbit/app): a map made
+// The MoonBit API (mooncakes t-ujiie-g/mbtmap) from a MoonBit app (bench/moonbit/app): a map made
 // with a JSON style, a source and a layer added on load, a query on idle, paint and camera changes,
 // a listener taken off. The app writes what it saw to window.__moonbit.result.
 

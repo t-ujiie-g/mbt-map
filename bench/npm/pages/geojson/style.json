@@ -1,6 +1,6 @@
 {
   "version": 8,
-  "name": "moonmap GeoJSON example",
+  "name": "mbtmap GeoJSON example",
   "sources": {
     "gsi": {
       "type": "vector", "tiles": ["/bench/fixtures/gsi-bvmap/{z}/{x}/{y}.pbf"], "minzoom": 14, "maxzoom": 14,

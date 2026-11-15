@@ -1,8 +1,8 @@
 // Blocks near Tokyo Station as 3D Tiles 1.0 b3dm (./set, written by bench/tiles/synthetic.mjs) streamed by
-// moon-map/3d's tiles layer, for the pack test's tiles check (bench/npm/checks/tiles.mjs), which also
+// mbt-map/3d's tiles layer, for the pack test's tiles check (bench/npm/checks/tiles.mjs), which also
 // streams PLATEAU's buildings (bench/fixtures/plateau-chiyoda, Draco-compressed b3dm).
-import { Map } from "moon-map";
-import { tilesLayer } from "moon-map/3d";
+import { Map } from "mbt-map";
+import { tilesLayer } from "mbt-map/3d";
 
 const map = new Map({
   container: "map",

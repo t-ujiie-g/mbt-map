@@ -39,7 +39,7 @@ const views = {
   odd: { style: "vector", camera: { center: [139.7671, 35.6812], zoom: 15.4, bearing: -60, pitch: 0 }, ratio: 1.5, maxSize: 333 },
 };
 // Per-channel differences allowed. A part's extra matrix moves a few antialiased edge pixels by a level
-// (on the globe, f32 sphere positions by hundredths of a pixel); MapLibre on a 2x screen against moonmap's
+// (on the globe, f32 sphere positions by hundredths of a pixel); MapLibre on a 2x screen against mbtmap's
 // 2x image as bench/raster/golden.mjs.
 const LIMITS = { split: { mean: 0.01, p99: 0 }, globeSplit: { mean: 0.05, p99: 1 }, maplibre: { mean: 0.05, p99: 1 } };
 
@@ -100,7 +100,7 @@ try {
     await page.waitForFunction(() => window.__ready, null, { timeout: 60000 });
     const [whole, parts, one] = await images(page, [{ pixelRatio: v.ratio }, { pixelRatio: v.ratio, maxSize: v.maxSize }, { pixelRatio: 1 }]);
     // The attribution is a DOM overlay, not part of the image.
-    await page.addStyleTag({ content: "#moonmap > div { visibility: hidden !important; }" });
+    await page.addStyleTag({ content: "#mbtmap > div { visibility: hidden !important; }" });
     const screen = decodePng(await page.screenshot({ clip: { x: 0, y: 0, width: 800, height: 600 } }));
     const split = compare(whole, parts);
     const shown = compare(overWhite(one), screen);

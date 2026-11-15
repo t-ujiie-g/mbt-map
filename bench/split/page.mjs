@@ -1,10 +1,10 @@
 // For each module: start a fresh module worker (timing its start), load the
 // module there and, for analysis modules, run it once cold and then warm.
 const modules = {
-  worker: "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm",
-  combined: "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/split/combined_entry/combined_entry.wasm",
-  analysis: "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/split/analysis_entry/analysis_entry.wasm",
-  empty: "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/split/empty_entry/empty_entry.wasm",
+  worker: "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm",
+  combined: "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/split/combined_entry/combined_entry.wasm",
+  analysis: "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/split/analysis_entry/analysis_entry.wasm",
+  empty: "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/split/empty_entry/empty_entry.wasm",
 };
 const POLYGONS = 10000;
 

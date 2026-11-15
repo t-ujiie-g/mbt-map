@@ -1,4 +1,4 @@
-# moon-map
+# mbt-map
 
 A lightweight WebGIS library for the web, written in MoonBit: map display, spatial analysis, data formats, GIS web services and 3D in one toolkit.
 

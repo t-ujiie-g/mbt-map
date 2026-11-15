@@ -50,7 +50,7 @@ const results = [];
 let failed = 0;
 for (const v of [0, 2]) {
   const masks = {};
-  for (const engine of ["moonmap", "cesium"]) {
+  for (const engine of ["mbtmap", "cesium"]) {
     masks[engine] = {};
     // A fresh page per clipping: CesiumJS stops rendering when a tileset's clipping is replaced.
     for (const [name, c] of [["none", null], ...Object.entries(CLIPS)]) {
@@ -68,12 +68,12 @@ for (const v of [0, 2]) {
       await page.close();
     }
   }
-  const whole = masks.moonmap.none.reduce((n, x, i) => n + (x | masks.cesium.none[i]), 0);
-  const base = apart(masks.moonmap.none, masks.cesium.none, whole);
+  const whole = masks.mbtmap.none.reduce((n, x, i) => n + (x | masks.cesium.none[i]), 0);
+  const base = apart(masks.mbtmap.none, masks.cesium.none, whole);
   for (const name of Object.keys(CLIPS)) {
-    const between = apart(masks.moonmap[name], masks.cesium[name], whole);
-    const cut = { moonmap: apart(masks.moonmap.none, masks.moonmap[name], whole), cesium: apart(masks.cesium.none, masks.cesium[name], whole) };
-    const ok = between <= base + SLACK && cut.moonmap > 0.05 && cut.cesium > 0.05;
+    const between = apart(masks.mbtmap[name], masks.cesium[name], whole);
+    const cut = { mbtmap: apart(masks.mbtmap.none, masks.mbtmap[name], whole), cesium: apart(masks.cesium.none, masks.cesium[name], whole) };
+    const ok = between <= base + SLACK && cut.mbtmap > 0.05 && cut.cesium > 0.05;
     if (!ok) failed++;
     results.push({ view: VIEWS[v].name, clip: name, unclipped: base, between, cut, ok });
   }
@@ -82,5 +82,5 @@ await browser.close();
 server.close();
 await mkdir(path.join(ROOT, "bench/results"), { recursive: true });
 await writeFile(path.join(ROOT, "bench/results/cesium-clip.json"), JSON.stringify({ date: new Date().toISOString(), slack: SLACK, results }, null, 2) + "\n");
-console.table(results.map((r) => ({ ...r, unclipped: r.unclipped.toFixed(3), between: r.between.toFixed(3), cut: `${r.cut.moonmap.toFixed(2)} / ${r.cut.cesium.toFixed(2)}` })));
+console.table(results.map((r) => ({ ...r, unclipped: r.unclipped.toFixed(3), between: r.between.toFixed(3), cut: `${r.cut.mbtmap.toFixed(2)} / ${r.cut.cesium.toFixed(2)}` })));
 if (failed) process.exitCode = 1;

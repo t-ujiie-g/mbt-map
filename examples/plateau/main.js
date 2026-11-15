@@ -1,8 +1,8 @@
-// PLATEAU's LOD2 buildings of Chiyoda as 3D Tiles (moon-map/3d's tilesLayer) over GSI's vector map; a click
+// PLATEAU's LOD2 buildings of Chiyoda as 3D Tiles (mbt-map/3d's tilesLayer) over GSI's vector map; a click
 // shows the building's attributes. `?local=1` reads the bench fixture (the tiles around Tokyo Station).
-import { Map } from "moon-map";
-import { lineOfSight, measure3d, tilesLayer } from "moon-map/3d";
-import { createMeasurement } from "moon-map/ui";
+import { Map } from "mbt-map";
+import { lineOfSight, measure3d, tilesLayer } from "mbt-map/3d";
+import { createMeasurement } from "mbt-map/ui";
 import { GSI_LAYERS } from "../shared/layers.js";
 import { BUILDINGS_3D, gsiSource } from "../shared/style.js";
 

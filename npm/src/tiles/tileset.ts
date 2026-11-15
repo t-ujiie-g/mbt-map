@@ -1,4 +1,4 @@
-// 3D Tiles 1.0 and 1.1 tilesets for moon-map/3d: the tile tree (external tilesets under the tile naming
+// 3D Tiles 1.0 and 1.1 tilesets for mbt-map/3d: the tile tree (external tilesets under the tile naming
 // them, implicit tiling expanded) and the tiles to draw and load for a frame, as @loaders.gl/tiles
 // 4.5.4's `Tileset3DTraverser` selects them (without skipping levels of detail).
 import { boundingVolume, distanceSquaredTo, IDENTITY, MASK_INDETERMINATE, MASK_OUTSIDE, multiply, visibilityWithPlaneMask, type Plane, type Vec3, type Volume } from "./geo.ts";

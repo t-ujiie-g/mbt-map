@@ -1,4 +1,4 @@
-// moon-map/services on bench/npm/pages/services: WMTS, ArcGIS VectorTileServer and WMS layers (tiled, one image of the
+// mbt-map/services on bench/npm/pages/services: WMTS, ArcGIS VectorTileServer and WMS layers (tiled, one image of the
 // view, or reprojected from EPSG:4326) draw what they name, features come from f=pbf, f=json, WFS GML, GetFeatureInfo and
 // identify, and exceptions, malformed documents, unknown layers and non-http URLs are refused with the reason.
 import { existsSync } from "node:fs";
@@ -10,7 +10,7 @@ export async function servicesChecks(page, requests) {
   const shot = async () => decodePng(await page.screenshot({ clip: { x: 0, y: 0, width: 600, height: 400 } })).rgba;
   const before = await shot();
   const r = await page.evaluate(async () => {
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     const map = window.__map;
     const fails = (p) => p.then(() => "", (e) => e.message);
     const failsNow = (f) => {
@@ -51,7 +51,7 @@ export async function servicesChecks(page, requests) {
   await page.evaluate(async () => {
     const map = window.__map;
     map.removeLayer("wmts");
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     map.addSource("wms", services.wmsSource(await services.getCapabilities("./wms.xml", "WMS"), { layers: "std" }));
     map.addLayer({ id: "wms", type: "raster", source: "wms" });
     await map.once("idle");
@@ -61,7 +61,7 @@ export async function servicesChecks(page, requests) {
   const top = async () => decodePng(await page.screenshot({ clip: { x: 0, y: 0, width: 600, height: 360 } })).rgba;
   const restyle = (style) => page.evaluate(async (s) => {
     const map = window.__map;
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     map.setStyle(s === "arcgis" ? await services.arcgisStyle("./arcgis/rest/services/Test/VectorTileServer") : s);
     await map.once("idle");
     return s === "arcgis" ? map.getStyle().sources.esri : null;
@@ -89,7 +89,7 @@ export async function servicesChecks(page, requests) {
   const asked = () => requests.filter((u) => /\/ogc\/items\.json/.test(u)).length;
   const followed = await page.evaluate(async () => {
     const map = window.__map;
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     map.jumpTo({ center: [139.7671, 35.6812], zoom: 13 });
     map.setStyle({ version: 8, sources: { view: { type: "geojson", data: { type: "FeatureCollection", features: [] } } }, layers: [
       { id: "bg", type: "background", paint: { "background-color": "#ffffff" } },
@@ -126,7 +126,7 @@ export async function servicesChecks(page, requests) {
   // arcgisFeatures on a static FeatureServer (bench/npm/pages/services/arcgis/.../FeatureServer): layer 0
   // lists PBF, so its three stations come as f=pbf, layer 1 only JSON; both read by services.wasm.
   const features = await page.evaluate(async () => {
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     const layer = (n) => `./arcgis/rest/services/Test/FeatureServer/${n}`;
     const pbf = await services.arcgisFeatures(layer(0));
     const json = await services.arcgisFeatures(layer(1));
@@ -150,7 +150,7 @@ export async function servicesChecks(page, requests) {
   // (info.json) and a MapServer's identify (arcgis/.../MapServer/identify) answer a click.
   const single = await page.evaluate(async () => {
     const map = window.__map;
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     map.setStyle({ version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#ffffff" } }] });
     await map.once("idle");
     const caps = await services.getCapabilities("./wms.xml", "WMS");
@@ -181,7 +181,7 @@ export async function servicesChecks(page, requests) {
   // A WMTS in EPSG:4326 (wmts-4326.xml: the west half blue, the east green) becomes a reprojected source.
   const geo = await page.evaluate(async () => {
     const map = window.__map;
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     const source = services.wmtsSource(await services.getCapabilities("./wmts-4326.xml", "WMTS"), { layer: "halves" });
     map.jumpTo({ center: [0, 0], zoom: 1 });
     map.setStyle({ version: 8, sources: { geo: source }, layers: [{ id: "bg", type: "background", paint: { "background-color": "#ffffff" } }, { id: "geo", type: "raster", source: "geo" }] });
@@ -195,7 +195,7 @@ export async function servicesChecks(page, requests) {
 
   // A WFS 1.1 offering GML only (wfs.xml, its GetFeature the static wfs-gml.xml, latitude first as asked).
   const wfsGml = await page.evaluate(async () => {
-    const services = await import("moon-map/services");
+    const services = await import("mbt-map/services");
     const caps = await services.getCapabilities("./wfs.xml", "WFS");
     const fc = await services.wfsFeatures(caps, { typeName: "st:stations" });
     return fc.features.map((f) => [f.id, f.properties.name, f.geometry.coordinates]);

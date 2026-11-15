@@ -3,8 +3,8 @@ import {
   "moonbit-community/rabbita/cmd",
   "moonbit-community/rabbita/html",
   "moonbit-community/rabbita/sub",
-  "t-ujiie-g/moonmap",
-  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/mbtmap",
+  "t-ujiie-g/mbtmap/style",
 }
 
 supported_targets = "js"

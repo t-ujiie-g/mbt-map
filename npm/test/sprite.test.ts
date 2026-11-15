@@ -64,7 +64,7 @@ test("loadSprites rejects a missing sheet, a sheet too large and a URL that is n
   const big = server({ "https://t/s.json": {}, "https://t/s.png": png(9000, 1) });
   await assert.rejects(loadSprites("https://t/s", 1, base, big.fetch, read), /9000 x 1, over 8192/);
   await assert.rejects(loadSprites("file:///s", 1, base, fetch, read));
-  await assert.rejects(loadSprites("https://t/s", 1, base, big.fetch, async (_, what) => { throw new Error(`${what}: too large`); }), /moon-map: sprite https:\/\/t\/s: too large/);
+  await assert.rejects(loadSprites("https://t/s", 1, base, big.fetch, async (_, what) => { throw new Error(`${what}: too large`); }), /mbt-map: sprite https:\/\/t\/s: too large/);
 });
 
 test("loadSprites loads nothing for a style without sprites", async () => {

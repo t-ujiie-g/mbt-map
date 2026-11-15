@@ -84,7 +84,7 @@ const srsOf = (e: Element): string | undefined => e.getAttribute("srsName") ?? u
 // The positions under `e` (pos, posList, coordinates, coord), longitude first.
 function positions(e: Element, srs: string, latitudeFirst: boolean): number[][] {
   if (epsgCode(srs) !== 4326) {
-    throw new Error(`moon-map: services: GML in ${srs} is not read; ask for EPSG:4326`);
+    throw new Error(`mbt-map: services: GML in ${srs} is not read; ask for EPSG:4326`);
   }
   const swap = srsNorthFirst(srs, latitudeFirst);
   const out: number[][] = [];

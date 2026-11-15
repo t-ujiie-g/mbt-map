@@ -3,11 +3,11 @@
 // paths are relative to the repository root.
 
 export const BUILD = {
-  wasm: "_build/wasm/release/build/t-ujiie-g/moonmap_engine/bench/backend/entry/entry.wasm",
+  wasm: "_build/wasm/release/build/t-ujiie-g/mbtmap_engine/bench/backend/entry/entry.wasm",
   wasmOpt: "bench/dist/entry.wasm-opt.wasm",
-  wasmgc: "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/backend/entry/entry.wasm",
+  wasmgc: "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/backend/entry/entry.wasm",
   wasmgcOpt: "bench/dist/entry.wasm-gc-opt.wasm",
-  js: "_build/js/release/build/t-ujiie-g/moonmap_engine/bench/backend/entry/entry.js",
+  js: "_build/js/release/build/t-ujiie-g/mbtmap_engine/bench/backend/entry/entry.js",
 };
 
 export async function loadModules({ fetchBytes, importJs }) {

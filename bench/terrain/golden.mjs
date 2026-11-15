@@ -150,14 +150,14 @@ compare("hillshade (0-255)", shade, gdal(["hillshade"], "hillshade.asc"), 1);
   const outside = ours.filter(Number.isNaN).length;
   console.log(`sample (m): ${points.length} points (${outside} without a value in both), max difference ${worst.toPrecision(3)} (tolerance 1e-6), ${over} over, ${missing} with a value in one only`);
 }
-// The same grid as a COG written by GDAL (Deflate, floating-point predictor), read by moon-map/data's
-// readRaster and loaded as moon-map/analysis's loadGrid loads it: gdaldem on that file, and
+// The same grid as a COG written by GDAL (Deflate, floating-point predictor), read by mbt-map/data's
+// readRaster and loaded as mbt-map/analysis's loadGrid loads it: gdaldem on that file, and
 // gdallocationinfo in EPSG:3857 coordinates (ours: the window's corner and resolution).
 {
   const cog = path.join(dir, "dem3857-cog.tif");
   execFileSync("gdal_translate", ["-q", "-of", "COG", "-co", "COMPRESS=DEFLATE", "-co", "PREDICTOR=YES", path.join(dir, "dem3857.tif"), cog]);
   const { dataImports, dataReader, rasterSource } = await import("../../data_worker/js/read.mjs");
-  const wasmOf = (name) => readFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`));
+  const wasmOf = (name) => readFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/${name}/${name}.wasm`));
   const imports = dataImports(() => data.exports.memory);
   const data = (await WebAssembly.instantiate(await wasmOf("data_worker"), imports)).instance;
   const tiff = (await WebAssembly.instantiate(await wasmOf("geotiff_worker"), {})).instance.exports;

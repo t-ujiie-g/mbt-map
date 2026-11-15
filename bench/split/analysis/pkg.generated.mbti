@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/bench/split/analysis"
+package "t-ujiie-g/mbtmap_engine/bench/split/analysis"
 
 // Values
 pub const EARTH_RADIUS : Double = 6371008.8

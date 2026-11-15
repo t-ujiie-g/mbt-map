@@ -19,7 +19,7 @@ extern "js" fn call_custom(
 
 ///|
 /// What `call_custom` asks of a layer: `render`, `prerender`, or its shadow
-/// casters' depth (moonmap's `renderShadow`).
+/// casters' depth (mbtmap's `renderShadow`).
 const CUSTOM_RENDER : Int32 = 0
 
 ///|

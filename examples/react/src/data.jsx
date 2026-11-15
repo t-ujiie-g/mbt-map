@@ -1,4 +1,4 @@
-// Files read with moon-map/data in React, over the loader the plain-DOM examples draw with the DOM.
+// Files read with mbt-map/data in React, over the loader the plain-DOM examples draw with the DOM.
 import { useEffect, useState } from "react";
 import { WRITE_FORMATS, createDataLoader } from "../../shared/data.js";
 import { useController } from "./use-controller.js";

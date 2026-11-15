@@ -1,6 +1,6 @@
 // PROJ strings parsed as proj4js 2.22.0 reads them (lib/projString.js and what it
 // uses), MIT License, Copyright (c) 2014 Mike Adair et al.; see NOTICE. Loaded by
-// moon-map/analysis and moon-map/data on the first PROJ string; import-free for `npm test`.
+// mbt-map/analysis and mbt-map/data on the first PROJ string; import-free for `npm test`.
 
 const D2R = 0.01745329251994329577;
 // `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
@@ -66,7 +66,7 @@ export function lookup<T>(table: Record<string, T>, key: string): T | undefined 
 }
 
 function fail(message: string): never {
-  throw new Error(`moon-map: analysis: ${message}`);
+  throw new Error(`mbt-map: analysis: ${message}`);
 }
 
 function number(key: string, v: string | true): number {

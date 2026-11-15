@@ -1,5 +1,5 @@
 // The style's images: the sprite's (sprite.js, loaded with the first sprite) and those `addImage` adds.
-import * as engine from "moon-map-engine";
+import * as engine from "mbt-map-engine";
 import { MAX_DOCUMENT_BYTES, readCapped } from "../../worker/js/body.mjs";
 import { decodeImage } from "../../worker/js/imagesize.mjs";
 import { type ImageInput, type StyleImageOptions, canvasPixels, imageOptions, imagePixels } from "./images";
@@ -58,7 +58,7 @@ export class StyleImages {
   /** Adds image `id`, or with `replace` replaces its pixels; fires `error` if it exists already, or does not. */
   set(id: string, image: ImageInput, options: StyleImageOptions, replace: boolean): void {
     if (this.#names.has(id) !== replace) {
-      this.#host.fail(new Error(replace ? `moon-map: no image named "${id}"` : `moon-map: an image named "${id}" already exists`));
+      this.#host.fail(new Error(replace ? `mbt-map: no image named "${id}"` : `mbt-map: an image named "${id}" already exists`));
       return;
     }
     let pixels, opts;
@@ -88,7 +88,7 @@ export class StyleImages {
   /** Fetches an image (http(s), relative to `base`) for `addImage` (MapLibre's `loadImage`), its pixels as stored. */
   async load(url: string, base: URL): Promise<{ data: ImageBitmap }> {
     const res = await this.#host.fetch(httpUrl(url, base, "an image"), "Image");
-    if (!res.ok) throw new Error(`moon-map: image ${url}: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`mbt-map: image ${url}: HTTP ${res.status}`);
     return { data: await decodeImage(await res.blob()) };
   }
 

@@ -2,8 +2,8 @@
 // `@proj` over coordinate pairs, computing with the host's `Math`.
 
 import {
-  "t-ujiie-g/moonmap_engine/proj",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/proj",
+  "t-ujiie-g/mbtmap_engine/wasmio",
   "moonbitlang/core/double",
 }
 

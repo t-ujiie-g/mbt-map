@@ -1,6 +1,6 @@
-// moonmap's engine and MapLibre side by side with one style and camera; bench/labels/golden.mjs
+// mbtmap's engine and MapLibre side by side with one style and camera; bench/labels/golden.mjs
 // reads the labels each placed through `window.__placed`. Needs `npm --prefix npm run build`.
-import * as moonmap from "/_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js";
+import * as mbtmap from "/_build/js/release/build/t-ujiie-g/mbtmap_engine/bundle/main/main.js";
 import * as maplibregl from "/bench/node_modules/maplibre-gl/dist/maplibre-gl.mjs";
 
 const params = new URLSearchParams(location.search);
@@ -20,9 +20,9 @@ if (geojson.length) {
   const sources = Object.fromEntries(Object.entries(styleJson.sources).map(([id, s]) => [id, s.type === "geojson" ? { ...s, data: null } : s]));
   engineStyle = JSON.stringify({ ...styleJson, sources });
 }
-const canvas = document.getElementById("moonmap");
-const mb = moonmap.create_map(canvas, engineStyle, lng, lat, zoom, bearing, pitch, "/worker/js/worker.mjs",
-  "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm", 0, provider, "sans-serif", [0, 22, 0, 85, NaN, 0, 0, 0], false);
+const canvas = document.getElementById("mbtmap");
+const mb = mbtmap.create_map(canvas, engineStyle, lng, lat, zoom, bearing, pitch, "/worker/js/worker.mjs",
+  "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm", 0, provider, "sans-serif", [0, 22, 0, 85, NaN, 0, 0, 0], false);
 const ml = new maplibregl.Map({ container: "maplibre", style: JSON.parse(styleText), ...camera, maxPitch: 85, attributionControl: false, pixelRatio: 1, fadeDuration: 0, zoomLevelsToOverscale: undefined });
 // The same images in both, drawn from functions of the pixel: a dot, a framed box, a pin at
 // 2x, an SDF ring (alpha 192 on its edge); scenes also ask for "nope", which neither has.
@@ -38,11 +38,11 @@ const IMAGES = {
   ring: [image(24, 24, (u, v) => [0, 0, 0, Math.max(0, Math.min(255, Math.round(192 - Math.abs(Math.hypot(u - 0.5, v - 0.5) * 24 - 7) * 16)))]), 1, true],
 };
 for (const [name, [img, pixelRatio, sdf]] of Object.entries(IMAGES)) {
-  moonmap.map_add_image(mb, name, img.width, img.height, img.data, pixelRatio, sdf);
+  mbtmap.map_add_image(mb, name, img.width, img.height, img.data, pixelRatio, sdf);
   ml.addImage(name, img, { pixelRatio, sdf });
 }
 
-const mbIdle = () => new Promise((r) => { const id = moonmap.map_on_idle(mb, () => { moonmap.map_off(mb, id); r(); }); });
+const mbIdle = () => new Promise((r) => { const id = mbtmap.map_on_idle(mb, () => { mbtmap.map_off(mb, id); r(); }); });
 await Promise.all([mbIdle(), new Promise((r) => ml.once("idle", r))]);
 await new Promise((r) => setTimeout(r, 500));
 
@@ -54,9 +54,9 @@ const JUSTIFY = ["left", "center", "right"];
 // Each shown label as `layer z/x/y feature@x,y` (anchor in MapLibre's 8192 tile units) with its
 // anchor, whether its text and its icon show, its text's justification if it has several layouts, the boxes it put in the collision grid (CSS px:
 // its text's, then its icon's) and, along lines, its glyphs' screen positions and angles.
-function moonmapLabels() {
+function mbtmapLabels() {
   const ignored = (layer, key) => styleJson.layers.find((l) => l.id === layer)?.layout?.[key] === true;
-  return moonmap.map_placed_labels(mb).split("\n").filter(Boolean).map((line) => {
+  return mbtmap.map_placed_labels(mb).split("\n").filter(Boolean).map((line) => {
     const [layer, z, x, y, feature, ax, ay, code, t, i, layout, ...rest] = line.split(",");
     const box = rest.slice(0, 8).map(Number);
     const boxes = [];
@@ -139,6 +139,6 @@ function maplibreLabels() {
   return out;
 }
 
-window.__placed = () => ({ moonmap: moonmapLabels(), maplibre: maplibreLabels() });
+window.__placed = () => ({ mbtmap: mbtmapLabels(), maplibre: maplibreLabels() });
 window.__ml = ml;
 window.__ready = true;

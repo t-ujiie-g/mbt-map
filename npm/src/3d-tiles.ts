@@ -1,4 +1,4 @@
-// The work of moon-map/3d's tiles layer, loaded with the first `tilesLayer`: the tileset read and
+// The work of mbt-map/3d's tiles layer, loaded with the first `tilesLayer`: the tileset read and
 // selected each frame, contents asked of the 3D worker and drawn with the model program.
 import type { Clipping } from "./clipping";
 import type { CustomRenderMethodInput } from "./custom";

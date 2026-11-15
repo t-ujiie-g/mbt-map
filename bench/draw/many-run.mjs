@@ -1,4 +1,4 @@
-// Pointer moves while a polygon is drawn over many shapes with moon-map/draw: per move, the time until
+// Pointer moves while a polygon is drawn over many shapes with mbt-map/draw: per move, the time until
 // the map is idle again, in Chromium with the Metal GPU (vsync: whole frames).
 // Usage: node draw/many-run.mjs [--shapes=500] [--label=name]; writes bench/results/draw-many[-label].json.
 import { writeFile } from "node:fs/promises";

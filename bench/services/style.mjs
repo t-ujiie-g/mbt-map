@@ -1,4 +1,4 @@
-// ArcGIS VectorTileServer styles made absolute by moon-map/services' arcgisVectorStyle, drawn by moonmap
+// ArcGIS VectorTileServer styles made absolute by mbt-map/services' arcgisVectorStyle, drawn by mbtmap
 // and MapLibre GL JS 6.16.0 from the live service, pixel by pixel; symbol layers left out as in
 // style:public. Writes bench/results/services-style.json; Node needs NODE_USE_ENV_PROXY=1 behind a proxy.
 import { writeFile } from "node:fs/promises";
@@ -18,7 +18,7 @@ const CAMERAS = {
   japan: { center: [137.5, 36.5], zoom: 4.5, bearing: 0, pitch: 0 },
 };
 // Measured in the cloud (SwiftShader) and set just above, with what differs there.
-const EXTENT = "tiles of extent 8192 (Esri's at z15 here) quantized to moonmap's TILE_EXTENT 4096 (VISION §4-2): edges move by up to 1/16 px";
+const EXTENT = "tiles of extent 8192 (Esri's at z15 here) quantized to mbtmap's TILE_EXTENT 4096 (VISION §4-2): edges move by up to 1/16 px";
 const THIN = "thin road and coast lines at a fractional zoom";
 const LIMITS = {
   "world-basemap-v2-tokyo12": { mean: 0.1, p99: 2, gap: THIN },

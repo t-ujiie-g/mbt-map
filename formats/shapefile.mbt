@@ -3,7 +3,7 @@
 
 ///|
 /// Reads a shapefile's .shp and .dbf into a row per record not deleted (npm/README.md
-/// `moon-map/data`). `text` decodes `dbf[start:end]` where it is not ASCII, in the .dbf's
+/// `mbt-map/data`). `text` decodes `dbf[start:end]` where it is not ASCII, in the .dbf's
 /// encoding; `slow_number` parses its numbers past the fast path, as `read_csv`'s.
 pub fn read_shapefile(
   shp : BytesView,

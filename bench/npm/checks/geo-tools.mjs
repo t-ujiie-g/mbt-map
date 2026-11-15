@@ -1,4 +1,4 @@
-// The showcases' measuring and drawing tools (moon-map/geodesic, moon-map/draw and the
+// The showcases' measuring and drawing tools (mbt-map/geodesic, mbt-map/draw and the
 // controllers over them), checked alike in all three examples by npm/pack-test.mjs.
 import path from "node:path";
 import { ROOT } from "../../lib/root.mjs";
@@ -29,7 +29,7 @@ export async function measureChecks(page) {
   await page.mouse.move(560, 300, { steps: 2 });
   await page.mouse.dblclick(520, 380);
   const line = await measured(3, false);
-  const after = await page.evaluate(() => ({ zoom: window.__map.getZoom(), point: window.__identify.state.point, layers: window.__map.getStyle().layers.filter((l) => l.id.startsWith("moon-map-measure")).map((l) => l.id) }));
+  const after = await page.evaluate(() => ({ zoom: window.__map.getZoom(), point: window.__identify.state.point, layers: window.__map.getStyle().layers.filter((l) => l.id.startsWith("mbt-map-measure")).map((l) => l.id) }));
   const text = await page.evaluate(() => document.getElementById("measured").textContent);
   const profiled = await profileChecks(page, line.length);
   await page.click("#measure button >> text=面積");
@@ -38,7 +38,7 @@ export async function measureChecks(page) {
   const area = await measured(3, true);
   await awaitAfter(page, "measure: 消す", () => page.click("#measure button >> text=消す"));
   const cleared = await page.evaluate(() => {
-    return { mode: window.__measurement.state.mode, features: window.__map.getStyle().sources["moon-map-measure"].data.features.length, dblclick: window.__map.doubleClickZoom.isEnabled(), profile: window.__profile.state.distances.length };
+    return { mode: window.__measurement.state.mode, features: window.__map.getStyle().sources["mbt-map-measure"].data.features.length, dblclick: window.__map.doubleClickZoom.isEnabled(), profile: window.__profile.state.distances.length };
   });
   const sum = (a) => a.reduce((x, y) => x + y, 0);
   const ok =
@@ -49,7 +49,7 @@ export async function measureChecks(page) {
   return { ok, profiled, line: { mode: line.mode, length: line.length, segments: line.segments }, area: { mode: area.mode, perimeter: area.length, area: area.area, segments: area.segments }, after, text, cleared };
 }
 
-// The profile of the measured line (moon-map/ui over moon-map/geodesic and moon-map/analysis's sampleDem):
+// The profile of the measured line (mbt-map/ui over mbt-map/geodesic and mbt-map/analysis's sampleDem):
 // samples along it to its length, heights at each, and the chart's pointer shown as a dot on the map.
 async function profileChecks(page, length) {
   await page.waitForFunction(() => !window.__profile.state.loading && window.__profile.state.distances.length > 2, null, { timeout: 30000 });
@@ -71,7 +71,7 @@ async function profileChecks(page, length) {
   return { ok, samples: s.distances.length, min: s.min, max: s.max, gain: s.gain, pointed };
 }
 
-// The showcase's drawing (moon-map/draw): a polygon closed on its first vertex, a line finished with
+// The showcase's drawing (mbt-map/draw): a polygon closed on its first vertex, a line finished with
 // Enter, one cancelled with Escape, a circle by two clicks, undo and redo; measuring takes over.
 export async function drawChecks(page) {
   await openTab(page, "draw");
@@ -121,7 +121,7 @@ export async function drawChecks(page) {
   return { ok, polygon: ring.length, lines: lines.features.length, circle: circleRing.length, undone, redone, handed: handed.mode, end };
 }
 
-// Editing with moon-map/draw's select mode: a vertex dragged (the map does not pan), a midpoint
+// Editing with mbt-map/draw's select mode: a vertex dragged (the map does not pan), a midpoint
 // dragged into a vertex, one deleted by right click, the shape dragged whole, a vertex snapped
 // onto another shape's, a name set from the panel and undone, the shape deleted with Delete.
 export async function editChecks(page) {
@@ -195,7 +195,7 @@ export async function editChecks(page) {
   return { ok, selected, changed, inserted, deleted, allMoved, snapped, corner: shifted[0], named, unnamed, left, pan };
 }
 
-// Split and merge (moon-map/draw over moon-map/analysis's geometry module): a rectangle cut in two by a
+// Split and merge (mbt-map/draw over mbt-map/analysis's geometry module): a rectangle cut in two by a
 // line drawn across it, the halves selected with Shift and merged back, the merge undone.
 export async function splitChecks(page) {
   await openTab(page, "draw");

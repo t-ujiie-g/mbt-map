@@ -1,4 +1,4 @@
-// `moon-map/3d`: glTF models read in a worker of their own (meshopt decoding in its wasm), placed on the
+// `mbt-map/3d`: glTF models read in a worker of their own (meshopt decoding in its wasm), placed on the
 // map at GeoJSON points or streamed as 3D Tiles by custom layers, on Web Mercator and on the globe.
 import { mercatorMeters, type Clipping } from "./clipping";
 import type { CustomLayerInterface, CustomRenderMethodInput } from "./custom";

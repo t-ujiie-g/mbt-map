@@ -1,4 +1,4 @@
-// I3S 1.7 and 1.8 node contents for moon-map/3d as @loaders.gl/i3s 4.5.4 (MIT) reads them: geometry buffers
+// I3S 1.7 and 1.8 node contents for mbt-map/3d as @loaders.gl/i3s 4.5.4 (MIT) reads them: geometry buffers
 // (uncompressed, or Draco with its I3S metadata) as one primitive around the node's center, its resources,
 // material and attribute buffers. Import-free but for sibling modules.
 
@@ -103,7 +103,7 @@ export function nodeResources(layer: I3sLayer, node: I3sNode): { geometry?: stri
   };
 }
 
-/** A material definition as moonmap draws it (I3S colors are 0 to 1, alpha modes lowercase; alphaCutoff 0.25 by default as loaders.gl). */
+/** A material definition as mbtmap draws it (I3S colors are 0 to 1, alpha modes lowercase; alphaCutoff 0.25 by default as loaders.gl). */
 export function materialOf(layer: I3sLayer, definition: number | undefined, textured: boolean): Material {
   const md = (definition === undefined ? undefined : layer.materialDefinitions?.[definition]) ?? {};
   const f = md.pbrMetallicRoughness?.baseColorFactor;

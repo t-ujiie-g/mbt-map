@@ -23,11 +23,11 @@ const TILES = [[14551, 6450], [14552, 6450], [14551, 6451], [14552, 6451]];
 const entry = await import(path.join(ROOT, ENTRY_JS));
 let a;
 const { instance: ai } = await WebAssembly.instantiate(
-  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/analysis_worker/analysis_worker.wasm")),
+  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/analysis_worker/analysis_worker.wasm")),
   { Math, host: { number: hostNumber(() => a.memory) } },
 );
 a = ai.exports;
-const { instance: ri } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/route_worker/route_worker.wasm")), { Math });
+const { instance: ri } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/route_worker/route_worker.wasm")), { Math });
 const r = ri.exports;
 const decoder = new TextDecoder();
 const put = (e, bytes) => {

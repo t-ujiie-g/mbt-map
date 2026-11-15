@@ -1,4 +1,4 @@
-// Capped fetches for moon-map/3d's main-thread loaders: services are untrusted (AGENTS.md §8.2).
+// Capped fetches for mbt-map/3d's main-thread loaders: services are untrusted (AGENTS.md §8.2).
 import { MAX_DOCUMENT_BYTES, readCapped } from "../../../worker/js/body.mjs";
 
 export { MAX_DOCUMENT_BYTES };

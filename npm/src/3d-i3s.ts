@@ -1,4 +1,4 @@
-// The work of moon-map/3d's I3S layer, loaded with the first `i3sLayer`: the scene layer's nodes selected
+// The work of mbt-map/3d's I3S layer, loaded with the first `i3sLayer`: the scene layer's nodes selected
 // by I3S's level of detail on the 3D Tiles engine (3d-tiles.js), node contents from the 3D worker and
 // features' attributes read on the main thread.
 import type { TilesLayerOptions } from "./3d";

@@ -1,4 +1,4 @@
-// moon-map/3d's i3dm, pnts and cmpt contents vs @loaders.gl/3d-tiles 4.5.4 on synthetic tiles, hostile ones
+// mbt-map/3d's i3dm, pnts and cmpt contents vs @loaders.gl/3d-tiles 4.5.4 on synthetic tiles, hostile ones
 // refused; normals, which loaders.gl ignores or refuses, vs its own loop with Cesium's orientation, and
 // pnts' RGB565 and oct normals vs Cesium's decoding (loaders.gl shifts RGB565 and reads octs at 256).
 // Usage: node tiles/contents-golden.mjs; writes bench/results/tiles-contents.json.

@@ -1,7 +1,7 @@
 // Seeded points counted per block in the analysis worker; the counts then
 // color the blocks on the map. Nothing of the analysis runs on the main thread.
-import { Map } from "moon-map";
-import { load } from "moon-map/analysis";
+import { Map } from "mbt-map";
+import { load } from "mbt-map/analysis";
 
 let s = 7;
 const rand = () => (s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296;

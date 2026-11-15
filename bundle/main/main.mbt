@@ -53,8 +53,8 @@ pub fn create_map(
     limits=limits_of(limits),
     strict~,
   ) catch {
-    BadStyle(e) => throw_error("moon-map: style: \{e.message()}")
-    NoWebGL2 => throw_error("moon-map: WebGL2 is not available")
+    BadStyle(e) => throw_error("mbt-map: style: \{e.message()}")
+    NoWebGL2 => throw_error("mbt-map: WebGL2 is not available")
   }
 }
 
@@ -356,8 +356,8 @@ pub fn map_set_style(
   strict : Bool,
 ) -> String {
   map.set_style(style_json, strict~) catch {
-    BadStyle(e) => return "moon-map: style: \{e.message()}"
-    NoWebGL2 => return "moon-map: WebGL2 is not available"
+    BadStyle(e) => return "mbt-map: style: \{e.message()}"
+    NoWebGL2 => return "mbt-map: WebGL2 is not available"
   }
   ""
 }

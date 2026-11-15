@@ -32,7 +32,7 @@ export interface LegendState {
 
 /**
  * `layers`: the layer ids to show (default all but the background); `title(layer)`: an entry's
- * title (default `metadata["moon-map:title"]`, else the id); `label(layer, category)`: an item's label.
+ * title (default `metadata["mbt-map:title"]`, else the id); `label(layer, category)`: an item's label.
  */
 export interface LegendOptions {
   layers?: string[];
@@ -41,7 +41,7 @@ export interface LegendOptions {
 }
 
 function titleOf(layer: LayerSpecification): string {
-  const t = (layer as { metadata?: Record<string, unknown> }).metadata?.["moon-map:title"];
+  const t = (layer as { metadata?: Record<string, unknown> }).metadata?.["mbt-map:title"];
   return typeof t === "string" ? t : layer.id;
 }
 

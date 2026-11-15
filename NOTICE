@@ -1,4 +1,4 @@
-moonmap
+mbtmap
 Copyright 2026 t-ujiie-g
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
@@ -1005,7 +1005,7 @@ Test / benchmark data (continued):
   styles compared by bench/style/public.mjs and compat.mjs. BSD-3-Clause,
   © The Protomaps Authors.
 - CesiumJS 1.146.0 (bench devDependency `cesium`, not shipped): draws PLATEAU's
-  buildings beside moon-map/3d in bench/cesium/run.mjs. Apache-2.0,
+  buildings beside mbt-map/3d in bench/cesium/run.mjs. Apache-2.0,
   © 2011-2026 CesiumJS Contributors (https://github.com/CesiumGS/cesium).
 
 - delaunay/delaunator.mbt: ported from delaunator 5.1.0

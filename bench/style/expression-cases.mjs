@@ -274,8 +274,8 @@ export const CASES = [
   ...GEOMETRY_CASES,
 ];
 
-// Expressions MapLibre rejects when parsing and moonmap compiles (they fail when evaluated):
-// moonmap folds no constants and checks the types of operator arguments only when evaluating.
+// Expressions MapLibre rejects when parsing and mbtmap compiles (they fail when evaluated):
+// mbtmap folds no constants and checks the types of operator arguments only when evaluating.
 export const MAPLIBRE_REJECTS = [
   JSON.stringify(["array", "string", 3, ["literal", ["a", "b"]]]),
   JSON.stringify(["to-color", ["literal", [300, 0, 0]]]),

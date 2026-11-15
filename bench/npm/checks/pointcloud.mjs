@@ -1,4 +1,4 @@
-// moon-map/3d's point cloud layer on bench/npm/pages/pointcloud: the synthetic LAS in plane rectangular IX
+// mbt-map/3d's point cloud layer on bench/npm/pages/pointcloud: the synthetic LAS in plane rectangular IX
 // (EPSG:6677) is read, taken to longitude and latitude, drawn by its colors and recolored by class and
 // height; `crs` given by hand reads the same, and a missing file rejects `ready`.
 import { decodePng } from "../../lib/png.mjs";

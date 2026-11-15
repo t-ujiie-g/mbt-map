@@ -1,4 +1,4 @@
-import { Map, type LngLat, type MapOptions, type StyleSpecification } from "moon-map";
+import { Map, type LngLat, type MapOptions, type StyleSpecification } from "mbt-map";
 import {
   checkBearing,
   checkCenter,
@@ -14,15 +14,15 @@ import {
 
 export { MAX_PITCH, MAX_WORKERS, MAX_ZOOM, parseBearing, parseCenter, parsePitch, parseZoom } from "./parse";
 
-/** `detail` of the events `<moon-map>` dispatches (they bubble and cross shadow roots); `map` is null only for an `moon-map-error` before the map exists. */
-export interface MoonMapEventDetail {
+/** `detail` of the events `<mbt-map>` dispatches (they bubble and cross shadow roots); `map` is null only for an `mbt-map-error` before the map exists. */
+export interface MbtMapEventDetail {
   map: Map | null;
   center: LngLat;
   zoom: number;
   bearing: number;
   pitch: number;
   error?: Error;
-  /** For `moon-map-click`: the screen point (CSS pixels from the map's top-left) and the place under it. */
+  /** For `mbt-map-click`: the screen point (CSS pixels from the map's top-left) and the place under it. */
   point?: { x: number; y: number };
   lngLat?: LngLat;
 }
@@ -34,11 +34,11 @@ const ATTRIBUTES = ["style-url", "center", "zoom", "bearing", "pitch", "worker-c
 const Base = (typeof HTMLElement === "undefined" ? class {} : HTMLElement) as typeof HTMLElement;
 
 /**
- * `<moon-map style-url="..." center="139.76,35.68" zoom="12">`, the map in its
- * shadow root. Invalid attributes fire `moon-map-error` and keep the previous value;
+ * `<mbt-map style-url="..." center="139.76,35.68" zoom="12">`, the map in its
+ * shadow root. Invalid attributes fire `mbt-map-error` and keep the previous value;
  * `mapStyle` takes a style object and `map` is the `Map` once created.
  */
-export class MoonMapElement extends Base {
+export class MbtMapElement extends Base {
   static observedAttributes = ATTRIBUTES;
 
   #map: Map | null = null;
@@ -165,7 +165,7 @@ export class MoonMapElement extends Base {
   }
 
   #reject(name: string, value: string): void {
-    this.#dispatch("moon-map-error", new Error(`moon-map: invalid ${name}: ${JSON.stringify(value)}`));
+    this.#dispatch("mbt-map-error", new Error(`mbt-map: invalid ${name}: ${JSON.stringify(value)}`));
   }
 
   #options(): Omit<MapOptions, "container"> | null {
@@ -191,17 +191,17 @@ export class MoonMapElement extends Base {
     try {
       map = new Map({ ...options, container: this.#box });
     } catch (err) {
-      this.#dispatch("moon-map-error", err instanceof Error ? err : new Error(String(err)));
+      this.#dispatch("mbt-map-error", err instanceof Error ? err : new Error(String(err)));
       return;
     }
     this.#map = map;
-    map.on("load", () => this.#dispatch("moon-map-load"));
-    map.on("idle", () => this.#dispatch("moon-map-idle"));
-    map.on("movestart", () => this.#dispatch("moon-map-movestart"));
-    map.on("move", () => this.#dispatch("moon-map-move"));
-    map.on("moveend", () => this.#dispatch("moon-map-moveend"));
-    map.on("error", (e) => this.#dispatch("moon-map-error", e.error));
-    map.on("click", (e) => e.point && e.lngLat && this.#dispatch("moon-map-click", undefined, { point: { x: e.point.x, y: e.point.y }, lngLat: e.lngLat }));
+    map.on("load", () => this.#dispatch("mbt-map-load"));
+    map.on("idle", () => this.#dispatch("mbt-map-idle"));
+    map.on("movestart", () => this.#dispatch("mbt-map-movestart"));
+    map.on("move", () => this.#dispatch("mbt-map-move"));
+    map.on("moveend", () => this.#dispatch("mbt-map-moveend"));
+    map.on("error", (e) => this.#dispatch("mbt-map-error", e.error));
+    map.on("click", (e) => e.point && e.lngLat && this.#dispatch("mbt-map-click", undefined, { point: { x: e.point.x, y: e.point.y }, lngLat: e.lngLat }));
   }
 
   #destroy(): void {
@@ -223,11 +223,11 @@ export class MoonMapElement extends Base {
     else this.#create();
   }
 
-  #dispatch(type: string, error?: Error, extra?: Pick<MoonMapEventDetail, "point" | "lngLat">): void {
+  #dispatch(type: string, error?: Error, extra?: Pick<MbtMapEventDetail, "point" | "lngLat">): void {
     if (error) console.error(error);
     const map = this.#map;
     if (!map && !error) return;
-    const detail: MoonMapEventDetail = {
+    const detail: MbtMapEventDetail = {
       map,
       center: this.center,
       zoom: this.zoom,
@@ -242,16 +242,16 @@ export class MoonMapElement extends Base {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "moon-map": MoonMapElement;
+    "mbt-map": MbtMapElement;
   }
 }
 
-if (typeof customElements !== "undefined" && !customElements.get("moon-map")) {
-  customElements.define("moon-map", MoonMapElement);
+if (typeof customElements !== "undefined" && !customElements.get("mbt-map")) {
+  customElements.define("mbt-map", MbtMapElement);
 }
 
-/** The `<moon-map>` with id `id` in the document, or null (for bindings that hold an id, such as MoonBit's). */
-export function moonMapElement(id: string): MoonMapElement | null {
+/** The `<mbt-map>` with id `id` in the document, or null (for bindings that hold an id, such as MoonBit's). */
+export function mbtMapElement(id: string): MbtMapElement | null {
   const el = typeof document === "undefined" ? null : document.getElementById(id);
-  return el instanceof MoonMapElement ? el : null;
+  return el instanceof MbtMapElement ? el : null;
 }

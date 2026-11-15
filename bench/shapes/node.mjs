@@ -98,4 +98,4 @@ row(`lineSlice (${count(singles)} lines x 10 cuts)`,
   { tablesIn: time(() => singleIds.forEach((id) => slices[0].forEach(() => env.put([id])))) });
 singleIds.forEach(env.dispose);
 
-await writeResults("shapes-node", { tiles: TILES, statistic: TIMING, columns: "moon-map: the dataset's table out of analysis.wasm and into shapes.wasm, the export, a table result read back into analysis.wasm as a dataset; tablesIn: the copies in alone; exportOnly: the copies in and the export, its table left in shapes.wasm" }, all);
+await writeResults("shapes-node", { tiles: TILES, statistic: TIMING, columns: "mbt-map: the dataset's table out of analysis.wasm and into shapes.wasm, the export, a table result read back into analysis.wasm as a dataset; tablesIn: the copies in alone; exportOnly: the copies in and the export, its table left in shapes.wasm" }, all);

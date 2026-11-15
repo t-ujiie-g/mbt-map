@@ -1,4 +1,4 @@
-// The showcase's Web services (moon-map/services, in the data tab): the bundled WMTS capabilities of GSI's pale map (its
+// The showcase's Web services (mbt-map/services, in the data tab): the bundled WMTS capabilities of GSI's pale map (its
 // tiles from the fixtures with ?local=1) listed, one layer added under the vector overlays, kept by a new basemap, removed.
 import { openTab } from "./step.mjs";
 

@@ -1,4 +1,4 @@
-// moon-map/3d's glTF reading (loadModel in Chromium: npm/src/model/gltf.ts and meshopt in 3d.wasm) vs
+// mbt-map/3d's glTF reading (loadModel in Chromium: npm/src/model/gltf.ts and meshopt in 3d.wasm) vs
 // @loaders.gl/gltf 4.5.4 (attributes, indices, materials, KHR_texture_transform) and gltf-transform
 // 4.5.1's world matrices, on models written by gltf-transform: plain, quantized (KHR_mesh_quantization),
 // meshopt-compressed (EXT_ and KHR_meshopt_compression, both encoder methods), sparse, interleaved,
@@ -196,7 +196,7 @@ try {
   server.close();
 }
 
-/** loaders.gl's attributes, indices and materials and gltf-transform's world matrices, in moonmap's order. */
+/** loaders.gl's attributes, indices and materials and gltf-transform's world matrices, in mbtmap's order. */
 async function reference(name, bytes) {
   bytes = webpOptional(bytes);
   const loaded = name.endsWith(".gltf")

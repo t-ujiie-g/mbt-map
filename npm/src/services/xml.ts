@@ -8,15 +8,15 @@ export const MAX_XML_LENGTH = 32 * 1024 * 1024;
 
 /** `xml` parsed by the host's DOMParser; a malformed document or a service exception throws. */
 export function parseXml(xml: string | Document, what: string): Element {
-  if (typeof xml === "string" && xml.length > MAX_XML_LENGTH) throw new Error(`moon-map: services: ${what} is too long`);
+  if (typeof xml === "string" && xml.length > MAX_XML_LENGTH) throw new Error(`mbt-map: services: ${what} is too long`);
   const doc = typeof xml === "string" ? new DOMParser().parseFromString(xml, "application/xml") : xml;
   const root = doc.documentElement;
   if (!root || root.localName === "parsererror" || doc.getElementsByTagName("parsererror").length) {
-    throw new Error(`moon-map: services: ${what} is not well-formed XML`);
+    throw new Error(`mbt-map: services: ${what} is not well-formed XML`);
   }
   if (/ExceptionReport$/.test(root.localName)) {
     const message = text(first(root, "ServiceException") ?? first(first(root, "Exception"), "ExceptionText")) || text(root);
-    throw new Error(`moon-map: services: ${what}: ${message}`);
+    throw new Error(`mbt-map: services: ${what}: ${message}`);
   }
   return root;
 }

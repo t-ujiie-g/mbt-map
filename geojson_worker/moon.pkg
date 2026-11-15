@@ -2,8 +2,8 @@
 // its glue (and that of `geojson_props_worker`, the module with expressions).
 
 import {
-  "t-ujiie-g/moonmap_engine/geojson_tiles",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/geojson_tiles",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

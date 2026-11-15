@@ -3,7 +3,7 @@
 ///|
 /// Reads the object `object` (or the first) of a TopoJSON Topology as topojson-client's
 /// `feature` makes features of it, collections in them flattened (npm/README.md
-/// `moon-map/data`); gives the table and the objects' names. `slow_number` as `read_geojson`'s.
+/// `mbt-map/data`); gives the table and the objects' names. `slow_number` as `read_geojson`'s.
 pub fn read_topojson(
   bytes : BytesView,
   object : String?,

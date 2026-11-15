@@ -1,6 +1,6 @@
 // The CesiumJS side of bench/cesium/run.mjs: the same tileset on a plain white ellipsoid (no Ion,
-// imagery, terrain, sky or fog), with the selection settings moonmap and loaders.gl use, lowered as
-// moonmap's `height` lowers it, and MapLibre's camera of ?view= as a lookAt around the center at 0 m.
+// imagery, terrain, sky or fog), with the selection settings mbtmap and loaders.gl use, lowered as
+// mbtmap's `height` lowers it, and MapLibre's camera of ?view= as a lookAt around the center at 0 m.
 import { HEIGHT, HEIGHT_OFFSET, FOV, ORBIT_FRAMES, VIEWS, WIDTH, cameraDistance, quantiles, settle, trackFrames } from "./views.mjs";
 
 const Cesium = window.Cesium;
@@ -24,7 +24,7 @@ scene.fog.enabled = false;
 scene.screenSpaceCameraController.enableInputs = false;
 const target = Cesium.Cartesian3.fromDegrees(view.center[0], view.center[1], 0);
 const enu = Cesium.Transforms.eastNorthUpToFixedFrame(target);
-// moonmap's light (Mapbox's default: azimuth 210°, polar 30°), as the direction it travels.
+// mbtmap's light (Mapbox's default: azimuth 210°, polar 30°), as the direction it travels.
 const DEG = Math.PI / 180;
 const toLight = new Cesium.Cartesian3(Math.sin(30 * DEG) * Math.sin(210 * DEG), Math.sin(30 * DEG) * Math.cos(210 * DEG), Math.cos(30 * DEG));
 const lightDirection = Cesium.Matrix4.multiplyByPointAsVector(enu, toLight, new Cesium.Cartesian3());
@@ -71,10 +71,10 @@ window.__run = async () => {
   };
 };
 
-// Clips (null: does not) as moonmap's Map.setClipping does: planes in east, north, up meters at `origin` (the tileset lowered onto
+// Clips (null: does not) as mbtmap's Map.setClipping does: planes in east, north, up meters at `origin` (the tileset lowered onto
 // the ellipsoid there, so 0 m is the same ground), polygons of longitudes and latitudes; then settles.
 window.__clip = async (c) => {
-  // moonmap draws both faces, so a cut building shows its inside walls in both; black around, so pale faces count.
+  // mbtmap draws both faces, so a cut building shows its inside walls in both; black around, so pale faces count.
   tileset.backFaceCulling = false;
   scene.backgroundColor = Cesium.Color.BLACK;
   scene.globe.baseColor = Cesium.Color.BLACK;

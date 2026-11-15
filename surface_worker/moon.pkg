@@ -3,13 +3,13 @@
 // over a dataset's table, computing with the host's Math and number printing.
 
 import {
-  "t-ujiie-g/moonmap_engine/clusters",
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/density",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/grids",
-  "t-ujiie-g/moonmap_engine/isolines",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/clusters",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/density",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/grids",
+  "t-ujiie-g/mbtmap_engine/isolines",
+  "t-ujiie-g/mbtmap_engine/wasmio",
   "moonbitlang/core/cmp",
   "moonbitlang/core/double",
 }

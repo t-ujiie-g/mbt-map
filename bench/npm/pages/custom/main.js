@@ -1,7 +1,7 @@
 // A custom layer under a GeoJSON square, for the pack test's custom layer check
 // (bench/npm/checks/custom.mjs): it draws a blue box through MapLibre's shader prelude
 // and leaves the GL state in a mess, which the map must undo.
-import { Map } from "moon-map";
+import { Map } from "mbt-map";
 
 const map = new Map({
   container: "map",

@@ -1,7 +1,7 @@
 // `npm --prefix bench run example`, then /bench/pages/terrain/: Mt Fuji in 3D
 // with its hillshade, from the z12 DEM fixtures or GSI's live DEM tiles
 // (z1-14) with `?remote=1`. `?zoom=`, `?bearing=` and `?pitch=` set the camera.
-import * as moonmap from "/_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js";
+import * as mbtmap from "/_build/js/release/build/t-ujiie-g/mbtmap_engine/bundle/main/main.js";
 
 const GSI_DEM = "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png";
 
@@ -9,13 +9,13 @@ const params = new URLSearchParams(location.search);
 const style = await (await fetch("./style.json")).json();
 if (params.get("remote") === "1") Object.assign(style.sources.dem, { tiles: [GSI_DEM], minzoom: 1, maxzoom: 14 });
 
-const map = moonmap.create_map(
+const map = mbtmap.create_map(
   document.getElementById("map"),
   JSON.stringify(style),
   138.7274, 35.3606, Number(params.get("zoom") ?? 11.3),
   Number(params.get("bearing") ?? -20), Number(params.get("pitch") ?? 60),
   "/worker/js/worker.mjs",
-  "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm",
+  "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm",
   0,
   null,
   "sans-serif",
@@ -23,5 +23,5 @@ const map = moonmap.create_map(
   false,
 );
 window.__map = map;
-window.__moonmap = moonmap;
-moonmap.map_on_idle(map, () => { window.__idle = window.__loaded = performance.now(); });
+window.__mbtmap = mbtmap;
+mbtmap.map_on_idle(map, () => { window.__idle = window.__loaded = performance.now(); });

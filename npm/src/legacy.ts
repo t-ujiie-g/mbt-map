@@ -372,7 +372,7 @@ function propertyFunction(parameters: Record<string, unknown>, spec: Spec, stops
     for (const [input, output] of stops) appendStop(e, input, output, false);
     return typed(e);
   }
-  throw new Error(`moon-map: unknown property function type ${type}`);
+  throw new Error(`mbt-map: unknown property function type ${type}`);
 }
 
 function zoomFunction(parameters: Record<string, unknown>, spec: Spec, stops: [Json, Json][]): Json {
@@ -382,7 +382,7 @@ function zoomFunction(parameters: Record<string, unknown>, spec: Spec, stops: [J
   else if (type === "exponential") {
     const base = parameters.base !== undefined ? parameters.base : 1;
     e = [interpolator(parameters), base === 1 ? ["linear"] : ["exponential", base], ["zoom"]];
-  } else throw new Error(`moon-map: unknown zoom function type "${type}"`);
+  } else throw new Error(`mbt-map: unknown zoom function type "${type}"`);
   for (const [input, output] of stops) appendStop(e, input, output, type === "interval");
   fixupStep(e);
   return e;

@@ -1,4 +1,4 @@
-// moon-map/draw vs terra-draw 1.37 on MapLibre: the same clicks and moves in each mode, in Chromium,
+// mbt-map/draw vs terra-draw 1.37 on MapLibre: the same clicks and moves in each mode, in Chromium,
 // then the shapes compared. Usage: node draw/golden.mjs; writes bench/results/draw-golden.json.
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -31,7 +31,7 @@ const SCRIPTS = {
 const { server, origin } = await serve();
 const browser = await chromium.launch({ args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
 const drawn = {};
-for (const engine of ["moonmap", "terradraw"]) {
+for (const engine of ["mbtmap", "terradraw"]) {
   drawn[engine] = {};
   // A fresh map per script: terra-draw's drags let MapLibre pan a little before they start.
   for (const [mode, script] of Object.entries(SCRIPTS)) {
@@ -73,16 +73,16 @@ const maxDiff = (a, b) => (a.length === b.length ? Math.max(...a.map((p, i) => M
 const corners = (ring) => ring.slice(0, -1).map((p) => p.map((v) => v.toFixed(9)).join()).sort();
 const rows = [];
 for (const mode of Object.keys(SCRIPTS)) {
-  const [a, b] = [drawn.moonmap[mode], drawn.terradraw[mode]];
-  const row = { mode, moonmap: a.length, terradraw: b.length, ok: a.length === b.length && a.length >= 1 && a[0].type === b[0].type };
+  const [a, b] = [drawn.mbtmap[mode], drawn.terradraw[mode]];
+  const row = { mode, mbtmap: a.length, terradraw: b.length, ok: a.length === b.length && a.length >= 1 && a[0].type === b[0].type };
   if (row.ok) {
     const [pa, pb] = [flat(a[0]), flat(b[0])];
     row.vertices = `${pa.length} / ${pb.length}`;
     if (mode === "rectangle") {
       row.ok = JSON.stringify(corners(pa)) === JSON.stringify(corners(pb));
     } else if (mode === "circle") {
-      // terra-draw ("globe") draws on a sphere; moonmap on WGS 84 at the geodesic distance to the click.
-      const centre = drawn.moonmap.point[0].coordinates;
+      // terra-draw ("globe") draws on a sphere; mbtmap on WGS 84 at the geodesic distance to the click.
+      const centre = drawn.mbtmap.point[0].coordinates;
       const radius = (ring, at) => ring.slice(0, -1).map((p) => WGS84.Inverse(at[1], at[0], p[1], p[0]).s12);
       const ra = radius(pa, centre);
       const rb = radius(pb, centre);

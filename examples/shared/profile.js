@@ -1,9 +1,9 @@
-// The elevation profile of a finished distance measurement (moon-map/ui, heights
-// from GSI's DEM by moon-map/analysis's `sampleDem`), drawn as SVG; the point under
+// The elevation profile of a finished distance measurement (mbt-map/ui, heights
+// from GSI's DEM by mbt-map/analysis's `sampleDem`), drawn as SVG; the point under
 // the chart's pointer is a dot on the map (`map.track`).
-import { sampleDem } from "moon-map/analysis";
-import { measure } from "moon-map/geodesic";
-import { createProfile, formatLength } from "moon-map/ui";
+import { sampleDem } from "mbt-map/analysis";
+import { measure } from "mbt-map/geodesic";
+import { createProfile, formatLength } from "mbt-map/ui";
 import { showRows } from "./readout.js";
 import { DEM_TILES } from "./style.js";
 

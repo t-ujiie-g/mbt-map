@@ -10,18 +10,18 @@
   },
   "summary": {
     "dissolve": {
-      "moon-map": 192.8,
-      "moonmapGeoJSON": 198.7,
+      "mbt-map": 192.8,
+      "mbtmapGeoJSON": 198.7,
       "turf": 2333.1
     },
     "buffer10m": {
-      "moon-map": 490.8,
-      "moonmapGeoJSON": 570.2,
+      "mbt-map": 490.8,
+      "mbtmapGeoJSON": 570.2,
       "turf": 1176.9
     },
     "clipByWater": {
-      "moon-map": 74.3,
-      "moonmapGeoJSON": 73.9,
+      "mbt-map": 74.3,
+      "mbtmapGeoJSON": 73.9,
       "turf": 957.2
     }
   }

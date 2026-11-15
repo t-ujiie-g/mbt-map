@@ -1,7 +1,7 @@
-// The showcase's search from `moon-map/search`: coordinates (projected ones through moon-map/analysis) and the places,
+// The showcase's search from `mbt-map/search`: coordinates (projected ones through mbt-map/analysis) and the places,
 // without a server; `?gsi-search=1` adds GSI's place-name search as an external provider (no published terms; see the README).
-import { transform } from "moon-map/analysis";
-import { coordinates, createSearch, datasetSearch } from "moon-map/search";
+import { transform } from "mbt-map/analysis";
+import { coordinates, createSearch, datasetSearch } from "mbt-map/search";
 
 /** An external provider: GSI's place-name search, the shape any web API takes. */
 export function gsiPlaceSearch() {

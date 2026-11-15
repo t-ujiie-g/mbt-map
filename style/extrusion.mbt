@@ -86,7 +86,7 @@ fn parse_light(json : Json?) -> Light raise StyleError {
 }
 
 ///|
-/// The style's `lights` (an moonmap extension, Mapbox's names): `ambient` and `directional` colors and
+/// The style's `lights` (an mbtmap extension, Mapbox's names): `ambient` and `directional` colors and
 /// intensities, `direction` [azimuthal from north, polar from up] in degrees, `shadows` the directional
 /// light's `shadow-intensity` when it has `cast-shadows`. A missing light is black.
 pub struct Lights {

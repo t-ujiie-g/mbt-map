@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/globe"
+package "t-ujiie-g/mbtmap_engine/globe"
 
 import {
   "moonbitlang/core/debug",
-  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/core",
 }
 
 // Values

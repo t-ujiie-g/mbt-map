@@ -1,7 +1,7 @@
-// The places as an attribute table from `moon-map/ui`: sorted by header, filtered, paged; a row's
+// The places as an attribute table from `mbt-map/ui`: sorted by header, filtered, paged; a row's
 // click selects the place (the places layer's `selected` feature state) and fits the map to it;
 // its columns are added, computed by expression, renamed and removed with a field editor.
-import { cellText, createAttributeTable, createFieldEditor } from "moon-map/ui";
+import { cellText, createAttributeTable, createFieldEditor } from "mbt-map/ui";
 
 /** Each column's key and heading. */
 export const TABLE_COLUMNS = [
@@ -57,7 +57,7 @@ export async function runField(fields, action, { name, expression, to }) {
     await fields.removeColumn(name);
     return `「${name}」を消しました`;
   } catch (err) {
-    return String(err.message).replace(/^moon-map: /, "");
+    return String(err.message).replace(/^mbt-map: /, "");
   }
 }
 

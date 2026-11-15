@@ -105,9 +105,9 @@ export function queryArgs<O extends object>(geometryOrOptions: PointLike | [Poin
 /** The `layers` option as a list (null for all), or why it is refused: not an Array or Set, or naming a layer `has` lacks. */
 export function queryLayers(layers: unknown, has: (id: string) => boolean): string[] | null | Error {
   if (layers === undefined) return null;
-  if (!Array.isArray(layers) && !(layers instanceof Set)) return new Error("moon-map: layers must be an Array or a Set of strings");
+  if (!Array.isArray(layers) && !(layers instanceof Set)) return new Error("mbt-map: layers must be an Array or a Set of strings");
   const list = [...(layers as Iterable<string>)];
   const missing = list.find((id) => !has(id));
-  if (missing !== undefined) return new Error(`moon-map: the layer '${missing}' does not exist in the map's style and cannot be queried for features`);
+  if (missing !== undefined) return new Error(`mbt-map: the layer '${missing}' does not exist in the map's style and cannot be queried for features`);
   return list;
 }

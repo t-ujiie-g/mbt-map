@@ -1,7 +1,7 @@
-// The map's controls in React, from the same `moon-map/ui` controllers and markup as the plain-DOM examples.
+// The map's controls in React, from the same `mbt-map/ui` controllers and markup as the plain-DOM examples.
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { createAttribution, createFullscreen, createGeolocation, createNavigation, createScale } from "moon-map/ui";
+import { createAttribution, createFullscreen, createGeolocation, createNavigation, createScale } from "mbt-map/ui";
 import { LOCATION_LABELS } from "../../shared/controls.js";
 import { Icon } from "./icon.jsx";
 import { useController } from "./use-controller.js";

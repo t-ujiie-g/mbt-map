@@ -3,7 +3,7 @@
 // every backend.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/core",
   "moonbitlang/core/debug",
 }
 

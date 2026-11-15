@@ -1,6 +1,6 @@
 // Analysis speed: Turf.js + flatbush on parsed GeoJSON against the shipped wasm
 // on a loaded dataset (export calls, no worker messages). "bbox + index" includes
-// computing the boxes; moonmap builds its index on the first search.
+// computing the boxes; mbtmap builds its index on the first search.
 import { loadAnalysis, MEASURE } from "./load.mjs";
 import * as ref from "./reference.mjs";
 import { median } from "../lib/rows.mjs";
@@ -22,7 +22,7 @@ export async function runAnalysisBench(fetchBytes, { runs = 5 } = {}) {
     return median(ts);
   };
   const rows = {};
-  const row = (name, js, moonmap) => (rows[name] = { js, moonmap });
+  const row = (name, js, mbtmap) => (rows[name] = { js, mbtmap });
 
   const buildingsText = await text("buildings");
   const buildingsBytes = new TextEncoder().encode(buildingsText);
@@ -79,6 +79,6 @@ export async function runAnalysisBench(fetchBytes, { runs = 5 } = {}) {
 
 export function printAnalysis(result) {
   console.table(Object.fromEntries(Object.entries(result.rows).map(([n, r]) => [n, {
-    "js ms": r.js.toFixed(2), "moonmap ms": r.moonmap.toFixed(2), "js / moonmap": (r.js / r.moonmap).toFixed(2),
+    "js ms": r.js.toFixed(2), "mbtmap ms": r.mbtmap.toFixed(2), "js / mbtmap": (r.js / r.mbtmap).toFixed(2),
   }])));
 }

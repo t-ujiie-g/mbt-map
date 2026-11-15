@@ -1,5 +1,5 @@
 // The JS side of the analysis golden test and bench: Turf.js 7.4.0 and
-// flatbush 4.6.2 over parsed GeoJSON, with the semantics moonmap documents.
+// flatbush 4.6.2 over parsed GeoJSON, with the semantics mbtmap documents.
 import Flatbush from "flatbush";
 import { area } from "@turf/area";
 import { bbox } from "@turf/bbox";

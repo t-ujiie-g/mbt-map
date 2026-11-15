@@ -1,6 +1,6 @@
-// A glTF model through moon-map/3d: a clock tower (tower.glb, meshopt-compressed) on Gyoko-dori in front
+// A glTF model through mbt-map/3d: a clock tower (tower.glb, meshopt-compressed) on Gyoko-dori in front
 // of Tokyo Station, under the radius ring and the places. A new style drops custom layers, so it goes back each time.
-import { modelLayer } from "moon-map/3d";
+import { modelLayer } from "mbt-map/3d";
 
 const TOWERS = {
   type: "FeatureCollection",

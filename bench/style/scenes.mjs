@@ -1,5 +1,5 @@
 // The scenes of style/golden.mjs: a style, a camera and the differences allowed (per-channel mean
-// and 99th percentile, 0-255), set just above what was measured; `gap` names what moonmap lacks there.
+// and 99th percentile, 0-255), set just above what was measured; `gap` names what mbtmap lacks there.
 import { FUJI_DEM } from "../lib/fuji-terrain.mjs";
 
 const GSI = { type: "vector", tiles: ["{origin}/bench/fixtures/gsi-bvmap/{z}/{x}/{y}.pbf"], minzoom: 14, maxzoom: 14 };

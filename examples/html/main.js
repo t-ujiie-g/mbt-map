@@ -1,5 +1,5 @@
 // The showcase with the npm package's `Map` and the DOM.
-import { Map } from "moon-map";
+import { Map } from "mbt-map";
 import { mountApp } from "../shared/app.js";
 import { DESTINATIONS } from "../shared/places.js";
 import { mountShell } from "../shared/shell.js";

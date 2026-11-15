@@ -34,7 +34,7 @@ test("breakdown: constants, zoom curves and mixed conditions are single entries"
 });
 
 test("withOverlays: keeps the overlays and their sources, in place or on top", () => {
-  const overlay = { metadata: { "moon-map:overlay": true } };
+  const overlay = { metadata: { "mbt-map:overlay": true } };
   const previous = {
     sources: { base: { a: 1 }, pts: { data: "mine" } },
     layers: [{ id: "bg" }, { id: "pts", source: "pts", ...overlay }, { id: "pts-label", source: "pts", ...overlay }],

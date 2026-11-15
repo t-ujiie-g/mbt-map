@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/bench/backend/entry"
+package "t-ujiie-g/mbtmap_engine/bench/backend/entry"
 
 // Values
 pub fn alloc_bytes(Int32) -> FixedArray[Byte]

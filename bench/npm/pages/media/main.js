@@ -1,6 +1,6 @@
 // An image, a video (red for a second, then blue) and a canvas source side by side, for the pack
 // test's media check (bench/npm/checks/media.mjs).
-import { Map } from "moon-map";
+import { Map } from "mbt-map";
 
 const box = (west, east) => [[west, 10], [east, 10], [east, -10], [west, -10]];
 const paint = document.getElementById("paint").getContext("2d");

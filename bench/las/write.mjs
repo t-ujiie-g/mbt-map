@@ -55,7 +55,7 @@ export function writeLas({ minor, format, points, scale = [0.01, 0.01, 0.01], of
   if (minor >= 2) v.setUint16(6, globalEncoding, true);
   out[24] = 1;
   out[25] = minor;
-  const software = "moonmap bench/las";
+  const software = "mbtmap bench/las";
   for (let i = 0; i < software.length; i++) out[58 + i] = software.charCodeAt(i);
   v.setUint16(94, headerSize, true);
   v.setUint32(96, pointsAt, true);

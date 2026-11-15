@@ -1,4 +1,4 @@
-// GeoTIFF sources drawn by moonmap (rasterTile in Chromium) vs the pixels they hold: GSI's map tiles (国土地理院)
+// GeoTIFF sources drawn by mbtmap (rasterTile in Chromium) vs the pixels they hold: GSI's map tiles (国土地理院)
 // as a COG identical, the Mt Fuji DEM within 1/256 m, EPSG:4326 and 6677 rasters as proj4js 2.22.0 samples
 // them, a map of the COG as one of the PNGs. Needs `npm --prefix npm run build`.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -229,7 +229,7 @@ try {
     await p.goto(`${origin}/bench/geotiff/page.html`);
     await p.waitForFunction(() => window.__ready, null, { timeout: 60000 });
     await p.evaluate((sources) => new Promise((resolve) => {
-      const map = new window.moonmap.Map({ container: "map", center: [139.7671, 35.6812], zoom: 14, style: { version: 8, sources, layers: [{ id: "bg", type: "background", paint: { "background-color": "#fff" } }, { id: "r", type: "raster", source: "s" }] } });
+      const map = new window.mbtmap.Map({ container: "map", center: [139.7671, 35.6812], zoom: 14, style: { version: 8, sources, layers: [{ id: "bg", type: "background", paint: { "background-color": "#fff" } }, { id: "r", type: "raster", source: "s" }] } });
       map.once("idle", resolve);
     }), sources);
     const img = decodePng(await p.screenshot());

@@ -10,7 +10,7 @@ export interface TransformedRequest {
 /** `url` resolved against `base`, refused unless http(s), so a style cannot fetch data: or blob: URLs (AGENTS.md §8.3). */
 export function httpUrl(url: string | URL, base: string | URL, what: string): string {
   const u = new URL(url, base);
-  if (!/^https?:$/.test(u.protocol)) throw new Error(`moon-map: ${what} must be an http(s) URL: ${u.href}`);
+  if (!/^https?:$/.test(u.protocol)) throw new Error(`mbt-map: ${what} must be an http(s) URL: ${u.href}`);
   return u.href;
 }
 
@@ -39,7 +39,7 @@ export function resolveTemplate(template: string, base: string | URL, what = "ti
 export function workerScriptUrl(url: string | URL, base: URL, origin: string): string {
   const u = new URL(url, base);
   if (!/^https?:$/.test(u.protocol) || u.origin !== origin) {
-    throw new Error(`moon-map: the worker must be a same-origin http(s) URL: ${u.href}`);
+    throw new Error(`mbt-map: the worker must be a same-origin http(s) URL: ${u.href}`);
   }
   return u.href;
 }

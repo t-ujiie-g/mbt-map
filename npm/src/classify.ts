@@ -31,7 +31,7 @@ export interface Statistics {
 
 // The finite numbers of `values`, refused past MAX_CLASS_VALUES.
 function finite(values: ArrayLike<unknown>): Float64Array {
-  if (values.length > MAX_CLASS_VALUES) throw new Error(`moon-map: classify: more than ${MAX_CLASS_VALUES} values`);
+  if (values.length > MAX_CLASS_VALUES) throw new Error(`mbt-map: classify: more than ${MAX_CLASS_VALUES} values`);
   const out = new Float64Array(values.length);
   let n = 0;
   for (let i = 0; i < values.length; i++) {
@@ -304,11 +304,11 @@ export function classBreaks(
   method: ClassMethod = "jenks",
   { matchBounds = false }: { matchBounds?: boolean } = {},
 ): number[] | null {
-  if (!Number.isInteger(classes) || classes < 1 || classes > MAX_CLASSES) throw new Error(`moon-map: classify: classes must be an integer from 1 to ${MAX_CLASSES}`);
+  if (!Number.isInteger(classes) || classes < 1 || classes > MAX_CLASSES) throw new Error(`mbt-map: classify: classes must be an integer from 1 to ${MAX_CLASSES}`);
   const x = finite(values);
   if (x.length === 0) return null;
   const tooMany = (work: number, cap: number) => {
-    if (work > cap) throw new Error(`moon-map: classify: ${x.length} values in ${classes} classes are too many for ${method}`);
+    if (work > cap) throw new Error(`mbt-map: classify: ${x.length} values in ${classes} classes are too many for ${method}`);
   };
   switch (method) {
     case "jenks": {
@@ -350,20 +350,20 @@ export function classBreaks(
       return a;
     }
     default:
-      throw new Error(`moon-map: classify: unknown method ${String(method)}`);
+      throw new Error(`mbt-map: classify: unknown method ${String(method)}`);
   }
 }
 
 /**
  * A style `step` expression giving `outputs[i]` (colors, widths, …) to values of class `i`:
- * `["step", input, outputs[0], breaks[1], outputs[1], …]`, which `moon-map/ui`'s legend lists as entries. Breaks
+ * `["step", input, outputs[0], breaks[1], outputs[1], …]`, which `mbt-map/ui`'s legend lists as entries. Breaks
  * must ascend; of two equal ones (an empty class, which jenks and quantile may give) the later output stands.
  */
 export function classStep(input: unknown, breaks: number[], outputs: unknown[]): unknown[] {
-  if (breaks.length < 2 || outputs.length !== breaks.length - 1) throw new Error("moon-map: classify: give one output per class");
+  if (breaks.length < 2 || outputs.length !== breaks.length - 1) throw new Error("mbt-map: classify: give one output per class");
   const expr: unknown[] = ["step", input, outputs[0]];
   for (let i = 1; i < outputs.length; i++) {
-    if (!(breaks[i] >= breaks[i - 1])) throw new Error("moon-map: classify: breaks must ascend");
+    if (!(breaks[i] >= breaks[i - 1])) throw new Error("mbt-map: classify: breaks must ascend");
     if (i > 1 && breaks[i] === breaks[i - 1]) expr[expr.length - 1] = outputs[i];
     else expr.push(breaks[i], outputs[i]);
   }

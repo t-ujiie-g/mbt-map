@@ -111,13 +111,13 @@
     {
       "group": "geometries",
       "label": "a feature without geometry",
-      "why": "flatgeobuf throws reading the missing geometry; moon-map/data gives a row without one",
+      "why": "flatgeobuf throws reading the missing geometry; mbt-map/data gives a row without one",
       "ok": true
     },
     {
       "group": "geometries",
       "label": "a CircularString",
-      "why": "flatgeobuf gives curves no coordinates; moon-map/data refuses them",
+      "why": "flatgeobuf gives curves no coordinates; mbt-map/data refuses them",
       "ok": true
     },
     {
@@ -177,7 +177,7 @@
     {
       "group": "hostile",
       "label": "a property of no column",
-      "why": "flatgeobuf throws reading the column's name; moon-map/data refuses the file",
+      "why": "flatgeobuf throws reading the column's name; mbt-map/data refuses the file",
       "ok": true
     }
   ],

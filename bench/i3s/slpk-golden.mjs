@@ -1,4 +1,4 @@
-// moon-map/3d's SLPK reader (npm/src/i3s/slpk.ts) vs the files it was packed from and @loaders.gl/i3s 4.5.4's
+// mbt-map/3d's SLPK reader (npm/src/i3s/slpk.ts) vs the files it was packed from and @loaders.gl/i3s 4.5.4's
 // parseSLPKArchive: SLPKs written here from the synthetic layer (and Esri's San Francisco sample when its
 // fixtures are there), stored, deflated, zip64, with and without the hash table, read from bytes, a Blob and
 // a local server with and without range requests; requests and bytes counted; hostile copies refused.

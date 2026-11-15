@@ -1,6 +1,6 @@
 // GeoJSON sources from the style: one by URL (places.geojson), one inline.
-// moonmap loads its GeoJSON module and worker only because the style has them.
-import { Map } from "moon-map";
+// mbtmap loads its GeoJSON module and worker only because the style has them.
+import { Map } from "mbt-map";
 
 const params = new URLSearchParams(location.search);
 const map = new Map({

@@ -1,6 +1,6 @@
-// The boxes of ./boxes.mjs for bench/sight/golden.mjs: extrusions and moon-map/3d's model layer.
-import { Map } from "moon-map";
-import { modelLayer } from "moon-map/3d";
+// The boxes of ./boxes.mjs for bench/sight/golden.mjs: extrusions and mbt-map/3d's model layer.
+import { Map } from "mbt-map";
+import { modelLayer } from "mbt-map/3d";
 import { BOXES, CENTER, MODEL } from "./boxes.mjs";
 
 const polygon = ([w, s, e, n, height]) => ({ type: "Feature", properties: { height }, geometry: { type: "Polygon", coordinates: [[[w, s], [e, s], [e, n], [w, n], [w, s]]] } });

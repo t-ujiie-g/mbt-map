@@ -1,6 +1,6 @@
-// `moon-map/data`: CSV, WKT, WKB, shapefiles, TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoJSON read in a worker
+// `mbt-map/data`: CSV, WKT, WKB, shapefiles, TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoJSON read in a worker
 // of its own, started on the first call, into tables that are both a GeoJSON source's data (`toGeoJSON`)
-// and an moon-map/analysis dataset (`load(table)`); tables written out; GeoTIFF pixels and tiles.
+// and an mbt-map/analysis dataset (`load(table)`); tables written out; GeoTIFF pixels and tiles.
 import { tableInfo, tableToGeoJSON, withIds } from "../../wasmio/js/table.mjs";
 import { crsArg, type Crs } from "./crs";
 import { bboxArg, csvArgs, csvWriteArgs, formatOf, shapefileParts, type CsvOptions, type CsvWriteOptions, type DataFormat, type ShapefileParts, type WriteFormat } from "./data-format";
@@ -89,7 +89,7 @@ export class DataTable {
     return { table: this.#bytes.slice(0), ids: this.#ids?.slice(0) ?? null };
   }
 
-  /** A copy of the rows in @geom.Table's byte form (docs/FORMATS.md "Table"), which moon-map/analysis's `load` takes. */
+  /** A copy of the rows in @geom.Table's byte form (docs/FORMATS.md "Table"), which mbt-map/analysis's `load` takes. */
   tableBytes(): ArrayBuffer {
     return this.#bytes.slice(0);
   }
@@ -112,7 +112,7 @@ const FORMATS: DataFormat[] = ["csv", "wkt", "wkb", "shapefile", "topojson", "km
 function formatFor(options: ReadOptions, name: string | null): DataFormat {
   const format = options.format ?? (name === null ? null : formatOf(name));
   if (!FORMATS.includes(format as DataFormat)) {
-    throw new Error(`moon-map: data: ${options.format === undefined ? "the format cannot be told from the input; give options.format" : `unknown format ${String(options.format)}`}`);
+    throw new Error(`mbt-map: data: ${options.format === undefined ? "the format cannot be told from the input; give options.format" : `unknown format ${String(options.format)}`}`);
   }
   return format as DataFormat;
 }
@@ -132,17 +132,17 @@ function sourceOf(input: Input, options: ReadOptions, transfer: Transferable[]):
     input instanceof ArrayBuffer ? input.slice(0) :
     ArrayBuffer.isView(input) ? new Uint8Array(input.buffer, input.byteOffset, input.byteLength).slice().buffer :
     null;
-  if (!bytes) throw new Error("moon-map: data: read takes a URL, a Blob or bytes");
+  if (!bytes) throw new Error("mbt-map: data: read takes a URL, a Blob or bytes");
   transfer.push(bytes);
   return { bytes };
 }
 
 async function call(format: DataFormat, source: object, options: ReadOptions, transfer: Transferable[]): Promise<DataTable> {
   const { layer, encoding } = options;
-  if (layer !== undefined && typeof layer !== "string") throw new Error("moon-map: data: invalid layer");
-  if (encoding !== undefined && typeof encoding !== "string") throw new Error("moon-map: data: invalid encoding");
-  if (options.crs !== undefined && (format === "kml" || format === "gpx" || format === "geojson")) throw new Error("moon-map: data: KML, GPX and GeoJSON are always in EPSG:4326; options.crs is for other formats");
-  if (options.bbox !== undefined && format !== "flatgeobuf") throw new Error("moon-map: data: options.bbox is for FlatGeobuf");
+  if (layer !== undefined && typeof layer !== "string") throw new Error("mbt-map: data: invalid layer");
+  if (encoding !== undefined && typeof encoding !== "string") throw new Error("mbt-map: data: invalid encoding");
+  if (options.crs !== undefined && (format === "kml" || format === "gpx" || format === "geojson")) throw new Error("mbt-map: data: KML, GPX and GeoJSON are always in EPSG:4326; options.crs is for other formats");
+  if (options.bbox !== undefined && format !== "flatgeobuf") throw new Error("mbt-map: data: options.bbox is for FlatGeobuf");
   const bbox = options.bbox === undefined ? undefined : bboxArg(options.bbox);
   const crs = options.crs === undefined ? undefined : await crsArg(options.crs, "data");
   const args = { format, options: { ...(format === "csv" ? csvArgs(options) : {}), crs, layer, encoding, bbox }, ...source };
@@ -159,10 +159,10 @@ export async function read(input: Input | ArrayLike<File> | ShapefileParts<Input
   const files = Array.isArray(input) || (typeof FileList !== "undefined" && input instanceof FileList) ? Array.from(input as ArrayLike<File>) : null;
   if (files?.length === 1) return read(files[0], options);
   const parts = files ? shapefileParts(files) : (input as ShapefileParts<Input>)?.shp !== undefined ? (input as ShapefileParts<Input>) : null;
-  if (files && !parts) throw new Error("moon-map: data: of several files, read takes a shapefile's (one .shp and its .dbf, .prj, .cpg)");
+  if (files && !parts) throw new Error("mbt-map: data: of several files, read takes a shapefile's (one .shp and its .dbf, .prj, .cpg)");
   if (parts) {
     const format = options.format ?? "shapefile";
-    if (format !== "shapefile") throw new Error("moon-map: data: a shapefile's parts need format \"shapefile\"");
+    if (format !== "shapefile") throw new Error("mbt-map: data: a shapefile's parts need format \"shapefile\"");
     const sources: Record<string, object> = {};
     for (const [k, v] of Object.entries(parts)) if (v !== undefined) sources[k] = sourceOf(v, options, transfer);
     return call(format, { parts: sources }, options, transfer);
@@ -174,7 +174,7 @@ export async function read(input: Input | ArrayLike<File> | ShapefileParts<Input
 
 /** Reads `text` (CSV, WKT, hexadecimal WKB, TopoJSON, KML, GPX or GeoJSON) as `options.format`. */
 export async function parse(text: string, options: ReadOptions & { format: DataFormat }): Promise<DataTable> {
-  if (typeof text !== "string") throw new Error("moon-map: data: parse takes a string");
+  if (typeof text !== "string") throw new Error("mbt-map: data: parse takes a string");
   const bytes = new TextEncoder().encode(text).buffer;
   return call(formatFor(options, null), { bytes }, options, [bytes]);
 }
@@ -191,9 +191,9 @@ export interface WriteOptions extends DataOptions, CsvWriteOptions {
  */
 export async function write(input: DataTable | object, options: WriteOptions): Promise<string> {
   const { format } = options ?? {};
-  if (!["geojson", "csv", "kml"].includes(format)) throw new Error(`moon-map: data: unknown write format ${String(format)}`);
+  if (!["geojson", "csv", "kml"].includes(format)) throw new Error(`mbt-map: data: unknown write format ${String(format)}`);
   if (!(input instanceof DataTable)) {
-    if (!input || typeof input !== "object") throw new Error("moon-map: data: write takes a DataTable or a GeoJSON object");
+    if (!input || typeof input !== "object") throw new Error("mbt-map: data: write takes a DataTable or a GeoJSON object");
     if (format === "geojson") return JSON.stringify(input);
     const { workerUrl, wasmUrl, projWasmUrl, xmlUrl, geotiffUrl } = options;
     input = await parse(JSON.stringify(input), { workerUrl, wasmUrl, projWasmUrl, xmlUrl, geotiffUrl, format: "geojson" });
@@ -242,7 +242,7 @@ export interface Raster {
 }
 
 const fail = (what: string): never => {
-  throw new Error(`moon-map: data: invalid ${what}`);
+  throw new Error(`mbt-map: data: invalid ${what}`);
 };
 
 const isFour = (v: unknown): boolean => Array.isArray(v) && v.length === 4 && v.every(Number.isFinite);
@@ -311,7 +311,7 @@ export async function rasterTile(input: Input, z: number, x: number, y: number, 
 }
 
 /**
- * XYZ tile `z`/`x`/`y` of a `reprojected` source (npm/README.md; moon-map/services' `wmsSource` and `wmtsSource` make them) as a PNG,
+ * XYZ tile `z`/`x`/`y` of a `reprojected` source (npm/README.md; mbt-map/services' `wmsSource` and `wmtsSource` make them) as a PNG,
  * or null where it shows nothing. `transformRequest` is asked once with the source's template: its headers and credentials go
  * with each request.
  */

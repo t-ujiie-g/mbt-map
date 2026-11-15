@@ -1,4 +1,4 @@
-// moon-map/3d's tiles layer on bench/npm/pages/tiles: the synthetic b3dm tileset (bench/tiles/synthetic.mjs)
+// mbt-map/3d's tiles layer on bench/npm/pages/tiles: the synthetic b3dm tileset (bench/tiles/synthetic.mjs)
 // (a cmpt of b3dm and instanced i3dm trees among them) is refined into its four tiles up close, coarsened to its root from afar, and drawn on the globe;
 // PLATEAU's Draco-compressed buildings around Tokyo Station are refined and drawn; a click picks a
 // feature with its batch table's properties; a pnts and a glTF of points (tiles/points) are drawn and picked.

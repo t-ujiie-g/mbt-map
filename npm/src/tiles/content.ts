@@ -1,4 +1,4 @@
-// A 3D tile's content for moon-map/3d: Batched 3D Model (b3dm), Instanced 3D Model (i3dm), Point Cloud
+// A 3D tile's content for mbt-map/3d: Batched 3D Model (b3dm), Instanced 3D Model (i3dm), Point Cloud
 // (pnts), Composite (cmpt) of those, or a glTF itself (3D Tiles 1.1).
 import { readGltf, type Attribute, type DracoDecode, type Material, type MeshoptDecode, type Model } from "../model/gltf.ts";
 import { cross, eastNorthUp, normalize, type Vec3 } from "./geo.ts";

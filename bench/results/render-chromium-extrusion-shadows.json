@@ -5,14 +5,14 @@
     "viewport": "1280x800",
     "dpr": 2,
     "pitch": 45,
-    "style": "bench/maplibre/style.json, buildings extruded 30 m (ftCode 3103) or 8 m, moonmap: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"
+    "style": "bench/maplibre/style.json, buildings extruded 30 m (ftCode 3103) or 8 m, mbtmap: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"
   },
   "params": {
     "runs": 11,
     "statistic": "median of runs"
   },
   "sizes": {
-    "moon-map": {
+    "mbt-map": {
       "main": 148160,
       "worker": 96820
     },
@@ -22,7 +22,7 @@
     }
   },
   "summary": {
-    "moon-map": {
+    "mbt-map": {
       "idle": 242.07500004768372,
       "scenarios": {
         "pan": {
@@ -90,9 +90,9 @@
     }
   },
   "runs": {
-    "moon-map": [
+    "mbt-map": [
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 39.189999997615814,
           "imported": 53.5349999666214,
@@ -165,7 +165,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 35,
           "imported": 48.049999952316284,
@@ -238,7 +238,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.610000014305115,
           "imported": 47.4549999833107,
@@ -311,7 +311,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.74499994516373,
           "imported": 47.77499997615814,
@@ -384,7 +384,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.55999994277954,
           "imported": 47.544999957084656,
@@ -457,7 +457,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.60000002384186,
           "imported": 47.480000019073486,
@@ -530,7 +530,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.34999996423721,
           "imported": 47.52999997138977,
@@ -603,7 +603,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.469999969005585,
           "imported": 47.5799999833107,
@@ -676,7 +676,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 35.14500004053116,
           "imported": 48.02500003576279,
@@ -749,7 +749,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 35.37999999523163,
           "imported": 48.605000019073486,
@@ -822,7 +822,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 34.3299999833107,
           "imported": 47.064999997615814,

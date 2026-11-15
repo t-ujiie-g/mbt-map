@@ -79,4 +79,4 @@ for (const k of [0, 20]) {
 }
 env.dispose(gsiId);
 
-await writeResults("surface-node", { tiles: TILES, statistic: TIMING, columns: "moon-map: the dataset's table (with the property name and numbers) into surface.wasm, the export, a table result read back into analysis.wasm as a dataset (f64s for dbscan and kmeans); tablesIn: the copies in alone; exportOnly: the copies in and the export, its table left in surface.wasm" }, all);
+await writeResults("surface-node", { tiles: TILES, statistic: TIMING, columns: "mbt-map: the dataset's table (with the property name and numbers) into surface.wasm, the export, a table result read back into analysis.wasm as a dataset (f64s for dbscan and kmeans); tablesIn: the copies in alone; exportOnly: the copies in and the export, its table left in surface.wasm" }, all);

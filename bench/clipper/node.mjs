@@ -1,4 +1,4 @@
-// Dissolve, 10 m buffer and water clip of each fixture tile's buildings: moonmap's wasm modules vs
+// Dissolve, 10 m buffer and water clip of each fixture tile's buildings: mbtmap's wasm modules vs
 // Turf.js 7.4.0 (polyclip-ts, JSTS), totals over the first tiles, median of runs.
 // Usage: node clipper/node.mjs [--runs=5] [--tiles=5]
 import { readFile, readdir, writeFile } from "node:fs/promises";
@@ -19,11 +19,11 @@ const tileCount = Number(arg("tiles", 5));
 
 let a;
 const { instance: ai } = await WebAssembly.instantiate(
-  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/analysis_worker/analysis_worker.wasm")),
+  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/analysis_worker/analysis_worker.wasm")),
   { Math, host: { number: hostNumber(() => a.memory) } },
 );
 a = ai.exports;
-const { instance: gi } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/geometry_worker/geometry_worker.wasm")), {});
+const { instance: gi } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/geometry_worker/geometry_worker.wasm")), {});
 const g = gi.exports;
 const put = (e, bytes) => {
   const at = e.prepare_input(bytes.length);
@@ -92,21 +92,21 @@ const total = (fn) => {
 };
 const med = (xs) => [...xs].sort((p, q) => p - q)[xs.length >> 1];
 
-// Turf's clip meets each building with only the water polygons near it, as moonmap does.
+// Turf's clip meets each building with only the water polygons near it, as mbtmap does.
 const cases = {
   dissolve: {
-    moonmap: (t, d) => geometry([d.buildings], () => g.dissolve()),
-    moonmapGeoJSON: (t, d) => geometry([d.buildings], () => g.dissolve(), true),
+    mbtmap: (t, d) => geometry([d.buildings], () => g.dissolve()),
+    mbtmapGeoJSON: (t, d) => geometry([d.buildings], () => g.dissolve(), true),
     turf: (t) => union(t.buildings),
   },
   buffer10m: {
-    moonmap: (t, d) => geometry([d.buildings], () => g.buffer(10, 0, 0, 0, 0)),
-    moonmapGeoJSON: (t, d) => geometry([d.buildings], () => g.buffer(10, 0, 0, 0, 0), true),
+    mbtmap: (t, d) => geometry([d.buildings], () => g.buffer(10, 0, 0, 0, 0)),
+    mbtmapGeoJSON: (t, d) => geometry([d.buildings], () => g.buffer(10, 0, 0, 0, 0), true),
     turf: (t) => buffer(t.buildings, 10, { units: "meters" }),
   },
   clipByWater: {
-    moonmap: (t, d) => geometry([d.buildings, d.water], (lenA) => g.overlay(lenA, 0)),
-    moonmapGeoJSON: (t, d) => geometry([d.buildings, d.water], (lenA) => g.overlay(lenA, 0), true),
+    mbtmap: (t, d) => geometry([d.buildings, d.water], (lenA) => g.overlay(lenA, 0)),
+    mbtmapGeoJSON: (t, d) => geometry([d.buildings, d.water], (lenA) => g.overlay(lenA, 0), true),
     turf: (t) => t.buildings.features.map((b) => {
       const box = bboxOf(b);
       const near = t.water.features.filter((w) => overlaps(box, bboxOf(w)));
@@ -123,7 +123,7 @@ for (const [name, impls] of Object.entries(cases)) {
     total(fn); // warm-up
     summary[name][impl] = Math.round(med(Array.from({ length: runs }, () => total(fn))) * 10) / 10;
   }
-  console.log(`${name.padEnd(12)} moonmap ${summary[name].moonmap} ms (with GeoJSON out ${summary[name].moonmapGeoJSON} ms), Turf ${summary[name].turf} ms`);
+  console.log(`${name.padEnd(12)} mbtmap ${summary[name].mbtmap} ms (with GeoJSON out ${summary[name].mbtmapGeoJSON} ms), Turf ${summary[name].turf} ms`);
 }
 const buildings = tiles.reduce((s, t) => s + t.buildings.features.length, 0);
 await writeFile(path.join(ROOT, "bench/results/geometry-node.json"), JSON.stringify({

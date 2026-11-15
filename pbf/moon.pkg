@@ -1,5 +1,5 @@
 import {
   "moonbitlang/core/debug",
-  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/core",
   "moonbitlang/core/encoding/utf8",
 }

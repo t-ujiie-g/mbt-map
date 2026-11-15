@@ -59,17 +59,17 @@ export const LAYER_GROUPS = [
 /** The groups off at first: the map opens plain, and the panel turns these on. */
 export const HIDDEN_AT_START = new Set(["駅の密度", "散歩道", "駅の略図"]);
 
-/** The datasets read with moon-map/data by id, as `{ name, data }`: overlays that every new style keeps. */
+/** The datasets read with mbt-map/data by id, as `{ name, data }`: overlays that every new style keeps. */
 export const datasets = new Map();
 
 /** The raster overlays of Web services (services.js) by id, as `{ name, source }`: kept by every new style too. */
 export const serviceLayers = new Map();
 
 /** The first vector overlay of `layers` (a style's), which raster overlays go under. */
-export const firstVectorOverlay = (layers) => layers.find((l) => l.metadata?.["moon-map:overlay"] && !serviceLayers.has(l.id))?.id;
+export const firstVectorOverlay = (layers) => layers.find((l) => l.metadata?.["mbt-map:overlay"] && !serviceLayers.has(l.id))?.id;
 
 /** A service overlay's layer. */
-export const serviceLayer = (id) => ({ id, type: "raster", source: id, metadata: { "moon-map:overlay": true }, paint: { "raster-opacity": 0.85 } });
+export const serviceLayer = (id) => ({ id, type: "raster", source: id, metadata: { "mbt-map:overlay": true }, paint: { "raster-opacity": 0.85 } });
 
 /** A tile URL as the showcase reads it: GSI's pale map from the fixtures' standard map with `?local=1`. */
 export const tileUrl = (url) => (local ? url.replace(`${GSI}/pale/`, `${fixtures}gsi-std/`) : url);
@@ -105,7 +105,7 @@ export const datasetSource = (data) => ({ type: "geojson", data });
 
 /** A dataset's layers: its polygons, lines and points, kept apart by geometry. */
 export function datasetLayers(id) {
-  const metadata = { "moon-map:overlay": true };
+  const metadata = { "mbt-map:overlay": true };
   const only = (...types) => ["in", ["geometry-type"], ["literal", types]];
   return [
     { id: `${id}-fill`, type: "fill", source: id, metadata, filter: only("Polygon", "MultiPolygon"), paint: { "fill-color": "#2f5bd0", "fill-opacity": 0.2 } },
@@ -163,7 +163,7 @@ export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, bas
   };
   sources.photo.attribution = "国土地理院 全国最新写真（シームレス）";
   sources.dem.attribution = "国土地理院 標高タイル";
-  const overlay = { "moon-map:overlay": true };
+  const overlay = { "mbt-map:overlay": true };
   const base =
     basemap === "photo"
       ? [{ id: "photo", type: "raster", source: "photo" }, ...GSI_LAYERS.filter((l) => l.id.startsWith("label"))]
@@ -216,7 +216,7 @@ export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, bas
     },
   ];
   // Raster overlays go under the vector ones (places, stations, datasets).
-  const under = layers.findIndex((l) => l.metadata?.["moon-map:overlay"]);
+  const under = layers.findIndex((l) => l.metadata?.["mbt-map:overlay"]);
   for (const [id, { source }] of serviceLayers) sources[id] = source;
   layers.splice(under < 0 ? layers.length : under, 0, ...[...serviceLayers.keys()].map(serviceLayer));
   for (const [id, { data }] of datasets) {
@@ -227,7 +227,7 @@ export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, bas
   for (const [i, l] of layers.entries()) {
     if (off.has(l.id)) layers[i] = { ...l, layout: { ...l.layout, visibility: "none" } };
   }
-  const style = { version: 8, name: `moon-map showcase (${mode})`, sprite: SPRITE, sources, layers };
+  const style = { version: 8, name: `mbt-map showcase (${mode})`, sprite: SPRITE, sources, layers };
   if (mode === "3d") {
     style.terrain = { source: "dem", exaggeration: 1.5 };
     style.sky = { "sky-color": "#88C6FC", "horizon-color": "#ffffff", "fog-color": "#ffffff" };

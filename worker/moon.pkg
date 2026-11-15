@@ -3,11 +3,11 @@
 // used by worker/js/worker.mjs, and store_*.mbt back packed tiles per target.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/mvt",
-  "t-ujiie-g/moonmap_engine/raster",
-  "t-ujiie-g/moonmap_engine/style",
-  "t-ujiie-g/moonmap_engine/tess",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/mvt",
+  "t-ujiie-g/mbtmap_engine/raster",
+  "t-ujiie-g/mbtmap_engine/style",
+  "t-ujiie-g/mbtmap_engine/tess",
   "moonbitlang/core/cmp",
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
@@ -28,9 +28,9 @@ options(
 )
 
 import {
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/pbf",
-  "t-ujiie-g/moonmap_engine/tiler",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/pbf",
+  "t-ujiie-g/mbtmap_engine/tiler",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/json",
 } for "test"

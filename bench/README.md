@@ -87,16 +87,16 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 ## tess/ — テッセレーションの黄金テストと速度
 
 - `golden.mjs`：全 fixture の全ポリゴン地物について、MapLibre の塗りの処理（`classifyRings(geometry, 500)` →
-  ポリゴンごとに earcut 3.2.4）と、moon-map の `FillTessellator` の頂点・インデックスを地物ごとの FNV ハッシュで
+  ポリゴンごとに earcut 3.2.4）と、mbt-map の `FillTessellator` の頂点・インデックスを地物ごとの FNV ハッシュで
   比較する（js ビルドは地物ごと、wasm-gc ビルドはタイル全体）。同じ三角形分割に対し earcut の `deviation`
   （面積の相対誤差）も報告する。
 - `node.mjs` / `browser.mjs`：`maplibre/style.json` が描く内容（面レイヤーのポリゴン、線レイヤーの線をスタイルの
-  filter / join / cap どおりに）を moon-map でデコード＋テッセレーションする時間と、同じスタイルでの MapLibre
+  filter / join / cap どおりに）を mbt-map でデコード＋テッセレーションする時間と、同じスタイルでの MapLibre
   `WorkerTile.parse` を同じ Worker で計測する。MapLibre 側はスタイル式の評価・paint 属性・FeatureIndex・GPU 用
-  バッファ詰めまで含むので、moon-map に有利な比較である。JS の `classifyRings + earcut` 行と `decode only` 行の差で
+  バッファ詰めまで含むので、mbt-map に有利な比較である。JS の `classifyRings + earcut` 行と `decode only` 行の差で
   earcut 単体を比べる。
 
-## render/ — 描画（moon-map と MapLibre）
+## render/ — 描画（mbt-map と MapLibre）
 
 `maplibre/style.json` をそのまま両エンジンに渡し、同じタイル・同じカメラ操作で計測する（Chromium + Metal GPU、
 1280×800、DPR 2、11 回の中央値。最初の数回はブラウザが温まっておらず遅いため、5 回では中央値がぶれた）。
@@ -104,11 +104,11 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 （結果のファイル名に付く）。
 
 - 初回描画：ナビゲーション開始から最初の `idle`（見えているタイルが揃って描かれた）まで。import 完了・
-  地図生成の時刻も記録する。moon-map は `bundle/main` を esbuild で minify したもの（アプリが配信する形）を読む。
-- フレーム：毎フレーム rAF でカメラを設定し（moon-map は `map_set_camera`、MapLibre は `jumpTo`）、
+  地図生成の時刻も記録する。mbt-map は `bundle/main` を esbuild で minify したもの（アプリが配信する形）を読む。
+- フレーム：毎フレーム rAF でカメラを設定し（mbt-map は `map_set_camera`、MapLibre は `jumpTo`）、
   パン・ズームの各 3 秒間の rAF 間隔と、フレームごとの rAF コールバック CPU 時間の合計を測る（両エンジンとも
   描画は rAF 内）。`--uncapped`（vsync なし）では rAF に GPU 同期待ちが入るので CPU 時間は比較に使わない。
-- サイズ：moon-map は minify 後の main bundle と、Worker（グルー JS＋wasm-gc）の gzip -9。
+- サイズ：mbt-map は minify 後の main bundle と、Worker（グルー JS＋wasm-gc）の gzip -9。
 
 ## worker/ — Worker のタイル処理
 
@@ -120,7 +120,7 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 ## npm/ — npm パッケージの確認
 
 `pack-test.mjs` は `npm/` をビルドして `npm pack` し、できた tarball を examples と試験用のページ（`bench/npm/pages/`）の
-`node_modules/moon-map` に展開する（アプリがインストールするのと同じ形。`npm/prepare.mjs`）。そのうえで Chromium で次を確かめる。
+`node_modules/mbt-map` に展開する（アプリがインストールするのと同じ形。`npm/prepare.mjs`）。そのうえで Chromium で次を確かめる。
 
 - `examples/{html,element,react}`（ショーケース。`?local=1` で fixture を読む）：3 つとも同じく、解析（5 km 以内の地点、平面直角座標系の
   座標）、3D の切り替え、地点への移動、コントロール（`checks/controls.mjs`）、クラスタ（`clusters.mjs`）、検索（`search.mjs`）、
@@ -129,9 +129,9 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 - `bench/npm/pages/npm`（ファサード）：イベント、出典の表示、エラーの経路と、`checks/` のカメラ（`camera.mjs`）、スタイルの変更
   （`style.mjs`）、画像（`images.mjs`）、地物の状態（`state.mjs`）、問い合わせとマウスのイベント（`query.mjs`）、ラスタ・TileJSON・
   PMTiles のソース（`tile-sources.mjs`）、追跡と画像の書き出し（`track-export.mjs`）。
-- `bench/npm/pages/element`（素の HTML の `<moon-map>`）：属性で `moon-map-move` が1回だけ出ること、不正な属性が `moon-map-error` になり値が変わらない
+- `bench/npm/pages/element`（素の HTML の `<mbt-map>`）：属性で `mbt-map-move` が1回だけ出ること、不正な属性が `mbt-map-error` になり値が変わらない
   こと、移動では地図を保ち、外すと解放し、戻すと同じカメラで作り直すこと、帰属表示が右下の1行であること。
-- `bench/npm/pages/{geojson,analysis}`：GeoJSON ソースと `moon-map/analysis` の遅延読み込み、結果、エラーの経路。
+- `bench/npm/pages/{geojson,analysis}`：GeoJSON ソースと `mbt-map/analysis` の遅延読み込み、結果、エラーの経路。
 - `bench/npm/pages/media`（image・video・canvas のソース、`media.mjs`）、`bench/npm/pages/custom`（カスタムレイヤー、`custom.mjs`）。
 
 fixture がなくてもタイルが 404 になるだけで地図は読み込まれるので、CI でも動く（`--screenshots=dir` で画面を保存する）。
@@ -145,14 +145,14 @@ fixture がなくてもタイルが 404 になるだけで地図は読み込ま�
 - `split/analysis_entry`：それを単独の wasm-gc モジュールにしたもの。`split/combined_entry`：表示用 Worker に同じコードを入れた一体型。`split/empty_entry`：空のモジュール（ランタイムの下限）。
 - サイズ（gzip）に加えて、3ブラウザで、モジュール Worker の起動時間と、各モジュールの読み込み（fetch・コンパイル・インスタンス化）、解析の初回と温まった後の時間を測る。1万ポリゴン、15回の中央値。ローカルの配信なので、ネットワークの時間は含まない（サイズから見積もる）。
 
-## analysis/ — 解析（`moon-map/analysis`）
+## analysis/ — 解析（`mbt-map/analysis`）
 
 配布する解析の wasm（`analysis_worker`）を、Worker のグルーを通さずに直接呼ぶ（`load.mjs`）。比べる相手は Turf.js 7.4.0 と flatbush 4.6.2
 （`reference.mjs`）。データは geojson/ の fixture。
 
 - `golden.mjs`：buildings・mixed・world・roads・points の全地物の面積・長さ・重心・bbox、各 200 個の矩形検索、各 400 個の近傍検索（k=10 と 1）、
   点の内外判定・集計・グリッド集計を比べる。値はビット単位で一致しなければならない。
-- `node.mjs` / `browser.mjs`：同じ処理の速度。JS は `JSON.parse` 済みの GeoJSON に対して、moon-map は読み込んだデータセットに対して測る
+- `node.mjs` / `browser.mjs`：同じ処理の速度。JS は `JSON.parse` 済みの GeoJSON に対して、mbt-map は読み込んだデータセットに対して測る
   （Worker とのメッセージは含まない）。5回の中央値。
 
 ## geojson/ — GeoJSON の読み込みとタイル分割
@@ -164,7 +164,7 @@ fixture がなくてもタイルが 404 になるだけで地図は読み込ま�
 - `golden.mjs`：geojson-vt の既定値、MapLibre の GeoJSON ソースの設定（4096 単位に換算）、ラップなしの3つで、データの範囲の全タイルを
   geojson-vt と比べる（地物の順・型・行・整数座標）。js ビルドは中身をそのまま、wasm-gc ビルドはタイルごとのハッシュで比べる。メモリを
   多く使うので `--max-old-space-size=8192` で動かす。
-- `node.mjs` / `browser.mjs`：geojson-vt（デコード＋`JSON.parse`、索引、タイル切り出し）と moon-map の wasm-gc ビルド（線形メモリへの
+- `node.mjs` / `browser.mjs`：geojson-vt（デコード＋`JSON.parse`、索引、タイル切り出し）と mbt-map の wasm-gc ビルド（線形メモリへの
   コピー＋読み込み、索引、タイル切り出し）を比べる。MapLibre の GeoJSON ソースの設定で、z6〜16 のデータ上の全タイルを、毎回新しい
   索引から切り出す（キャッシュではなく実際に切る）。5回の中央値。
 - 読み込み方の比較：A は MoonBit で GeoJSON のテキストを読む（本番の方式）。B は JS の `JSON.parse` と JS のループで `geom` の表のバイト列
@@ -176,6 +176,6 @@ fixture がなくてもタイルが 404 になるだけで地図は読み込ま�
 `raster/`、`pmtiles/`、`query/`、`track/`、`export/`、`ui/`、`labels/`、`style/`（`style:golden`・`style:public`・`style:compat`・
 `expression:golden`・`color:golden`。場面は `style/scenes.mjs`、公開のスタイルは `style/public-styles.mjs`）、`camera/`、`terrain/`、
 `proj/`、`clipper/`（`clipper:golden`・`buffer:check`・`geometry:node`）、`geodesic/`、`draw/`（`draw:golden`・`draw:many`・
-`draw:setdata`）、`data/`（`data:golden`、`fgb:golden`、`xml:golden`、`write:golden`、`geotiff:golden`：`moon-map/data` の読み書きを
+`draw:setdata`）、`data/`（`data:golden`、`fgb:golden`、`xml:golden`、`write:golden`、`geotiff:golden`：`mbt-map/data` の読み書きを
 papaparse、betterknown、wkx、shpjs、topojson-client、flatgeobuf、togeojson、tokml、geotiff と比べる。すべて 0 differ のまま。共通の部品は `data/common.mjs`）、
 `geotiff/`（`geotiff:tiles`：`geotiff` ソースのタイルを元の画素と比べる。すべて ok のまま）。開発用のページは `pages/`（basic、terrain）にあり、`npm run example` で配信する。

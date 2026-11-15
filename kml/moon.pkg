@@ -2,16 +2,16 @@
 // `gpx()` read them (over `@xml.Document`). Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/xml",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/xml",
   "moonbitlang/core/cmp",
   "moonbitlang/core/double",
 }
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
 } for "test"

@@ -2,7 +2,7 @@
 // coordinates in React, from the controllers the plain-DOM examples draw with the DOM.
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { createIdentify } from "moon-map/ui";
+import { createIdentify } from "mbt-map/ui";
 import { createCoordinateReadout } from "../../shared/coordinates.js";
 import { createShowcaseDraw } from "../../shared/draw.js";
 import { createAnalysis, routeAnalysisClicks } from "../../shared/analyze.js";

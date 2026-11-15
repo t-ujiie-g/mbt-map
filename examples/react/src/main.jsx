@@ -1,9 +1,9 @@
-// The showcase in React 19 with <moon-map>: attributes and properties as
+// The showcase in React 19 with <mbt-map>: attributes and properties as
 // props, the element's CustomEvents as `on<event>` props. The map keeps its
 // own state; React renders the panel from the events.
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import "moon-map/element";
+import "mbt-map/element";
 import { describe } from "../../shared/analysis.js";
 import { pinDestinations, saveImage } from "../../shared/overlay.js";
 import { panelControllers } from "../../shared/panel.js";
@@ -92,21 +92,21 @@ function App() {
 
   return (
     <>
-      <moon-map
+      <mbt-map
         ref={ref}
         center="139.7671,35.6812"
         zoom="15"
         attribution-control="false"
-        onmoon-map-load={onLoad}
-        onmoon-map-move={(e) => setCamera(e.detail)}
-        onmoon-map-moveend={(e) => update(e.detail.center)}
+        onmbt-map-load={onLoad}
+        onmbt-map-move={(e) => setCamera(e.detail)}
+        onmbt-map-moveend={(e) => update(e.detail.center)}
       />
       {map && <MapControls map={map} status={status} />}
       {tools?.coordinates}
       <aside className="panel">
         <div className={collapsed ? "panel-card collapsed" : "panel-card"}>
           <header className="brand">
-            <a className="logo" href="../">moon-map</a>
+            <a className="logo" href="../">mbt-map</a>
             <nav className="variants" aria-label="書き方">
               {VARIANTS.map(([path, label]) => <a key={path} href={`../${path}/`} aria-current={path === "react" ? "page" : undefined}>{label}</a>)}
             </nav>

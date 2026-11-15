@@ -128,7 +128,7 @@ export interface FitBoundsOptions extends FlyToOptions {
 
 function num(v: number | undefined): number {
   if (v === undefined) return NaN;
-  if (!Number.isFinite(v)) throw new TypeError(`moon-map: camera values must be finite numbers: ${String(v)}`);
+  if (!Number.isFinite(v)) throw new TypeError(`mbt-map: camera values must be finite numbers: ${String(v)}`);
   return v;
 }
 
@@ -167,10 +167,10 @@ export interface Limits {
 /** Throws unless the limits are finite, within `MIN_ZOOM`-`MAX_ZOOM_LIMIT` and `MIN_PITCH`-`MAX_PITCH`, min not above max. */
 export function checkLimits(l: Limits): void {
   for (const v of [l.minZoom, l.maxZoom, l.minPitch, l.maxPitch]) {
-    if (!Number.isFinite(v)) throw new TypeError(`moon-map: zoom and pitch limits must be finite numbers: ${String(v)}`);
+    if (!Number.isFinite(v)) throw new TypeError(`mbt-map: zoom and pitch limits must be finite numbers: ${String(v)}`);
   }
   if (l.minZoom > l.maxZoom || l.minPitch > l.maxPitch || l.minZoom < MIN_ZOOM || l.maxZoom > MAX_ZOOM_LIMIT || l.minPitch < MIN_PITCH || l.maxPitch > MAX_PITCH) {
-    throw new RangeError("moon-map: zoom limits must lie in 0-24 and pitch limits in 0-85, min not above max");
+    throw new RangeError("mbt-map: zoom limits must lie in 0-24 and pitch limits in 0-85, min not above max");
   }
 }
 

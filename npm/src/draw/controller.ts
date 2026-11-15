@@ -20,13 +20,13 @@ export interface DrawnFeature {
 
 type Plain = { properties?: Record<string, unknown> | null; geometry: { type: string; coordinates: unknown } };
 
-/** What `moon-map/analysis` gives for splitting and merging: `splitFeatures` and `mergeFeatures`. */
+/** What `mbt-map/analysis` gives for splitting and merging: `splitFeatures` and `mergeFeatures`. */
 export interface GeometryOps {
   split(features: Plain[], line: { type: string; coordinates: unknown }): Promise<Plain[]>;
   merge(features: Plain[]): Promise<Plain>;
 }
 
-/** What `moon-map/geodesic` gives for circles: `circle` and `inverse`. */
+/** What `mbt-map/geodesic` gives for circles: `circle` and `inverse`. */
 export interface Geodesic {
   circle(center: Position, radius: number, options?: { steps?: number }): Promise<Position[]>;
   inverse(from: Position, to: Position): Promise<{ distance: number }>;
@@ -35,8 +35,8 @@ export interface Geodesic {
 /**
  * `mode` (null for none); `features` drawn; `drawing` the shape under way (with the pointer) or null;
  * `vertices` placed for it; `selection` the ids picked in `"select"` mode (Shift adds), `selected` the
- * last of them; `canUndo` and `canRedo`; `error` why the last split or circle failed (moon-map/analysis or
- * moon-map/geodesic refused it), null once the features change.
+ * last of them; `canUndo` and `canRedo`; `error` why the last split or circle failed (mbt-map/analysis or
+ * mbt-map/geodesic refused it), null once the features change.
  */
 export interface DrawState {
   mode: EditMode | null;
@@ -51,8 +51,8 @@ export interface DrawState {
 }
 
 /**
- * `geodesic`: moon-map/geodesic (circles need it); `geometry`: moon-map/analysis's `{ split: splitFeatures, merge: mergeFeatures }`;
- * `id`: the source and layer prefix (default "moon-map-draw"); `color` "#3b6ed6"; `steps` per circle 64; `precision` 9 decimals;
+ * `geodesic`: mbt-map/geodesic (circles need it); `geometry`: mbt-map/analysis's `{ split: splitFeatures, merge: mergeFeatures }`;
+ * `id`: the source and layer prefix (default "mbt-map-draw"); `color` "#3b6ed6"; `steps` per circle 64; `precision` 9 decimals;
  * `snapping`: to other shapes' `vertices` and `lines` within `pixels` (default 40, as terra-draw), `true` for both.
  */
 export interface DrawOptions {
@@ -106,7 +106,7 @@ class DrawStore extends Store<DrawState> implements Draw {
     super({ mode: null, selected: null, selection: [], features: [], drawing: null, vertices: [], canUndo: false, canRedo: false, error: null });
     this.#map = map;
     this.#options = options;
-    this.#id = options.id ?? "moon-map-draw";
+    this.#id = options.id ?? "mbt-map-draw";
     this.listen(map, "click", (e) => this.#click(lngLat(e), e.point, e.originalEvent?.shiftKey));
     this.listen(map, "mousemove", (e) => this.#move(lngLat(e), e.point));
     this.listen(map, "mousedown", (e) => this.#press(lngLat(e), e.point));
@@ -116,8 +116,8 @@ class DrawStore extends Store<DrawState> implements Draw {
   }
 
   setMode(mode: EditMode | null): void {
-    if (mode === "circle" && !this.#options.geodesic) throw new Error("moon-map: draw: circles need the `geodesic` option (moon-map/geodesic)");
-    if (mode === "split" && !this.#options.geometry) throw new Error("moon-map: draw: splitting needs the `geometry` option (moon-map/analysis)");
+    if (mode === "circle" && !this.#options.geodesic) throw new Error("mbt-map: draw: circles need the `geodesic` option (mbt-map/geodesic)");
+    if (mode === "split" && !this.#options.geometry) throw new Error("mbt-map: draw: splitting needs the `geometry` option (mbt-map/analysis)");
     this.#reset();
     if (mode) this.#layers();
     const map = this.#map;
@@ -143,7 +143,7 @@ class DrawStore extends Store<DrawState> implements Draw {
     this.#show({ selection, selected: selection.at(-1) ?? null });
   }
 
-  /** The selected features as one (moon-map/analysis's `merge`), replacing them; one step to undo. */
+  /** The selected features as one (mbt-map/analysis's `merge`), replacing them; one step to undo. */
   async merge(): Promise<void> {
     const ids = this.state.selection;
     const geometry = this.#options.geometry;
@@ -158,7 +158,7 @@ class DrawStore extends Store<DrawState> implements Draw {
     this.select(feature.id);
   }
 
-  /** The features (the selection, or all) cut by `line` (moon-map/analysis's `split`), each replaced by its pieces. */
+  /** The features (the selection, or all) cut by `line` (mbt-map/analysis's `split`), each replaced by its pieces. */
   async #split(line: DrawnFeature["geometry"]): Promise<void> {
     const before = this.state.features;
     const ids = this.state.selection.length > 0 ? this.state.selection : before.map((f) => f.id);
@@ -472,7 +472,7 @@ class DrawStore extends Store<DrawState> implements Draw {
 }
 
 /** The property that ties a piece of a split to its feature. */
-const SOURCE = "moon-map:draw-source";
+const SOURCE = "mbt-map:draw-source";
 
 /** The selection without the ids `features` no longer has. */
 function kept(features: DrawnFeature[], selection: string[]): Pick<DrawState, "selection" | "selected"> {

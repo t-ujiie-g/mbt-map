@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/simplify"
+package "t-ujiie-g/mbtmap_engine/simplify"
 
 import {
-  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/geom",
 }
 
 // Values

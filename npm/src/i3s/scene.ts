@@ -1,4 +1,4 @@
-// I3S scene layers (OGC I3S 1.7 and later, with node pages) for moon-map/3d: the layer's resources, its
+// I3S scene layers (OGC I3S 1.7 and later, with node pages) for mbt-map/3d: the layer's resources, its
 // nodes as tiles of the shared traversal, and the level of detail @loaders.gl/tiles 4.5.4 selects I3S
 // nodes with (`getLodStatus`, `getProjectedRadius`).
 import { add, cross, eastNorthUp, GLOBE_RADIUS, length, MERCATOR_RADIUS, normalize, scale, sub, toCartesian, toCartographic, type Vec3 } from "../tiles/geo.ts";
@@ -9,7 +9,7 @@ import { Tile, type FrameState } from "../tiles/tileset.ts";
 /** The most nodes a layer may name. */
 export const MAX_NODES = 1_000_000;
 
-/** A node of a node page (I3S 1.7 `node`), as far as moonmap reads it. */
+/** A node of a node page (I3S 1.7 `node`), as far as mbtmap reads it. */
 export interface I3sNode {
   index?: number;
   lodThreshold?: number;

@@ -7,9 +7,9 @@
  */
 export function packPattern(pattern: string): number {
   const cells = pattern.toUpperCase();
-  if (!/^[TF*012]{9}$/.test(cells)) throw new Error(`moon-map: analysis: ${pattern} is not a DE-9IM pattern`);
+  if (!/^[TF*012]{9}$/.test(cells)) throw new Error(`mbt-map: analysis: ${pattern} is not a DE-9IM pattern`);
   if ([0, 1, 3, 4].every((k) => cells[k] === "F" || cells[k] === "*")) {
-    throw new Error(`moon-map: analysis: disjoint features match ${pattern}; use relateMatrix for single pairs`);
+    throw new Error(`mbt-map: analysis: disjoint features match ${pattern}; use relateMatrix for single pairs`);
   }
   return [...cells].reduce((packed, c, k) => packed | ("F012T*".indexOf(c) << (k * 3)), 0);
 }

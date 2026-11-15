@@ -1,7 +1,7 @@
 // A synthetic I3S 3DObject layer near Tokyo Station (./set, written by bench/i3s/synthetic.mjs) streamed by
-// moon-map/3d's I3S layer, for the pack test's i3s check (bench/npm/checks/i3s.mjs).
-import { Map } from "moon-map";
-import { i3sLayer } from "moon-map/3d";
+// mbt-map/3d's I3S layer, for the pack test's i3s check (bench/npm/checks/i3s.mjs).
+import { Map } from "mbt-map";
+import { i3sLayer } from "mbt-map/3d";
 
 const map = new Map({
   container: "map",

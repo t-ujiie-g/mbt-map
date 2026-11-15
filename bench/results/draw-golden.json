@@ -7,7 +7,7 @@
   "rows": [
     {
       "mode": "point",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "1 / 1",
@@ -15,7 +15,7 @@
     },
     {
       "mode": "linestring",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "3 / 3",
@@ -23,7 +23,7 @@
     },
     {
       "mode": "polygon",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "4 / 4",
@@ -31,14 +31,14 @@
     },
     {
       "mode": "rectangle",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "5 / 5"
     },
     {
       "mode": "circle",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "65 / 65",
@@ -46,7 +46,7 @@
     },
     {
       "mode": "edit",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "5 / 5",
@@ -54,7 +54,7 @@
     },
     {
       "mode": "snap",
-      "moonmap": 2,
+      "mbtmap": 2,
       "terradraw": 2,
       "ok": true,
       "vertices": "4 / 4",
@@ -62,14 +62,14 @@
     },
     {
       "mode": "freehand",
-      "moonmap": 1,
+      "mbtmap": 1,
       "terradraw": 1,
       "ok": true,
       "vertices": "17 / 18"
     }
   ],
   "drawn": {
-    "moonmap": {
+    "mbtmap": {
       "point": [
         {
           "type": "Point",

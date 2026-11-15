@@ -1,4 +1,4 @@
-// moonmap vs MapLibre, same style, tiles and camera script, in Chromium with the Metal GPU.
+// mbtmap vs MapLibre, same style, tiles and camera script, in Chromium with the Metal GPU.
 // Usage: node render/run.mjs [--runs=11] [--uncapped] [--labels] [--line-labels] [--terrain] [--extrusion] [--shadows] [--pitch=N]
 // Writes bench/results/render-chromium[-labels][-line-labels][-terrain][-extrusion][-pitchN][-uncapped].json.
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
@@ -22,7 +22,7 @@ const lineLabels = process.argv.includes("--line-labels");
 const terrain = process.argv.includes("--terrain");
 // --extrusion draws the buildings as fill-extrusion (GSI tiles have no heights:
 // 30 m for sturdy buildings, 8 m for others), pitched 45 degrees by default.
-// --shadows (with the extrusions) gives moonmap's style a sun casting shadows (`lights`, moonmap's extension);
+// --shadows (with the extrusions) gives mbtmap's style a sun casting shadows (`lights`, mbtmap's extension);
 // MapLibre, which has no shadows, draws the extrusions alone.
 const shadows = process.argv.includes("--shadows");
 const extrusion = shadows || process.argv.includes("--extrusion");
@@ -104,25 +104,25 @@ if (styleVariant) {
 
 const dpr = 2;
 
-// Shipped sizes: moonmap's js bundle minified as a bundler would, its worker
+// Shipped sizes: mbtmap's js bundle minified as a bundler would, its worker
 // glue and wasm; MapLibre's dist files.
 const gz = async (file) => gzipSync(await readFile(path.join(ROOT, file)), { level: 9 }).length;
-await build({ entryPoints: [path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/moon-map-main.min.js"), logLevel: "warning" });
-await build({ entryPoints: [path.join(ROOT, "worker/js/worker.mjs")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/moon-map-worker.min.js"), logLevel: "warning" });
+await build({ entryPoints: [path.join(ROOT, "_build/js/release/build/t-ujiie-g/mbtmap_engine/bundle/main/main.js")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/mbt-map-main.min.js"), logLevel: "warning" });
+await build({ entryPoints: [path.join(ROOT, "worker/js/worker.mjs")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/mbt-map-worker.min.js"), logLevel: "warning" });
 const sizes = {
-  moonmap: { main: await gz("bench/dist/moon-map-main.min.js"), worker: await gz("bench/dist/moon-map-worker.min.js") + await gz("_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm") },
+  mbtmap: { main: await gz("bench/dist/mbt-map-main.min.js"), worker: await gz("bench/dist/mbt-map-worker.min.js") + await gz("_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm") },
   maplibre: { main: await gz("bench/node_modules/maplibre-gl/dist/maplibre-gl.mjs"), worker: await gz("bench/node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs") },
 };
 
 const { server, origin } = await serve();
 const browser = await chromium.launch({ args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", ...(uncapped ? ["--disable-gpu-vsync", "--disable-frame-rate-limit"] : [])] });
-const results = { moonmap: [], maplibre: [] };
+const results = { mbtmap: [], maplibre: [] };
 for (let i = 0; i < runs; i++) {
-  for (const engine of ["moonmap", "maplibre"]) {
+  for (const engine of ["mbtmap", "maplibre"]) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: dpr });
     const page = await context.newPage();
     page.on("pageerror", (e) => console.log(engine, "pageerror", e.message));
-    await page.goto(`${origin}/bench/render/index.html?engine=${engine}&dpr=${dpr}&pitch=${pitch}&style=/${engine === "moonmap" && shadows ? shadowStyle : style}`);
+    await page.goto(`${origin}/bench/render/index.html?engine=${engine}&dpr=${dpr}&pitch=${pitch}&style=/${engine === "mbtmap" && shadows ? shadowStyle : style}`);
     const t0 = Date.now();
     await page.waitForFunction(() => window.__result, null, { timeout: 120000, polling: 500 }).catch((e) => {
       throw new Error(`${engine}, run ${i}: no result after ${Date.now() - t0} ms (${e.message})`);
@@ -149,7 +149,7 @@ for (const [engine, rs] of Object.entries(results)) {
   };
 }
 const out = {
-  env: { browser: `chromium ${browser.version()}`, uncapped, viewport: "1280x800", dpr, pitch, style: [labels ? "bench/maplibre/style.json + bench/pages/basic labels" : "bench/maplibre/style.json", ...(lineLabels ? ["contour labels along lines"] : []), ...(terrain ? ["terrain on bench/fixtures/gsi-dem as Terrarium, z12-13 halved from it, sky"] : []), ...(extrusion ? ["buildings extruded 30 m (ftCode 3103) or 8 m"] : []), ...(shadows ? ["moon-map: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"] : [])].join(", ") },
+  env: { browser: `chromium ${browser.version()}`, uncapped, viewport: "1280x800", dpr, pitch, style: [labels ? "bench/maplibre/style.json + bench/pages/basic labels" : "bench/maplibre/style.json", ...(lineLabels ? ["contour labels along lines"] : []), ...(terrain ? ["terrain on bench/fixtures/gsi-dem as Terrarium, z12-13 halved from it, sky"] : []), ...(extrusion ? ["buildings extruded 30 m (ftCode 3103) or 8 m"] : []), ...(shadows ? ["mbt-map: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"] : [])].join(", ") },
   params: { runs, statistic: "median of runs" }, sizes, summary, runs: results,
 };
 await writeFile(path.join(ROOT, `bench/results/render-chromium${variant}${uncapped ? "-uncapped" : ""}.json`), JSON.stringify(out, null, 2) + "\n");

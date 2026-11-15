@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/bench/backend/kernel"
+package "t-ujiie-g/mbtmap_engine/bench/backend/kernel"
 
 // Values
 pub fn alloc_churn(Int32, Int32) -> Int32

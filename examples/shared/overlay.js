@@ -29,7 +29,7 @@ export async function saveImage(map) {
   const blob = await map.toBlob({ pixelRatio: 2 });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "moon-map.png";
+  a.download = "mbt-map.png";
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   window.__saved = { type: blob.type, size: blob.size };

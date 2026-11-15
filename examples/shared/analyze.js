@@ -1,8 +1,8 @@
 // The analysis tab: places' Voronoi cells classed by area (field editor columns, jenks as a `step`
 // the legend lists), the shortest way along the drawn roads, and what the center sees (GSI's DEM:
 // a viewshed on a canvas source, a line of sight to a click).
-import { classBreaks, classStep, load, loadDem } from "moon-map/analysis";
-import { createFieldEditor } from "moon-map/ui";
+import { classBreaks, classStep, load, loadDem } from "mbt-map/analysis";
+import { createFieldEditor } from "mbt-map/ui";
 import { PLACES } from "./places.js";
 import { DEM_TILES } from "./style.js";
 import { tileLines } from "./tile-lines.js";

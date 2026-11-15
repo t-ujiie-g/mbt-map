@@ -1,9 +1,9 @@
-// Coordinate reference systems as the workers take them, shared by moon-map/analysis
-// and moon-map/data.
+// Coordinate reference systems as the workers take them, shared by mbt-map/analysis
+// and mbt-map/data.
 
 /**
  * A coordinate reference system: an EPSG code (`6677`, `"EPSG:6677"`, `"urn:ogc:def:crs:EPSG::6677"`),
- * `"CRS84"` (= 4326), a PROJ string, or (in moon-map/analysis) a name given with `defineCrs`. EPSG codes
+ * `"CRS84"` (= 4326), a PROJ string, or (in mbt-map/analysis) a name given with `defineCrs`. EPSG codes
  * known without a definition are listed in the package README.
  */
 export type Crs = string | number;
@@ -22,5 +22,5 @@ export async function crsArg(crs: Crs, entry: string, named?: Map<string, string
     const m = /^(?:EPSG:|URN:OGC:DEF:CRS:EPSG::)?(\d{1,6})$/.exec(key);
     if (m) return Number(m[1]);
   }
-  throw new Error(`moon-map: ${entry}: not a CRS: ${String(crs)}`);
+  throw new Error(`mbt-map: ${entry}: not a CRS: ${String(crs)}`);
 }

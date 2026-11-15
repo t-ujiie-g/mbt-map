@@ -1,5 +1,5 @@
 // Reads each public style (style/public-styles.mjs) with the npm build in Chromium, with every
-// tile and sprite request refused, and lists what moonmap leaves out of it: its `warning` events.
+// tile and sprite request refused, and lists what mbtmap leaves out of it: its `warning` events.
 // node style/compat.mjs [--style=name]
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";

@@ -2,7 +2,7 @@
 // worker glue, for the golden test and the bench.
 import { hostNumber } from "../../wasmio/js/host.mjs";
 
-export const ANALYSIS_WASM = "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/analysis_worker/analysis_worker.wasm";
+export const ANALYSIS_WASM = "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/analysis_worker/analysis_worker.wasm";
 // Mirrors MEASURE_* in analysis_worker/datasets.mbt.
 export const MEASURE = { area: 0, length: 1, centroid: 2, bbox: 3 };
 

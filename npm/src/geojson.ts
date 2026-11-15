@@ -74,7 +74,7 @@ export function createGeoJSONTiles(
   // Why the worker stopped (null while it runs): tiles asked from then on are empty, cluster queries refused.
   let stopped: string | null = null;
   const stop = (why: string): string => {
-    const message = (stopped ??= `moon-map: ${why}`);
+    const message = (stopped ??= `mbt-map: ${why}`);
     worker.terminate();
     for (const resolve of pending.values()) resolve(null);
     pending.clear();
@@ -91,11 +91,11 @@ export function createGeoJSONTiles(
     } else if (msg?.type === "cluster") {
       const [resolve, reject] = asked.get(msg.id) ?? [];
       asked.delete(msg.id);
-      if (typeof msg.error === "string") reject?.(new Error(`moon-map: ${msg.error}`));
+      if (typeof msg.error === "string") reject?.(new Error(`mbt-map: ${msg.error}`));
       else resolve?.(msg.result);
     } else if (msg?.type === "loaded" || msg?.type === "error") {
       const found = [...loaded].find(([, l]) => l.n === msg.source);
-      if (msg.type === "error") onError(new Error(`moon-map: GeoJSON source ${found?.[0]}: ${msg.message}`));
+      if (msg.type === "error") onError(new Error(`mbt-map: GeoJSON source ${found?.[0]}: ${msg.message}`));
       if (!found || msg.id !== found[1].busy) return;
       const [id, l] = found;
       if (msg.fetched instanceof ArrayBuffer) l.fetched = msg.fetched;
@@ -160,7 +160,7 @@ export function createGeoJSONTiles(
     const key = typeof spec.promoteId === "string" ? spec.promoteId : undefined;
     try {
       const features = updateable(l, key);
-      if (!features) throw new Error(`moon-map: GeoJSONSource "${id}": GeoJSON data is not compatible with updateData`);
+      if (!features) throw new Error(`mbt-map: GeoJSONSource "${id}": GeoJSON data is not compatible with updateData`);
       const affected = applySourceDiff(features, diff, key);
       const data = { type: "FeatureCollection", features: [...features.values()] };
       l.updateable = features;
@@ -218,8 +218,8 @@ export function createGeoJSONTiles(
     },
     update(source, diff) {
       const l = loaded.get(source);
-      if (!l) return Promise.reject(new Error(`moon-map: source "${source}" is not a GeoJSON source`));
-      if (!isSourceDiff(diff)) return Promise.reject(new Error(`moon-map: GeoJSON source ${source}: not a GeoJSONSourceDiff`));
+      if (!l) return Promise.reject(new Error(`mbt-map: source "${source}" is not a GeoJSON source`));
+      if (!isSourceDiff(diff)) return Promise.reject(new Error(`mbt-map: GeoJSON source ${source}: not a GeoJSONSourceDiff`));
       if (stopped !== null) return Promise.reject(new Error(stopped));
       const key = typeof l.source.spec.promoteId === "string" ? l.source.spec.promoteId : undefined;
       const copy = JSON.parse(JSON.stringify(diff)) as GeoJSONSourceDiff;
@@ -231,7 +231,7 @@ export function createGeoJSONTiles(
     cluster(source, query) {
       return new Promise((resolve, reject) => {
         const l = loaded.get(source);
-        if (l === undefined) throw new Error(`moon-map: source "${source}" is not a GeoJSON source`);
+        if (l === undefined) throw new Error(`mbt-map: source "${source}" is not a GeoJSON source`);
         if (stopped !== null) throw new Error(stopped);
         const id = nextQuery++;
         worker.postMessage({ type: "cluster", id, source: l.n, ...clusterArgs(query) });

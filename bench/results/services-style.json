@@ -52,7 +52,7 @@
         "mean": 0.25,
         "p99": 5
       },
-      "gap": "tiles of extent 8192 (Esri's at z15 here) quantized to moonmap's TILE_EXTENT 4096 (VISION §4-2): edges move by up to 1/16 px"
+      "gap": "tiles of extent 8192 (Esri's at z15 here) quantized to mbtmap's TILE_EXTENT 4096 (VISION §4-2): edges move by up to 1/16 px"
     },
     {
       "scene": "world-basemap-v2-turned",

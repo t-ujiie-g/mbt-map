@@ -56,7 +56,7 @@ export function ogcLink(links: OGCLink[], rels: string[], prefer?: RegExp): stri
 /** The collections of an OGC API `/collections` document (`base`: its URL). */
 export function readOGCCollections(doc: unknown, base: string): OGCCollection[] {
   const collections = record(doc).collections;
-  if (!Array.isArray(collections)) throw new Error("moon-map: services: not an OGC API collections document");
+  if (!Array.isArray(collections)) throw new Error("mbt-map: services: not an OGC API collections document");
   return collections.map((c) => readOGCCollection(c, base));
 }
 
@@ -101,7 +101,7 @@ function decoded(url: string): string {
   try {
     return decodeURI(url);
   } catch {
-    throw new Error(`moon-map: services: the tile URL ${url} is malformed`);
+    throw new Error(`mbt-map: services: the tile URL ${url} is malformed`);
   }
 }
 
@@ -111,10 +111,10 @@ function decoded(url: string): string {
  */
 export function ogcTileSource(tileset: unknown, base: string): TileSource {
   const t = record(tileset);
-  if (!isWebMercatorQuad(t)) throw new Error("moon-map: services: the tileset is not on WebMercatorQuad");
+  if (!isWebMercatorQuad(t)) throw new Error("mbt-map: services: the tileset is not on WebMercatorQuad");
   const vector = t.dataType === "vector";
   const item = ogcLink(ogcLinks(t, base), ["item"], vector ? /mapbox-vector-tile|mvt|protobuf/ : /image\/(png|jpeg|webp)/);
-  if (!item) throw new Error("moon-map: services: the tileset has no tile URL");
+  if (!item) throw new Error("mbt-map: services: the tileset has no tile URL");
   const tiles = decoded(item).replace(/\{tileMatrix\}/g, "{z}").replace(/\{tileRow\}/g, "{y}").replace(/\{tileCol\}/g, "{x}");
   const limits = Array.isArray(t.tileMatrixSetLimits) ? t.tileMatrixSetLimits.map((l) => Number(record(l).tileMatrix)).filter(Number.isInteger) : [];
   const box = record(t.boundingBox);

@@ -20,7 +20,7 @@ export interface FieldEditor {
   /**
    * Sets `column` (added if new) of every feature, or `only` some, to `value`: a style expression
    * evaluated for each (`Map.evaluateExpression`; `["id"]` the row's id, promoted ids included), or
-   * a function of its row (values from `moon-map/analysis`, say). Writes the changed features with
+   * a function of its row (values from `mbt-map/analysis`, say). Writes the changed features with
    * `updateData` (`setData` when the features lack unique ids).
    */
   calculate(column: string, value: unknown, options?: CalculateOptions): Promise<void>;
@@ -54,9 +54,9 @@ class Editor implements FieldEditor {
   async #calculate(column: string, value: unknown, { only }: CalculateOptions = {}, fresh: boolean): Promise<void> {
     checkColumn(column);
     const table = this.#options.table;
-    if (only && !table) throw new Error("moon-map: field editor: `only` needs a table");
+    if (only && !table) throw new Error("mbt-map: field editor: `only` needs a table");
     return this.#edit((features, rows) => {
-      if (fresh && features.some((f) => f.properties && Object.hasOwn(f.properties, column))) throw new Error(`moon-map: field editor: column ${JSON.stringify(column)} exists`);
+      if (fresh && features.some((f) => f.properties && Object.hasOwn(f.properties, column))) throw new Error(`mbt-map: field editor: column ${JSON.stringify(column)} exists`);
       const passing = new Set(only === "filtered" ? table!.passing(rows) : []);
       const selected = new Set(table?.state.selected);
       const indices = rows.flatMap((r, i) => (!only || (only === "filtered" ? passing.has(r) : r.id !== null && selected.has(String(r.id))) ? [i] : []));
@@ -81,7 +81,7 @@ class Editor implements FieldEditor {
    */
   async #edit(change: (features: Feature[], rows: TableRow[]) => void, columns?: (shown: string[]) => string[]): Promise<void> {
     const source = this.#map.getSource(this.#options.source);
-    if (!source?.getData || !source.setData) throw new Error("moon-map: field editor: only GeoJSON sources can be edited");
+    if (!source?.getData || !source.setData) throw new Error("mbt-map: field editor: only GeoJSON sources can be edited");
     const data = await source.getData();
     const features = featuresOf(data) as Feature[];
     const promoteId = typeof source.promoteId === "string" ? source.promoteId : undefined;

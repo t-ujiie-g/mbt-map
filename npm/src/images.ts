@@ -26,7 +26,7 @@ export function imagePixels(image: ImageInput, draw: (image: CanvasImageSource) 
   if (raw.data instanceof Uint8Array || raw.data instanceof Uint8ClampedArray) {
     const { width, height } = raw as { width: number; height: number };
     if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0 || raw.data.length !== width * height * 4) {
-      throw new Error(`moon-map: image data must be width * height * 4 bytes`);
+      throw new Error(`mbt-map: image data must be width * height * 4 bytes`);
     }
     return { width, height, data: new Uint8Array(raw.data.buffer, raw.data.byteOffset, raw.data.length) };
   }
@@ -36,7 +36,7 @@ export function imagePixels(image: ImageInput, draw: (image: CanvasImageSource) 
 /** `pixelRatio` and `sdf` checked: a positive finite ratio, 1 by default. */
 export function imageOptions(options: StyleImageOptions = {}): { pixelRatio: number; sdf: boolean } {
   const pixelRatio = options.pixelRatio ?? 1;
-  if (!(pixelRatio > 0 && Number.isFinite(pixelRatio))) throw new Error(`moon-map: pixelRatio must be a positive number: ${pixelRatio}`);
+  if (!(pixelRatio > 0 && Number.isFinite(pixelRatio))) throw new Error(`mbt-map: pixelRatio must be a positive number: ${pixelRatio}`);
   return { pixelRatio, sdf: options.sdf === true };
 }
 
@@ -62,7 +62,7 @@ export const MAX_SPRITE_HEIGHT = 4094;
  * for the atlas are left out, and so is anything past `MAX_SPRITE_IMAGES` or twice the sheet's bytes.
  */
 export function spriteImages(index: unknown, sheet: ImagePixels, prefix: string): { name: string; pixels: ImagePixels; pixelRatio: number; sdf: boolean }[] {
-  if (!index || typeof index !== "object") throw new Error("moon-map: a sprite index must be a JSON object");
+  if (!index || typeof index !== "object") throw new Error("mbt-map: a sprite index must be a JSON object");
   const out = [];
   let budget = sheet.data.length * 2;
   for (const [name, e] of Object.entries(index as Record<string, SpriteEntry>)) {
@@ -104,7 +104,7 @@ export function canvasPixels(image: CanvasImageSource): ImagePixels {
   const height = (image as { height: number }).height;
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("moon-map: no 2D canvas to read images");
+  if (!ctx) throw new Error("mbt-map: no 2D canvas to read images");
   ctx.drawImage(image, 0, 0);
   const d = ctx.getImageData(0, 0, width, height).data;
   return { width, height, data: new Uint8Array(d.buffer, d.byteOffset, d.length) };

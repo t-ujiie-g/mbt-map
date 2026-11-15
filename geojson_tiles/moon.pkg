@@ -2,11 +2,11 @@
 // their tiles as encoded columnar tiles (`@tiler.encode_tile`) for the display worker.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/formats",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/wasmio",
-  "t-ujiie-g/moonmap_engine/tiler",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/formats",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/tiler",
 }
 
 supported_targets = "+wasm-gc"

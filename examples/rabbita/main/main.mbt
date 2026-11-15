@@ -1,11 +1,11 @@
 ///|
 /// Where the buttons go: name, place and zoom (with `?local=1` only Tokyo Station has tiles).
-let destinations : Array[(String, @moonmap.LngLat, Double)] = [
-  ("東京駅", @moonmap.lnglat(139.7671, 35.6812), 15.0),
-  ("富士山", @moonmap.lnglat(138.7274, 35.3606), 11.5),
-  ("大阪駅", @moonmap.lnglat(135.4959, 34.7025), 15.0),
-  ("京都駅", @moonmap.lnglat(135.7588, 34.9858), 14.0),
-  ("札幌駅", @moonmap.lnglat(141.3508, 43.0686), 15.0),
+let destinations : Array[(String, @mbtmap.LngLat, Double)] = [
+  ("東京駅", @mbtmap.lnglat(139.7671, 35.6812), 15.0),
+  ("富士山", @mbtmap.lnglat(138.7274, 35.3606), 11.5),
+  ("大阪駅", @mbtmap.lnglat(135.4959, 34.7025), 15.0),
+  ("京都駅", @mbtmap.lnglat(135.7588, 34.9858), 14.0),
+  ("札幌駅", @mbtmap.lnglat(141.3508, 43.0686), 15.0),
 ]
 
 ///|
@@ -109,8 +109,8 @@ fn style() -> @style.Style {
 ///|
 #derive(Eq)
 priv struct Model {
-  camera : @moonmap_rabbita.Camera?
-  clicked : @moonmap_rabbita.Click?
+  camera : @mbtmap_rabbita.Camera?
+  clicked : @mbtmap_rabbita.Click?
   station : String?
   loaded : Bool
   large : Bool
@@ -119,9 +119,9 @@ priv struct Model {
 ///|
 priv enum Msg {
   Loaded
-  Moved(@moonmap_rabbita.Camera)
-  Clicked(@moonmap_rabbita.Click)
-  Picked(Array[@moonmap.Feature])
+  Moved(@mbtmap_rabbita.Camera)
+  Clicked(@mbtmap_rabbita.Click)
+  Picked(Array[@mbtmap.Feature])
   Go(Int32)
   Resize
 }
@@ -141,7 +141,7 @@ fn update(
     Clicked(click) =>
       (
         { ..model, clicked: Some(click), },
-        @moonmap_rabbita.query_features(
+        @mbtmap_rabbita.query_features(
           map_id,
           click.point,
           layers=["stations"],
@@ -163,7 +163,7 @@ fn update(
       let (_, center, zoom) = destinations[i]
       (
         model,
-        @moonmap_rabbita.with_map(map_id, map => {
+        @mbtmap_rabbita.with_map(map_id, map => {
           map.fly_to(center~, zoom~, duration=1200.0)
           @rabbita.none
         }),
@@ -174,7 +174,7 @@ fn update(
       let radius = if large { 14.0 } else { 9.0 }
       (
         { ..model, large, },
-        @moonmap_rabbita.with_map(map_id, map => {
+        @mbtmap_rabbita.with_map(map_id, map => {
           map.set_paint(
             "stations",
             "circle-radius",
@@ -259,14 +259,14 @@ fn view(model : Model, emit : @rabbita.Emit[Msg]) -> @html.Html {
   )
   @html.div(class="app", [
     @html.header([
-      @html.h1("moon-map × rabbita"),
+      @html.h1("mbt-map × rabbita"),
       @html.p(
         class="lead",
-        "MoonBit の Web フレームワーク rabbita のアプリに、moon-map の地図を <moon-map> 要素として置いています。",
+        "MoonBit の Web フレームワーク rabbita のアプリに、mbt-map の地図を <mbt-map> 要素として置いています。",
       ),
     ]),
     @html.nav(buttons),
-    @moonmap_rabbita.view(
+    @mbtmap_rabbita.view(
       map_id,
       css="display:block;height:60vh;min-height:320px",
     ),
@@ -286,7 +286,7 @@ fn app() -> @rabbita.Val[@html.Html] {
           loaded: false,
           large: false,
         },
-        @moonmap_rabbita.setup(
+        @mbtmap_rabbita.setup(
           map_id,
           style(),
           center=destinations[0].1,
@@ -296,7 +296,7 @@ fn app() -> @rabbita.Val[@html.Html] {
     },
     update~,
     subscriptions=(_, emit) => {
-      @moonmap_rabbita.events(
+      @mbtmap_rabbita.events(
         map_id,
         on_load=emit(Loaded),
         on_moveend=emit.map(c => Moved(c)),

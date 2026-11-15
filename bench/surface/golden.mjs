@@ -25,11 +25,11 @@ const TILES = Number(arg("tiles", 4));
 
 let a;
 const { instance: ai } = await WebAssembly.instantiate(
-  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/analysis_worker/analysis_worker.wasm")),
+  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/analysis_worker/analysis_worker.wasm")),
   { Math, host: { number: hostNumber(() => a.memory) } },
 );
 a = ai.exports;
-const { instance: si } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/surface_worker/surface_worker.wasm")), { Math, host: hostText() });
+const { instance: si } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/surface_worker/surface_worker.wasm")), { Math, host: hostText() });
 const s = si.exports;
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

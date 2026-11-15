@@ -1,4 +1,4 @@
-// Strict parsing of <moon-map> attributes: invalid values give null (AGENTS.md
+// Strict parsing of <mbt-map> attributes: invalid values give null (AGENTS.md
 // §8.3). Import-free so tests run it as is.
 
 /** Highest zoom; mirrors `MAX_ZOOM` in core/transform.mbt. */

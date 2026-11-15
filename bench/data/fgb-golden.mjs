@@ -1,4 +1,4 @@
-// moon-map/data's FlatGeobuf vs flatgeobuf 4.6.1's `deserialize` on GSI features (国土地理院ベクトルタイル提供実験),
+// mbt-map/data's FlatGeobuf vs flatgeobuf 4.6.1's `deserialize` on GSI features (国土地理院ベクトルタイル提供実験),
 // every column and geometry type, bboxes from bytes and over HTTP, hostile files: identical or refused
 // by both. Usage: node data/fgb-golden.mjs; writes bench/results/fgb-golden.json.
 import { readFile, writeFile } from "node:fs/promises";
@@ -186,9 +186,9 @@ for (const g of shapes.slice(0, 9)) {
   compare("geometries", `header type ${g.type}`, await ours({ data: bytes }), await theirs(bytes));
 }
 const noGeometry = fgbFile([{ type: "Feature", geometry: null, properties: { a: 1 } }], { columns: [{ name: "a", type: T.Int }] });
-deviation("geometries", "a feature without geometry", await ours({ data: noGeometry }), false, "flatgeobuf throws reading the missing geometry; moon-map/data gives a row without one");
+deviation("geometries", "a feature without geometry", await ours({ data: noGeometry }), false, "flatgeobuf throws reading the missing geometry; mbt-map/data gives a row without one");
 const curve = fgbFile([{ type: "Feature", geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }, properties: {} }], { geometryType: 8 });
-deviation("geometries", "a CircularString", await ours({ data: curve }), true, "flatgeobuf gives curves no coordinates; moon-map/data refuses them");
+deviation("geometries", "a CircularString", await ours({ data: curve }), true, "flatgeobuf gives curves no coordinates; mbt-map/data refuses them");
 
 // --- CRS: an EPSG code, a WKT, and options.crs over the header's ---
 const ix = "+proj=tmerc +lat_0=36 +lon_0=139.8333333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs";
@@ -311,7 +311,7 @@ deviation("hostile", "bbox over a tree pointing back up", await ours({ data: cha
   for (let i = 0; i < 16 * 16; i++) v.setBigUint64(headerEnd + i * 40 + 32, 0n, true);
 }) }, { bbox: [-180, -90, 180, 90] }), true, "flatgeobuf walks it until its queue fails");
 const noColumn = fgbFile([{ type: "Feature", geometry: shapes[0], properties: { b: 1 } }], { columns: [{ name: "a", type: T.Int }, { name: "b", type: T.Int }], headerColumns: 1 });
-deviation("hostile", "a property of no column", await ours({ data: noColumn }), true, "flatgeobuf throws reading the column's name; moon-map/data refuses the file");
+deviation("hostile", "a property of no column", await ours({ data: noColumn }), true, "flatgeobuf throws reading the column's name; mbt-map/data refuses the file");
 
 server.close();
 

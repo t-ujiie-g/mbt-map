@@ -1,6 +1,6 @@
 {
   "version": 8,
-  "name": "moonmap terrain example",
+  "name": "mbtmap terrain example",
   "sources": {
     "dem": {
       "type": "raster-dem",

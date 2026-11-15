@@ -202,7 +202,7 @@ fn Map::drawn_tiles(self : Map, src : SourceTiles) -> Array[TileEntry] {
 
 ///|
 /// Compiles a query's `filter` (JSON text from `JSON.stringify`, or "" for
-/// none); the error if it is not one moonmap evaluates.
+/// none); the error if it is not one mbtmap evaluates.
 fn compile_filter(filter : String) -> Result[@style.Expr?, String] {
   if filter == "" {
     return Ok(None)
@@ -210,7 +210,7 @@ fn compile_filter(filter : String) -> Result[@style.Expr?, String] {
   try
     @style.compile(parse_json(filter), expected=BoolType, path="filter")
   catch {
-    e => Err("moon-map: \{e.message()}")
+    e => Err("mbt-map: \{e.message()}")
   } noraise {
     e => Ok(Some(e))
   }
@@ -232,7 +232,7 @@ pub fn Map::query_rendered(
     Err(why) => return why
   }
   if points.is_empty() {
-    return "moon-map: a query needs a point"
+    return "mbt-map: a query needs a point"
   }
   let style = self.style
   let wanted = style.layers.map(l => {

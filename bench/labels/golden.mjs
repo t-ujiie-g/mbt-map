@@ -340,13 +340,13 @@ try {
     page.on("pageerror", (e) => console.log(name, "pageerror", e.message));
     await page.goto(`${origin}/bench/labels/index.html?style=/${file}&camera=${encodeURIComponent(JSON.stringify(scene.camera))}`);
     await page.waitForFunction(() => window.__ready, null, { timeout: 60000 });
-    const { moonmap, maplibre } = await page.evaluate(() => window.__placed());
+    const { mbtmap, maplibre } = await page.evaluate(() => window.__placed());
     await page.close();
     const theirs = new Map(maplibre.map((l) => [l.key, l]));
-    const ours = new Map(moonmap.map((l) => [l.key, l]));
+    const ours = new Map(mbtmap.map((l) => [l.key, l]));
     const missing = maplibre.filter((l) => !ours.has(l.key)).map((l) => l.key);
-    const extra = moonmap.filter((l) => !theirs.has(l.key)).map((l) => l.key);
-    const both = moonmap.filter((l) => theirs.has(l.key));
+    const extra = mbtmap.filter((l) => !theirs.has(l.key)).map((l) => l.key);
+    const both = mbtmap.filter((l) => theirs.has(l.key));
     const anchors = both
       .filter((l) => ["anchor", "text", "icon", "justify"].some((k) => l[k] !== theirs.get(l.key)[k]))
       .map((l) => `${l.key}: ${l.anchor} ${l.text} ${l.icon} ${l.justify} vs ${theirs.get(l.key).anchor} ${theirs.get(l.key).text} ${theirs.get(l.key).icon} ${theirs.get(l.key).justify}`);
@@ -361,7 +361,7 @@ try {
     let glyphCount = 0;
     for (const l of both.filter((l) => l.glyphs)) {
       const theirGlyphs = theirs.get(l.key).glyphs ?? [];
-      // MapLibre gives spaces a quad and moonmap none: as many of its glyphs as it has more are
+      // MapLibre gives spaces a quad and mbtmap none: as many of its glyphs as it has more are
       // passed over, in order, where they do not lie at ours.
       const far = (g, t) => !hidden(g) && !hidden(t) && Math.hypot(g[0] - t[0], g[1] - t[1]) > GLYPH_TOLERANCE;
       let spaces = theirGlyphs.length - l.glyphs.length;
@@ -383,7 +383,7 @@ try {
     }
     if (arg("debug")) {
       const tiles = (ls) => [...new Set(ls.map((l) => l.key.split(" ")[1]))].sort().join(" ");
-      console.log("tiles", tiles(moonmap), "|", tiles(maplibre));
+      console.log("tiles", tiles(mbtmap), "|", tiles(maplibre));
       for (const l of both) {
         if (diff(l) > Number(arg("debug"))) console.log(l.key, l.anchor, theirs.get(l.key).anchor, JSON.stringify(l.box), JSON.stringify(theirs.get(l.key).box));
       }
@@ -392,7 +392,7 @@ try {
       glyphDiff <= GLYPH_TOLERANCE && angleDiff <= ANGLE_TOLERANCE;
     if (!same) failed++;
     results.push({
-      scene: name, same, maplibre: maplibre.length, moonmap: moonmap.length,
+      scene: name, same, maplibre: maplibre.length, mbtmap: mbtmap.length,
       anchored: both.filter((l) => l.anchor !== null && l.anchor !== "top").length,
       justified: both.filter((l) => l.justify !== null && l.justify !== "left").length, icons: both.filter((l) => l.icon).length,
       boxDiff: Math.round(boxDiff * 1000) / 1000,

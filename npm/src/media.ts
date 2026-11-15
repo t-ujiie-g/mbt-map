@@ -78,7 +78,7 @@ export function quadOf(coordinates: unknown): number[] {
 /** `url` against `base`, http(s) only (AGENTS.md §8.3). */
 export function mediaUrl(url: unknown, base: URL): string {
   const u = new URL(String(url), base);
-  if (!/^https?:$/.test(u.protocol)) throw new Error(`moon-map: media must be http(s): ${u.href}`);
+  if (!/^https?:$/.test(u.protocol)) throw new Error(`mbt-map: media must be http(s): ${u.href}`);
   return u.href;
 }
 
@@ -149,11 +149,11 @@ export class Media {
     const request = ++e.request;
     this.#fetch(url)
       .then((res) => {
-        if (!res.ok) throw new Error(`moon-map: image ${url}: HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`mbt-map: image ${url}: HTTP ${res.status}`);
         return res.blob();
       })
       .then(async (blob) => {
-        await checkBlobImageSize(blob, MAX_MEDIA_SIZE, `moon-map: image ${url}`);
+        await checkBlobImageSize(blob, MAX_MEDIA_SIZE, `mbt-map: image ${url}`);
         return createImageBitmap(blob);
       })
       .then((bitmap) => {
@@ -165,7 +165,7 @@ export class Media {
   }
 
   #video(id: string, e: Entry, urls: unknown, failed: (err: unknown) => void): void {
-    if (!Array.isArray(urls) || urls.length === 0) throw new Error(`moon-map: video source "${id}" needs urls`);
+    if (!Array.isArray(urls) || urls.length === 0) throw new Error(`mbt-map: video source "${id}" needs urls`);
     const video = document.createElement("video");
     // Credentials are never sent to other origins; muted so that browsers let it play.
     video.crossOrigin = "anonymous";
@@ -180,7 +180,7 @@ export class Media {
     const signal = new AbortController();
     const state = () => this.#engine.playing(id, !video.paused);
     for (const type of ["playing", "pause", "loadeddata", "seeked"]) video.addEventListener(type, state, signal);
-    video.lastElementChild!.addEventListener("error", () => failed(new Error(`moon-map: video source "${id}" did not load`)), signal);
+    video.lastElementChild!.addEventListener("error", () => failed(new Error(`mbt-map: video source "${id}" did not load`)), signal);
     e.video = video;
     e.stop = () => {
       signal.abort();
@@ -193,8 +193,8 @@ export class Media {
   #canvas(id: string, e: Entry, canvas: unknown, animate: boolean): void {
     // An id is looked up as such, never as a selector built from the style.
     const el = typeof canvas === "string" ? document.getElementById(canvas) : canvas;
-    if (!(el instanceof HTMLCanvasElement)) throw new Error(`moon-map: canvas source "${id}": no canvas ${String(canvas)}`);
-    if (!(el.width > 0 && el.height > 0)) throw new Error(`moon-map: canvas source "${id}": the canvas has no pixels`);
+    if (!(el instanceof HTMLCanvasElement)) throw new Error(`mbt-map: canvas source "${id}": no canvas ${String(canvas)}`);
+    if (!(el.width > 0 && el.height > 0)) throw new Error(`mbt-map: canvas source "${id}": the canvas has no pixels`);
     e.canvas = el;
     this.#engine.show(id, el, e.quad);
     if (animate) this.#engine.playing(id, true);
@@ -203,7 +203,7 @@ export class Media {
   /** The quad of source `id`'s `coordinates`; malformed ones fire an error and place it nowhere. */
   #quad(id: string, coordinates: unknown): number[] {
     const quad = quadOf(coordinates);
-    if (quad.length === 0) this.#fail(new Error(`moon-map: source "${id}": coordinates must be four [longitude, latitude] corners in the world`));
+    if (quad.length === 0) this.#fail(new Error(`mbt-map: source "${id}": coordinates must be four [longitude, latitude] corners in the world`));
     return quad;
   }
 

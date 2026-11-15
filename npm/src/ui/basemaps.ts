@@ -18,7 +18,7 @@ export interface BasemapsState {
 
 /**
  * `active`: the basemap drawn now (default none: the map's own style); `overlay(layer)`: the layers
- * to keep across basemaps (default those whose `metadata` says `"moon-map:overlay": true`).
+ * to keep across basemaps (default those whose `metadata` says `"mbt-map:overlay": true`).
  */
 export interface BasemapsOptions {
   basemaps: Basemap[];

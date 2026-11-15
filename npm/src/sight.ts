@@ -22,7 +22,7 @@ export interface Sight {
  */
 export function sight(heights: ArrayLike<number>, distances: ArrayLike<number>, observerHeight = 2, targetHeight = 0, curvatureCoeff = CURVATURE_COEFF): Sight {
   const n = heights.length;
-  if (n < 2 || distances.length !== n) throw new Error("moon-map: analysis: a line of sight needs two or more samples");
+  if (n < 2 || distances.length !== n) throw new Error("mbt-map: analysis: a line of sight needs two or more samples");
   const drop = curvatureCoeff / (2 * SEMI_MAJOR);
   const z0 = heights[0] + observerHeight;
   const end = distances[n - 1];

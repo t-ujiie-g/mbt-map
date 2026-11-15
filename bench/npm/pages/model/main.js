@@ -1,7 +1,7 @@
-// A glTF box (quantized and meshopt-compressed, bench/model/pack-model.mjs) placed by moon-map/3d's model
+// A glTF box (quantized and meshopt-compressed, bench/model/pack-model.mjs) placed by mbt-map/3d's model
 // layer, for the pack test's model check (bench/npm/checks/model.mjs).
-import { Map } from "moon-map";
-import { modelLayer } from "moon-map/3d";
+import { Map } from "mbt-map";
+import { modelLayer } from "mbt-map/3d";
 
 const map = new Map({
   container: "map",

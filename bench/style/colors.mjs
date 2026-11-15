@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 import { parseCssColor } from "../node_modules/@maplibre/maplibre-gl-style-spec/src/expression/types/parse_css_color.ts";
 import { ROOT } from "../lib/root.mjs";
 
-const { color_parse } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bench/expr/expr.js")).href);
+const { color_parse } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/t-ujiie-g/mbtmap_engine/bench/expr/expr.js")).href);
 
 const SOURCE = path.join(ROOT, "bench/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/types/parse_css_color.ts");
 const namedColors = () => [...readFileSync(SOURCE, "utf8").matchAll(/^\s+(\w+): \[\d+, \d+, \d+\],?$/gm)].map((m) => m[1]);
@@ -75,7 +75,7 @@ function compare(s, eq) {
   const got = color_parse(s)?.color ?? null;
   if (want) accepted++;
   const ok = want === null || got === null ? want === got : want.every((x, i) => eq(x, got[i]));
-  if (!ok) differ.push({ input: s, maplibre: want, moonmap: got });
+  if (!ok) differ.push({ input: s, maplibre: want, mbtmap: got });
   return ok && want !== null && !want.every((x, i) => same(x, got[i]));
 }
 const all = inputs();

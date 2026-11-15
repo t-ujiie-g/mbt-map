@@ -135,18 +135,18 @@ try {
       // A source query lists each tile's features in an order of tiles MapLibre
       // does not define, so it is compared as a multiset.
       const key = (xs) => (kind === "source" ? xs.map((f) => JSON.stringify(f)).sort() : sameDepthInOrder(xs).map((f) => JSON.stringify(f)));
-      const a = key(r.moonmap);
+      const a = key(r.mbtmap);
       const b = key(r.maplibre);
       const first = a.findIndex((s, i) => s !== b[i]);
       const same = a.length === b.length && first < 0;
       // Known difference on the globe (PROGRESS.md 20.2c): MapLibre queries a tile past the antimeridian
-      // in another world copy (wrap ±1, longitudes beyond ±180°), moonmap in this one.
+      // in another world copy (wrap ±1, longitudes beyond ±180°), mbtmap in this one.
       const beyond = (f) => JSON.stringify(f.geometry.coordinates).match(/-?\d+(\.\d+)?/g).some((n, i) => i % 2 === 0 && Math.abs(Number(n)) > 180);
       const known = !same && v.globe && a.length === b.length && r.maplibre.some(beyond);
       if (!same && !known) failed++;
       results.push({
-        view: v.name, kind, geometry, options, same, ...(known ? { known: "antimeridian world copy" } : {}), moonmap: a.length, maplibre: b.length,
-        ...(same ? {} : { firstDifference: first < 0 ? a.length : first, moonmapAt: a[first]?.slice(0, 300), maplibreAt: b[first]?.slice(0, 300) }),
+        view: v.name, kind, geometry, options, same, ...(known ? { known: "antimeridian world copy" } : {}), mbtmap: a.length, maplibre: b.length,
+        ...(same ? {} : { firstDifference: first < 0 ? a.length : first, mbtmapAt: a[first]?.slice(0, 300), maplibreAt: b[first]?.slice(0, 300) }),
       });
     }
     await page.close();

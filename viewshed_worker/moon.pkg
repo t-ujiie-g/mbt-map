@@ -2,8 +2,8 @@
 // over a grid's elevations, computing with the host's Math.
 
 import {
-  "t-ujiie-g/moonmap_engine/viewshed",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/viewshed",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

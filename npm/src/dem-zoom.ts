@@ -21,7 +21,7 @@ function tileSpan(z: number, a: number, b: number, lat: boolean): number {
  * `MAX_GRID_SIDE` cells a side; `tileSize` is 256 to 4096 pixels.
  */
 export function demZoom(bounds: [number, number, number, number], maxZoom: number, tileSize = 256): number {
-  if (!(tileSize >= 256 && tileSize <= MAX_GRID_SIDE)) throw new Error(`moon-map: analysis: tileSize must be 256 to ${MAX_GRID_SIDE}: ${tileSize}`);
+  if (!(tileSize >= 256 && tileSize <= MAX_GRID_SIDE)) throw new Error(`mbt-map: analysis: tileSize must be 256 to ${MAX_GRID_SIDE}: ${tileSize}`);
   const most = Math.floor(MAX_GRID_SIDE / tileSize);
   for (let z = Math.floor(Math.min(24, maxZoom)); z > 0; z--) {
     if (tileSpan(z, bounds[0], bounds[2], false) <= most && tileSpan(z, bounds[1], bounds[3], true) <= most) return z;

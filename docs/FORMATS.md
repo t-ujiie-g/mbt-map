@@ -477,7 +477,7 @@ In:
 - `{type: "call", id, op, ...}`, run one after another in arrival order. `op` and its arguments
   (no argument may be named `op`):
   - `load` with `url` (fetched without credentials), `bytes` (GeoJSON as UTF-8) or
-    `table` (an ArrayBuffer of "Table" bytes, as moon-map/data reads them; `load_table`),
+    `table` (an ArrayBuffer of "Table" bytes, as mbt-map/data reads them; `load_table`),
     and `crs` (of its coordinates; anything but 4326 is transformed to 4326 by
     the coordinate system module, which every other call then assumes). A
     `crs` is an EPSG code or a Float64Array "CRS definition";

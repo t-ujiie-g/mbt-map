@@ -1,6 +1,6 @@
 import { type Bounds, clampBounds, CLICK_PIXELS, clickWindow, type ImageRequest, isWebMercator, lngLatToMercator, MERCATOR_HALF, mercatorToLngLat, mercatorZoom, resolved, serviceBase, type TileSource, validBounds, withQuery, zoomResolution } from "./common.ts";
 
-/** The parts of an ArcGIS REST service's `?f=json` that moonmap reads; the rest is kept as given. */
+/** The parts of an ArcGIS REST service's `?f=json` that mbtmap reads; the rest is kept as given. */
 export interface ArcGISService {
   serviceDescription?: string;
   description?: string;
@@ -76,7 +76,7 @@ export interface ArcGISSourceOptions {
 export function arcgisSource(service: ArcGISService, url: string, options: ArcGISSourceOptions = {}): TileSource {
   const base = serviceBase(url);
   const kind = /\/(MapServer|ImageServer|VectorTileServer)$/i.exec(base)?.[1].toLowerCase();
-  if (!kind) throw new Error("moon-map: services: the URL is not an ArcGIS MapServer, ImageServer or VectorTileServer");
+  if (!kind) throw new Error("mbt-map: services: the URL is not an ArcGIS MapServer, ImageServer or VectorTileServer");
   const bounds = arcgisBounds(service);
   const extra = { ...(bounds && { bounds: clampBounds(bounds) }), ...(service.copyrightText && { attribution: service.copyrightText }) };
   if (kind === "vectortileserver") {
@@ -119,7 +119,7 @@ function exportUrl(base: string, kind: string, options: ArcGISSourceOptions, bbo
 export function arcgisImage(url: string, options: ArcGISSourceOptions = {}): ImageRequest {
   const base = serviceBase(url);
   const kind = /\/(MapServer|ImageServer)$/i.exec(base)?.[1].toLowerCase();
-  if (!kind) throw new Error("moon-map: services: the URL is not an ArcGIS MapServer or ImageServer");
+  if (!kind) throw new Error("mbt-map: services: the URL is not an ArcGIS MapServer or ImageServer");
   return (bbox, width, height, pixelRatio) => exportUrl(base, kind, options, bbox.join(","), width, height, pixelRatio);
 }
 
@@ -137,7 +137,7 @@ export interface ArcGISIdentifyOptions {
 /** A MapServer's `identify` at `lngLat` on a map at `zoom`, in EPSG:4326 over a 101 by 101 pixel window around it. */
 export function arcgisIdentifyUrl(url: string, lngLat: [number, number], zoom: number, options: ArcGISIdentifyOptions = {}): string {
   const base = serviceBase(url);
-  if (!/\/MapServer$/i.test(base)) throw new Error("moon-map: services: the URL is not an ArcGIS MapServer");
+  if (!/\/MapServer$/i.test(base)) throw new Error("mbt-map: services: the URL is not an ArcGIS MapServer");
   const [x, y] = lngLatToMercator(...lngLat);
   const [x0, y0, x1, y1] = clickWindow(x, y, zoomResolution(zoom));
   return withQuery(`${base}/identify`, {

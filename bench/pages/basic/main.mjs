@@ -1,7 +1,7 @@
 // /bench/pages/basic/ (`npm --prefix bench run example`): z14 fixtures, or GSI's tiles with
 // `?remote=1`; `?center=lng,lat&zoom=&bearing=&pitch=` set the camera, `?buildings=1` extrudes
 // buildings (30 m or 8 m), `?terrain=1` adds GSI's DEM (`&exaggeration=`).
-import * as moonmap from "/_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js";
+import * as mbtmap from "/_build/js/release/build/t-ujiie-g/mbtmap_engine/bundle/main/main.js";
 
 const GSI_TILES = "https://cyberjapandata.gsi.go.jp/xyz/experimental_bvmap/{z}/{x}/{y}.pbf";
 
@@ -36,13 +36,13 @@ if (params.get("remote") === "1") {
 }
 
 const [lng, lat] = (params.get("center") ?? "139.7671,35.6812").split(",").map(Number);
-const map = moonmap.create_map(
+const map = mbtmap.create_map(
   document.getElementById("map"),
   style,
   lng, lat, Number(params.get("zoom") ?? 14.5),
   Number(params.get("bearing") ?? 0), Number(params.get("pitch") ?? 0),
   "/worker/js/worker.mjs",
-  "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm",
+  "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm",
   0, // tile workers: 0 = half the hardware threads, at most 4
   null, // no GeoJSON sources
   "sans-serif", // labels' font family
@@ -50,5 +50,5 @@ const map = moonmap.create_map(
   false, // draw what is supported, as the facade does unless `strict`
 );
 window.__map = map;
-window.__moonmap = moonmap;
-moonmap.map_on_idle(map, () => { window.__idle = window.__loaded = performance.now(); });
+window.__mbtmap = mbtmap;
+mbtmap.map_on_idle(map, () => { window.__idle = window.__loaded = performance.now(); });

@@ -175,7 +175,7 @@
       "view": "z14",
       "ok": true,
       "requested": 4,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -184,7 +184,7 @@
       "view": "z15",
       "ok": true,
       "requested": 2,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -193,7 +193,7 @@
       "view": "z3",
       "ok": true,
       "requested": 9,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -202,7 +202,7 @@
       "view": "z14",
       "ok": true,
       "requested": 4,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -211,7 +211,7 @@
       "view": "z15",
       "ok": true,
       "requested": 2,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -220,7 +220,7 @@
       "view": "z3",
       "ok": true,
       "requested": 9,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -229,7 +229,7 @@
       "view": "z14",
       "ok": true,
       "requested": 4,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -238,7 +238,7 @@
       "view": "z15",
       "ok": true,
       "requested": 2,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -247,7 +247,7 @@
       "view": "z3",
       "ok": true,
       "requested": 9,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -256,7 +256,7 @@
       "view": "z14",
       "ok": true,
       "requested": 4,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -265,7 +265,7 @@
       "view": "z15",
       "ok": true,
       "requested": 2,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -274,7 +274,7 @@
       "view": "z3",
       "ok": true,
       "requested": 9,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -283,7 +283,7 @@
       "view": "z1",
       "ok": true,
       "requested": 11,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -292,7 +292,7 @@
       "view": "z2",
       "ok": true,
       "requested": 17,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -301,7 +301,7 @@
       "view": "z5",
       "ok": true,
       "requested": 37,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     },
     {
@@ -310,7 +310,7 @@
       "view": "z11",
       "ok": true,
       "requested": 25,
-      "moonmapOnly": [],
+      "mbtmapOnly": [],
       "maplibreOnly": []
     }
   ]

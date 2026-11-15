@@ -3,7 +3,7 @@
     "browser": "chromium 156.0.8078.4",
     "gpu": true,
     "renderers": {
-      "moon-map": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
+      "mbt-map": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
       "cesium": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)"
     },
     "viewport": "800x600",
@@ -15,19 +15,19 @@
     "statistic": "median of runs (settle and orbit); tiles and bytes from the first run",
     "orbit": "120 frames, bearing +1° per frame, after settling",
     "selection": "maximumScreenSpaceError 8 on both; Cesium without dynamic or foveated SSE, skipLevelOfDetail off, cullRequestsWhileMoving off",
-    "height": "moonmap tilesLayer height -36.7; Cesium modelMatrix translating the tileset 36.7 m down its bounding sphere center's ellipsoid normal",
+    "height": "mbtmap tilesLayer height -36.7; Cesium modelMatrix translating the tileset 36.7 m down its bounding sphere center's ellipsoid normal",
     "camera": "MapLibre's camera (vertical fov 36.87°, distance 1.5 viewport heights at the center latitude's meters per pixel) as Cesium's lookAt of heading = bearing, pitch = pitch - 90° around the center at 0 m; Cesium's fov the horizontal one",
     "code": "gzip -9 of the .js/.mjs/.wasm each page fetched from npm/dist or cesium/Build/Cesium (its prebuilt IIFE Cesium.js carries the workers, CESIUM_WORKERS, started from blobs); assetsGzip is the rest (css, json, images)"
   },
   "sizes": {
-    "moon-map": {
+    "mbt-map": {
       "gzip": 313064,
       "assetsGzip": 0,
       "files": {
         "3d.js": 9075,
         "index.js": 161464,
         "worker.js": 4896,
-        "moon-map.wasm": 80291,
+        "mbt-map.wasm": 80291,
         "custom.js": 2983,
         "3d-tiles.js": 10414,
         "3d-worker.js": 16379,
@@ -58,7 +58,7 @@
       "pitch": 50,
       "bearing": -20,
       "cameraDistanceMeters": 436.5554327829685,
-      "moon-map": {
+      "mbt-map": {
         "settleMs": 389.6399999856949,
         "selected": 24,
         "selectedWithContent": 24,
@@ -173,7 +173,7 @@
       "pitch": 0,
       "bearing": 0,
       "cameraDistanceMeters": 873.110865565937,
-      "moon-map": {
+      "mbt-map": {
         "settleMs": 349.14999997615814,
         "selected": 27,
         "selectedWithContent": 27,
@@ -293,7 +293,7 @@
       "pitch": 60,
       "bearing": 30,
       "cameraDistanceMeters": 218.27771639148426,
-      "moon-map": {
+      "mbt-map": {
         "settleMs": 319.55500000715256,
         "selected": 14,
         "selectedWithContent": 14,

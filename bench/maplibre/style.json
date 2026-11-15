@@ -1,6 +1,6 @@
 {
   "version": 8,
-  "name": "moon-map-bench (GSI bvmap, fill/line/circle/background)",
+  "name": "mbt-map-bench (GSI bvmap, fill/line/circle/background)",
   "sources": {
     "gsi": {
       "type": "vector",

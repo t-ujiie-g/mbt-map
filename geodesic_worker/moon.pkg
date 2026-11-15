@@ -2,8 +2,8 @@
 // with the host's `Math`.
 
 import {
-  "t-ujiie-g/moonmap_engine/geodesic",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/geodesic",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

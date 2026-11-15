@@ -1,4 +1,4 @@
-// Uncompressed LAS 1.0 to 1.4 point clouds for moon-map/3d (ASPRS LAS Specification 1.4 R15): the header,
+// Uncompressed LAS 1.0 to 1.4 point clouds for mbt-map/3d (ASPRS LAS Specification 1.4 R15): the header,
 // VLRs and EVLRs, point data record formats 0 to 10 and the CRS they state. LAZ is refused. Import-free.
 
 /** Caps against hostile files: points kept, (E)VLRs read, and the bytes the 3D worker fetches. */

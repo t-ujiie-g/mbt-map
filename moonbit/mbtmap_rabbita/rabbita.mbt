@@ -2,15 +2,15 @@
 using @cmd {type Cmd, type Emit}
 
 ///|
-/// The `<moon-map>` with `id` (null when there is none); importing it defines the element.
-#module("moon-map/element")
-extern "js" fn find_element(id : String) -> @moonmap.JsValue = "moonMapElement"
+/// The `<mbt-map>` with `id` (null when there is none); importing it defines the element.
+#module("mbt-map/element")
+extern "js" fn find_element(id : String) -> @mbtmap.JsValue = "mbtMapElement"
 
 ///|
 /// The map's camera as an event leaves it.
 #derive(Eq, Debug)
 pub(all) struct Camera {
-  center : @moonmap.LngLat
+  center : @mbtmap.LngLat
   zoom : Double
   bearing : Double
   pitch : Double
@@ -20,13 +20,13 @@ pub(all) struct Camera {
 /// A click on the map: the screen point, the place under it and the camera then.
 #derive(Eq, Debug)
 pub(all) struct Click {
-  point : @moonmap.Point
-  lnglat : @moonmap.LngLat
+  point : @mbtmap.Point
+  lnglat : @mbtmap.LngLat
   camera : Camera
 }
 
 ///|
-/// A `<moon-map>` element with `id`, which `setup`, `with_map` and `events` find the map by.
+/// A `<mbt-map>` element with `id`, which `setup`, `with_map` and `events` find the map by.
 /// `css` is its inline style (give it a height); the map fills it.
 pub fn view(id : String, css? : String, class? : String) -> @html.Html {
   let attrs = @html.Attrs::build().id(id)
@@ -37,30 +37,30 @@ pub fn view(id : String, css? : String, class? : String) -> @html.Html {
     attrs.class(c) |> ignore
   }
   let children : Array[@html.Html] = []
-  @html.node("moon-map", attrs, children)
+  @html.node("mbt-map", attrs, children)
 }
 
 ///|
 extern "js" fn configure(
-  el : @moonmap.JsValue,
+  el : @mbtmap.JsValue,
   id : String,
-  camera : @moonmap.JsValue,
+  camera : @mbtmap.JsValue,
   url : String,
-  style : @moonmap.JsValue,
+  style : @mbtmap.JsValue,
 ) -> Unit =
   #|(el, id, camera, url, style) => {
-  #|  if (!el) { console.error(new Error(`moon-map: no <moon-map> with id ${JSON.stringify(id)}`)); return; }
+  #|  if (!el) { console.error(new Error(`mbt-map: no <mbt-map> with id ${JSON.stringify(id)}`)); return; }
   #|  for (const k of ["center", "zoom", "bearing", "pitch"]) if (k in camera) el[k] = camera[k];
   #|  if (url) { el.mapStyle = null; el.setAttribute("style-url", url); } else el.mapStyle = style;
   #|}
 
 ///|
-/// Gives the map of `<moon-map>` `id` its style and camera once the view is on the page; the map is
+/// Gives the map of `<mbt-map>` `id` its style and camera once the view is on the page; the map is
 /// made then. Run it again to change the style (tiles of sources that stay alike are kept).
 pub fn setup(
   id : String,
   style : @style.Style,
-  center? : @moonmap.LngLat,
+  center? : @mbtmap.LngLat,
   zoom? : Double,
   bearing? : Double,
   pitch? : Double,
@@ -87,9 +87,9 @@ pub fn setup(
       configure(
         find_element(id),
         id,
-        @moonmap.json_to_js(Json::object(camera)),
+        @mbtmap.json_to_js(Json::object(camera)),
         url,
-        @moonmap.json_to_js(json),
+        @mbtmap.json_to_js(json),
       )
     },
     kind=@cmd.after_render,
@@ -98,19 +98,19 @@ pub fn setup(
 
 ///|
 extern "js" fn when_map(
-  el : @moonmap.JsValue,
-  f : (@moonmap.Map) -> Unit,
+  el : @mbtmap.JsValue,
+  f : (@mbtmap.Map) -> Unit,
 ) -> Unit =
   #|(el, f) => {
   #|  if (!el) return;
   #|  if (el.map) f(el.map);
-  #|  else el.addEventListener("moon-map-load", () => el.map && f(el.map), { once: true });
+  #|  else el.addEventListener("mbt-map-load", () => el.map && f(el.map), { once: true });
   #|}
 
 ///|
-/// Runs `f` on the map of `<moon-map>` `id` (once it has loaded, if it has not yet) and then the command
-/// `f` returns: the typed API of `t-ujiie-g/moonmap` from `update`.
-pub fn with_map(id : String, f : (@moonmap.Map) -> Cmd) -> Cmd {
+/// Runs `f` on the map of `<mbt-map>` `id` (once it has loaded, if it has not yet) and then the command
+/// `f` returns: the typed API of `t-ujiie-g/mbtmap` from `update`.
+pub fn with_map(id : String, f : (@mbtmap.Map) -> Cmd) -> Cmd {
   @cmd.custom_cmd(
     scheduler => when_map(find_element(id), map => scheduler.add(f(map))),
     kind=@cmd.after_render,
@@ -118,13 +118,13 @@ pub fn with_map(id : String, f : (@moonmap.Map) -> Cmd) -> Cmd {
 }
 
 ///|
-/// The features drawn at `point` of the map of `<moon-map>` `id` (in `layers` only, if given), topmost
+/// The features drawn at `point` of the map of `<mbt-map>` `id` (in `layers` only, if given), topmost
 /// first, as a message.
 pub fn query_features(
   id : String,
-  point : @moonmap.Point,
+  point : @mbtmap.Point,
   layers? : Array[String],
-  done : Emit[Array[@moonmap.Feature]],
+  done : Emit[Array[@mbtmap.Feature]],
 ) -> Cmd {
   @cmd.custom_cmd(
     scheduler => {
@@ -157,7 +157,7 @@ priv suberror Listen {
 extern "js" fn listen(
   id : String,
   types : FixedArray[String],
-  f : (String, @moonmap.JsValue) -> Unit,
+  f : (String, @mbtmap.JsValue) -> Unit,
 ) -> () -> Unit =
   #|(id, types, f) => {
   #|  const h = (e) => { if (e.target instanceof Element && e.target.id === id) f(e.type, e.detail); };
@@ -166,12 +166,12 @@ extern "js" fn listen(
   #|}
 
 ///|
-extern "js" fn detail_number(detail : @moonmap.JsValue, key : String) -> Double =
+extern "js" fn detail_number(detail : @mbtmap.JsValue, key : String) -> Double =
   #|(d, k) => (typeof d?.[k] === "number" ? d[k] : NaN)
 
 ///|
 extern "js" fn detail_pair(
-  detail : @moonmap.JsValue,
+  detail : @mbtmap.JsValue,
   key : String,
   a : String,
   b : String,
@@ -179,11 +179,11 @@ extern "js" fn detail_pair(
   #|(d, k, a, b) => [Number(d?.[k]?.[a] ?? NaN), Number(d?.[k]?.[b] ?? NaN)]
 
 ///|
-extern "js" fn detail_error(detail : @moonmap.JsValue) -> String =
+extern "js" fn detail_error(detail : @mbtmap.JsValue) -> String =
   #|(d) => String(d?.error?.message ?? d?.error ?? "")
 
 ///|
-fn camera_of(detail : @moonmap.JsValue) -> Camera {
+fn camera_of(detail : @mbtmap.JsValue) -> Camera {
   let c = detail_pair(detail, "center", "lng", "lat")
   {
     center: { lng: c[0], lat: c[1], },
@@ -194,7 +194,7 @@ fn camera_of(detail : @moonmap.JsValue) -> Camera {
 }
 
 ///|
-fn click_of(detail : @moonmap.JsValue) -> Click {
+fn click_of(detail : @mbtmap.JsValue) -> Click {
   let p = detail_pair(detail, "point", "x", "y")
   let l = detail_pair(detail, "lngLat", "lng", "lat")
   {
@@ -205,14 +205,14 @@ fn click_of(detail : @moonmap.JsValue) -> Click {
 }
 
 ///|
-fn handle(h : Handlers, kind : String, detail : @moonmap.JsValue) -> Cmd? {
+fn handle(h : Handlers, kind : String, detail : @mbtmap.JsValue) -> Cmd? {
   match kind {
-    "moon-map-load" => h.load
-    "moon-map-idle" => h.idle
-    "moon-map-move" => h.move_.map(e => (e.0)(camera_of(detail)))
-    "moon-map-moveend" => h.moveend.map(e => (e.0)(camera_of(detail)))
-    "moon-map-click" => h.click.map(e => (e.0)(click_of(detail)))
-    "moon-map-error" => h.error.map(e => (e.0)(detail_error(detail)))
+    "mbt-map-load" => h.load
+    "mbt-map-idle" => h.idle
+    "mbt-map-move" => h.move_.map(e => (e.0)(camera_of(detail)))
+    "mbt-map-moveend" => h.moveend.map(e => (e.0)(camera_of(detail)))
+    "mbt-map-click" => h.click.map(e => (e.0)(click_of(detail)))
+    "mbt-map-error" => h.error.map(e => (e.0)(detail_error(detail)))
     _ => None
   }
 }
@@ -223,22 +223,22 @@ fn sub_loader(payload : Error, scheduler : &@cmd.Scheduler) -> @sub.RunningSub? 
   let current = Ref(handlers)
   let types = []
   if handlers.load is Some(_) {
-    types.push("moon-map-load")
+    types.push("mbt-map-load")
   }
   if handlers.idle is Some(_) {
-    types.push("moon-map-idle")
+    types.push("mbt-map-idle")
   }
   if handlers.move_ is Some(_) {
-    types.push("moon-map-move")
+    types.push("mbt-map-move")
   }
   if handlers.moveend is Some(_) {
-    types.push("moon-map-moveend")
+    types.push("mbt-map-moveend")
   }
   if handlers.click is Some(_) {
-    types.push("moon-map-click")
+    types.push("mbt-map-click")
   }
   if handlers.error is Some(_) {
-    types.push("moon-map-error")
+    types.push("mbt-map-error")
   }
   let stop = listen(id, FixedArray::from_array(types), (kind, detail) => {
     if handle(current.val, kind, detail) is Some(cmd) {
@@ -252,7 +252,7 @@ fn sub_loader(payload : Error, scheduler : &@cmd.Scheduler) -> @sub.RunningSub? 
 }
 
 ///|
-/// The events of `<moon-map>` `id` as messages: `on_load` (first view drawn), `on_idle` (settled, also
+/// The events of `<mbt-map>` `id` as messages: `on_load` (first view drawn), `on_idle` (settled, also
 /// right after load), `on_move` (each frame the camera moves), `on_moveend`, `on_click` and `on_error`
 /// (the error's message). Return it from `subscriptions`.
 pub fn events(
@@ -280,7 +280,7 @@ pub fn events(
     on_click is Some(_),
     on_error is Some(_),
   ]
-  let key = "moon-map.events(\{id},\{flags.map(f => if f { "1" } else { "0" }).join("")})"
+  let key = "mbt-map.events(\{id},\{flags.map(f => if f { "1" } else { "0" }).join("")})"
   @sub.custom_sub(
     key,
     @sub.Scope::Local,

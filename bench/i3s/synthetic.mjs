@@ -241,7 +241,7 @@ const layer = {
   spatialReference: sr,
   heightModelInfo: { heightModel: "ellipsoidal", vertCRS: "WGS_84", heightUnit: "meter" },
   alias: "Synthetic buildings",
-  copyrightText: "moonmap test data",
+  copyrightText: "mbtmap test data",
   capabilities: ["View", "Query"],
   fullExtent: { ...sr, xmin: CENTER[0] - 0.004, xmax: CENTER[0] + 0.004, ymin: CENTER[1] - 0.003, ymax: CENTER[1] + 0.003, zmin: 0, zmax: 150 },
   store: {

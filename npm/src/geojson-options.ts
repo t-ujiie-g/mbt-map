@@ -51,11 +51,11 @@ export function sameOptions(a: Record<string, unknown>, b: Record<string, unknow
  */
 export function clusterArgs(query: ClusterQuery) {
   const { cluster } = query;
-  if (!Number.isInteger(cluster) || Math.abs(cluster) > INT32_MAX) throw new Error(`moon-map: no cluster with the id ${cluster}`);
+  if (!Number.isInteger(cluster) || Math.abs(cluster) > INT32_MAX) throw new Error(`mbt-map: no cluster with the id ${cluster}`);
   if (query.op !== "leaves") return query;
   const limit = query.limit ?? 10;
   const offset = query.offset ?? 0;
-  if (!(limit === Infinity || (Number.isInteger(limit) && limit >= 0))) throw new Error(`moon-map: bad limit ${limit}`);
-  if (!(Number.isInteger(offset) && offset >= 0)) throw new Error(`moon-map: bad offset ${offset}`);
+  if (!(limit === Infinity || (Number.isInteger(limit) && limit >= 0))) throw new Error(`mbt-map: bad limit ${limit}`);
+  if (!(Number.isInteger(offset) && offset >= 0)) throw new Error(`mbt-map: bad offset ${offset}`);
   return { op: "leaves", cluster, limit: limit > INT32_MAX ? -1 : limit, offset: Math.min(offset, INT32_MAX) };
 }

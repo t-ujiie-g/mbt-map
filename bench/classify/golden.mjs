@@ -1,4 +1,4 @@
-// moon-map/analysis's classification (npm/src/classify.ts) vs simple-statistics 8.0.0 (jenks, ckmeans,
+// mbt-map/analysis's classification (npm/src/classify.ts) vs simple-statistics 8.0.0 (jenks, ckmeans,
 // quantile, equal intervals, statistics) and geostats 2.1.0 (standard deviation classes) on random
 // numbers and GSI attributes; every number must be identical (Object.is).
 // Usage: node --experimental-strip-types classify/golden.mjs; writes bench/results/classify-golden.json.

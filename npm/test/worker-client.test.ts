@@ -62,7 +62,7 @@ test("start refuses a worker from elsewhere", () => {
 });
 
 test("a call before start rejects", async () => {
-  await assert.rejects(new WorkerClient("data").call("read", {}), /^Error: moon-map: data: the worker has not been started$/);
+  await assert.rejects(new WorkerClient("data").call("read", {}), /^Error: mbt-map: data: the worker has not been started$/);
 });
 
 test("a call posts its op and arguments and takes its answer by id", async () => {
@@ -80,7 +80,7 @@ test("an answer with an error rejects its call, named after the entry", async ()
   const { client, worker } = started();
   const call = client.call("read", {});
   worker.onmessage!({ data: { type: "result", id: 0, error: "no such file" } });
-  await assert.rejects(call, /^Error: moon-map: data: no such file$/);
+  await assert.rejects(call, /^Error: mbt-map: data: no such file$/);
 });
 
 test("answers with an unknown id, or that are not answers, are ignored", async () => {
@@ -96,7 +96,7 @@ test("onerror rejects every pending call and stops the worker", async () => {
   const { client, worker } = started();
   const calls = [client.call("read", {}), client.call("read", {})];
   worker.onerror!({ message: "failed to load" });
-  for (const call of calls) await assert.rejects(call, /^Error: moon-map: data: failed to load$/);
+  for (const call of calls) await assert.rejects(call, /^Error: mbt-map: data: failed to load$/);
   assert.equal(client.generation, 1);
   assert.equal(worker.terminated, true);
   assert.equal(client.started, false);
@@ -107,14 +107,14 @@ test("onerror without a message says the worker failed", async () => {
   const { client, worker } = started();
   const call = client.call("read", {});
   worker.onerror!({});
-  await assert.rejects(call, /^Error: moon-map: data: the worker failed$/);
+  await assert.rejects(call, /^Error: mbt-map: data: the worker failed$/);
 });
 
 test("onmessageerror rejects pending calls", async () => {
   const { client, worker } = started();
   const call = client.call("read", {});
   worker.onmessageerror!();
-  await assert.rejects(call, /^Error: moon-map: data: a message could not be read$/);
+  await assert.rejects(call, /^Error: mbt-map: data: a message could not be read$/);
 });
 
 test("terminate rejects pending calls and lets the client start again", async () => {
@@ -122,7 +122,7 @@ test("terminate rejects pending calls and lets the client start again", async ()
   const call = client.call("read", {});
   const generation = client.generation;
   client.terminate();
-  await assert.rejects(call, /^Error: moon-map: data: terminated$/);
+  await assert.rejects(call, /^Error: mbt-map: data: terminated$/);
   assert.equal(worker.terminated, true);
   assert.equal(client.generation, generation + 1);
   client.start("./data-worker.js", () => ({}));

@@ -25,7 +25,7 @@ export interface WFSCapabilities {
 /** Reads a WFS GetCapabilities document; `base`: its URL, which relative URLs in it are resolved against. */
 export function readWFSCapabilities(xml: string | Document, base?: string): WFSCapabilities {
   const root = parseXml(xml, "WFS capabilities");
-  if (root.localName !== "WFS_Capabilities") throw new Error("moon-map: services: not a WFS capabilities document");
+  if (root.localName !== "WFS_Capabilities") throw new Error("mbt-map: services: not a WFS capabilities document");
   const version = root.getAttribute("version") ?? "";
   const v10 = version.startsWith("1.0");
   const crs = version.startsWith("2.") ? "CRS" : "SRS";

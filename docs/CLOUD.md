@@ -1,10 +1,10 @@
 # Claude Code on the web で開発する
 
-claude.ai/code のクラウドのセッションで moon-map の開発を続けるための準備と使い方。作業の決まりは AGENTS.md（特に §2 と §9）、いまどこまで進んでいるかは PROGRESS.md の冒頭にある。
+claude.ai/code のクラウドのセッションで mbt-map の開発を続けるための準備と使い方。作業の決まりは AGENTS.md（特に §2 と §9）、いまどこまで進んでいるかは PROGRESS.md の冒頭にある。
 
 ## 1. 環境を作る（最初に一度）
 
-claude.ai/code で、このリポジトリ（t-ujiie-g/moon-map）の環境を作り、次のように設定する。
+claude.ai/code で、このリポジトリ（t-ujiie-g/mbt-map）の環境を作り、次のように設定する。
 
 ### ネットワーク
 
@@ -36,7 +36,7 @@ api.plateauview.mlit.go.jp
 - `tiles.openfreemap.org`、`raw.githubusercontent.com`、`build.protomaps.com`：公開スタイルの比較（`npm run style:public`）に使うタイルとスプライト（manifest の sha256 と照合する）。Node の `fetch` はプロキシを読まないので `NODE_USE_ENV_PROXY=1` を付ける（`scripts/setup.sh` は付けている）
 - `assets.cms.plateau.reearth.io`：PLATEAU の 3D Tiles のフィクスチャ（`plateau-chiyoda`、東京駅まわりの建物。manifest の sha256 と照合する）。`api.plateauview.mlit.go.jp`：PLATEAU のデータカタログ（フィクスチャを選び直すとき）
 - Playwright の 2 つ：黄金テストと npm パッケージのテストで使う Chromium
-- `services.arcgisonline.com` から `gibs.earthdata.nasa.gov` までの 7 つ：`moon-map/services` を公開されている GIS の Web サービスで確かめる黄金テスト（`npm run services:golden`）。応答は記録せず、毎回取りに行く
+- `services.arcgisonline.com` から `gibs.earthdata.nasa.gov` までの 7 つ：`mbt-map/services` を公開されている GIS の Web サービスで確かめる黄金テスト（`npm run services:golden`）。応答は記録せず、毎回取りに行く
 
 GitHub と npm は既定の一覧に入っている。
 
@@ -69,7 +69,7 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" && [ -x scripts/setu
         "hooks": [
           {
             "type": "command",
-            "command": "if [ \"$CLAUDE_CODE_REMOTE\" = \"true\" ]; then \"$CLAUDE_PROJECT_DIR\"/scripts/setup.sh > /tmp/moon-map-setup.log 2>&1 || echo 'scripts/setup.sh failed: see /tmp/moon-map-setup.log' >&2; fi",
+            "command": "if [ \"$CLAUDE_CODE_REMOTE\" = \"true\" ]; then \"$CLAUDE_PROJECT_DIR\"/scripts/setup.sh > /tmp/mbt-map-setup.log 2>&1 || echo 'scripts/setup.sh failed: see /tmp/mbt-map-setup.log' >&2; fi",
             "timeout": 600
           }
         ]
@@ -96,7 +96,7 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" && [ -x scripts/setu
 - **性能ベンチ**（`worker:browser`、`render`、`*:node` の時間）：数字は M2 の開発機で測ったものだけを PROGRESS に載せる（VISION §2、AGENTS.md §5）。クラウドのセッションは、測る必要があるときは報告にそう書く。ローカルのセッションでまとめて測る。
 - **moonbit-skills プラグイン**：リポジトリの設定に書いてあっても、クラウドでは読み込まれない。API は `moon ide doc`、生成された `.mbti`、docs.moonbitlang.com で確かめる。
 - **ローカルの自動メモリ**：クラウドには届かない。続けてほしい決まりは AGENTS.md §2 に書く。
-- **GitHub の一部の操作**：プロキシが GraphQL を止めることがあり、そのときは `gh pr create` / `gh pr checks` が失敗する。REST（`gh api repos/t-ujiie-g/moon-map/pulls`、`.../commits/<sha>/check-runs`）を使う。ブランチの削除とタグの push はできない。
+- **GitHub の一部の操作**：プロキシが GraphQL を止めることがあり、そのときは `gh pr create` / `gh pr checks` が失敗する。REST（`gh api repos/t-ujiie-g/mbt-map/pulls`、`.../commits/<sha>/check-runs`）を使う。ブランチの削除とタグの push はできない。
 
 ## 4. ツールチェーンを上げるとき
 

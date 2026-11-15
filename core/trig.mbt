@@ -1,6 +1,6 @@
 ///|
 /// Elementary functions: MoonBit's (`Trig::moonbit`), or a wasm host's `Math`,
-/// which computes as the JavaScript libraries moonmap follows and keeps `@math`
+/// which computes as the JavaScript libraries mbtmap follows and keeps `@math`
 /// out of the module.
 pub(all) struct Trig {
   sin : (Double) -> Double

@@ -39,7 +39,7 @@ for (const [name, sets] of [[`gsi roads (${TILES} tiles)`, networks], ["jittered
     time(() => sets.forEach(([, data, tolerance]) => new PathFinder(data, { tolerance }))),
     time(() => sets.forEach((_, k) => m.network_dispose(build(k)))),
     { tablesIn: time(() => ids.forEach((id) => env.put([id]))) });
-  // With snap there is no JS counterpart: moonmap with snap 2 m against geojson-path-finder without.
+  // With snap there is no JS counterpart: mbtmap with snap 2 m against geojson-path-finder without.
   row(`${name}: build the network with snap 2 m`,
     time(() => sets.forEach(([, data, tolerance]) => new PathFinder(data, { tolerance }))),
     time(() => sets.forEach((_, k) => m.network_dispose(build(k, 2)))));
@@ -57,4 +57,4 @@ for (const [name, sets] of [[`gsi roads (${TILES} tiles)`, networks], ["jittered
   ids.forEach(env.dispose);
 }
 
-await writeResults("route-node", { pathFinder: "2.1.0", tiles: TILES, queries: QUERIES, statistic: TIMING, columns: "moonmap build: the dataset's table into route.wasm and network_new; paths: network_path and its f64s read; tablesIn: the copies in alone" }, all);
+await writeResults("route-node", { pathFinder: "2.1.0", tiles: TILES, queries: QUERIES, statistic: TIMING, columns: "mbtmap build: the dataset's table into route.wasm and network_new; paths: network_path and its f64s read; tablesIn: the copies in alone" }, all);

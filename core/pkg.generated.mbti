@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/core"
+package "t-ujiie-g/mbtmap_engine/core"
 
 import {
   "moonbitlang/core/debug",

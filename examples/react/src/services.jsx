@@ -1,4 +1,4 @@
-// GIS Web services read with moon-map/services in React, over the loader the plain-DOM examples draw with the DOM.
+// GIS Web services read with mbt-map/services in React, over the loader the plain-DOM examples draw with the DOM.
 import { useEffect, useState } from "react";
 import { createServiceLoader } from "../../shared/services.js";
 import { useController } from "./use-controller.js";

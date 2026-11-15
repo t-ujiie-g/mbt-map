@@ -1,4 +1,4 @@
-// moonmap's evaluateExpression (the attribute table's field calculation) vs style-spec 26.5.0's
+// mbtmap's evaluateExpression (the attribute table's field calculation) vs style-spec 26.5.0's
 // createExpression(...).evaluate on GSI features as GeoJSON and hand-written ones: the value-typed expressions
 // of style/expression-cases.mjs and field formulas, each value identical (colors and `format` as text).
 // Usage: node fields/golden.mjs (after the npm build); writes bench/results/fields-golden.json.
@@ -119,7 +119,7 @@ for (const e of [...CASES.filter(([, type = "value", state]) => type === "value"
       evaluations++;
       if (!same(want, ours[zi][i])) {
         bad++;
-        sample ??= { zoom, properties: f.properties, id: f.id, styleSpec: want, moonmap: ours[zi][i] };
+        sample ??= { zoom, properties: f.properties, id: f.id, styleSpec: want, mbtmap: ours[zi][i] };
       }
     }),
   );

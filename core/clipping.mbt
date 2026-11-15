@@ -1,5 +1,5 @@
 ///|
-/// Most planes a clipping (`Map::set_clipping`, moon-map/3d's layers) cuts with: the
+/// Most planes a clipping (`Map::set_clipping`, mbt-map/3d's layers) cuts with: the
 /// shaders' uniform arrays are this long.
 pub const MAX_CLIP_PLANES : Int32 = 16
 

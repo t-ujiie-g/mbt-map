@@ -1,5 +1,5 @@
-// The showcase's search (moon-map/search, no server): place names, coordinates in
-// three forms (plane rectangular and UTM through moon-map/analysis), and the input
+// The showcase's search (mbt-map/search, no server): place names, coordinates in
+// three forms (plane rectangular and UTM through mbt-map/analysis), and the input
 // box driven from the keyboard, each choice moving the map.
 import { awaitAfter } from "./step.mjs";
 

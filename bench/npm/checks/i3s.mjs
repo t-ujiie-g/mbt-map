@@ -1,4 +1,4 @@
-// moon-map/3d's I3S layer on bench/npm/pages/i3s: the synthetic buildings (Draco, a PNG atlas) refine into their
+// mbt-map/3d's I3S layer on bench/npm/pages/i3s: the synthetic buildings (Draco, a PNG atlas) refine into their
 // children up close and coarsen to the root afar, a click gives attributes; the synthetic point cloud
 // (PCSL, LEPCC) refines by density; the buildings as an SLPK give the same nodes and attributes.
 import { commonestShare } from "./pixels.mjs";
@@ -21,7 +21,7 @@ export async function i3sChecks(page) {
   const points = await page.evaluate(async () => {
     const map = window.__map;
     map.removeLayer("buildings");
-    const { i3sLayer } = await import("moon-map/3d");
+    const { i3sLayer } = await import("mbt-map/3d");
     const layer = i3sLayer({ id: "points", url: new URL("./pcsl/layers/0/layer.json", location.href).href, pointSize: 3 });
     map.addLayer(layer);
     window.__layer = layer;
@@ -41,7 +41,7 @@ export async function i3sChecks(page) {
   const slpk = await page.evaluate(async () => {
     const map = window.__map;
     map.removeLayer("points");
-    const { i3sLayer } = await import("moon-map/3d");
+    const { i3sLayer } = await import("mbt-map/3d");
     const layer = i3sLayer({ id: "slpk", url: new URL("./set.slpk", location.href).href });
     map.addLayer(layer);
     window.__layer = layer;
