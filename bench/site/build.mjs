@@ -1,6 +1,5 @@
-// Builds the GitHub Pages site into _site/: the hand-written home page of site/, docs/*.md as HTML (marked),
-// the package's files once under lib/, the sample gallery (examples/samples: each sample's page with its
-// code) and the example apps on that copy.
+// Builds the GitHub Pages site into _site/: site/'s home page, docs/*.md as HTML, npm/dist once as lib/,
+// the samples gallery (examples/samples) and the example apps on that copy.
 // Usage: node site/build.mjs [--no-prepare] (from bench/; --no-prepare reuses examples packed already).
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
