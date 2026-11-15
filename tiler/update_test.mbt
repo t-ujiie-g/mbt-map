@@ -128,19 +128,71 @@ test "update changes properties in a copy and moves the feature to the end" {
   assert_eq(table.column("k").unwrap().values[row], Some(Bool(true)))
   assert_eq(table.column("j").bind(c => c.values[row]), None)
   assert_eq(d.xy[2:4].to_owned(), [@core.TILE_EXTENT / 2, @core.TILE_EXTENT / 2])
-  // Removing all properties ignores the rest, as geojson-vt does.
-  let all = change(Num(2.0), remove_all_properties=true, add_properties=[
-    ("k", Some(Num(1.0))),
-  ])
-  assert_true(t.update(diff(update=[all])))
-  let row = t.tile(0, 0, 0).unwrap().rows[1]
-  assert_eq(table.column("k").unwrap().values[row], None)
-  assert_eq(table.column("n").unwrap().values[row], None)
   // An update without changes still affects its feature, one of a missing id nothing.
   assert_true(t.update(diff(update=[change(Num(2.0))])))
   assert_false(
     t.update(diff(update=[change(Num(9.0), remove_all_properties=true)])),
   )
+}
+
+///|
+/// The properties of the last feature of `t`'s top tile, in column order.
+fn last_properties(
+  t : @tiler.Tiler,
+  table : @geom.Table,
+) -> Array[(String, @geom.Prop)] {
+  let rows = t.tile(0, 0, 0).unwrap().rows
+  let row = rows[rows.length() - 1]
+  let out = []
+  for c in table.columns {
+    if c.values[row] is Some(v) {
+      out.push((c.name, v))
+    }
+  }
+  out
+}
+
+///|
+test "update removing all properties still adds the ones given, unlike geojson-vt" {
+  let table = point_table([(0.0, 0.0)], [Some(Num(1.0))])
+  let t = @tiler.Tiler::new(table)
+  let u = change(
+    Num(1.0),
+    remove_all_properties=true,
+    remove_properties=["k"],
+    add_properties=[("k", Some(Num(7.0))), ("m", Some(Str("v")))],
+  )
+  assert_true(t.update(diff(update=[u])))
+  assert_eq(last_properties(t, table), [("k", Num(7.0)), ("m", Str("v"))])
+  assert_eq(table.ids[t.tile(0, 0, 0).unwrap().rows[0]], Some(Num(1.0)))
+}
+
+///|
+test "update removing all properties alone leaves none" {
+  let table = point_table([(0.0, 0.0)], [Some(Num(1.0))])
+  let t = @tiler.Tiler::new(table)
+  assert_true(last_properties(t, table).length() > 0)
+  assert_true(
+    t.update(diff(update=[change(Num(1.0), remove_all_properties=true)])),
+  )
+  assert_eq(last_properties(t, table), [])
+}
+
+///|
+test "update removing some properties keeps the others and adds" {
+  let table = point_table([(0.0, 0.0)], [Some(Num(1.0))])
+  let t = @tiler.Tiler::new(table)
+  let before = last_properties(t, table)
+  let u = change(Num(1.0), remove_properties=["missing"], add_properties=[
+    ("m", Some(Bool(true))),
+  ])
+  assert_true(t.update(diff(update=[u])))
+  assert_eq(last_properties(t, table), [..before, ("m", Bool(true))])
+  let u = change(Num(1.0), remove_properties=["n"], add_properties=[
+    ("m", Some(Num(2.0))),
+  ])
+  assert_true(t.update(diff(update=[u])))
+  assert_eq(last_properties(t, table), [("m", Num(2.0))])
 }
 
 ///|

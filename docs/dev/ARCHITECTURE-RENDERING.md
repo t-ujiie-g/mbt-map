@@ -74,6 +74,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). What the engine d
 - The pattern is taken at the integer zoom (no cross-fade).
 - A pattern picked by feature draws the layer by groups (`StyleLayer::paints_by_group`).
 - Fill outlines go after all of a tile's fills, as MapLibre draws them.
+- Layers are drawn in the style's order, extrusions among them (MapLibre's translucent pass: depth is tested only by 3D layers). A background of one color is the frame's clear color only when it is the lowest layer shown (`Map::base_background`); any other is drawn where it sits over the tiles covering the view (`Map::draw_background`, MapLibre's `drawBackground`), so a translucent one tints the fills below it, is hidden by the extrusions above and covers those below; on terrain it goes into the terrain's textures in order (`npm run style:golden`'s `background-*-extrusions` scenes).
 - Icons have their own atlas (`Renderer::icon`: 1 px transparent padding, MapLibre's `ImageAtlas` for icons), whose places never move: an image replaced at the same size is copied over its pixels, one of another size gets a new place.
 - The workers lay icons out, so they are told each image's size (`Map::send_images`, once per frame with changes); tiles whose icons used a changed image are loaded again, and while the facade loads a sprite (`Map::hold_images`) the workers hold tiles of styles with icons, as MapLibre's tiles wait for the sprite.
 - An image a tile lacks fires `styleimagemissing` once (`Map::report_missing`).
@@ -128,7 +129,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). What the engine d
 - The camera has bearing and pitch (≤ `MAX_PITCH` 85°, as MapLibre).
 - Above about 70° the horizon comes on screen: the ground ends at MapLibre's horizon line (`Transform::horizon`, 85% of the way to the true horizon), screen points above it map to the ground at the line, the far plane sits at its depth, and the style's `sky` is drawn above it (MapLibre's sky shader; no `sky`, no sky or fog, as in MapLibre).
 - `Transform` keeps a MapLibre-style view-projection (`Mat4`, column-major) over world pixels relative to the center, so precision holds at every zoom.
-- `covering_tiles(min_z, max_z)` walks a quadtree over the view's ground footprint and drops a zoom level per doubling of distance beyond `LOD_DISTANCE` camera distances, and leaves ground that wants more than `MIN_ZOOM_SLACK` levels below `min_z` empty; leaves never overlap.
+- `covering_tiles(min_z, max_z)` walks a quadtree over the view's ground footprint and drops a zoom level per doubling of distance beyond `LOD_DISTANCE` camera distances, and leaves ground that wants more than `MIN_ZOOM_SLACK` levels below `min_z` empty; leaves never overlap. What ground wants is measured from the camera's own tile zoom (`tile_size`), never deeper than it: a source starting far below the view (terrain on a DEM of zoom 14 alone, seen at zoom 2) gets no tiles instead of the 4^14 of the whole world, which froze the page.
 
 ### World copies
 
@@ -234,7 +235,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). What the engine d
 ## 3D terrain
 
 - 3D terrain (style `terrain`): DEM tiles also carry their elevations (f32), uploaded as an R32F texture.
-- Terrain tiles follow the display zoom (or the DEM's, if deeper) and use their part of the nearest loaded DEM tile (`u_dem`).
+- Terrain tiles follow the display zoom (or the DEM's, if deeper) and use their part of the nearest loaded DEM tile (`u_dem`); more than `MIN_ZOOM_SLACK` levels above the DEM's minimum zoom there are none, and nothing is drawn (as MapLibre's terrain below its source's `minzoom`).
 - Every layer but symbols is drawn into a per-tile render target, again only when what it holds changes (`Map::texture_signature`; `map/terrain.mbt`, 512 px × device pixel ratio up to 2), then draws a 65×65 grid with skirts raised by the DEM, with the depth test on and MapLibre's terrain fog (depth over `Transform::fog_range`, fading in from 60° to 70° of pitch).
 - Symbols go on top.
 - `Transform.elevation` lifts the camera's center to the ground height under it (meters times `pixels_per_meter`).

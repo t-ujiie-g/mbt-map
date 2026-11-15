@@ -50,7 +50,7 @@ Layers with `visibility: "none"` are dropped when the style is parsed: hiding a 
 
 ### background
 
-`background-color`, `background-opacity`, `background-pattern`.
+`background-color`, `background-opacity`, `background-pattern`. A background is drawn where it sits in the layer order: a translucent one above other layers tints them, and extrusion layers above it stay clear. On terrain a `background-pattern` is not drawn.
 
 ### fill
 

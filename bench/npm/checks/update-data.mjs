@@ -1,6 +1,8 @@
-// `updateData` on the GeoJSON test page: a diff changes what is queried, `getData` and `getStyle`, asks the GeoJSON
-// worker only for tiles around what it touched (fewer than `setData`), waits behind a URL source's load, and is
-// refused with MapLibre's error for data whose features lack ids.
+// `updateData` on the GeoJSON test page: a diff changes what is queried, `getData` and `getStyle`, asks the GeoJSON worker
+// only for tiles around what it touched, waits behind a URL source's load, is refused with MapLibre's error for features
+// without ids; removing all properties and adding some (`createFieldEditor`'s updates) draws the added ones.
+import { pixel } from "./pixels.mjs";
+
 export async function updateDataChecks(page) {
   const r = await page.evaluate(async () => {
     const map = window.__map;
@@ -57,5 +59,40 @@ export async function updateDataChecks(page) {
     r.updated > 0 && r.updated < r.all &&
     JSON.stringify(r.errors) === JSON.stringify(['mbt-map: GeoJSONSource "route": GeoJSON data is not compatible with updateData']) &&
     r.names === 8 && r.left === 7 && !r.first;
-  return { ok, ...r };
+  const replaced = await replacedProperties(page);
+  return { ok: ok && replaced.ok, ...r, replaced };
+}
+
+async function replacedProperties(page) {
+  const r = await page.evaluate(async () => {
+    const map = window.__map;
+    const edits = map.getSource("edits");
+    await edits.updateData({ update: [{ id: 3, removeAllProperties: true, addOrUpdateProperties: [{ key: "kind", value: "b" }, { key: "note", value: "new" }] }] });
+    const point = { type: "Feature", properties: { uid: "u1", kind: "a", old: 1 }, geometry: { type: "Point", coordinates: [139.759, 35.681] } };
+    map.addSource("promoted", { type: "geojson", promoteId: "uid", data: { type: "FeatureCollection", features: [point] } });
+    const lit = ["case", ["boolean", ["feature-state", "on"], false], "#00ff00", "#0000ff"];
+    map.addLayer({ id: "promoted", type: "circle", source: "promoted", paint: { "circle-radius": 8, "circle-color": lit } });
+    map.setFeatureState({ source: "promoted", id: "u1" }, { on: true });
+    await map.once("idle");
+    await map.getSource("promoted").updateData({ update: [{ id: "u1", removeAllProperties: true, addOrUpdateProperties: [{ key: "uid", value: "u1" }, { key: "kind", value: "b" }] }] });
+    await map.once("idle");
+    const of = (features, id) => features.filter((f) => f.id === id).map((f) => f.properties);
+    return {
+      rendered: of(await map.queryRenderedFeatures({ layers: ["edits"] }), 3),
+      sourced: of(await map.querySourceFeatures("edits"), 3)[0],
+      data: of((await edits.getData()).features, 3),
+      promoted: of(await map.queryRenderedFeatures({ layers: ["promoted"] }), "u1"),
+      at: map.project([139.756, 35.681]),
+      atPromoted: map.project([139.759, 35.681]),
+    };
+  });
+  const colors = { edits: await pixel(page, r.at.x, r.at.y), promoted: await pixel(page, r.atPromoted.x, r.atPromoted.y) };
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const ok =
+    same(r.rendered, [{ kind: "b", note: "new" }]) &&
+    same(r.sourced, { kind: "b", note: "new" }) &&
+    same(r.data, [{ kind: "b", note: "new" }]) &&
+    same(r.promoted, [{ uid: "u1", kind: "b" }]) &&
+    same(colors, { edits: [255, 0, 0], promoted: [0, 255, 0] });
+  return { ok, ...r, colors };
 }

@@ -676,7 +676,18 @@ async function showcase(page) {
       ring: order.indexOf("radius-ring") === order.indexOf("places") - 1, model,
     };
   });
+  crumb("showcase: globe to 3D");
+  // At the globe's zoom the fixtures' DEM (zoom 14 alone) is far deeper than the view: no terrain tile, and frames go on.
+  await page.click("#modes button >> text=3D", { timeout: 10000 });
+  await page.waitForFunction(() => window.__map.getPitch() === 60 && !window.__map.isMoving(), null, { timeout: 30000 });
+  const wide = await page.evaluate(async () => {
+    const map = window.__map;
+    map.triggerRepaint();
+    await map.once("render");
+    return { zoom: map.getZoom(), terrain: map.getStyle().terrain?.source };
+  });
   const ok =
+    Math.abs(wide.zoom - 2) < 1e-9 && wide.terrain === "dem" &&
     ["places", "places-label"].includes(picked.rows[0][1]) && picked.text.includes("東京駅") &&
     identified.count >= 1 && identified.index === 0 && identified.selected === true &&
     coordinates.length === 4 && /^35\.68\d+, 139\.76\d+$/.test(coordinates[0][1]) && /N 139°46′/.test(coordinates[1][1]) &&
@@ -694,7 +705,7 @@ async function showcase(page) {
     atCentre(tokyoPin) && atCentre(osakaPin) &&
     globe.projection === "globe" && globe.pitch === 0 && Math.abs(globe.centre[0]) < 1e-6 && Math.abs(globe.centre[1]) < 1e-6 && globe.ring && globe.model === true &&
     saved.type === "image/png" && saved.size > 0 && controls.ok && searched.ok && tabled.ok && tabled.marked && analyzed.ok && read.ok && services.ok && measured.ok && drew.ok && edited.ok && cut.ok && clustered.ok;
-  return [ok, { first, picked, identified, coordinates, hovered, tilted, osaka: osaka.near, shown, styled, globe, tokyoPin, osakaPin, saved, controls, searched, tabled, analyzed, read, services, measured, drew, edited, cut, clustered }];
+  return [ok, { first, picked, identified, coordinates, hovered, tilted, osaka: osaka.near, shown, styled, globe, wide, tokyoPin, osakaPin, saved, controls, searched, tabled, analyzed, read, services, measured, drew, edited, cut, clustered }];
 }
 
 async function engineStarted(page) {

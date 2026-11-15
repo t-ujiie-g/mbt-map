@@ -104,3 +104,30 @@ test "a view at sea level is covered as without heights" {
     t.covering_tiles(4, 14).map(u => u.id),
   )
 }
+
+///|
+test "a source that starts far deeper than the camera's zoom is not covered" {
+  let far = (zoom : Double, pitch : Double) => {
+    @core.Transform::new({ ..tokyo(), zoom, pitch, }, 1200.0, 800.0)
+  }
+  // The whole world at zoom 14 would be 4^14 tiles.
+  assert_eq(far(2.0, 60.0).covering_tiles(14, 14).length(), 0)
+  assert_eq(far(2.0, 0.0).covering_tiles(14, 14, tile_size=256).length(), 0)
+  assert_eq(far(0.0, 85.0).covering_tiles(14, 22).length(), 0)
+  // Up to MIN_ZOOM_SLACK levels above it the ground near the camera still gets its tiles.
+  for zoom in [11.0, 12.0, 13.0] {
+    let tiles = far(zoom, 60.0).covering_tiles(14, 14)
+    assert_true(tiles.length() > 0 && tiles.length() < 400)
+    assert_true(tiles.iter().all(u => u.id.z == 14))
+  }
+  // A maximum deeper than the camera's zoom is not walked into.
+  let tiles = far(2.0, 60.0).covering_tiles(0, 24)
+  assert_true(tiles.length() > 0 && tiles.length() < 100)
+  assert_true(tiles.iter().all(u => u.id.z <= 2))
+  assert_true(
+    far(2.0, 0.0)
+    .covering_tiles(0, 24, tile_size=256)
+    .iter()
+    .any(u => u.id.z == 3),
+  )
+}
