@@ -87,6 +87,7 @@ const ENTRIES = [
   ...Object.entries(DATA_PARTS).map(([source, file]) => [file.slice(2), path.join("data_worker/js", source)]),
   ["prjwkt.js", "npm/src/prjwkt.ts"],
   ["element.js", "element/element.ts", { plugins: [separate({ "moon-map": "./index.js" })] }],
+  ["moonbit.js", "npm/src/moonbit.ts", { plugins: [separate({ "./index": "./index.js" })] }],
 ];
 for (const [file, source, options] of ENTRIES) {
   await build({ ...common, ...options, entryPoints: [path.join(ROOT, source)], outfile: path.join(DIST, file) });

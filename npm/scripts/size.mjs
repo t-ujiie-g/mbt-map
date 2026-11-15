@@ -25,6 +25,7 @@ const ENTRIES = [
   { name: "image export (loaded by moonmap with the first toBlob)", files: ["export.js"], budget: 1_000, references: [] },
   { name: "TileJSON merging (loaded by moonmap with the first source given by url)", files: ["tilejson-merge.js"], budget: 1_000, references: [] },
   { name: "moon-map/element (on top of moonmap)", files: ["element.js"], budget: 5_000, references: ["./index.js"] },
+  { name: "moon-map/moonbit (the MoonBit API's entry, on top of moonmap)", files: ["moonbit.js"], budget: 500, references: ["./index.js"] },
   { name: "moon-map/ui (every controller)", files: ["ui.js"], budget: 10_000, references: [] },
   { name: "moon-map/search", files: ["search.js"], budget: 5_000, references: [] },
   { name: "moon-map/services", files: ["services.js"], budget: 12_000, references: ["./services-gml.js", "./services-worker.js", "./services.wasm"] },

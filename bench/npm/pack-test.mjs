@@ -13,6 +13,7 @@ import { drawChecks, editChecks, measureChecks, splitChecks } from "./checks/geo
 import { mediaChecks } from "./checks/media.mjs";
 import { customChecks } from "./checks/custom.mjs";
 import { modelChecks } from "./checks/model.mjs";
+import { moonbitChecks } from "./checks/moonbit.mjs";
 import { tilesChecks } from "./checks/tiles.mjs";
 import { plateauChecks } from "./checks/plateau.mjs";
 import { pointCloudChecks } from "./checks/pointcloud.mjs";
@@ -58,6 +59,7 @@ const PAGES = {
   pointcloud: "bench/npm/pages/pointcloud/",
   i3s: "bench/npm/pages/i3s/",
   globe: "bench/npm/pages/globe/",
+  moonbit: "bench/npm/pages/moonbit/",
   basic: "bench/pages/basic/",
   terrain: "bench/pages/terrain/",
   "showcase-html": "examples/html/?local=1",
@@ -491,6 +493,10 @@ const checks = {
 
   async globe(page) {
     return globeChecks(page);
+  },
+
+  async moonbit(page) {
+    return moonbitChecks(page);
   },
 
   async services(page, requests) {

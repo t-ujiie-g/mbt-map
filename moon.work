@@ -1,4 +1,5 @@
 members = [
   ".",
   "./moonbit/moonmap",
+  "./bench/moonbit",
 ]
