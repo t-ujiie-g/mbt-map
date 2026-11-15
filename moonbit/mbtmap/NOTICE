@@ -1,0 +1,13 @@
+mbt-map (MoonBit module t-ujiie-g/mbtmap)
+Copyright 2026 t-ujiie-g
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+style/layers.g.mbt and style/sources.g.mbt are generated from the names of the
+MapLibre style specification (@maplibre/maplibre-gl-style-spec,
+src/reference/v8.json): https://github.com/maplibre/maplibre-style-spec
+Copyright (c) 2020, MapLibre contributors. BSD 3-Clause License; its text is in
+the repository's NOTICE under the style-spec entry.
+
+The npm package `mbt-map` this module binds to carries its own notices
+(https://github.com/t-ujiie-g/mbt-map/blob/main/NOTICE).
