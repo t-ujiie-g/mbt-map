@@ -6,8 +6,8 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 162349,
-      "budget": 163000
+      "bytes": 162989,
+      "budget": 168000
     },
     {
       "name": "GeoJSON sources (loaded by mbt-map when a style has one)",
