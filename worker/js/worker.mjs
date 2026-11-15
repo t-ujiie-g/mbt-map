@@ -321,6 +321,9 @@ onmessage = (e) => {
       () => postMessage({ type: "ready" }),
       (err) => postMessage({ type: "error", message: failure(err) }),
     );
+  } else if (msg?.type === "glyphs" && Number.isInteger(msg.epoch)) {
+    glyphs?.reset();
+    postMessage({ type: "glyphs", epoch: msg.epoch });
   } else if (msg?.type === "style" && ready && msg.style instanceof Uint8Array) {
     // Tiles asked for after this message are made with the new style; a style
     // that fails is reported, and `ready` stays usable (once the wasm runs).

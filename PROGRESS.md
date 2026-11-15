@@ -121,3 +121,18 @@ Where things stand, decisions and open issues. The development history before th
 - `?local=1`：Liberty の文書は `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が `style/public-styles.mjs` の固定した版を sha256 で確かめて取る。取れなければ警告して地理院で始まる）、タイルは `bench/fixtures/ofm-planet`（東京駅の周りの z14 だけ）と `gsi-std`、スプライトは `bench/fixtures/sprites/ofm`。そこで東京で始まる。CI はタイルのフィクスチャを持たないが、確かめはスタイルと都市の層だけで足りる（タイルのフィクスチャを外しても通ることを確かめた）。
 - pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
 - 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。
+
+## グリフのアトラスがあふれる問題（2026-11-15、Mac）
+
+- 症状：漢字の多い地図（OpenFreeMap の Liberty に中文・日本語のラベル）で都市を何か所も回ると「the glyph atlas is full; some labels miss characters」が出て、以後のラベルの文字が欠けたままになる。
+- 原因：グリフは主スレッドの 1 枚のアトラス（2048 px 四方、R8）に足すだけで、外すことがなかった。TinySDF のグリフは 48 px + 余白 6 px で約 62 px 四方なので、2048 px には 1000 字ほどしか入らない。ワーカーは各グリフを一度しか送らないので、あふれた字は二度と載らない。ワーカー側のキャッシュ（`MAX_GLYPHS` 4096）も満ちると以後の字を空白にしていた。
+- 直し：
+  - アトラスが満ちたら作り直す（`Map::rebuild_atlas`）。読み込み済みのタイル（Ready、Stale、読み込み中の前のもの）とそのタイルの通知が使うグリフだけを `@label.Atlas::repack` で詰め直す（高いものから。使うグリフが面積の半分を超える間は辺を倍にし、`ATLAS_SIZE` 2048 から `MAX_ATLAS_SIZE` 8192（`MAX_TEXTURE_SIZE` がそれより小さければそれ）まで。少なくなれば 2048 に戻る）。
+  - 頂点のアトラス座標は別のバッファ（`uv`）にし、記号のメッシュはグリフの番号と角（4 バイト/頂点）を持つので、作り直しの後は `Renderer::place_glyphs` で書き直すだけ（タイルを読み直さない）。MapLibre のようなタイルごとのアトラスは、グリフの鍵が全体で一つで描画がアトラス 1 枚を前提にしているこの作りでは変更が大きいので採らなかった。
+  - 主スレッドは受けたグリフのビットマップを持つ（`@label.GlyphStore`）。作り直しで外したものは、全ワーカーが新しい `{type: "glyphs", epoch}` に答えるまで残す（それ以前に作られたタイルが使いうるため）。ワーカーはそれを受けると「送った」記録を消し、次に使うときに送り直す。ワーカーのキャッシュは満ちたら空にして描き直す（送り直しはしない）。
+  - 警告は 8192 px でも読み込み済みのタイルの字が入らないときだけ。
+- 再現と確かめ：`npm run labels:atlas`（`bench/labels/atlas.mjs`）。Liberty（ofm-planet のフィクスチャ）に GeoJSON の漢字ラベル（1 段 600 字、段ごとに別の字）を重ね、`setData` で 20 段進めてから、最後の段を新しいページで描いたものと比べる。
+  - 直す前：警告 1 回、新しいページと違う画素 26303（GeoJSON のラベルがほぼ全部消える）。
+  - 直した後：警告 0、違う画素 0〜2000 弱（建物の縁。ラベルは同じ）。40 段で作り直しは 5 回、各 2〜5 ms（M2、Chromium）、アトラスは 2048 と 4096 を行き来。1 段 1800 字でも警告なし（4096 に広がる）。
+- `npm run labels:golden` は全シーン同じのまま。MoonBit のテスト（`label`：repack、`bitmap_at`、`GlyphStore`）とワーカーのテスト（送り直し、キャッシュを空にする）を足した。
+- 大きさ：`mbt-map` 162349 → 164177 バイト（+1.8KB、主に `Map[Int32, Bitmap]` の実体化）、ラベルのワーカー部分 9563 → 9612、表示ワーカー 85000 → 85032。記号のメッシュは頂点あたり CPU に 4 バイト（グリフの番号と角）、GPU に 4 バイト（`uv`）増える。

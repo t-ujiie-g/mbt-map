@@ -6,6 +6,7 @@ pub struct Renderer {
   priv atlas : LineAtlas
   priv patterns : PatternAtlas
   priv icons : PatternAtlas
+  priv mut glyph_side : Int32
 }
 
 ///|
@@ -24,6 +25,7 @@ pub fn Renderer::new(canvas : Canvas) -> Renderer? {
       atlas: LineAtlas::new(),
       patterns: PatternAtlas::new(),
       icons: PatternAtlas::new(wrap=false),
+      glyph_side: 0,
     })
   }
 }
@@ -347,11 +349,29 @@ pub fn Renderer::draw_relief(
 }
 
 ///|
-/// Pixels per side of the glyph atlas texture.
+/// Pixels per side of the glyph atlas texture at first, and the most it grows to
+/// (unless the context's `MAX_TEXTURE_SIZE` is smaller).
 pub const ATLAS_SIZE : Int32 = 2048
 
 ///|
-/// Copies a glyph bitmap (one byte per pixel) into the atlas at (x, y).
+pub const MAX_ATLAS_SIZE : Int32 = 8192
+
+///|
+/// The largest glyph atlas side this context takes.
+pub fn Renderer::max_atlas_size(self : Renderer) -> Int32 {
+  @cmp.minimum(MAX_ATLAS_SIZE, gl_max_texture_size(self.gl))
+}
+
+///|
+/// Replaces the glyph atlas with an empty one `side` pixels square.
+pub fn Renderer::reset_glyphs(self : Renderer, side : Int32) -> Unit {
+  gl_glyph_atlas(self.gl, side)
+  self.glyph_side = side
+}
+
+///|
+/// Copies a glyph bitmap (one byte per pixel) into the atlas at (x, y), which
+/// starts `ATLAS_SIZE` pixels square.
 pub fn Renderer::upload_glyph(
   self : Renderer,
   data : JsBuffer,
@@ -360,12 +380,16 @@ pub fn Renderer::upload_glyph(
   width : Int32,
   height : Int32,
 ) -> Unit {
-  gl_glyph(self.gl, ATLAS_SIZE, ATLAS_SIZE, data, x, y, width, height)
+  if self.glyph_side == 0 {
+    self.reset_glyphs(ATLAS_SIZE)
+  }
+  gl_glyph(self.gl, data, x, y, width, height)
 }
 
 ///|
 /// Uploads a symbol entry's glyph quads; `rects` holds the atlas rectangle
-/// (x, y, width, height) of each of its glyphs. No label shows until `show`.
+/// (x, y, width, height) of each of its glyphs, which `place_glyphs` may change
+/// later if `movable`. No label shows until `show`.
 pub fn Renderer::upload_symbols(
   self : Renderer,
   vertices : JsBuffer,
@@ -373,8 +397,21 @@ pub fn Renderer::upload_symbols(
   index_bytes : Int32,
   rects : FixedArray[Int32],
   colors~ : JsBuffer = undefined_buffer(),
+  movable~ : Bool = false,
 ) -> Mesh {
-  gl_upload_symbols(self.gl, vertices, indices, index_bytes, rects, colors)
+  let mesh = gl_upload_symbols(self.gl, vertices, indices, index_bytes, colors)
+  gl_place_glyphs(self.gl, mesh, rects, movable)
+  mesh
+}
+
+///|
+/// Points a movable symbol mesh's glyphs at new atlas rectangles (as `upload_symbols`).
+pub fn Renderer::place_glyphs(
+  self : Renderer,
+  mesh : Mesh,
+  rects : FixedArray[Int32],
+) -> Unit {
+  gl_place_glyphs(self.gl, mesh, rects, true)
 }
 
 ///|

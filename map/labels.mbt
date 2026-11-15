@@ -67,11 +67,12 @@ const VIEWPORT_PADDING : Double = 100.0
 const PLACEMENT_INTERVAL : Double = 100.0
 
 ///|
-/// A symbol mesh's labels and their placement state as of `round`: `boxes` (text then
-/// icon, CSS px), terrain `heights` (DEM version `heights_at`), the `anchor`, `variant`
-/// and `shifts` each label took, and the y `order` it is drawn in when sorted.
+/// A symbol mesh's labels and their placement state as of `round`: `keys` (atlas key per glyph index),
+/// `boxes` (text then icon, CSS px), terrain `heights` (DEM version `heights_at`), the `anchor`,
+/// `variant` and `shifts` each label took, and the y `order` it is drawn in when sorted.
 priv struct LabelSet {
   labels : @render_webgl2.JsBuffer
+  keys : FixedArray[Int32]
   count : Int32
   allow_overlap : Bool
   mut cooperative : Bool
@@ -138,8 +139,16 @@ fn Map::glyph_key(self : Map, key : Int32) -> Int32 {
 }
 
 ///|
-/// Adds the glyphs a worker drew for the first time to the atlas, after
-/// numbering the fonts the tile message names.
+/// A glyph's SDF bitmap (one byte per pixel) as a worker sent it.
+priv struct Bitmap {
+  data : @render_webgl2.JsBuffer
+  width : Int32
+  height : Int32
+}
+
+///|
+/// Adds the glyphs a worker sent to the atlas, after numbering the fonts the
+/// tile message names; when the atlas is full, it is made again (`rebuild_atlas`).
 fn Map::take_glyphs(self : Map, msg : JsValue) -> Unit {
   self.tile_fonts.clear()
   for i in 0..<fonts_of(msg) {
@@ -154,43 +163,141 @@ fn Map::take_glyphs(self : Map, msg : JsValue) -> Unit {
     }
     self.tile_fonts.push(id)
   }
+  let fresh = []
   for i in 0..<glyphs_of(msg) {
     let g = glyph_at(msg, i)
-    let cp = self.glyph_key(get_int(g, "cp"))
-    let w = get_int(g, "width")
-    let h = get_int(g, "height")
-    match self.atlas.place(cp, w, h) {
+    let key = self.glyph_key(get_int(g, "cp"))
+    let bitmap = {
+      data: buffer_of(g, "data"),
+      width: get_int(g, "width"),
+      height: get_int(g, "height"),
+    }
+    self.glyphs.add(key, bitmap)
+    if self.atlas.rect(key) is None {
+      fresh.push((key, bitmap))
+    }
+  }
+  for g in fresh {
+    let (key, b) = g
+    match self.atlas.place(key, b.width, b.height) {
       Some((x, y)) =>
-        self.renderer.upload_glyph(buffer_of(g, "data"), x, y, w, h)
-      None =>
-        if self.atlas.rect(cp) is None && !self.atlas_full {
-          self.atlas_full = true
-          console_warn("the glyph atlas is full; some labels miss characters")
-        }
+        self.renderer.upload_glyph(b.data, x, y, b.width, b.height)
+      None if b.width > 0 && b.height > 0 => {
+        self.rebuild_atlas(msg)
+        return
+      }
+      None => ()
     }
   }
 }
 
 ///|
-/// Uploads a symbol entry and its labels, none shown yet.
-fn Map::symbol_mesh(self : Map, l : JsValue) -> (@render_webgl2.Mesh, LabelSet) {
-  let codepoints = buffer_of(l, "codepoints")
-  let rects = FixedArray::make(length_of(codepoints) * 4, 0)
-  for i in 0..<length_of(codepoints) {
-    if self.atlas.rect(self.glyph_key(u32_at(codepoints, i)))
-      is Some((x, y, w, h)) {
+/// Makes the atlas again from the glyphs of the loaded tiles and of tile message `msg`
+/// (`@label.Atlas::repack`) and points the loaded labels at their new places; the
+/// workers are told to send the glyphs left out again, should a later tile use them.
+fn Map::rebuild_atlas(self : Map, msg : JsValue) -> Unit {
+  let used = []
+  for src in self.sources {
+    for _, e in src.tiles {
+      match e.state {
+        Ready(ms) | Stale(ms) | Loading(previous=Some(ms), ..) =>
+          for m in ms {
+            if m.labels is Some(s) {
+              for k in s.keys {
+                used.push(k)
+              }
+            }
+          }
+        _ => ()
+      }
+    }
+  }
+  for i in 0..<layers_of(msg) {
+    let l = layer_at(msg, i)
+    if get_int(l, "kind") == @core.KIND_SYMBOL {
+      let codepoints = buffer_of(l, "codepoints")
+      for j in 0..<length_of(codepoints) {
+        used.push(self.glyph_key(u32_at(codepoints, j)))
+      }
+    }
+  }
+  let kept = self.glyphs.keep(used)
+  self.atlas = @label.Atlas::repack(
+    kept.map(g => (g.0, g.1.width, g.1.height)),
+    @render_webgl2.ATLAS_SIZE,
+    self.renderer.max_atlas_size(),
+  )
+  self.renderer.reset_glyphs(self.atlas.width)
+  for g in kept {
+    let (key, b) = g
+    match self.atlas.bitmap_at(key) {
+      Some((x, y)) =>
+        self.renderer.upload_glyph(b.data, x, y, b.width, b.height)
+      None if !self.atlas_full => {
+        self.atlas_full = true
+        console_warn("the glyph atlas is full; some labels miss characters")
+      }
+      None => ()
+    }
+  }
+  for src in self.sources {
+    for _, e in src.tiles {
+      match e.state {
+        Ready(ms) | Stale(ms) | Loading(previous=Some(ms), ..) =>
+          for m in ms {
+            if m.labels is Some(s) {
+              self.renderer.place_glyphs(m.mesh, self.glyph_rects(s.keys))
+            }
+          }
+        _ => ()
+      }
+    }
+  }
+  let mut workers = 0
+  for failed in self.failed_workers {
+    if !failed {
+      workers += 1
+    }
+  }
+  let epoch = self.glyphs.forget(workers)
+  for i, w in self.workers {
+    if !self.failed_workers[i] {
+      post_glyphs(w, epoch)
+    }
+  }
+  self.request_render()
+}
+
+///|
+/// The atlas rectangle (x, y, width, height) of each glyph key, zeros for those it lacks.
+fn Map::glyph_rects(self : Map, keys : FixedArray[Int32]) -> FixedArray[Int32] {
+  let rects = FixedArray::make(keys.length() * 4, 0)
+  for i, key in keys {
+    if self.atlas.rect(key) is Some((x, y, w, h)) {
       rects[i * 4] = x
       rects[i * 4 + 1] = y
       rects[i * 4 + 2] = w
       rects[i * 4 + 3] = h
     }
   }
+  rects
+}
+
+///|
+/// Uploads a symbol entry and its labels, none shown yet.
+fn Map::symbol_mesh(self : Map, l : JsValue) -> (@render_webgl2.Mesh, LabelSet) {
+  let codepoints = buffer_of(l, "codepoints")
+  let keys = FixedArray::makei(length_of(codepoints), i => {
+    self.glyph_key(u32_at(codepoints, i))
+  })
+  let rects = self.glyph_rects(keys)
   let mesh = self.renderer.upload_symbols(
     buffer_of(l, "vertices"),
     buffer_of(l, "indices"),
     get_int(l, "indexBytes"),
     rects,
     colors=buffer_of(l, "colors"),
+    movable=true,
   )
   let labels = buffer_of(l, "labels")
   let count = length_of(labels) / LABEL_FLOATS
@@ -200,6 +307,7 @@ fn Map::symbol_mesh(self : Map, l : JsValue) -> (@render_webgl2.Mesh, LabelSet) 
     mesh,
     {
       labels,
+      keys,
       count,
       allow_overlap: get_bool(l, "allowOverlap"),
       cooperative: false,

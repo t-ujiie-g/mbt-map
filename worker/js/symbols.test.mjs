@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildSymbols, iconBox, iconCorners, LABEL_FLOATS, MAX_LABEL_CHARS, OFFSET_UNITS, shapeIcon, SYMBOL_VERTEX_BYTES } from "./symbols.mjs";
+import { buildSymbols, Glyphs, iconBox, iconCorners, LABEL_FLOATS, MAX_LABEL_CHARS, OFFSET_UNITS, shapeIcon, SYMBOL_VERTEX_BYTES } from "./symbols.mjs";
 import { SDF_BUFFER, SDF_SIZE } from "./text.mjs";
 
 // A label's icon columns without an icon: no box, one layout, no indices.
@@ -240,4 +240,31 @@ test("fonts name glyphs by their face; format sections take their own font and c
   assert.deepEqual([...colors.slice(0, 8)], [0, 0, 0, 0, 0, 0, 0, 0]);
   assert.deepEqual([...colors.slice(4 * 8, 4 * 8 + 8)], [255, 0, 0, 255, 1, 0, 0, 0]);
   assert.equal(buildSymbols(entry([[0, 0, 10, ["a"]]]), glyphs).colors, undefined);
+});
+
+test("glyphs are sent once, again after a reset, and drawn again once the cache is full", () => {
+  const g = new Glyphs("sans-serif");
+  let drawn = 0;
+  g.sdfs[0] = { draw: () => (drawn++, { glyphAdvance: 10, glyphLeft: 0, glyphTop: 0, width: 2, height: 2, data: new Uint8ClampedArray(4) }) };
+  const keys = () => g.take().map((x) => x.cp);
+  g.startTile();
+  g.metrics(0x4e00);
+  g.metrics(0x4e01);
+  assert.deepEqual(keys(), [0x4e00, 0x4e01]);
+  g.metrics(0x4e00);
+  assert.deepEqual(keys(), []);
+  g.reset();
+  g.metrics(0x4e00);
+  assert.deepEqual(keys(), [0x4e00]);
+  assert.equal(drawn, 2);
+  // Past 4096 glyphs the cache starts again: known glyphs are drawn again but not sent again.
+  for (let i = 0; i < 4096; i++) {
+    if (i % 1024 === 0) g.startTile();
+    g.metrics(0x5000 + i);
+  }
+  g.take();
+  g.startTile();
+  g.metrics(0x4e00);
+  assert.equal(drawn, 2 + 4096 + 1);
+  assert.deepEqual(keys(), []);
 });

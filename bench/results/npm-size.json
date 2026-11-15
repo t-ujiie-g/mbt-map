@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 162349,
+      "bytes": 164177,
       "budget": 163000
     },
     {
@@ -96,12 +96,12 @@
     },
     {
       "name": "display worker",
-      "bytes": 85000,
+      "bytes": 85032,
       "budget": 100000
     },
     {
       "name": "labels (loaded by the display worker with the first tile that has them)",
-      "bytes": 9563,
+      "bytes": 9612,
       "budget": 10000
     },
     {
