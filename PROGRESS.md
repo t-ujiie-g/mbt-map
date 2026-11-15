@@ -125,7 +125,8 @@ Where things stand, decisions and open issues. The development history before th
 ## 公開の流れ（2026-11-15、Mac）
 
 - 判断（ユーザー）：タグを打ったら各所に公開されるように。少なくとも npm は自動で、pptx-svg の流れ（信頼された公開と段階公開、2FA で承認）を参考に。
-- `.github/workflows/release.yml`（`v*` のタグ）：`verify`（タグ・版・CHANGELOG のそろい、MoonBit のテスト、npm のビルド・テスト・大きさ）→ `npm`（`npm stage publish`、OIDC、npm 11.15 以上。その版がもうあれば飛ばす）、`mooncakes`（secret `MOONCAKES_TOKEN` があれば `mbtmap`、`mbtmap_rabbita` の順。索引に載るのを待って 5 回まで）、`github-release`（`CHANGELOG.md` の節を本文に）。Pages は `pages.yml` が同じタグで。
+- `.github/workflows/release.yml`（`v*` のタグ）：`verify`（タグ・版・CHANGELOG のそろい、MoonBit のテスト、npm のビルド・テスト・大きさ）→ `npm`（`npm stage publish`、OIDC、npm 11.15 以上。その版がもうあれば飛ばす）、`github-release`（`CHANGELOG.md` の節を本文に）。Pages は `pages.yml` が同じタグで。
+- mooncakes は手で公開する（ユーザー判断）：mooncakes のトークンは期限がなくアカウント全体に効き、OIDC のような仕組みもないので、CI の secret に置くと workflow や Actions が乗っ取られたときに任意の版を出されうる。npm は OIDC と 2FA の承認があるので自動のまま。
 - 版：npm と MoonBit の 2 モジュールは同じ版（0.1.0）。`bench/lib/release.mjs` が版と CHANGELOG のそろいを見る（`release.test.mjs` が今の版でも確かめる）。npm の `package.json` は `private` を外し、説明、キーワード、ホームページ（Pages）、`publishConfig.access: public`。`npm pack` は 167 ファイル、0.91MB（展開 2.51MB）。`moon publish --dry-run` は通る。
 - npm の信頼された公開はパッケージが npm にないと設定できないので、0.1.0 は手元から一度出し、その後に信頼された公開（段階公開だけ）を設定する。手順は docs/dev/RELEASING.md。
 - Pages を手動で一度公開した（https://t-ujiie-g.github.io/mbt-map/ ）。
