@@ -14,7 +14,7 @@ const map = new Map({
 map.on("click", "stations", (e) => console.log(e.features[0].properties.name));
 ```
 
-> mbt-map is approaching its first release (0.1.0). The npm package and the MoonBit modules are not published yet.
+Documentation, examples and a live demo: **<https://t-ujiie-g.github.io/mbt-map/>**
 
 ## What it does
 
