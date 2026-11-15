@@ -132,6 +132,7 @@
   ],
   "runs": 18,
   "diffs": 510,
+  "removeAllAdds": 66,
   "tiles": 189981,
   "features": 73677655,
   "queries": 49119,

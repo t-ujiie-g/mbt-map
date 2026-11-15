@@ -154,8 +154,8 @@ fn properties_of(
 }
 
 ///|
-/// A new row holding row `row`'s id with `u`'s property changes
-/// (geojson-vt's `applyPropertyUpdates`: removing all of them ignores the rest).
+/// A new row holding row `row`'s id with `u`'s property changes. Unlike geojson-vt's
+/// `applyPropertyUpdates`, removing all still adds, as MapLibre's `applySourceDiff` does.
 fn Source::updated_row(self : Source, row : Int32, u : FeatureDiff) -> Int32 {
   let props = []
   if !u.remove_all_properties {
@@ -164,9 +164,9 @@ fn Source::updated_row(self : Source, row : Int32, u : FeatureDiff) -> Int32 {
         props.push((c.name, Some(v)))
       }
     }
-    for p in u.add_properties {
-      props.push(p)
-    }
+  }
+  for p in u.add_properties {
+    props.push(p)
   }
   self.table.push_row(self.table.ids[row], props)
 }

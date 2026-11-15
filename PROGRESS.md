@@ -11,7 +11,7 @@ Where things stand, decisions and open issues. The development history before th
   - 文書：README、docs/ の入口ごとのガイド、その後の点検（リファクタリングとセキュリティ）。
   - GitHub Pages：手書きのトップ、docs の HTML、動く例。サンプル集とテーマの切り替え、例の画面の英語化。
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
-  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）。
+  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
 - **次**：公開のあと、単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
 - **未解決**：
   - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
@@ -20,6 +20,8 @@ Where things stand, decisions and open issues. The development history before th
   - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
   - Linux の WebKit で `antialias: false` のキャンバスの最後のフレームが出ない件が headless だけのことか。Linux の headless Firefox に WebGL2 がない（pack test は飛ばす）。
   - 世界が画面より狭い（ズーム約 1 未満）とき、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
+  - 地形の上では `background-pattern` を描かない（色の背景は地形のテクスチャに順番どおり入る）。地形つきの背景の順は MapLibre とのピクセル比較に入っていない（`style:golden` の環境で MapLibre 側が地形の上の hillshade を描かず、比べる絵にならなかった）。
+  - @maplibre/geojson-vt の `applyPropertyUpdates` は 6.3.1 と main でも `removeAllProperties` のとき足す属性を捨てる（上流へは未報告）。
 - **文書の置き場所**：毎回読む決まりは AGENTS.md、仕組みの詳しい説明は docs/dev/ARCHITECTURE.md とその分冊、コマンドの一覧は docs/dev/COMMANDS.md、ツールチェーンと計測で分かったことは docs/dev/TOOLCHAIN.md（AGENTS.md を 130KB から分けた）。
 
 ## 進め方と名前の決定（2026-11-15、ユーザー判断）
@@ -346,3 +348,28 @@ Where things stand, decisions and open issues. The development history before th
   - ショーケースのコロプレスの区切りの最後が重なる（`… / 24.91 / 24.91`）のは `classBreaks` の jenks が simple-statistics と同じく各クラスの下限と最大値を返すためで、いちばん上のクラスが 1 つの値だけのときに起きる。
   - OpenFreeMap のスタイルの `symbol-placement` の式の警告、Firefox の WebGL の性能の警告、GSI のデータの質。
 - 確かめ：`npm --prefix bench test`（20 → 21）、`node site/build.mjs`（切れたリンクなし）、pack test の `samples,showcase-html,showcase-element,showcase-react,plateau,rabbita,globe`（Chromium）と `samples,showcase-html`（WebKit）、`node bench/lib/long-comments.mjs`（46 のまま）。
+## 公開前のライブラリの直し：`updateData`、背景の描く順、地形で固まる件（2026-11-15、Mac）
+
+公開直前に見つかった 3 件。ブランチ `fix/update-data-and-draw-order`。
+
+1. **`updateData` で `removeAllProperties` と `addOrUpdateProperties` を一緒に渡すと、描かれるデータの属性が消える**
+   - 原因：`tiler/source.mbt` の `Source::updated_row` が、@maplibre/geojson-vt 6.3.0 の `applyPropertyUpdates`（`removeAllProperties` なら `{}` を返して終わり）をそのまま移していた。ファサードの `npm/src/geojson-diff.ts`（MapLibre の `applySourceDiff`）は消してから足すので、`getData()` は正しいのにタイルの属性は `{}`、`promoteId` の id は null になり、式は既定値に落ち、feature state は出ず、クエリの属性は空だった。`createFieldEditor`（`propertiesDiff`）はいつもこの形を送るので、フィールド演算・改名・削除のたびに起きていた。
+   - 直し：消してから足す（MapLibre の `applySourceDiff` と `GeoJSONSourceDiff` の文書どおり）。geojson-vt からの意図した逸脱で、コードの 1 行と docs/dev/ARCHITECTURE-MODULES.md に書いた。`ClusterIndex::update` も同じ `Source` を通る。`remove_all_properties` を読むのはここと `has_property_changes` だけ。`promoteId` の id は表示ワーカーが属性から読む（MapLibre と同じ）ので、足した属性に入っていれば戻る。
+   - 上流：geojson-vt は 6.3.1 と main でも同じ（直っていない）。bench の版は 6.3.0 のまま。
+   - ゴールデン：`geojson:diffs` は種つきの差分にこの形が 66 件ある。比べる相手には同じ意味の差分（それまでに出たすべてのキーの `removeProperties` と足す分）を渡す（`forReference`。除外はしない。docs/dev/COMMANDS.md）。18 run、510 差分、189,981 タイルで 0 differ。`geojson:update`（ファサード対 MapLibre）は all identical、`geojson:golden` 0 differ（8,148 タイル）、`cluster:golden` 0 differ。
+   - テスト：`tiler/update_test.mbt`（全消し＋追加、全消しだけ、一部を消して追加。全バックエンド）。pack test の `geojson`（`bench/npm/checks/update-data.mjs`）：直す前は `queryRenderedFeatures` が `{}`、`promoteId` のソースは id が消えて 0 件、円は既定の青のまま。直した後は `queryRenderedFeatures`・`querySourceFeatures`・`getData` とも `{kind: "b", note: "new"}`、円は式どおり赤、`promoteId` のソースは feature state の緑。
+
+2. **背景レイヤーがスタイルの順番で描かれない**
+   - 原因：色の `background` は「最初に見つかった 1 枚」を画面の消去色に使うだけで（`Map::background`）、途中に置いた背景は描かれず、2 枚目以降は無視されていた（平面・地形とも。球と模様だけ順番どおり）。半透明の背景を塗りの上・立体の下に置いても塗りに色が乗らなかった。
+   - MapLibre の順番（`painter.ts`）：最初の 3D レイヤー（`opaquePassCutoff`）以降は 2D レイヤーの深度テストが切れる（`getDepthModeForSublayer` が `DepthMode.disabled`）。つまりレイヤー順そのままで、立体より上の半透明の塗り・ラスタ・背景は立体の上に乗り、下のものは立体に隠れる。立体の層の「あいだ」に置いた背景は、下の層の立体には乗り、上の層の立体には隠れる（地面だけに乗るのは立体より下に置いたとき）。塗りとラスタはもとからこの順だった。
+   - 直し：消去色に使うのは、そのズームで見えるいちばん下のレイヤーが色の背景のときだけ（`Map::base_background`）。それ以外の背景は、置かれた位置で、視野を覆うタイルごとに描く（`Map::draw_background`。球の `draw_globe_background` を平面にも使う。地平線より上の空には乗らない）。地形ではテクスチャの中に順番どおり描く（`map/terrain.mbt`）。
+   - テスト：`style:golden` に 4 場面（`background-under-extrusions` 平均 0.13、`background-between-extrusions` 0.093（上に半透明の塗りも）、`background-over-horizon` 0.228、`globe-background-between-extrusions` 0.012。どれも p99 0）。全 69 場面が限度内。地形の場面は入れられなかった（上の「未解決」）。目で見た限り、地形の hillshade の上の半透明の背景は正しく乗る。
+
+3. **`?local=1` のショーケースで Globe → 3D と押すとページが固まる**
+   - 原因：フィクスチャの DEM はズーム 14 だけ。Globe でズーム 2 まで引いたあと 3D にすると、地形のタイル選び（`render_terrain` → `@core.Transform::covering_tiles(14, 14)`）が、カメラから 6 距離以内の地面を `min_z` のタイルで埋めようとして、見えている世界のほぼ全部を z14（4^14 枚の規模）まで割っていた（Playwright で再現し、CDP で止めたスタックが `covering_tiles` ← `render_terrain` ← `draw_frame`）。`MIN_ZOOM_SLACK` の判定が、`min_z` まで引き上げられた `max_z` を「カメラが望むズーム」として使っていた。本番の DEM（ズーム 1〜14）では起きない。
+   - 直し（`core/covering.mbt`）：望むズームをカメラ自身のタイルズーム（`tile_size` つき）から測り、それより深くは割らない（`min_z` がそれより深いときだけ `min_z`）。`min_z` が望むズームより `MIN_ZOOM_SLACK`（2）を超えて深ければタイルなし。これで枚数は入力によらず抑えられる。呼び出し側（`Map::cover`、地形）は `tile_size` を渡す。ズームが `min_z` 以上のときの結果は変わらない（`camera:golden`、`globe:golden`、`raster:golden` のタイル URL、`query:golden` 750/750）。DEM の最小ズームより 2 を超えて引いた地形は何も描かない（MapLibre も地形のソースの `minzoom` 未満ではタイルを選ばない）。
+   - テスト：`core/covering_test.mbt`（ズーム 2 で `(14, 14)` は 0 枚、`(0, 24)` は 100 枚未満で z ≤ 2、ズーム 11〜13 では近くに z14 のタイル）。pack test のショーケース 3 つに「Globe → 3D」：クリックが返り、ピッチ 60 まで動いて次のフレームが描かれる（直す前はクリックが 30 秒で時間切れ）。
+
+- 大きさ（gzip）：mbt-map（index.js）166,922 → 166,971 バイト（166.9KB → 167.0KB、+0.05KB、予算 168KB）。`geojson.wasm` は変わらず。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 930、wasm-gc 940、js 989、native 930）、npm のテスト（457）と大きさ、bench のテスト、pack test（Chromium、24/24）、`geojson:golden`・`cluster:golden`・`geojson:diffs`・`geojson:update`・`style:golden`（69/69）・`raster:golden`・`query:golden`（750/750）・`globe:golden`（794 比較、タイルの違い 0）・`camera:golden`（331 比較）、`long-comments`（47 のまま）。Firefox と WebKit の pack test は回していない。
+

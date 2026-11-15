@@ -238,7 +238,12 @@ fn Map::render_terrain(
       )
     _ =>
       (
-        t.covering_tiles(src.source.min_zoom, z, heights?=self.ground_heights()),
+        t.covering_tiles(
+          src.source.min_zoom,
+          z,
+          heights?=self.ground_heights(),
+          tile_size=src.source.tile_size,
+        ),
         self.fog(),
       )
   }
@@ -357,13 +362,31 @@ fn Map::draw_texture(
   // Texture pixels per CSS pixel: the tile spans TILE_SIZE * 2^(zoom - z) on screen.
   let px = size.to_double() /
     (@core.TILE_SIZE * @math.pow(2.0, zoom - id.z.to_double()))
+  let base = self.base_background(zoom)
   for index, layer in self.style.layers {
-    if layer.kind is (Background | Symbol | FillExtrusion | Custom) ||
+    if layer.kind is (Symbol | FillExtrusion | Custom) ||
+      (layer.kind is Background && layer.pattern is Some(_)) ||
+      base == Some(index) ||
       zoom < layer.min_zoom ||
       zoom >= layer.max_zoom {
       continue
     }
     let shared = paint_of(layer, zoom, JsProps::none())
+    if layer.kind is Background {
+      let whole = {
+        id,
+        wrap: 0,
+        copy: false,
+        at: self.placement(id, None, 1.0),
+        meshes: [],
+        bounds: None,
+      }
+      self.renderer.draw_background(
+        texture_placement(whole, id, size),
+        shared.rgba(),
+      )
+      continue
+    }
     if layer.heatmap is Some(h) {
       // As MapLibre: each tile's own kernels, at 512 px.
       let draws = draws_of

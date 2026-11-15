@@ -108,7 +108,12 @@ fn Map::cover(self : Map, src : SourceTiles) -> Array[@core.UnwrappedTile] {
   } else {
     // Tiles outside the source's bounds are never asked for.
     t
-    .covering_tiles(s.min_zoom, z, heights?=self.ground_heights())
+    .covering_tiles(
+      s.min_zoom,
+      z,
+      heights?=self.ground_heights(),
+      tile_size=s.tile_size,
+    )
     .filter(u => s.covers(u.id.z, u.id.x, u.id.y))
   }
 }

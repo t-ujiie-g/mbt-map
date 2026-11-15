@@ -71,15 +71,18 @@ fn Transform::base_footprint(self : Transform) -> Array[MercatorCoord] {
 }
 
 ///|
-/// Non-overlapping tiles over the view and the world copies it reaches, nearest the center first:
-/// `max_z` near the camera, lower zooms down to `min_z` (none past `MIN_ZOOM_SLACK` below), on
-/// ground between each tile's `heights` in meters (sea level and the center's).
+/// Non-overlapping tiles over the view and its world copies, nearest the center first: `max_z` near
+/// the camera, down to `min_z` in the distance (none past `MIN_ZOOM_SLACK` below), on ground between
+/// `heights` (meters). None deeper than `tile_size` tiles at the camera's zoom, unless `min_z` is.
 pub fn Transform::covering_tiles(
   self : Transform,
   min_z : Int32,
   max_z : Int32,
   heights? : (TileId) -> (Double, Double),
+  tile_size~ : Int32 = 512,
 ) -> Array[UnwrappedTile] {
+  let wanted = @cmp.minimum(max_z, self.tile_zoom(0, MAX_TILE_ZOOM, tile_size~))
+  let max_z = @cmp.maximum(min_z, wanted)
   let ws = self.world_size()
   let center = self.camera.center.to_mercator()
   let footprint = self.base_footprint()
@@ -131,7 +134,7 @@ pub fn Transform::covering_tiles(
         dist < LOD_DISTANCE * d * @math.pow(2.0, levels.to_double())
       }
       let split = if tile.z < min_z {
-        if !near(max_z - min_z + MIN_ZOOM_SLACK) {
+        if !near(wanted - min_z + MIN_ZOOM_SLACK) {
           continue
         }
         true

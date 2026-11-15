@@ -111,15 +111,26 @@ fn Map::globe_cover(
 }
 
 ///|
-/// Draws a background layer's color over the globe, tile by tile (MapLibre's
-/// `drawBackground` on the globe).
-fn Map::draw_globe_background(self : Map, layer : @style.StyleLayer) -> Unit {
-  guard self.globe is Some(g) else { return }
-  let p = paint_of(layer, self.transform.camera.zoom, JsProps::none())
-  let color = rgba_of(p.color)
-  color[3] = color[3] * p.opacity
-  for u in self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false) {
-    self.renderer.draw_globe_background(self.placement(u.id, None, 1.0), color)
+/// Draws a background layer's color over the tiles that cover the view (MapLibre's
+/// `drawBackground`).
+fn Map::draw_background(self : Map, layer : @style.StyleLayer) -> Unit {
+  let t = self.transform
+  let color = paint_of(layer, t.camera.zoom, JsProps::none()).rgba()
+  let tiles = match self.globe {
+    Some(g) if g.is_globe() =>
+      self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false)
+    _ =>
+      t.covering_tiles(
+        0,
+        t.tile_zoom(0, @core.MAX_TILE_ZOOM),
+        heights?=self.ground_heights(),
+      )
+  }
+  for u in tiles {
+    self.renderer.draw_background(
+      self.placement(u.id, None, 1.0, wrap=u.wrap),
+      color,
+    )
   }
 }
 
