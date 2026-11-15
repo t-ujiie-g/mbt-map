@@ -143,6 +143,6 @@ Where things stand, decisions and open issues. The development history before th
 
 - 判断（ユーザー）：例は npm install 前提でなく、CDN から HTML 1 枚で動く形が適切。0.1.0 の前に入れる。
 - 問題：ブラウザは別のオリジンの Worker のスクリプトを起動しない。CDN から読むと、モジュールの隣から読む Worker だけが弾かれ、地図が読み込まれなかった（pack test の `cdn` で、直す前はタイムアウト）。
-- 直し：`workerScriptUrl`（`npm/src/urls.ts`）が、ライブラリ自身を読んだオリジン（CDN）の Worker を、それを import するだけの同じオリジンの `blob:` から起こす（URL ごとに 1 つ作って使い回す）。ページのオリジンとライブラリのオリジン以外は今までどおり拒むので、`<mbt-map worker-url>` などのマークアップから別のコードは起こせない。CSP を使うページが CDN から読むときは `worker-src blob:` が要る（Getting started に書いた）。wasm と動的 import は別のオリジンからでも読める。
+- 直し：`workerScriptUrl`（`npm/src/urls.ts`）が、ライブラリ自身のフォルダ（CDN の `dist/`）にある Worker を、それを import するだけの同じオリジンの `blob:` から起こす（URL ごとに 1 つ作って使い回す）。オリジンでなくフォルダで判定する（CDN は誰のパッケージも同じオリジンから配るので、オリジンで許すと別のパッケージのスクリプトも通る。自動のセキュリティレビューの指摘）。ページのオリジンとライブラリのフォルダ以外は今までどおり拒むので、`<mbt-map worker-url>` などのマークアップから別のコードは起こせない。CSP を使うページが CDN から読むときは `worker-src blob:` が要る（Getting started に書いた）。wasm と動的 import は別のオリジンからでも読める。
 - 確かめ：pack test の `cdn`（`bench/npm/pages/cdn`、パッケージを CORS 付きの別のポートから読む。地図のタイルの Worker、GeoJSON の Worker、解析の Worker がそれぞれ動き、問い合わせと解析の結果が合う）。単体テスト（blob の中身、使い回し、別のオリジンを拒む）。
 - 見せ方：Getting started の最初を「CDN から HTML 1 枚」にし、npm は次の節に。README と npm の README に CDN の書き方。サイトのサンプルのページは、表示するコードの import map を jsDelivr の版つきの URL（今の版、`mbt-map@0.1.0`）に、CSS をサイトの絶対 URL にして、コピーしてそのまま動く形にした（サイトで動かすのは今どおり同じオリジンの `lib/`）。

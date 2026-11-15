@@ -141,7 +141,7 @@ const checks = {
       r.thrown === "mbt-map: style: layers[0].paint.line-width: unsupported: expression properties" &&
       JSON.stringify(r.warned) === JSON.stringify([{ path: "layers[0].paint.line-width", layer: "x", message: "expression properties" }]) &&
       r.lazy &&
-      r.workerRefused.startsWith("mbt-map: the worker must be an http(s) URL on the page's origin or the library's") &&
+      r.workerRefused.startsWith("mbt-map: the worker must be an http(s) URL on the page's origin or beside the library") &&
       r.leftovers === 0;
     // The display worker's parts load on first use: labels with the style's symbol layers,
     // queries with the first query, PMTiles with the first pmtiles:// tile.

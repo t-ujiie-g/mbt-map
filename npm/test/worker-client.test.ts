@@ -56,8 +56,8 @@ test("start resolves the script against the page and sends init once", () => {
 
 test("start refuses a worker from elsewhere", () => {
   const client = new WorkerClient("data");
-  assert.throws(() => client.start("https://y.org/w.js", () => ({})), /on the page.s origin or the library.s/);
-  assert.throws(() => client.start("data:text/javascript,", () => ({})), /on the page.s origin or the library.s/);
+  assert.throws(() => client.start("https://y.org/w.js", () => ({})), /on the page.s origin or beside the library/);
+  assert.throws(() => client.start("data:text/javascript,", () => ({})), /on the page.s origin or beside the library/);
   assert.equal(client.started, false);
 });
 

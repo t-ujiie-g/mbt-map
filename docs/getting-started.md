@@ -112,7 +112,7 @@ Bundlers differ in how they treat `new URL(…, import.meta.url)`. esbuild leave
 - `new Map({ workerUrl, wasmUrl, geojsonWorkerUrl, geojsonWasmUrl, geojsonPropertiesWasmUrl })` for the map's workers.
 - The last argument of `mbt-map/analysis`, `mbt-map/data` and `mbt-map/geodesic` functions takes `workerUrl`, `wasmUrl` and the URLs of the extra wasm files (`geometryWasmUrl`, `projWasmUrl`, `xmlUrl`, …); the worker starts with the options of the first call.
 
-Workers must come over http(s) from the page's origin or from the origin the library was loaded from, and wasm from an http(s) URL; `data:` and `blob:` URLs given as options are refused.
+Workers must come over http(s) from the page's origin or from the library's own folder (on a CDN), and wasm from an http(s) URL; `data:` and `blob:` URLs given as options are refused.
 
 ### Content Security Policy
 
