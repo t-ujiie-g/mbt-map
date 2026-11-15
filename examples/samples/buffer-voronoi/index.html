@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buffers, Voronoi cells and hulls</title>
+<meta name="description" content="Stations loaded into mbt-map/analysis: geodesic buffers, Voronoi cells clipped to a box and the convex hull, each drawn as a layer.">
+<link rel="stylesheet" href="../sample.css">
+<style>
+  .panel input[type=number] { width: 6em; }
+</style>
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="map"></div>
+<div class="panel">
+  <h1>Buffer, Voronoi, hull</h1>
+  <div class="row">
+    <button data-op="buffer">Buffer</button>
+    <input id="meters" type="number" value="800" min="50" max="5000" step="50" aria-label="Buffer distance in meters"> m
+  </div>
+  <div class="row">
+    <button data-op="voronoi">Voronoi cells</button>
+    <button data-op="hull">Convex hull</button>
+  </div>
+  <output id="status"></output>
+</div>
+<script type="module" src="./main.js"></script>
+</html>
