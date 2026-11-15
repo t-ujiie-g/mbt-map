@@ -1,0 +1,111 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/moonmap/geom"
+
+import {
+  "moonbitlang/core/debug",
+  "t-ujiie-g/moonmap/core",
+}
+
+// Values
+pub const MAX_TABLE_CELLS : Int32 = 32_000_000
+
+pub const MAX_TABLE_POINTS : Int32 = 20_000_000
+
+pub fn read_prop(@core.ByteReader) -> Prop?
+
+pub fn start_of(Array[Int32], Int32) -> Int32
+
+pub fn start_of_last(Array[Int32]) -> Int32
+
+pub fn write_prop(@core.ByteWriter, Prop?) -> Unit
+
+// Errors
+
+// Types and methods
+pub struct Column {
+  name : String
+  values : Array[Prop?]
+}
+
+#derive(Eq, @debug.Debug)
+pub(all) enum GeomKind {
+  NoGeometry
+  Point
+  MultiPoint
+  LineString
+  MultiLineString
+  Polygon
+  MultiPolygon
+}
+pub fn GeomKind::equal(Self, Self) -> Bool
+pub fn GeomKind::not_equal(Self, Self) -> Bool
+pub fn GeomKind::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum Prop {
+  Null
+  Bool(Bool)
+  Num(Double)
+  Str(String)
+}
+pub fn Prop::equal(Self, Self) -> Bool
+pub fn Prop::not_equal(Self, Self) -> Bool
+pub fn Prop::to_repr(Self) -> @debug.Repr
+
+pub struct Table {
+  kinds : Array[GeomKind]
+  ids : Array[Prop?]
+  part_ends : Array[Int32]
+  ring_ends : Array[Int32]
+  point_ends : Array[Int32]
+  coords : Array[Double]
+  columns : Array[Column]
+  // private fields
+}
+pub fn Table::column(Self, String) -> Column?
+pub fn Table::feature_points(Self, Int32) -> (Int32, Int32)
+pub fn Table::from_bytes(BytesView) -> Self?
+pub fn Table::length(Self) -> Int32
+pub fn Table::map_coords(Self, (Double, Double) -> (Double, Double)?) -> Self
+pub fn Table::new() -> Self
+pub fn Table::parts(Self, Int32) -> (Int32, Int32)
+pub fn Table::points(Self, Int32) -> (Int32, Int32)
+pub fn Table::push_row(Self, Prop?, ArrayView[(String, Prop?)]) -> Int32
+pub fn[S : TableSource] Table::read_from(S, Int32) -> Self?
+pub fn Table::rings(Self, Int32) -> (Int32, Int32)
+pub fn Table::to_bytes(Self) -> Bytes
+pub fn[S : TableSink] Table::write_to(Self, S) -> Int32
+
+pub struct TableBuilder {
+  table : Table
+  // private fields
+}
+pub fn TableBuilder::cells(Self) -> Int64
+pub fn TableBuilder::discard_feature(Self) -> Unit
+pub fn TableBuilder::end_feature(Self, GeomKind, id? : Prop?) -> Unit
+pub fn TableBuilder::end_part(Self) -> Unit
+pub fn TableBuilder::end_ring(Self) -> Unit
+pub fn TableBuilder::end_ring_at(Self, Int32) -> Unit
+pub fn TableBuilder::finish(Self) -> Table
+pub fn TableBuilder::new() -> Self
+pub fn TableBuilder::point(Self, Double, Double) -> Unit
+pub fn TableBuilder::prop(Self, String, Prop) -> Unit
+pub fn TableBuilder::reserve(Self, Int32, Int32) -> Unit
+
+// Type aliases
+
+// Traits
+pub(open) trait TableSink {
+  fn room(Self, Int32) -> Bool
+  fn set_u8(Self, Int32, Int32) -> Unit
+  fn set_u32(Self, Int32, Int32) -> Unit
+  fn set_f64(Self, Int32, Double) -> Unit
+}
+
+pub(open) trait TableSource {
+  fn u8_at(Self, Int32) -> Int32
+  fn u32_at(Self, Int32) -> Int32
+  fn f64_at(Self, Int32) -> Double
+  fn utf8_at(Self, Int32, Int32) -> String
+}
+pub impl TableSource for BytesView

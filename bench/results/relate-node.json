@@ -1,0 +1,88 @@
+{
+  "env": {
+    "runtime": "node v22.23.4",
+    "v8": "12.4.254.21-node.57",
+    "cpu": "Apple M2",
+    "platform": "darwin arm64"
+  },
+  "params": {
+    "jsts": "2.12.1",
+    "tiles": 4,
+    "statistic": "median ms of one call: warm-up 300 ms, then 7 samples of at least 50 ms each",
+    "columns": "moon-map: both datasets' tables out of analysis.wasm and into relate.wasm, the export, the result read; tablesIn: those copies alone"
+  },
+  "rows": {
+    "read GeoJSON (43847 GSI features; moonmap: JSON text into a dataset)": {
+      "js": 29,
+      "moon-map": 185,
+      "stringify": 51.3,
+      "ratio": 6.38
+    },
+    "gsi buildings x roads intersects (24 pairs)": {
+      "js": 251.6,
+      "moon-map": 110.8,
+      "tablesIn": 0.393,
+      "ratio": 0.44
+    },
+    "gsi buildings x roads touches (0 pairs)": {
+      "js": 250.8,
+      "moon-map": 111.4,
+      "tablesIn": 0.395,
+      "ratio": 0.444
+    },
+    "gsi water x roads intersects (51 pairs)": {
+      "js": 18.6,
+      "moon-map": 10.4,
+      "tablesIn": 0.122,
+      "ratio": 0.559
+    },
+    "gsi water x roads touches (0 pairs)": {
+      "js": 18.4,
+      "moon-map": 10.4,
+      "tablesIn": 0.122,
+      "ratio": 0.565
+    },
+    "gsi roads x roads (200) intersects (2824 pairs)": {
+      "js": 26.6,
+      "moon-map": 9.72,
+      "tablesIn": 0.0193,
+      "ratio": 0.366
+    },
+    "gsi roads x roads (200) touches (2014 pairs)": {
+      "js": 26.6,
+      "moon-map": 9.75,
+      "tablesIn": 0.0194,
+      "ratio": 0.367
+    },
+    "gsi buildings x buildings (200) intersects (818 pairs)": {
+      "js": 35.4,
+      "moon-map": 14.3,
+      "tablesIn": 0.0348,
+      "ratio": 0.403
+    },
+    "gsi buildings x buildings (200) touches (10 pairs)": {
+      "js": 35,
+      "moon-map": 14.3,
+      "tablesIn": 0.035,
+      "ratio": 0.408
+    },
+    "random sets (20 of 60 x 60) intersects (24273 pairs)": {
+      "js": 552.2,
+      "moon-map": 195.8,
+      "tablesIn": 0.0614,
+      "ratio": 0.355
+    },
+    "random sets (20 of 60 x 60) touches (9265 pairs)": {
+      "js": 704.2,
+      "moon-map": 249.9,
+      "tablesIn": 0.0616,
+      "ratio": 0.355
+    },
+    "100 DE-9IM matrices (random pairs, one call a pair, tables copied by the first)": {
+      "js": 0.989,
+      "moon-map": 0.396,
+      "tablesIn": 0.00446,
+      "ratio": 0.401
+    }
+  }
+}

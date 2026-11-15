@@ -1,0 +1,411 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/moonmap/core"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub const EARTH_RADIUS : Double = 6371008.8
+
+pub const EXTRUSION_VERTEX_BYTES : Int32 = 24
+
+pub const FIELD_OF_VIEW : Double = 0.6435011087932844
+
+pub const GEOMETRY_TYPE_KEY : String = "$type"
+
+pub const GEOM_LINES : Int32 = 2
+
+pub const GEOM_POINTS : Int32 = 1
+
+pub const GEOM_POLYGONS : Int32 = 3
+
+pub const KIND_CIRCLE : Int32 = 3
+
+pub const KIND_EXTRUSION : Int32 = 6
+
+pub const KIND_FILL : Int32 = 1
+
+pub const KIND_HILLSHADE : Int32 = 5
+
+pub const KIND_LINE : Int32 = 2
+
+pub const KIND_RASTER : Int32 = 7
+
+pub const KIND_SYMBOL : Int32 = 4
+
+pub const MAX_CLIP_PLANES : Int32 = 16
+
+pub const MAX_CLIP_POINTS : Int32 = 64
+
+pub const MAX_CLIP_RINGS : Int32 = 8
+
+pub const MAX_PITCH : Double = 85.0
+
+pub const MAX_TILE_ZOOM : Int32 = 28
+
+pub const MAX_VALID_LATITUDE : Double = 85.051129
+
+pub const MAX_ZOOM : Double = 22.0
+
+pub const NORTH_POLE_Y : Int32 = -32768
+
+pub const PI : Double = 3.141592653589793
+
+pub const PROP_ABSENT : Int32 = 5
+
+pub const PROP_FALSE : Int32 = 1
+
+pub const PROP_NULL : Int32 = 0
+
+pub const PROP_NUMBER : Int32 = 3
+
+pub const PROP_STRING : Int32 = 4
+
+pub const PROP_TRUE : Int32 = 2
+
+pub const SHADOW_MAP_SIZE : Int32 = 2048
+
+pub const SOUTH_POLE_Y : Int32 = 32767
+
+pub const TILE_EXTENT : Int32 = 8192
+
+pub const TILE_SIZE : Double = 512.0
+
+pub fn clamp_i16(Int32) -> Int32
+
+pub fn cosh(Double) -> Double
+
+pub let exact_powers : FixedArray[Double]
+
+pub fn fit_box(LngLatBounds, Double, Double, Double, bearing~ : Double, padding~ : Padding, offset~ : (Double, Double), max_zoom~ : Double) -> (LngLat, Double)?
+
+pub fn haversine(Trig, Double, Double, Double, Double) -> Double
+
+pub fn js_hypot(Double, Double) -> Double
+
+pub fn js_max(Double, Double) -> Double
+
+pub fn js_min(Double, Double) -> Double
+
+pub fn js_round(Double) -> Double
+
+pub fn json_string_text(BytesView) -> String
+
+pub fn mercator_constrain(LngLat, Double, Limits, Double, Double) -> (LngLat, Double)
+
+pub fn parse_json(BytesView, slow_number? : (Int32, Int32) -> Double, max_depth? : Int32) -> @json.Json raise JsonError
+
+pub fn polygon_hits_box(Array[(Double, Double)], Double, Double, Double, Double) -> Bool
+
+pub fn polygon_hits_lines(Array[(Double, Double)], Array[Array[(Double, Double)]], Double) -> Bool
+
+pub fn polygon_hits_point(Array[(Double, Double)], (Double, Double), Double) -> Bool
+
+pub fn polygon_hits_polygon(Array[(Double, Double)], Array[(Double, Double)]) -> Bool
+
+pub fn polygon_hits_polygons(Array[(Double, Double)], Array[Array[(Double, Double)]]) -> Bool
+
+pub fn radians(Double) -> Double
+
+pub fn ray_view((Double, Double, Double), (Double, Double, Double), Double, Double) -> ShadowView
+
+pub fn read_json_number(BytesView, Int32, (Int32, Int32) -> Double) -> (Double, Int32)
+
+pub fn sinh(Double) -> Double
+
+pub fn spot_view((Double, Double, Double), (Double, Double, Double), Double, Double, Double, Double) -> ShadowView
+
+pub fn stable_order(ArrayView[Double]) -> FixedArray[Int32]
+
+pub fn[T] stable_sort(Array[T], (T, T) -> Bool) -> Unit
+
+pub fn strconv_number(BytesView) -> Double
+
+pub fn tile_containing(MercatorCoord, Int32) -> TileId?
+
+pub fn turf_radians(Double) -> Double
+
+pub fn turf_ring_area(Trig, Array[Double], Int32, Int32) -> Double
+
+pub fn utf8_lossy(BytesView) -> String
+
+pub fn zoom_shift(Int32) -> Int32
+
+// Errors
+pub(all) suberror JsonError {
+  JsonError(pos~ : Int32, String)
+}
+pub fn JsonError::message(Self) -> String
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct BBox {
+  min_x : Double
+  min_y : Double
+  max_x : Double
+  max_y : Double
+}
+pub fn BBox::contains(Self, Double, Double) -> Bool
+pub fn BBox::empty() -> Self
+pub fn BBox::equal(Self, Self) -> Bool
+pub fn BBox::is_empty(Self) -> Bool
+pub fn BBox::not_equal(Self, Self) -> Bool
+pub fn BBox::to_repr(Self) -> @debug.Repr
+
+pub struct Bezier {
+  // private fields
+}
+pub fn Bezier::at(Self, Double) -> Double
+pub fn Bezier::ease() -> Self
+pub fn Bezier::new(Double, Double, Double, Double) -> Self
+
+pub struct ByteReader {
+  // private fields
+}
+pub fn ByteReader::done(Self) -> Bool
+pub fn ByteReader::f64(Self) -> Double
+pub fn ByteReader::fail(Self) -> Unit
+pub fn ByteReader::i16(Self) -> Int32
+pub fn ByteReader::new(BytesView) -> Self
+pub fn ByteReader::ok(Self) -> Bool
+pub fn ByteReader::pad4(Self) -> Unit
+pub fn ByteReader::remaining(Self) -> Int32
+pub fn ByteReader::u32(Self) -> Int32
+pub fn ByteReader::u8(Self) -> Int32
+pub fn ByteReader::utf8(Self) -> String
+
+pub struct ByteWriter {
+  // private fields
+}
+pub fn ByteWriter::append(Self, Self) -> Unit
+pub fn ByteWriter::clear(Self) -> Unit
+pub fn ByteWriter::f32(Self, Double) -> Unit
+pub fn ByteWriter::f64(Self, Double) -> Unit
+pub fn ByteWriter::i16(Self, Int32) -> Unit
+pub fn ByteWriter::new() -> Self
+pub fn ByteWriter::pad4(Self) -> Unit
+pub fn ByteWriter::to_bytes(Self) -> Bytes
+pub fn ByteWriter::u32(Self, Int32) -> Unit
+pub fn ByteWriter::u8(Self, Int32) -> Unit
+pub fn ByteWriter::utf8(Self, String) -> Unit
+
+#derive(Eq, @debug.Debug)
+pub(all) struct Camera {
+  center : LngLat
+  zoom : Double
+  bearing : Double
+  pitch : Double
+}
+pub fn Camera::equal(Self, Self) -> Bool
+pub fn Camera::not_equal(Self, Self) -> Bool
+pub fn Camera::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct CameraTarget {
+  center : LngLat?
+  zoom : Double?
+  bearing : Double?
+  pitch : Double?
+  around : LngLat?
+  offset : (Double, Double)
+}
+pub fn CameraTarget::equal(Self, Self) -> Bool
+pub fn CameraTarget::new(center? : LngLat, zoom? : Double, bearing? : Double, pitch? : Double, around? : LngLat, offset? : (Double, Double)) -> Self
+pub fn CameraTarget::not_equal(Self, Self) -> Bool
+pub fn CameraTarget::to_repr(Self) -> @debug.Repr
+
+pub struct Ease {
+  // private fields
+}
+pub fn Ease::at(Self, Double) -> Camera
+
+pub struct Flight {
+  duration : Double
+  // private fields
+}
+pub fn Flight::at(Self, Double) -> Camera
+
+#derive(Eq, @debug.Debug)
+pub(all) struct Limits {
+  min_zoom : Double
+  max_zoom : Double
+  min_pitch : Double
+  max_pitch : Double
+  bounds : LngLatBounds?
+}
+pub fn Limits::default() -> Self
+pub fn Limits::equal(Self, Self) -> Bool
+pub fn Limits::not_equal(Self, Self) -> Bool
+pub fn Limits::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct LngLat {
+  lng : Double
+  lat : Double
+}
+pub fn LngLat::equal(Self, Self) -> Bool
+pub fn LngLat::not_equal(Self, Self) -> Bool
+pub fn LngLat::to_mercator(Self) -> MercatorCoord
+pub fn LngLat::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct LngLatBounds {
+  west : Double
+  south : Double
+  east : Double
+  north : Double
+}
+pub fn LngLatBounds::equal(Self, Self) -> Bool
+pub fn LngLatBounds::not_equal(Self, Self) -> Bool
+pub fn LngLatBounds::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub struct Mat4 {
+  m : FixedArray[Double]
+}
+pub fn Mat4::apply(Self, Double, Double, Double, Double) -> (Double, Double, Double, Double)
+pub fn Mat4::equal(Self, Self) -> Bool
+pub fn Mat4::identity() -> Self
+pub fn Mat4::invert(Self) -> Self?
+pub fn Mat4::mul(Self, Self) -> Self
+pub fn Mat4::not_equal(Self, Self) -> Bool
+pub fn Mat4::perspective(Double, Double, Double, Double) -> Self
+pub fn Mat4::rotate_x(Self, Double) -> Self
+pub fn Mat4::rotate_y(Self, Double) -> Self
+pub fn Mat4::rotate_z(Self, Double) -> Self
+pub fn Mat4::scale(Self, Double, Double, Double) -> Self
+pub fn Mat4::to_repr(Self) -> @debug.Repr
+pub fn Mat4::translate(Self, Double, Double, Double) -> Self
+
+#derive(Eq, @debug.Debug)
+pub(all) struct MercatorCoord {
+  x : Double
+  y : Double
+}
+pub fn MercatorCoord::equal(Self, Self) -> Bool
+pub fn MercatorCoord::not_equal(Self, Self) -> Bool
+pub fn MercatorCoord::to_lnglat(Self) -> LngLat
+pub fn MercatorCoord::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct Padding {
+  top : Double
+  right : Double
+  bottom : Double
+  left : Double
+}
+pub fn Padding::equal(Self, Self) -> Bool
+pub fn Padding::not_equal(Self, Self) -> Bool
+pub fn Padding::to_repr(Self) -> @debug.Repr
+pub fn Padding::uniform(Double) -> Self
+
+pub(all) struct ShadowView {
+  matrix : Mat4
+  texel : Double
+}
+
+pub(all) struct Terrain {
+  height : (Double, Double) -> Double?
+  lowest : Double
+  highest : Double
+}
+
+#derive(Eq, Hash, @debug.Debug)
+pub struct TileId {
+  z : Int32
+  x : Int32
+  y : Int32
+}
+pub fn TileId::children(Self) -> FixedArray[Self]?
+pub fn TileId::equal(Self, Self) -> Bool
+pub fn TileId::hash(Self) -> Int32
+pub fn TileId::hash_combine(Self, Hasher) -> Unit
+pub fn TileId::key(Self) -> Int64
+pub fn TileId::lnglat_bounds(Self) -> BBox
+pub fn TileId::mercator_bounds(Self) -> BBox
+pub fn TileId::new(Int32, Int32, Int32) -> Self?
+pub fn TileId::not_equal(Self, Self) -> Bool
+pub fn TileId::parent(Self) -> Self?
+pub fn TileId::to_repr(Self) -> @debug.Repr
+
+pub struct Transform {
+  camera : Camera
+  width : Double
+  height : Double
+  limits : Limits
+  elevation : Double
+  // private fields
+}
+pub fn Transform::at_point(Self, LngLat, Double, Double) -> Camera
+pub fn Transform::bounds(Self) -> LngLatBounds
+pub fn Transform::camera_for_bounds(Self, LngLatBounds, bearing? : Double, padding? : Padding, offset? : (Double, Double), max_zoom? : Double) -> Camera?
+pub fn Transform::center_depth(Self) -> Double
+pub fn Transform::covering_tiles(Self, Int32, Int32) -> Array[TileId]
+pub fn Transform::ease_to(Self, CameraTarget) -> Ease
+pub fn Transform::enu_matrix(Self, (Double, Double, Double)) -> Mat4
+pub fn Transform::exact(Camera, Double, Double, limits? : Limits) -> Self
+pub fn Transform::eye_ray(Self, Double, Double) -> ((Double, Double, Double), (Double, Double, Double), Double)
+pub fn Transform::fly_to(Self, CameraTarget, curve? : Double, speed? : Double, screen_speed? : Double, min_zoom? : Double) -> Flight?
+pub fn Transform::fog_range(Self) -> (Double, Double)
+pub fn Transform::ground_hit(Self, (Double, Double, Double), (Double, Double, Double), Double, Terrain?) -> Double?
+pub fn Transform::horizon(Self) -> Double
+pub fn Transform::keeping(Self, Double, Double, Camera) -> Camera
+pub fn Transform::max_pitch_scale_factor(Self) -> Double
+pub fn Transform::new(Camera, Double, Double, limits? : Limits) -> Self
+pub fn Transform::occluded(Self, LngLat, Double, Terrain) -> Bool
+pub fn Transform::panned(Self, Double, Double, Double, Double) -> Camera
+pub fn Transform::pixels_per_meter(Self) -> Double
+pub fn Transform::project(Self, LngLat, elevation? : Double) -> (Double, Double)
+pub fn Transform::projection(Self) -> (Mat4, Double, Double)
+pub fn Transform::ray_ground(Self, Double, Double) -> MercatorCoord
+pub fn Transform::resize(Self, Double, Double) -> Self
+pub fn Transform::screen_to_mercator(Self, Double, Double) -> MercatorCoord
+pub fn Transform::shadow_sphere_view(Self, (Double, Double, Double)) -> ShadowView
+pub fn Transform::shadow_view(Self, (Double, Double, Double)) -> ShadowView
+pub fn Transform::tile_light_matrix(Self, Mat4, TileId, Int32) -> Mat4
+pub fn Transform::tile_matrix(Self, TileId, Int32, aligned? : Bool) -> Mat4
+pub fn Transform::tile_scale(Self, TileId, Int32) -> Double
+pub fn Transform::tile_zoom(Self, Int32, Int32, tile_size? : Int32) -> Int32
+pub fn Transform::unproject(Self, Double, Double) -> LngLat
+pub fn Transform::unproject_on(Self, Double, Double, Terrain) -> LngLat
+pub fn Transform::with_camera(Self, Camera) -> Self
+pub fn Transform::with_elevation(Self, Double) -> Self
+pub fn Transform::with_limits(Self, Limits) -> Self
+pub fn Transform::world_matrix(Self) -> Mat4
+pub fn Transform::world_size(Self) -> Double
+pub fn Transform::zoomed_around(Self, Double, Double, Double) -> Camera
+
+pub(all) struct Trig {
+  sin : (Double) -> Double
+  cos : (Double) -> Double
+  tan : (Double) -> Double
+  asin : (Double) -> Double
+  acos : (Double) -> Double
+  atan : (Double) -> Double
+  atan2 : (Double, Double) -> Double
+  exp : (Double) -> Double
+  ln : (Double) -> Double
+  pow : (Double, Double) -> Double
+  cbrt : (Double) -> Double
+  atanh : (Double) -> Double
+}
+pub fn Trig::acos(Self, Double) -> Double
+pub fn Trig::asin(Self, Double) -> Double
+pub fn Trig::atan(Self, Double) -> Double
+pub fn Trig::atan2(Self, Double, Double) -> Double
+pub fn Trig::atanh(Self, Double) -> Double
+pub fn Trig::cbrt(Self, Double) -> Double
+pub fn Trig::cos(Self, Double) -> Double
+pub fn Trig::exp(Self, Double) -> Double
+pub fn Trig::ln(Self, Double) -> Double
+pub fn Trig::moonbit() -> Self
+pub fn Trig::pow(Self, Double, Double) -> Double
+pub fn Trig::sin(Self, Double) -> Double
+pub fn Trig::tan(Self, Double) -> Double
+
+// Type aliases
+pub type Line = Array[(Double, Double)]
+
+// Traits

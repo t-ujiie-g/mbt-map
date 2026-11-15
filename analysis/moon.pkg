@@ -1,0 +1,18 @@
+// Spatial analysis over `@geom.Table`s: a packed R-tree (flatbush), measures
+// and predicates matching Turf.js, queries and aggregation. Pure MoonBit,
+// tested on every backend.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/double",
+  "moonbitlang/core/int",
+  "moonbitlang/core/math",
+}
+
+import {
+  "t-ujiie-g/moonmap/geom",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/math",
+} for "test"

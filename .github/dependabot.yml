@@ -11,3 +11,13 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+  - package-ecosystem: npm
+    directories: ["/npm", "/bench", "/examples/react"]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+    versioning-strategy: increase
+    groups:
+      npm:
+        patterns: ["*"]

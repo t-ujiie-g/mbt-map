@@ -1,0 +1,39 @@
+// Export surface for the mvt and tess benches and golden tests; names come from `#export_name`.
+
+import {
+  "t-ujiie-g/moonmap/clipper",
+  "t-ujiie-g/moonmap/cluster_props",
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/draco",
+  "t-ujiie-g/moonmap/lepcc",
+  "t-ujiie-g/moonmap/formats",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/globe",
+  "t-ujiie-g/moonmap/meshopt",
+  "t-ujiie-g/moonmap/mvt",
+  "t-ujiie-g/moonmap/proj",
+  "t-ujiie-g/moonmap/route",
+  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/moonmap/tess",
+  "t-ujiie-g/moonmap/tiler",
+  "moonbitlang/core/double",
+}
+
+supported_targets = "+js+wasm+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  targets: {
+    "golden.mbt": [ "js" ],
+    "js_input.mbt": [ "js" ],
+    "linear_memory.mbt": [ "wasm", "wasm-gc" ],
+    "host_math.mbt": [ "wasm", "wasm-gc" ],
+    "meshopt_mem.mbt": [ "wasm", "wasm-gc" ],
+  },
+  link: {
+    "wasm": { "export-memory-name": "memory" },
+    "wasm-gc": { "export-memory-name": "memory" },
+    "js": { "format": "esm" },
+  },
+)

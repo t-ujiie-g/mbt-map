@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>moon-map: &lt;moon-map&gt; in plain HTML</title>
+<style>html, body { margin: 0; height: 100%; } moon-map { height: 100%; }</style>
+<!-- `npm --prefix bench run npm:pack` installs the packed tarball into ./node_modules. -->
+<script type="importmap">
+  { "imports": { "moon-map": "./node_modules/moon-map/dist/index.js", "moon-map/element": "./node_modules/moon-map/dist/element.js" } }
+</script>
+<moon-map style-url="/bench/pages/basic/style.json" center="139.7671,35.6812" zoom="14.5"></moon-map>
+<script type="module" src="./main.js"></script>

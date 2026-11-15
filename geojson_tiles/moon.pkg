@@ -1,0 +1,12 @@
+// What both GeoJSON worker modules do: read GeoJSON sources into tilers and cut
+// their tiles as encoded columnar tiles (`@tiler.encode_tile`) for the display worker.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/formats",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/wasmio",
+  "t-ujiie-g/moonmap/tiler",
+}
+
+supported_targets = "+wasm-gc"

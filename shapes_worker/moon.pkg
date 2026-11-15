@@ -1,0 +1,21 @@
+// The module the analysis worker loads on its first shape operation: Turf's
+// simplify, convex, nearestPointOnLine and lineSlice, concaveman and
+// d3-delaunay over a dataset's table, computing with the host's Math.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/delaunay",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/hull",
+  "t-ujiie-g/moonmap/lineops",
+  "t-ujiie-g/moonmap/simplify",
+  "t-ujiie-g/moonmap/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

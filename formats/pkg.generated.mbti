@@ -1,0 +1,78 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/moonmap/formats"
+
+import {
+  "moonbitlang/core/debug",
+  "t-ujiie-g/moonmap/geom",
+}
+
+// Values
+pub const MAX_CSV_COLUMNS : Int32 = 4096
+
+pub const MAX_GEOJSON_DEPTH : Int32 = 64
+
+pub const MAX_GEOJSON_KEYS : Int32 = 4096
+
+pub fn read_csv(BytesView, CsvOptions, slow_number? : (Int32, Int32) -> Double, srids? : Array[Int32]) -> @geom.Table raise ReadError
+
+pub fn read_esri_json(BytesView, slow_number~ : (Int32, Int32) -> Double) -> (@geom.Table, Bool) raise ReadError
+
+pub fn read_esri_pbf(BytesView) -> (@geom.Table, Bool) raise ReadError
+
+pub fn read_flatgeobuf(BytesView, ids? : Array[Int32]) -> @geom.Table raise ReadError
+
+pub fn read_geojson(BytesView, slow_number? : (Int32, Int32) -> Double) -> @geom.Table raise GeoJSONError
+
+pub fn read_geojson_features(BytesView, (Int32, Int32) -> Double) -> (@geom.Table, Array[Int32]) raise GeoJSONError
+
+pub fn read_shapefile(BytesView, BytesView?, text~ : (Int32, Int32) -> String, slow_number~ : (Int32, Int32) -> Double) -> @geom.Table raise ReadError
+
+pub fn read_topojson(BytesView, String?, slow_number~ : (Int32, Int32) -> Double) -> (@geom.Table, Array[String]) raise ReadError
+
+pub fn read_wkb(BytesView, srids? : Array[Int32]) -> @geom.Table raise ReadError
+
+pub fn read_wkb_any(BytesView, srids? : Array[Int32]) -> @geom.Table raise ReadError
+
+pub fn read_wkb_hex(BytesView, srids? : Array[Int32]) -> @geom.Table raise ReadError
+
+pub fn read_wkt(BytesView, slow_number? : (Int32, Int32) -> Double, srids? : Array[Int32]) -> @geom.Table raise ReadError
+
+pub fn wkt_of(@geom.Table, Int32, (Double) -> String) -> String?
+
+pub fn write_csv(@geom.Table, delimiter? : Char, header? : Bool, geometry~ : CsvGeometry, number_text~ : (Double) -> String) -> String raise ReadError
+
+// Errors
+#derive(@debug.Debug)
+pub(all) suberror GeoJSONError {
+  Malformed(pos~ : Int32, String)
+}
+pub fn GeoJSONError::message(Self) -> String
+pub fn GeoJSONError::to_repr(Self) -> @debug.Repr
+
+#derive(@debug.Debug)
+pub(all) suberror ReadError {
+  Invalid(format~ : String, pos~ : Int32, String)
+}
+pub fn ReadError::message(Self) -> String
+pub fn ReadError::to_repr(Self) -> @debug.Repr
+
+// Types and methods
+pub(all) enum CsvGeometry {
+  Wkt(String)
+  LonLat(String, String)
+  Omitted
+}
+
+pub(all) struct CsvOptions {
+  delimiter : Int32
+  header : Bool
+  dynamic_typing : Bool
+  latitude : String?
+  longitude : String?
+  geometry : String?
+}
+pub fn CsvOptions::new(delimiter? : Int32, header? : Bool, dynamic_typing? : Bool, latitude? : String, longitude? : String, geometry? : String) -> Self
+
+// Type aliases
+
+// Traits

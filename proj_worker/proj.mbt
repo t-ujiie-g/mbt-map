@@ -1,0 +1,102 @@
+///|
+const MAX_DEFINED_CRS : Int32 = 1024
+
+///|
+/// Makes room for `len` input bytes and returns where JS should write them,
+/// or -1 if `len` is too large.
+#export_name("prepare_input")
+pub fn prepare_input(len : Int32) -> Int32 {
+  @wasmio.prepare_input(len, @wasmio.MAX_INPUT_BYTES)
+}
+
+///|
+/// Where the last call's output starts.
+#export_name("output_addr")
+pub fn output_addr() -> Int32 {
+  @wasmio.output_addr()
+}
+
+///|
+/// The host's `Math` (js/worker.mjs passes it), as proj4js computes with.
+let trig : @proj.Trig = @wasmio.host_trig()
+
+///|
+let nan2 : (Double, Double) = (@double.not_a_number, @double.not_a_number)
+
+///|
+/// The CRSs `define_crs` made, by handle.
+let defined : Array[@proj.Crs] = []
+
+///|
+/// The CRS `id` names: an EPSG code, or -1 - a `define_crs` handle.
+fn crs_of(id : Int32) -> @proj.Crs? {
+  if id >= 0 {
+    @proj.Crs::from_epsg(id, trig~)
+  } else {
+    defined.get(-1 - id)
+  }
+}
+
+///|
+fn crs_name(id : Int32) -> String {
+  if id >= 0 {
+    "EPSG:\{id}"
+  } else {
+    "definition \{-1 - id}"
+  }
+}
+
+///|
+/// Makes the CRS encoded in the input (docs/FORMATS.md "CRS definition") and
+/// returns its handle.
+#export_name("define_crs")
+pub fn define_crs() -> Int32 {
+  let slots = @wasmio.input_f64s()
+  @wasmio.clear_input()
+  guard slots.length() == @proj.DEFINITION_SLOTS else {
+    return @wasmio.fail_with("malformed CRS definition")
+  }
+  guard defined.length() < MAX_DEFINED_CRS else {
+    return @wasmio.fail_with("too many CRS definitions")
+  }
+  match @proj.Definition::decode(slots[:]).bind(d => @proj.Crs::new(d, trig~)) {
+    Some(crs) => {
+      defined.push(crs)
+      defined.length() - 1
+    }
+    None => @wasmio.fail_with("invalid CRS definition")
+  }
+}
+
+///|
+/// 1 if CRS `id` is geographic, 0 if projected, or minus an error's length.
+#export_name("crs_kind")
+pub fn crs_kind(id : Int32) -> Int32 {
+  match crs_of(id) {
+    Some(c) => if c.is_geographic() { 1 } else { 0 }
+    None => @wasmio.fail_with("unsupported CRS \{crs_name(id)}")
+  }
+}
+
+///|
+/// The input's f64 x, y pairs taken from CRS `from` to CRS `to`, as f64s at
+/// `output_addr` (NaN where a projection cannot reach); returns their count.
+#export_name("transform_coords")
+pub fn transform_coords(from : Int32, to : Int32) -> Int32 {
+  guard crs_of(from) is Some(f) else {
+    return @wasmio.fail_with("unsupported CRS \{crs_name(from)}")
+  }
+  guard crs_of(to) is Some(t) else {
+    return @wasmio.fail_with("unsupported CRS \{crs_name(to)}")
+  }
+  let out = @wasmio.input_f64s()
+  for i in 0..<(out.length() / 2) {
+    let (x, y) = @proj.transform(f, t, out[i * 2], out[i * 2 + 1]).unwrap_or(
+      nan2,
+    )
+    out[i * 2] = x
+    out[i * 2 + 1] = y
+  }
+  @wasmio.clear_input()
+  @wasmio.write_f64s(out)
+}

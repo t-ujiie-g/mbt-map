@@ -1,0 +1,395 @@
+{
+  "env": {
+    "browser": "chromium 156.0.8078.4",
+    "gpu": true,
+    "renderers": {
+      "moon-map": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
+      "cesium": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)"
+    },
+    "viewport": "800x600",
+    "dpr": 1,
+    "cesium": "1.146.0"
+  },
+  "params": {
+    "runs": 3,
+    "statistic": "median of runs (settle and orbit); tiles and bytes from the first run",
+    "orbit": "120 frames, bearing +1° per frame, after settling",
+    "selection": "maximumScreenSpaceError 8 on both; Cesium without dynamic or foveated SSE, skipLevelOfDetail off, cullRequestsWhileMoving off",
+    "height": "moonmap tilesLayer height -36.7; Cesium modelMatrix translating the tileset 36.7 m down its bounding sphere center's ellipsoid normal",
+    "camera": "MapLibre's camera (vertical fov 36.87°, distance 1.5 viewport heights at the center latitude's meters per pixel) as Cesium's lookAt of heading = bearing, pitch = pitch - 90° around the center at 0 m; Cesium's fov the horizontal one",
+    "code": "gzip -9 of the .js/.mjs/.wasm each page fetched from npm/dist or cesium/Build/Cesium (its prebuilt IIFE Cesium.js carries the workers, CESIUM_WORKERS, started from blobs); assetsGzip is the rest (css, json, images)"
+  },
+  "sizes": {
+    "moon-map": {
+      "gzip": 313064,
+      "assetsGzip": 0,
+      "files": {
+        "3d.js": 9075,
+        "index.js": 161464,
+        "worker.js": 4896,
+        "moon-map.wasm": 80291,
+        "custom.js": 2983,
+        "3d-tiles.js": 10414,
+        "3d-worker.js": 16379,
+        "3d.wasm": 27562
+      }
+    },
+    "cesium": {
+      "gzip": 1870716,
+      "assetsGzip": 136329,
+      "files": {
+        "Widgets/widgets.css": 5970,
+        "Cesium.js": 1782167,
+        "Assets/approximateTerrainHeights.json": 97415,
+        "Assets/Images/ion-credit.png": 6051,
+        "Assets/IAU2006_XYS/IAU2006_XYS_18.json": 26893,
+        "ThirdParty/draco_decoder.wasm": 88549
+      }
+    }
+  },
+  "views": [
+    {
+      "name": "station-z17-p50",
+      "center": [
+        139.7671,
+        35.6812
+      ],
+      "zoom": 17,
+      "pitch": 50,
+      "bearing": -20,
+      "cameraDistanceMeters": 436.5554327829685,
+      "moon-map": {
+        "settleMs": 389.6399999856949,
+        "selected": 24,
+        "selectedWithContent": 24,
+        "settleMsRuns": [
+          390,
+          397,
+          368
+        ],
+        "requests": {
+          "tiles": 54,
+          "b3dm": 53,
+          "json": 1,
+          "bytes": 21645668,
+          "missing": [
+            "data/data58.b3dm"
+          ]
+        },
+        "sameEveryRun": true,
+        "orbitCpuMs": {
+          "frames": 120,
+          "p50": 1.8750000596046448,
+          "p95": 2.900000035762787,
+          "max": 3.274999976158142
+        },
+        "contents": [
+          "/bench/fixtures/plateau-chiyoda/data/data240.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data421.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data427.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data428.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data429.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data430.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data432.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data434.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data435.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data438.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data439.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data440.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data441.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data442.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data444.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data445.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data446.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data447.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data449.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data450.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data451.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data453.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data459.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data474.b3dm"
+        ],
+        "errors": []
+      },
+      "cesium": {
+        "settleMs": 391.914999961853,
+        "selected": 23,
+        "statisticsSelected": 23,
+        "settleMsRuns": [
+          392,
+          354,
+          399
+        ],
+        "requests": {
+          "tiles": 51,
+          "b3dm": 50,
+          "json": 1,
+          "bytes": 21011496,
+          "missing": []
+        },
+        "sameEveryRun": true,
+        "orbitCpuMs": {
+          "frames": 120,
+          "p50": 1.6650000214576721,
+          "p95": 3.439999997615814,
+          "max": 4.240000009536743
+        },
+        "contents": [
+          "/bench/fixtures/plateau-chiyoda/data/data421.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data427.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data428.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data429.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data430.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data432.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data433.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data434.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data435.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data438.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data439.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data440.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data441.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data442.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data444.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data445.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data446.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data447.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data449.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data450.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data451.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data453.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data459.b3dm"
+        ],
+        "errors": []
+      },
+      "sharedContents": 22
+    },
+    {
+      "name": "station-z16-p0",
+      "center": [
+        139.7671,
+        35.6812
+      ],
+      "zoom": 16,
+      "pitch": 0,
+      "bearing": 0,
+      "cameraDistanceMeters": 873.110865565937,
+      "moon-map": {
+        "settleMs": 349.14999997615814,
+        "selected": 27,
+        "selectedWithContent": 27,
+        "settleMsRuns": [
+          349,
+          351,
+          334
+        ],
+        "requests": {
+          "tiles": 50,
+          "b3dm": 49,
+          "json": 1,
+          "bytes": 20006080,
+          "missing": []
+        },
+        "sameEveryRun": true,
+        "orbitCpuMs": {
+          "frames": 120,
+          "p50": 1.75,
+          "p95": 2.784999966621399,
+          "max": 3.3199999928474426
+        },
+        "contents": [
+          "/bench/fixtures/plateau-chiyoda/data/data418.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data427.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data428.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data429.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data430.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data432.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data433.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data434.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data435.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data438.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data439.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data440.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data441.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data442.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data444.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data445.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data446.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data447.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data449.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data450.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data451.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data453.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data454.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data455.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data456.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data459.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data460.b3dm"
+        ],
+        "errors": []
+      },
+      "cesium": {
+        "settleMs": 380.55000001192093,
+        "selected": 27,
+        "statisticsSelected": 27,
+        "settleMsRuns": [
+          380,
+          382,
+          381
+        ],
+        "requests": {
+          "tiles": 50,
+          "b3dm": 49,
+          "json": 1,
+          "bytes": 20497876,
+          "missing": []
+        },
+        "sameEveryRun": true,
+        "orbitCpuMs": {
+          "frames": 120,
+          "p50": 2.159999966621399,
+          "p95": 3.1700000166893005,
+          "max": 3.7450000643730164
+        },
+        "contents": [
+          "/bench/fixtures/plateau-chiyoda/data/data418.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data427.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data428.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data429.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data430.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data432.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data433.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data434.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data435.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data438.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data439.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data440.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data441.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data442.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data444.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data445.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data446.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data447.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data449.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data450.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data451.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data453.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data454.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data455.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data456.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data459.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data460.b3dm"
+        ],
+        "errors": []
+      },
+      "sharedContents": 27
+    },
+    {
+      "name": "station-z18-p60",
+      "center": [
+        139.7671,
+        35.6812
+      ],
+      "zoom": 18,
+      "pitch": 60,
+      "bearing": 30,
+      "cameraDistanceMeters": 218.27771639148426,
+      "moon-map": {
+        "settleMs": 319.55500000715256,
+        "selected": 14,
+        "selectedWithContent": 14,
+        "settleMsRuns": [
+          320,
+          302,
+          336
+        ],
+        "requests": {
+          "tiles": 48,
+          "b3dm": 47,
+          "json": 1,
+          "bytes": 16510940,
+          "missing": [
+            "data/data58.b3dm"
+          ]
+        },
+        "sameEveryRun": true,
+        "orbitCpuMs": {
+          "frames": 120,
+          "p50": 1.649999976158142,
+          "p95": 2.5,
+          "max": 2.7199999690055847
+        },
+        "contents": [
+          "/bench/fixtures/plateau-chiyoda/data/data240.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data420.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data430.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data439.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data440.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data441.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data442.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data444.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data446.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data449.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data450.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data453.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data455.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data474.b3dm"
+        ],
+        "errors": []
+      },
+      "cesium": {
+        "settleMs": 348.5199999809265,
+        "selected": 17,
+        "statisticsSelected": 17,
+        "settleMsRuns": [
+          352,
+          349,
+          334
+        ],
+        "requests": {
+          "tiles": 47,
+          "b3dm": 46,
+          "json": 1,
+          "bytes": 19115204,
+          "missing": [
+            "data/data58.b3dm",
+            "data/data114.b3dm",
+            "data/data167.b3dm",
+            "data/data239.b3dm",
+            "data/data209.b3dm",
+            "data/data238.b3dm",
+            "data/data230.b3dm",
+            "data/data188.b3dm"
+          ]
+        },
+        "sameEveryRun": true,
+        "orbitCpuMs": {
+          "frames": 120,
+          "p50": 1.7350000143051147,
+          "p95": 3.6399999260902405,
+          "max": 4.579999923706055
+        },
+        "contents": [
+          "/bench/fixtures/plateau-chiyoda/data/data240.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data418.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data421.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data427.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data428.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data429.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data430.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data439.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data440.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data441.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data442.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data444.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data446.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data449.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data450.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data453.b3dm",
+          "/bench/fixtures/plateau-chiyoda/data/data455.b3dm"
+        ],
+        "errors": []
+      },
+      "sharedContents": 12
+    }
+  ]
+}

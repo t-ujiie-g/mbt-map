@@ -1,0 +1,61 @@
+// What a GeoJSON source's specification and cluster queries become in messages to its
+// worker. Import-free, so that `npm test` can load it.
+
+/** A cluster query: the expansion zoom, the children or the leaves (`limit`, `offset`) of cluster `cluster`. */
+export type ClusterQuery =
+  | { op: "expansion" | "children"; cluster: number }
+  | { op: "leaves"; cluster: number; limit?: number; offset?: number };
+
+const INT32_MAX = 2 ** 31 - 1;
+
+/**
+ * The options the worker loads a source with, derived as MapLibre's GeoJSONSource does (`clusterMaxZoom` 0 or unset
+ * means `maxzoom` - 1; `promoteId` only when a string, by which the worker finds diffs' features).
+ */
+export function loadOptions(spec: Record<string, unknown>) {
+  const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+  const within = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  // The style's ranges (style/source.mbt): the engine refuses a source past them, the worker never sees one.
+  const maxzoom = within(num(spec.maxzoom, 18), 0, 24);
+  const clusterMaxZoom = num(spec.clusterMaxZoom, 0);
+  const cluster =
+    spec.cluster === true
+      ? {
+          maxZoom: Math.max(-1, Math.min(30, clusterMaxZoom ? Math.round(clusterMaxZoom) : maxzoom - 1)),
+          radius: num(spec.clusterRadius, 0) || 50,
+          minPoints: Math.min(INT32_MAX, Math.ceil(Math.max(2, num(spec.clusterMinPoints, 0) || 2))),
+        }
+      : null;
+  return {
+    maxzoom,
+    buffer: within(num(spec.buffer, 128), 0, 512),
+    tolerance: Math.max(0, num(spec.tolerance, 0.375)),
+    lineMetrics: spec.lineMetrics === true,
+    cluster,
+    promoteId: typeof spec.promoteId === "string" ? spec.promoteId : undefined,
+  };
+}
+
+/** Whether two specifications load the same: the same data (by identity), options and cluster properties. */
+export function sameOptions(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  return (
+    a.data === b.data &&
+    JSON.stringify(loadOptions(a)) === JSON.stringify(loadOptions(b)) &&
+    JSON.stringify(a.clusterProperties) === JSON.stringify(b.clusterProperties)
+  );
+}
+
+/**
+ * `query` as the worker takes it: integer ids, a `limit` of 0 (MapLibre's 10), more or
+ * Infinity (-1), an `offset` from 0. Throws on anything else.
+ */
+export function clusterArgs(query: ClusterQuery) {
+  const { cluster } = query;
+  if (!Number.isInteger(cluster) || Math.abs(cluster) > INT32_MAX) throw new Error(`moon-map: no cluster with the id ${cluster}`);
+  if (query.op !== "leaves") return query;
+  const limit = query.limit ?? 10;
+  const offset = query.offset ?? 0;
+  if (!(limit === Infinity || (Number.isInteger(limit) && limit >= 0))) throw new Error(`moon-map: bad limit ${limit}`);
+  if (!(Number.isInteger(offset) && offset >= 0)) throw new Error(`moon-map: bad offset ${offset}`);
+  return { op: "leaves", cluster, limit: limit > INT32_MAX ? -1 : limit, offset: Math.min(offset, INT32_MAX) };
+}

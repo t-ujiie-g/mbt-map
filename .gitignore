@@ -2,14 +2,23 @@
 _build/
 target/
 .mooncakes/
-*.mbti.bak
+.moonagent/
+.repos/
 
-# Node
+# Node and build outputs
 node_modules/
 dist/
 *.tgz
+npm/LICENSE
+npm/NOTICE
 
-# Editors and OS
+# Benchmarks: raw results, screenshots and downloaded fixtures (only their manifests are committed)
+bench/results/*.raw.json
+bench/results/cesium/
+bench/fixtures/*/
+
+# Editors, OS, agents
 .DS_Store
 .vscode/
 .idea/
+.claude/worktrees/

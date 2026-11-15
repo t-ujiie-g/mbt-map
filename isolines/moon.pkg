@@ -1,0 +1,16 @@
+// Isolines and isobands of a grid of points over `@geom.Table`s: ports of
+// @turf/isolines and @turf/isobands 7.4.0. Pure MoonBit, tested on every
+// backend.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/robust",
+  "moonbitlang/core/double",
+}
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+  "moonbitlang/core/double",
+} for "test"

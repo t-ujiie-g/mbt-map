@@ -1,0 +1,253 @@
+///|
+/// `bytes` is the tile's Uint8Array; the js backend reads it without copying.
+#export_name("decode_bytes")
+pub fn decode_bytes(bytes : Bytes) -> Int32 {
+  decode_all(bytes[:])
+}
+
+///|
+/// `tessellate_tile` on the tile's Uint8Array.
+#export_name("tess_bytes")
+pub fn tess_bytes(bytes : Bytes, mode : Int32) -> Int32 {
+  tessellate_tile(bytes[:], mode)
+}
+
+///|
+/// Per-feature fill hashes (see `fill_hash`), comma separated.
+#export_name("fill_digest")
+pub fn fill_digest(bytes : Bytes) -> String {
+  let hashes = []
+  ignore(fill_hash(bytes[:], hashes))
+  hashes.map(h => h.to_string()).join(",")
+}
+
+///|
+/// `build_tiler` on the GeoJSON's UTF-8 Uint8Array.
+#export_name("geojson_tiler")
+pub fn geojson_tiler(
+  bytes : Bytes,
+  max_zoom : Int32,
+  index_max_zoom : Int32,
+  index_max_points : Int32,
+  tolerance : Double,
+  extent : Int32,
+  buffer : Int32,
+  wrap : Bool,
+  line_metrics : Bool,
+) -> Int32 {
+  build_tiler(
+    bytes[:],
+    max_zoom,
+    index_max_zoom,
+    index_max_points,
+    tolerance,
+    extent,
+    buffer,
+    wrap,
+    line_metrics,
+    @tiler.Trig::moonbit(),
+  )
+}
+
+///|
+/// `strconv` for a part of `bytes` starting at an offset.
+fn js_slow(bytes : Bytes) -> (Int32) -> (Int32, Int32) -> Double {
+  at => (s, e) => @core.strconv_number(bytes[at + s:at + e])
+}
+
+///|
+/// `diff_tiler` on the GeoJSON worker's `load` input.
+#export_name("geojson_tiler_diffs")
+pub fn geojson_tiler_diffs(
+  bytes : Bytes,
+  max_zoom : Int32,
+  index_max_zoom : Int32,
+  index_max_points : Int32,
+  tolerance : Double,
+  extent : Int32,
+  buffer : Int32,
+  wrap : Bool,
+  line_metrics : Bool,
+) -> Int32 {
+  let options : @tiler.TilerOptions = {
+    max_zoom,
+    index_max_zoom,
+    index_max_points,
+    tolerance,
+    extent,
+    buffer,
+    wrap,
+    line_metrics,
+  }
+  diff_tiler(bytes[:], options, @tiler.Trig::moonbit(), js_slow(bytes))
+}
+
+///|
+/// `diff_clusters` on the GeoJSON worker's `load` input; `properties` as for
+/// `geojson_clusters`.
+#export_name("geojson_clusters_diffs")
+pub fn geojson_clusters_diffs(
+  bytes : Bytes,
+  max_zoom : Int32,
+  min_points : Int32,
+  radius : Double,
+  extent : Int32,
+  wrap_buffer : Double,
+  properties : Bytes,
+) -> Int32 {
+  let properties = if properties.length() == 0 {
+    None
+  } else {
+    let json = @core.parse_json(properties[:]) catch { _ => return -1 }
+    let compiled = @style.compile_cluster_properties(json) catch {
+      _ => return -1
+    }
+    Some(compiled)
+  }
+  let options : @tiler.ClusterOptions = {
+    ..@tiler.ClusterOptions::default(),
+    max_zoom,
+    min_points,
+    radius,
+    extent,
+  }
+  diff_clusters(
+    bytes[:],
+    options,
+    wrap_buffer,
+    @tiler.Trig::moonbit(),
+    js_slow(bytes),
+    properties?,
+    hooks={
+      ..@cluster_props.Hooks::default(),
+      number_text: js_number_text,
+      text_number: js_text_number,
+    },
+  )
+}
+
+///|
+/// `apply_diff` on the GeoJSON worker's `update` input.
+#export_name("geojson_update")
+pub fn geojson_update(bytes : Bytes) -> Int32 {
+  apply_diff(bytes[:], js_slow(bytes))
+}
+
+///|
+/// `build_clusters` on the GeoJSON's UTF-8 Uint8Array.
+#export_name("geojson_clusters")
+pub fn geojson_clusters(
+  bytes : Bytes,
+  max_zoom : Int32,
+  min_points : Int32,
+  radius : Double,
+  extent : Int32,
+  wrap_buffer : Double,
+  wrap : Bool,
+  properties : Bytes,
+) -> Int32 {
+  let properties = if properties.length() == 0 {
+    None
+  } else {
+    let json = @core.parse_json(properties[:]) catch { _ => return -1 }
+    let compiled = @style.compile_cluster_properties(json) catch {
+      _ => return -1
+    }
+    Some(compiled)
+  }
+  build_clusters(
+    bytes[:],
+    max_zoom,
+    min_points,
+    radius,
+    extent,
+    wrap_buffer,
+    wrap,
+    @tiler.Trig::moonbit(),
+    properties?,
+    hooks={
+      ..@cluster_props.Hooks::default(),
+      number_text: js_number_text,
+      text_number: js_text_number,
+    },
+  )
+}
+
+///|
+extern "js" fn js_number_text(x : Double) -> String = "String"
+
+///|
+extern "js" fn js_text_number(s : String) -> Double = "Number"
+
+///|
+/// `read_only` on the GeoJSON's UTF-8 Uint8Array.
+#export_name("geojson_read")
+pub fn geojson_read(bytes : Bytes) -> Int32 {
+  read_only(bytes[:])
+}
+
+///|
+/// `table_tiler` on a `@geom.Table::to_bytes` Uint8Array (pipeline B).
+#export_name("geojson_tiler_table")
+pub fn geojson_tiler_table(
+  bytes : Bytes,
+  max_zoom : Int32,
+  index_max_zoom : Int32,
+  index_max_points : Int32,
+  tolerance : Double,
+  extent : Int32,
+  buffer : Int32,
+  wrap : Bool,
+) -> Int32 {
+  table_tiler(
+    bytes[:],
+    {
+      max_zoom,
+      index_max_zoom,
+      index_max_points,
+      tolerance,
+      extent,
+      buffer,
+      wrap,
+      line_metrics: false,
+    },
+    @tiler.Trig::moonbit(),
+  )
+}
+
+///|
+/// `clip_words` on input i32s in a Uint8Array, as comma-separated i32s.
+#export_name("clip_bytes")
+pub fn clip_bytes(
+  bytes : Bytes,
+  op : Int32,
+  fill : Int32,
+  tree : Int32,
+) -> String {
+  clip_words(words_of(bytes[:]), op, fill, tree=tree != 0)
+  .map(v => v.to_string())
+  .join(",")
+}
+
+///|
+/// `offset_words` on input i32s in a Uint8Array, as comma-separated i32s.
+#export_name("offset_bytes")
+pub fn offset_bytes(
+  bytes : Bytes,
+  delta : Double,
+  join : Int32,
+  end : Int32,
+  miter_limit : Double,
+  arc_tolerance : Double,
+) -> String {
+  offset_words(words_of(bytes[:]), delta, join, end, miter_limit, arc_tolerance)
+  .map(v => v.to_string())
+  .join(",")
+}
+
+///|
+/// `proj_coords` on a Uint8Array, as comma-separated numbers.
+#export_name("proj_bytes")
+pub fn proj_bytes(bytes : Bytes, from : Int32, to : Int32) -> String {
+  proj_coords(bytes[:], from, to).map(v => v.to_string()).join(",")
+}

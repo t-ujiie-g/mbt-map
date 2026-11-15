@@ -1,0 +1,108 @@
+{
+  "name": "moon-map",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lightweight vector-tile map renderer for the Web, written in MoonBit",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/t-ujiie-g/moon-map.git",
+    "directory": "npm"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "default": "./dist/element.js"
+    },
+    "./analysis": {
+      "types": "./dist/analysis.d.ts",
+      "default": "./dist/analysis.js"
+    },
+    "./ui": {
+      "types": "./dist/ui.d.ts",
+      "default": "./dist/ui.js"
+    },
+    "./search": {
+      "types": "./dist/search.d.ts",
+      "default": "./dist/search.js"
+    },
+    "./draw": {
+      "types": "./dist/draw.d.ts",
+      "default": "./dist/draw.js"
+    },
+    "./geodesic": {
+      "types": "./dist/geodesic.d.ts",
+      "default": "./dist/geodesic.js"
+    },
+    "./3d": {
+      "types": "./dist/3d.d.ts",
+      "default": "./dist/3d.js"
+    },
+    "./data": {
+      "types": "./dist/data.d.ts",
+      "default": "./dist/data.js"
+    },
+    "./services": {
+      "types": "./dist/services.d.ts",
+      "default": "./dist/services.js"
+    },
+    "./worker.js": "./dist/worker.js",
+    "./worker-labels.js": "./dist/worker-labels.js",
+    "./worker-pmtiles.js": "./dist/worker-pmtiles.js",
+    "./worker-query.js": "./dist/worker-query.js",
+    "./moon-map.wasm": "./dist/moon-map.wasm",
+    "./package.json": "./package.json",
+    "./geojson-worker.js": "./dist/geojson-worker.js",
+    "./geojson.wasm": "./dist/geojson.wasm",
+    "./geojson-properties.wasm": "./dist/geojson-properties.wasm",
+    "./analysis-worker.js": "./dist/analysis-worker.js",
+    "./analysis.wasm": "./dist/analysis.wasm",
+    "./geometry.wasm": "./dist/geometry.wasm",
+    "./relate.wasm": "./dist/relate.wasm",
+    "./shapes.wasm": "./dist/shapes.wasm",
+    "./surface.wasm": "./dist/surface.wasm",
+    "./viewshed.wasm": "./dist/viewshed.wasm",
+    "./route.wasm": "./dist/route.wasm",
+    "./analysis-viewshed.js": "./dist/analysis-viewshed.js",
+    "./proj.wasm": "./dist/proj.wasm",
+    "./geodesic-worker.js": "./dist/geodesic-worker.js",
+    "./geodesic.wasm": "./dist/geodesic.wasm",
+    "./3d-worker.js": "./dist/3d-worker.js",
+    "./3d.wasm": "./dist/3d.wasm",
+    "./data-worker.js": "./dist/data-worker.js",
+    "./data.wasm": "./dist/data.wasm",
+    "./data-zip.js": "./dist/data-zip.js",
+    "./data-crs.js": "./dist/data-crs.js",
+    "./data-fgb.js": "./dist/data-fgb.js",
+    "./data-reproject.js": "./dist/data-reproject.js",
+    "./prjwkt.js": "./dist/prjwkt.js",
+    "./xml.wasm": "./dist/xml.wasm",
+    "./geotiff.wasm": "./dist/geotiff.wasm",
+    "./services-worker.js": "./dist/services-worker.js",
+    "./services.wasm": "./dist/services.wasm",
+    "./data-geotiff.js": "./dist/data-geotiff.js"
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "./dist/element.js"
+  ],
+  "files": [
+    "dist",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "size": "node scripts/size.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test test/*.test.ts ../element/*.test.ts ../worker/js/*.test.mjs ../geojson_worker/js/*.test.mjs ../wasmio/js/*.test.mjs ../data_worker/js/*.test.mjs ../services_worker/js/*.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

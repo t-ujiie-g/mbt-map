@@ -1,0 +1,323 @@
+{
+  "env": {
+    "package": "moonmap@0.1.0",
+    "compression": "gzip -9"
+  },
+  "rows": [
+    {
+      "name": "moonmap",
+      "bytes": 161831,
+      "budget": 163000
+    },
+    {
+      "name": "GeoJSON sources (loaded by moonmap when a style has one)",
+      "bytes": 4495,
+      "budget": 5000
+    },
+    {
+      "name": "PMTiles headers (loaded by moonmap when a style has a pmtiles:// source)",
+      "bytes": 792,
+      "budget": 2000
+    },
+    {
+      "name": "GeoTIFF sources (loaded by moonmap with the first one; tiles by moon-map/data)",
+      "bytes": 301,
+      "budget": 1000
+    },
+    {
+      "name": "legacy filters and functions (loaded by moonmap when a style has them)",
+      "bytes": 3606,
+      "budget": 5000
+    },
+    {
+      "name": "sprite sheets (loaded by moonmap when a style has a sprite)",
+      "bytes": 1831,
+      "budget": 2000
+    },
+    {
+      "name": "image, video and canvas sources (loaded by moonmap when a style has one)",
+      "bytes": 2602,
+      "budget": 3000
+    },
+    {
+      "name": "custom layers (loaded by moonmap with the first one)",
+      "bytes": 2983,
+      "budget": 3000
+    },
+    {
+      "name": "image export (loaded by moonmap with the first toBlob)",
+      "bytes": 370,
+      "budget": 1000
+    },
+    {
+      "name": "TileJSON merging (loaded by moonmap with the first source given by url)",
+      "bytes": 462,
+      "budget": 1000
+    },
+    {
+      "name": "moon-map/element (on top of moonmap)",
+      "bytes": 1603,
+      "budget": 5000
+    },
+    {
+      "name": "moon-map/ui (every controller)",
+      "bytes": 9347,
+      "budget": 10000
+    },
+    {
+      "name": "moon-map/search",
+      "bytes": 2849,
+      "budget": 5000
+    },
+    {
+      "name": "moon-map/services",
+      "bytes": 11338,
+      "budget": 12000
+    },
+    {
+      "name": "WFS GML (loaded by moon-map/services with the first GML answer)",
+      "bytes": 2012,
+      "budget": 2500
+    },
+    {
+      "name": "services worker (ArcGIS f=json and f=pbf; loaded by moon-map/services on the first such read)",
+      "bytes": 20295,
+      "budget": 21000
+    },
+    {
+      "name": "moon-map/draw",
+      "bytes": 4932,
+      "budget": 10000
+    },
+    {
+      "name": "display worker",
+      "bytes": 85159,
+      "budget": 100000
+    },
+    {
+      "name": "labels (loaded by the display worker with the first tile that has them)",
+      "bytes": 9563,
+      "budget": 10000
+    },
+    {
+      "name": "PMTiles tiles (loaded by the display worker with the first pmtiles:// tile)",
+      "bytes": 2136,
+      "budget": 3000
+    },
+    {
+      "name": "feature queries (loaded by the display worker with the first query)",
+      "bytes": 927,
+      "budget": 1500
+    },
+    {
+      "name": "GeoJSON worker",
+      "bytes": 36946,
+      "budget": 37000
+    },
+    {
+      "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
+      "bytes": 56527,
+      "budget": 57000
+    },
+    {
+      "name": "moon-map/analysis",
+      "bytes": 8338,
+      "budget": 9000
+    },
+    {
+      "name": "PROJ strings (loaded by moon-map/analysis and moon-map/data on the first one)",
+      "bytes": 2742,
+      "budget": 5000
+    },
+    {
+      "name": "analysis worker",
+      "bytes": 30314,
+      "budget": 31000
+    },
+    {
+      "name": "geometry (loaded by the analysis worker on first use)",
+      "bytes": 41680,
+      "budget": 50000
+    },
+    {
+      "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
+      "bytes": 26801,
+      "budget": 30000
+    },
+    {
+      "name": "shapes (simplify, hulls, Delaunay, Voronoi, line slices; loaded by the analysis worker on first use)",
+      "bytes": 27964,
+      "budget": 30000
+    },
+    {
+      "name": "surfaces (grids, IDW, clusters, contours, density; loaded by the analysis worker on first use)",
+      "bytes": 29214,
+      "budget": 30000
+    },
+    {
+      "name": "viewshed (GDAL's; loaded by the analysis worker on first use)",
+      "bytes": 10727,
+      "budget": 12000
+    },
+    {
+      "name": "routing (geojson-path-finder; loaded by the analysis worker on first use)",
+      "bytes": 16038,
+      "budget": 17000
+    },
+    {
+      "name": "coordinate systems (loaded by the analysis and data workers on first use)",
+      "bytes": 21620,
+      "budget": 25000
+    },
+    {
+      "name": "moon-map/geodesic",
+      "bytes": 1246,
+      "budget": 2000
+    },
+    {
+      "name": "geodesic worker",
+      "bytes": 12030,
+      "budget": 15000
+    },
+    {
+      "name": "moon-map/3d",
+      "bytes": 9094,
+      "budget": 10000
+    },
+    {
+      "name": "3D Tiles (loaded by moon-map/3d with the first tilesLayer)",
+      "bytes": 10480,
+      "budget": 12000
+    },
+    {
+      "name": "I3S (loaded by moon-map/3d with the first i3sLayer)",
+      "bytes": 8314,
+      "budget": 10000
+    },
+    {
+      "name": "SLPK (loaded with the first i3sLayer of an .slpk)",
+      "bytes": 4570,
+      "budget": 6000
+    },
+    {
+      "name": "3d worker",
+      "bytes": 44100,
+      "budget": 50000
+    },
+    {
+      "name": "moon-map/data",
+      "bytes": 4728,
+      "budget": 6000
+    },
+    {
+      "name": "data worker",
+      "bytes": 40640,
+      "budget": 41000
+    },
+    {
+      "name": "zip archives (loaded by the data worker with the first one)",
+      "bytes": 1255,
+      "budget": 2000
+    },
+    {
+      "name": "FlatGeobuf headers, index and range requests (loaded by the data worker with the first one)",
+      "bytes": 2125,
+      "budget": 2500
+    },
+    {
+      "name": "reprojected sources' tiles (loaded by the data worker with the first one)",
+      "bytes": 1847,
+      "budget": 2000
+    },
+    {
+      "name": "coordinates from another CRS (loaded by the data worker with proj.wasm)",
+      "bytes": 1104,
+      "budget": 1500
+    },
+    {
+      "name": ".prj WKT (loaded by the data worker on the first .prj)",
+      "bytes": 3780,
+      "budget": 4000
+    },
+    {
+      "name": "KML and GPX (loaded by the data worker on the first such read)",
+      "bytes": 26730,
+      "budget": 27000
+    },
+    {
+      "name": "GeoTIFF (loaded by the data worker on the first raster read)",
+      "bytes": 19806,
+      "budget": 20000
+    },
+    {
+      "name": "moon-map/ui createAttribution alone",
+      "bytes": 483,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createFullscreen alone",
+      "bytes": 516,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createGeolocation alone",
+      "bytes": 1415,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createNavigation alone",
+      "bytes": 538,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createScale alone",
+      "bytes": 889,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createBasemaps alone",
+      "bytes": 717,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createLayerList alone",
+      "bytes": 849,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createLegend alone",
+      "bytes": 1566,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createCoordinates alone",
+      "bytes": 920,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createIdentify alone",
+      "bytes": 813,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createMeasurement alone",
+      "bytes": 1585,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createProfile alone",
+      "bytes": 926,
+      "budget": 2000
+    },
+    {
+      "name": "moon-map/ui createAttributeTable alone",
+      "bytes": 2037,
+      "budget": 2200
+    },
+    {
+      "name": "moon-map/ui createFieldEditor alone",
+      "bytes": 1362,
+      "budget": 2000
+    }
+  ]
+}

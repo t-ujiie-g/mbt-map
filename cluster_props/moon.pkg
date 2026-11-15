@@ -1,0 +1,16 @@
+// A GeoJSON source's `clusterProperties` evaluated as MapLibre's GeoJSON worker does,
+// for `@tiler.ClusterIndex`: only the GeoJSON worker that has expressions imports it.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/moonmap/tiler",
+}
+
+import {
+  "t-ujiie-g/moonmap/formats",
+  "moonbitlang/core/double",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
+} for "test"

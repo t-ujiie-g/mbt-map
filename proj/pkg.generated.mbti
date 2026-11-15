@@ -1,0 +1,88 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/moonmap/proj"
+
+import {
+  "t-ujiie-g/moonmap/core",
+}
+
+// Values
+pub const DEFINITION_SLOTS : Int32 = 34
+
+pub fn transform(Crs, Crs, Double, Double) -> (Double, Double)?
+
+// Errors
+
+// Types and methods
+pub struct Crs {
+  // private fields
+}
+pub fn Crs::from_epsg(Int32, trig? : @core.Trig) -> Self?
+pub fn Crs::is_geographic(Self) -> Bool
+pub fn Crs::new(Definition, trig? : @core.Trig) -> Self?
+
+pub(all) struct Definition {
+  mut proj : Method
+  mut a : Double
+  mut b : Double
+  mut r_a : Bool
+  mut towgs84 : Array[Double]
+  mut datum_wgs84 : Bool
+  mut to_meter : Double
+  mut from_greenwich : Double
+  mut long_wrap : Double
+  mut lat0 : Double
+  mut lat1 : Double
+  mut lat2 : Double
+  mut lat_ts : Double
+  mut long0 : Double
+  mut long1 : Double
+  mut long2 : Double
+  mut alpha : Double
+  mut gamma : Double
+  mut longc : Double
+  mut x0 : Double
+  mut y0 : Double
+  mut k0 : Double
+  mut zone : Int32
+  mut south : Bool
+  mut no_uoff : Bool
+  mut no_rot : Bool
+  mut czech : Bool
+}
+pub fn Definition::decode(ArrayView[Double]) -> Self?
+pub fn Definition::new(Method, Double, Double) -> Self
+
+pub(all) enum Method {
+  LongLat
+  Merc
+  Tmerc
+  Utm
+  Lcc
+  Aea
+  Aeqd
+  Stere
+  Sterea
+  Cass
+  Laea
+  Eqc
+  Eqdc
+  Sinu
+  Eck6
+  Moll
+  Robin
+  Cea
+  Mill
+  Poly
+  Omerc
+  Somerc
+  Krovak
+  Ortho
+  Gnom
+  Eqearth
+  Bonne
+}
+
+// Type aliases
+pub using @core {type Trig}
+
+// Traits

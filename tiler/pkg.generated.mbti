@@ -1,0 +1,109 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/moonmap/tiler"
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+}
+
+// Values
+pub const CLIP_END : String = "geojsonvt_clip_end"
+
+pub const CLIP_START : String = "geojsonvt_clip_start"
+
+pub const MAX_ZOOM : Int32 = 24
+
+pub fn encode_cluster_features(Array[ClusterFeature], @geom.Table) -> Bytes
+
+pub fn encode_cluster_tile(Array[ClusterFeature], @geom.Table) -> Bytes
+
+pub fn encode_tile(TileData, @geom.Table) -> Bytes
+
+// Errors
+
+// Types and methods
+pub struct ClusterFeature {
+  x : Double
+  y : Double
+  row : Int32
+  cluster_id : Int32
+  count : Int32
+  props : Array[(String, @geom.Prop)]
+}
+
+pub struct ClusterIndex {
+  // private fields
+}
+pub fn ClusterIndex::children(Self, Int32) -> Array[ClusterFeature]?
+pub fn ClusterIndex::expansion_zoom(Self, Int32) -> Int32
+pub fn ClusterIndex::leaves(Self, Int32, limit? : Int32, offset? : Int32) -> Array[ClusterFeature]?
+pub fn ClusterIndex::new(@geom.Table, options? : ClusterOptions, wrap_buffer? : Double, trig? : @core.Trig, properties? : ClusterProperties, feature_ends? : Array[Int32], promote_id? : String) -> Self
+pub fn ClusterIndex::tile(Self, Int32, Int32, Int32) -> Array[ClusterFeature]?
+pub fn ClusterIndex::update(Self, Diff) -> Bool
+
+pub(all) struct ClusterOptions {
+  min_zoom : Int32
+  max_zoom : Int32
+  min_points : Int32
+  radius : Double
+  extent : Int32
+  node_size : Int32
+  wrap : Bool
+}
+pub fn ClusterOptions::default() -> Self
+
+pub(all) struct ClusterProperties {
+  keys : Array[String]
+  map : (Int32) -> Array[@geom.Prop]
+  reduce : (Array[@geom.Prop], Array[@geom.Prop]) -> Unit
+}
+
+pub(all) struct Diff {
+  remove_all : Bool
+  remove : Array[@geom.Prop?]
+  table : @geom.Table
+  add : Array[Int32]
+  update : Array[FeatureDiff]
+}
+pub fn Diff::read(BytesView, @geom.Table, Array[Int32]) -> Self?
+
+pub(all) struct FeatureDiff {
+  id : @geom.Prop?
+  geometry : (Int32, Int32)?
+  remove_all_properties : Bool
+  remove_properties : Array[String]
+  add_properties : Array[(String, @geom.Prop?)]
+}
+
+pub struct TileData {
+  types : Array[Int32]
+  rows : Array[Int32]
+  ring_ends : Array[Int32]
+  point_ends : Array[Int32]
+  xy : Array[Int32]
+  clips : Array[Double]
+}
+
+pub struct Tiler {
+  // private fields
+}
+pub fn Tiler::new(@geom.Table, options? : TilerOptions, trig? : @core.Trig, feature_ends? : Array[Int32], promote_id? : String) -> Self
+pub fn Tiler::tile(Self, Int32, Int32, Int32) -> TileData?
+pub fn Tiler::update(Self, Diff) -> Bool
+
+pub(all) struct TilerOptions {
+  max_zoom : Int32
+  index_max_zoom : Int32
+  index_max_points : Int32
+  tolerance : Double
+  extent : Int32
+  buffer : Int32
+  wrap : Bool
+  line_metrics : Bool
+}
+pub fn TilerOptions::default() -> Self
+
+// Type aliases
+pub using @core {type Trig}
+
+// Traits
