@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Read data files</title>
+<meta name="description" content="CSV written in the page, and any file you drop or pick (CSV, zipped Shapefile, KML/KMZ, GPX, GeoJSON, FlatGeobuf, TopoJSON), read by mbt-map/data and drawn as a GeoJSON layer.">
+<link rel="stylesheet" href="../sample.css">
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="map"></div>
+<div class="panel">
+  <h1>Read data</h1>
+  <p>Drop a file on the map, or pick one: CSV, zipped Shapefile, KML/KMZ, GPX, GeoJSON, FlatGeobuf, TopoJSON.</p>
+  <input id="file" type="file" multiple accept=".csv,.tsv,.txt,.zip,.shp,.dbf,.prj,.cpg,.kml,.kmz,.gpx,.geojson,.fgb,.topojson,.wkt">
+  <output id="status"></output>
+</div>
+<script type="module" src="./main.js"></script>
+</html>

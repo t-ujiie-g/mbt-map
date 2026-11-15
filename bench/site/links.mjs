@@ -4,8 +4,8 @@ import path from "node:path";
 
 export const REPOSITORY = "https://github.com/t-ujiie-g/mbt-map";
 
-/** The examples the site publishes (their folders, under examples/). */
-export const SITE_EXAMPLES = ["html", "element", "react", "plateau", "rabbita"];
+/** The example apps the site publishes (their folders, under examples/); the samples come besides. */
+export const SITE_EXAMPLES = ["html", "react", "plateau", "rabbita"];
 
 /** GitHub's anchor for a heading's text (before numbering repeats). */
 export const slug = (text) =>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search places and coordinates</title>
+<meta name="description" content="mbt-map/search's controller with two providers that ask no server: coordinates typed in (degrees, DMS, plane rectangular) and a small GeoJSON of places; choosing a result flies there.">
+<link rel="stylesheet" href="../sample.css">
+<style>
+  .panel input[type=search] { width: 100%; box-sizing: border-box; padding: 5px 8px; border: 1px solid #d5dae2; border-radius: 7px; }
+  #results { list-style: none; margin: 0; padding: 0; }
+  #results li { padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+  #results li small { color: #5b6676; margin-left: 6px; }
+  #results li[aria-selected=true], #results li:hover { background: #e8eefc; }
+</style>
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="map"></div>
+<div class="panel">
+  <h1>Search</h1>
+  <input id="query" type="search" placeholder="とうきょう, Ueno, 35.6586 139.7454" autocomplete="off" role="combobox" aria-controls="results" aria-expanded="false" aria-label="Search places">
+  <ul id="results" role="listbox"></ul>
+  <p>Try a name in kana or English, degrees, 35°39′31″N 139°44′44″E, or 9系 X -35367 Y -5995.</p>
+</div>
+<script type="module" src="./main.js"></script>
+</html>
