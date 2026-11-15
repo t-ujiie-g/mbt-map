@@ -161,7 +161,7 @@ try {
   server.close();
 }
 const summary = { asks: results.length, identical: results.length - failed, features: results.reduce((n, r) => n + (r.maplibre ?? 0), 0) };
-await writeFile(path.join(ROOT, "bench/results/query-golden.json"), JSON.stringify({ env: { maplibre: "6.16.0", browser: "chromium", viewport: "800x600" }, summary, results }, null, 2) + "\n");
+await writeFile(path.join(ROOT, "bench/results/query-golden.json"), JSON.stringify({ env: { maplibre: "6.16.0", browser: "chromium", viewport: "800x600" }, summary, differing: results.filter((r) => !r.same) }, null, 2) + "\n");
 console.log(JSON.stringify(summary));
 for (const r of results.filter((r) => !r.same)) console.log(JSON.stringify(r));
 if (failed) process.exit(1);

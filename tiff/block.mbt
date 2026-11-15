@@ -296,7 +296,7 @@ fn half_to_float(h : Int32) -> UInt32 {
 ///|
 /// Bytes of one value of a band of sample format `format` and `bits` (geotiff's `arrayForType`),
 /// or 0 when geotiff reads no such samples.
-pub fn band_bytes(format : Int32, bits : Int32) -> Int32 {
+fn band_bytes(format : Int32, bits : Int32) -> Int32 {
   match format {
     1 if bits >= 1 && bits <= 8 => 1
     1 if bits >= 1 && bits <= 16 => 2

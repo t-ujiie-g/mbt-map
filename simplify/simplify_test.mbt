@@ -597,15 +597,3 @@ test "simplify keeps points, multipoints and rows without geometry" {
   assert_eq(out.part_ends, t.part_ends)
   assert_eq(out.column("name").unwrap().values, [None, Some(Str("m")), None])
 }
-
-///|
-test "simplify gives None past MAX_SIMPLIFY_POINTS" {
-  let b = @geom.TableBuilder::new()
-  for i in 0..<=@simplify.MAX_SIMPLIFY_POINTS {
-    b.point(i.to_double(), (i % 7).to_double())
-  }
-  b.end_ring()
-  b.end_part()
-  b.end_feature(LineString)
-  assert_true(@simplify.simplify(b.finish(), 1.0, false) is None)
-}

@@ -7,11 +7,7 @@ import {
 }
 
 // Values
-pub fn atmosphere_blend(Double, Double) -> Double
-
 pub fn planet_scale(Double) -> Double
-
-pub fn surface_vector(@core.LngLat) -> Vec3
 
 pub fn tile_granularity(Int32) -> Int32
 

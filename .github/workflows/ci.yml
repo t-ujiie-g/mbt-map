@@ -84,9 +84,7 @@ jobs:
         run: |
           scripts/setup.sh --no-fixtures --no-browser
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: Build the npm package
-        working-directory: npm
-        run: npm run build
+      # pack-test.mjs builds and packs npm/ itself (bench/npm/prepare.mjs).
       - name: Packed package runs the examples
         working-directory: bench
         run: npx playwright install --with-deps chromium && node npm/pack-test.mjs ${{ matrix.checks }}
@@ -128,9 +126,6 @@ jobs:
         run: |
           scripts/setup.sh --no-fixtures --no-browser
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: Build the npm package
-        working-directory: npm
-        run: npm run build
       - name: Packed package runs the examples
         working-directory: bench
         run: npx playwright install --with-deps ${{ matrix.browser }} && node npm/pack-test.mjs --browser=${{ matrix.browser }} ${{ matrix.checks }}

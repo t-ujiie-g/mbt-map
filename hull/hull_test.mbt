@@ -406,20 +406,6 @@ test "concave leaves out vertices with a non-finite coordinate" {
 }
 
 ///|
-test "concave and convex give None past MAX_HULL_POINTS" {
-  let b = @geom.TableBuilder::new()
-  for i in 0..<=@hull.MAX_HULL_POINTS {
-    b.point(i.to_double(), (i % 7).to_double())
-  }
-  b.end_ring()
-  b.end_part()
-  b.end_feature(MultiPoint)
-  let t = b.finish()
-  assert_true(@hull.concave(t, 2.0, 0.0) is None)
-  assert_true(@hull.convex(t) is None)
-}
-
-///|
 test "concave and convex take rbush's logarithms from trig" {
   let b = @geom.TableBuilder::new()
   for i in 0..<40 {

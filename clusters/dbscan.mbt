@@ -3,24 +3,24 @@
 
 ///|
 /// `dbscan`'s second value per row: Turf's `properties.dbscan` "core".
-pub const DBSCAN_CORE : Int32 = 0
+const DBSCAN_CORE : Int32 = 0
 
 ///|
 /// "edge".
-pub const DBSCAN_EDGE : Int32 = 1
+const DBSCAN_EDGE : Int32 = 1
 
 ///|
 /// "noise".
-pub const DBSCAN_NOISE : Int32 = 2
+const DBSCAN_NOISE : Int32 = 2
 
 ///|
 /// A row Turf does not cluster: not a Point, or a Point without coordinates.
-pub const DBSCAN_SKIPPED : Int32 = 3
+const DBSCAN_SKIPPED : Int32 = 3
 
 ///|
 /// Most neighbor candidates `dbscan` looks at over all its region queries
 /// (AGENTS.md §8.2); past them it gives None.
-pub const MAX_DBSCAN_CANDIDATES : Int64 = 1_000_000_000
+const MAX_DBSCAN_CANDIDATES : Int64 = 1_000_000_000
 
 ///|
 /// Turf's factor for kilometers (`earthRadius / 1e3`).

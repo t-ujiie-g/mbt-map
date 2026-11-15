@@ -1,6 +1,7 @@
 // mbtmap vs MapLibre, same style, tiles and camera script, in Chromium with the Metal GPU.
 // Usage: node render/run.mjs [--runs=11] [--uncapped] [--labels] [--line-labels] [--terrain] [--extrusion] [--shadows] [--pitch=N]
-// Writes bench/results/render-chromium[-labels][-line-labels][-terrain][-extrusion][-pitchN][-uncapped].json.
+// Writes bench/results/render-chromium[-labels][-line-labels][-terrain][-extrusion][-pitchN][-uncapped].json
+// (the medians) and the runs behind them as .raw.json.
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import path from "node:path";
@@ -150,7 +151,10 @@ for (const [engine, rs] of Object.entries(results)) {
 }
 const out = {
   env: { browser: `chromium ${browser.version()}`, uncapped, viewport: "1280x800", dpr, pitch, style: [labels ? "bench/maplibre/style.json + bench/pages/basic labels" : "bench/maplibre/style.json", ...(lineLabels ? ["contour labels along lines"] : []), ...(terrain ? ["terrain on bench/fixtures/gsi-dem as Terrarium, z12-13 halved from it, sky"] : []), ...(extrusion ? ["buildings extruded 30 m (ftCode 3103) or 8 m"] : []), ...(shadows ? ["mbt-map: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"] : [])].join(", ") },
-  params: { runs, statistic: "median of runs" }, sizes, summary, runs: results,
+  params: { runs, statistic: "median of runs" }, sizes, summary,
 };
-await writeFile(path.join(ROOT, `bench/results/render-chromium${variant}${uncapped ? "-uncapped" : ""}.json`), JSON.stringify(out, null, 2) + "\n");
+// The summary is committed; each run's numbers go beside it as *.raw.json (gitignored).
+const name = `bench/results/render-chromium${variant}${uncapped ? "-uncapped" : ""}`;
+await writeFile(path.join(ROOT, `${name}.json`), JSON.stringify(out, null, 2) + "\n");
+await writeFile(path.join(ROOT, `${name}.raw.json`), JSON.stringify({ ...out, runs: results }, null, 2) + "\n");
 console.log(JSON.stringify({ sizes, summary }, null, 2));

@@ -6,7 +6,7 @@ Things learned about MoonBit, its backends and the benchmark setup. `AGENTS.md` 
 
 - moon 0.1.20261104 uses the **new DSL config files `moon.mod` / `moon.pkg`**, not `moon.mod.json` / `moon.pkg.json`. MoonBit syntax and tooling change quickly: verify APIs with `moon ide doc`, generated `.mbti`, or docs.moonbitlang.com instead of guessing from memory.
 - The workspace (`moon.work`), its modules and where build outputs sit: [ARCHITECTURE.md](ARCHITECTURE.md) "MoonBit workspace and API modules".
-- `bench/backend/entry` shows the working patterns for exports (`pkgtype(kind: "foreign_library")` + `#export_name`), `export-memory-name`, and per-file conditional compilation (`options(targets: {...})`).
+- `bench/entry` shows the working patterns for exports (`pkgtype(kind: "foreign_library")` + `#export_name`), `export-memory-name`, and per-file conditional compilation (`options(targets: {...})`).
 - `moon info` writes `.mbti` from each module's canonical backend: `preferred_target` in `moon.mod`, else wasm. The js-only MoonBit API modules (`moonbit/mbtmap`, `moonbit/mbtmap_rabbita`) set `preferred_target = "js"`, so their public API is tracked like the rest; the engine module stays on wasm, so its js-only packages (`map`, `render_webgl2`, internal) get none (`moon info --target js` only prints the diff against wasm).
 - Inline wasm via `extern "wasm" fn f(...) = #|(func ...)` works on both wasm and wasm-gc and is how linear memory is accessed.
 - Current idioms the compiler insists on: `#derive(Eq, Debug)` (before the type) on a public type needs a `pub extend T with ...` entry in the package's `extends.mbt` (copy a neighbouring one); `extend` is a keyword; `Ref(x)`, `Map([], capacity=n)`, `Array(capacity=n)`, `@cmp.minimum`; `try?` is gone (`try Some(e) catch { _ => None }`). In a function with a bare `raise`, `catch` can match constructors of several suberror types.
@@ -15,11 +15,11 @@ Things learned about MoonBit, its backends and the benchmark setup. `AGENTS.md` 
 
 ## Backend facts measured so far
 
-See PROGRESS.md for the numbers' sources.
+See PROGRESS.md for the numbers' sources. The backend comparison (wasm, wasm-gc, js, `wasm-opt`) and the module-split measurement behind "one wasm per entry" were scripts of the earlier repository `t-ujiie-g/mbmap` (`bench/backend`, `bench/split`), not kept here.
 
 - **In wasm-gc every call to a `raise` function allocates its result object, even on success.** Keep `raise` off hot paths: report errors through sticky state or return values, and raise only at coarse boundaries. This alone made the mvt decoder go from 1.3–2.2× slower than JS to faster than JS.
 - wasm (linear memory) uses refcount + TLSF and is 6–9× slower than wasm-gc/JS on allocation-heavy code.
-- `wasm-opt -O3` made the wasm-gc mvt decoder 12–45% *slower* in every browser; do not run it on wasm-gc builds. For wasm (linear memory) it helps only on Node 22, whose older V8 does not inline small wasm functions (flags in `bench/backend/opt.mjs`).
+- `wasm-opt -O3` made the wasm-gc mvt decoder 12–45% *slower* in every browser; do not run it on wasm-gc builds. For wasm (linear memory) it helps only on Node 22, whose older V8 does not inline small wasm functions.
 - In hot loops `FixedArray` beats `Array` (an `Array` access also loads and checks its length): switching earcut's node pool cut its time by about 25%. Prefer incremental rotation over per-vertex `sin`/`cos`/`atan2` (it made line extrusion about 40% faster).
 - V8 does not switch a running wasm call to optimized code, so a worker's first tile runs in baseline code (about 3–5× slower than warm). Warming up with a synthetic tile at init did not help first render in measurements and was removed.
 - Sharing one buffer between layers with the same geometry and packing in place instead of copying made `process_tile` 23–27% faster (median tile) and the output 17% smaller. Compiling the worker wasm once on the main thread and sending the module to every worker made no difference to first render and was reverted.

@@ -1,6 +1,6 @@
 ///|
 /// The most bytes `DracoMesh::to_bytes` writes by default (the model worker's output cap).
-pub const MAX_OUTPUT_BYTES : Int32 = 0x40000000
+const MAX_OUTPUT_BYTES : Int32 = 0x40000000
 
 ///|
 /// The mesh as docs/dev/FORMATS.md "Draco output" lays it out: a header of u32s, the indices, then

@@ -1,14 +1,14 @@
 ///|
 /// The most pairs `relate_pairs` writes.
-pub const MAX_RELATE_PAIRS : Int32 = 10_000_000
+const MAX_RELATE_PAIRS : Int32 = 10_000_000
 
 ///|
 /// The most candidate pairs (boxes meeting) `relate_pairs` tests.
-pub const MAX_RELATE_CANDIDATES : Int32 = 10_000_000
+const MAX_RELATE_CANDIDATES : Int32 = 10_000_000
 
 ///|
 /// The most points `relate_pairs` reads over all the pairs it tests.
-pub const MAX_RELATE_TESTED_POINTS : Int32 = 1_000_000_000
+const MAX_RELATE_TESTED_POINTS : Int32 = 1_000_000_000
 
 ///|
 /// Makes room for `len` input bytes and returns where JS should write them,

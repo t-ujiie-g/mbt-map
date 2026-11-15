@@ -9,7 +9,7 @@ Run from the repository root:
 ```sh
 moon check --target all          # type-check every backend (wasm, wasm-gc, js, native)
 moon test --target all           # all tests on all backends
-moon test <pkg-dir> --target all # one package, e.g. moon test bench/backend/kernel
+moon test <pkg-dir> --target all # one package, e.g. moon test core
 moon test <pkg-dir> -F "glob"    # filter tests by name
 moon test <pkg-dir> -u           # update snapshots (single target only; -u fails with --target all)
 moon fmt && moon info            # before committing; regenerates pkg.generated.mbti
@@ -44,10 +44,8 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run bundlers`: mbt-map under bundlers (bench/bundlers/run.mjs): packs npm/, installs the tarball and pinned versions of Vite, webpack, Rollup, esbuild and Parcel into a temporary directory outside the repository (downloads them from npm; not part of CI) and checks in Chromium, for each dev server and build, that the map draws, a query finds its features and mbt-map/analysis, mbt-map/data (with a CRS) and mbt-map/geodesic answer; builds served from another origin too. Parcel's rows are known failures (it must stay "serve unbundled", which is checked); `-- --only=vite,webpack`, `--no-build` (dist/ as it is), `--keep` (leave the projects). Writes bench/results/bundlers.json.
 - `npm run npm:pack`: build + npm pack npm/, install it there, check examples and test pages in Chromium (CI runs this; `-- --browser=firefox|webkit` runs them in Firefox or WebKit, as CI's `pack firefox …` / `pack webkit …` jobs; `--only=a,b` / `--except=a,b` pick checks by name; `--no-prepare` reuses the last packing).
 
-### Engine: backends, decode, tessellation, rendering speed
+### Engine: decode, tessellation, rendering speed
 
-- `npm run backend:node`: backend comparison in Node (builds MoonBit + wasm-opt first).
-- `npm run backend:browser`: same, inside a module Worker in Chromium/Firefox/WebKit.
 - `npm run maplibre:parse`: MapLibre WorkerTile.parse baseline.
 - `npm run maplibre`: MapLibre first-render / frame-time / bundle-size baseline.
 - `npm run mvt:golden`: mvt vs @mapbox/vector-tile on all fixtures (must stay 35/35).
@@ -59,7 +57,6 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run subdivision:golden`: tess's globe subdivision vs MapLibre 6.16's subdividePolygon / subdivideVertexLine on GSI polygons and lines and seeded random ones, poles and zoom 0 included (must stay 0 differ).
 - `npm run worker:browser`: worker process_tile per fixture, cold and warm, in three browsers.
 - `npm run render`: mbt-map vs MapLibre: first render, frame CPU, bundle sizes (same style); node render/run.mjs --labels adds the label layers, --line-labels contour labels along lines.
-- `npm run split`: the module-split measurement behind "one wasm per entry" (bench/split; rerun when revisiting that granularity).
 
 ### Styles, sources and the map
 
@@ -153,3 +150,6 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run sight:golden`: Map.pickPosition / castRay / setViewshed / setClipping (3D picking, lines of sight, viewsheds and clipping through the shadow map) vs the analytic answers on extrusions and a glTF box of known size (bench/sight/page): segments' first hits within 5 cm, clipped or not, picks on a surface, ground pixels tinted seen or hidden (must stay 0 differ).
 - `npm run clip:cesium`: Map.setClipping vs CesiumJS 1.146.0's ClippingPlaneCollection / ClippingPolygonCollection on PLATEAU (plateau-chiyoda): the same planes and polygons at two of bench/cesium's cameras, where buildings are drawn over black (both faces drawn), each clipping within 2% more pixels apart than unclipped.
 - `npm run cesium`: mbt-map/3d's tilesLayer vs CesiumJS 1.146.0 on PLATEAU (plateau-chiyoda), same viewport and cameras: tiles selected, tile requests and bytes, time until settled, screenshots side by side (bench/results/cesium/, gitignored), frame CPU over an orbit, code gzip; requests leaving 127.0.0.1 fail it; `-- --gpu` on the M2 (frame numbers count only there).
+- `npm run las:synthetic`: writes the pack test's point cloud, bench/npm/pages/pointcloud/cloud.las (gitignored; bench/npm/prepare.mjs writes it before the pack test, and `las:golden` takes the same bytes).
+- `npm run tiles:synthetic`: writes the pack test's 3D Tiles (bench/npm/pages/tiles/set/: b3dm, a cmpt with i3dm, pnts with a glTF of points; committed).
+- `npm run i3s:synthetic`, `npm run i3s:pcsl-synthetic`: write the pack test's I3S 3DObject layer (bench/npm/pages/i3s/set/) and point cloud layer (pcsl/, LEPCC by Esri's encoder; needs g++), both committed.

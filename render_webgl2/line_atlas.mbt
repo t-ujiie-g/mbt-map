@@ -1,15 +1,15 @@
 ///|
 /// Size of the dash texture, as MapLibre's `LineAtlas`: a row (or 15 for
 /// round dashes) per pattern, each pattern stretched over the width.
-pub const LINE_ATLAS_WIDTH : Int32 = 256
+const LINE_ATLAS_WIDTH : Int32 = 256
 
 ///|
-pub const LINE_ATLAS_HEIGHT : Int32 = 512
+const LINE_ATLAS_HEIGHT : Int32 = 512
 
 ///|
 /// Most numbers a dash pattern may have; longer ones are refused (building a
 /// pattern takes time quadratic in its length).
-pub const MAX_DASH_PARTS : Int32 = 64
+const MAX_DASH_PARTS : Int32 = 64
 
 ///|
 /// Rows above and below a round dash's middle row.

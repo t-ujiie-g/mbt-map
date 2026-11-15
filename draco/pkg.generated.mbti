@@ -2,15 +2,7 @@
 package "t-ujiie-g/mbtmap_engine/draco"
 
 // Values
-pub const MAX_ATTRIBUTES : Int32 = 256
-
-pub const MAX_ATTRIBUTE_BYTES : Int32 = 0x10000000
-
-pub const MAX_FACES : Int32 = 0x400000
-
 pub const MAX_KD_DIMENSIONS : Int32 = 1024
-
-pub const MAX_OUTPUT_BYTES : Int32 = 0x40000000
 
 pub const MAX_POINTS : Int32 = 0x400000
 
