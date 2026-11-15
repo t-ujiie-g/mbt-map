@@ -221,3 +221,21 @@ Where things stand, decisions and open issues. The development history before th
   - 振る舞いを合わせているが NOTICE にないもの：OpenLayers（`npm/src/services/` の GML の属性の読みと要求の形）、terra-draw（`npm/src/draw/` の既定のしきい値）、gl-matrix（`core/matrix.mbt` などの行列の演算）。コードを写したものなら項目を足す。
 - VISION.md（44.8KB）を、いまも効いているものだけにした：ゴールと柱、性能目標とサイズ予算（`npm/scripts/size.mjs` に合わせた。メインは 168KB）、アーキテクチャの原則、設計原則、後回し・やらない、API 方針（MoonBit は npm の上の型付きの API と rabbita の部品）、作業ルール、これからの計画（0.1.0、単独の移植、Phase 21）。Phase 0〜20 の表、最初の指示（§9）、ほかのライブラリとの突き合わせ（§10）、パッケージの一覧、予算を上げた経緯は外した（mbmap にある）。節の番号（§1〜§8、§4 の 1〜10）は変えていないので、コードや文書の「VISION §n」はそのまま通る。
 - 追加（本線）：MoonBit の 2 モジュールに `LICENSE` を置き、`mbtmap` には生成したスタイルの関数の出どころ（style-spec、BSD-3）を書いた `NOTICE` を置いた（mooncakes に出るのはモジュールのディレクトリだけなので）。ふるまいを合わせて書いた部分にも念のため記載を足した：OpenLayers（GML・WMS・WMTS の読み、BSD-2）、terra-draw（作図のモードとしきい値、MIT）、gl-matrix（行列とベクトル、MIT）。
+## テストの見直し（2026-11-15、Mac）
+
+- 依頼：意味の薄いテスト、ほかで保証されているテストを消すか作り直す。全テストの名前と、機械的に拾った弱い形（表明なし、`let _ =`、`is Some(_)` だけ、定数を定数と比べる、数行だけ）を読んだ。
+- 結論：消すべきものは少なかった。MoonBit の約 990、npm の 446、bench の 20 のほとんどは、値を表明するか、参照ライブラリの値を埋め込むか、壊れた入力を拒むことを確かめている。`pub fn` で js のテストが 1 行も通らないのは純粋なパッケージ全体で 4 つだけだった（`ExtrusionBuffers::clear`、`Globe::projection`、`Globe::limits`、`PackedTile::length`）。
+- 消した（同語反復）：`density` の「the contour caps」と `isolines` の「the segment and nesting caps…」（上限の定数を同じリテラルと比べるだけ。上限が効くことは別のテストが小さい予算で確かめている）、`tess` の `CIRCLE_GRANULARITY == 3` と `las.test.ts` の `MAX_LAS_POINTS == 10_000_000` の 1 行ずつ。
+- まとめた：`globe` の「radius correction is 1 once drawn flat」を、同じ補正を確かめる隣のテストへ。
+- 値の表明に強めた：`fill-sort-key` と同じ式の `circle-sort-key`（`is Some(_)` → 式そのもの）、180 度をまたぐ線の西端タイル（`is Some(_)` → 切られた座標 `[-64, 8178, 91, 8101]`）、`fit_box` のズーム（9〜11 の間 → `log2(1125)`）、`crsArg` の名前引き（`Float64Array` であること → その PROJ 文字列の定義と同じ）。
+- 足した（CI で守られていなかったところ。golden は CI では 1 つも走らない）：
+  - `proj/projections_test.mbt`：`proj:golden` の PROJ 文字列 43 個それぞれの 1 点を proj4js 2.22.0 の値と比べ、逆変換で戻す（`bench/proj/unit-cases.mjs` が書く）。`proj` の行カバレッジは 365/1674 → 1430/1674（擬円筒・平射・斜軸の各ファイルは 0 行だった）。
+  - `clipper/libcxx_sort_wbtest.mbt`：同じキーの並びを libc++ 21 の `std::sort`（`bench/clipper/libcxx-sort-cases.cpp`、clang++ で作る）と 24 の大きさ × 7 の並びで比べる。`libcxx_sort.mbt` は 17/154 → 145/154。
+  - `worker/js/wasm.test.mjs`：ビルドした表示ワーカーの wasm を Node で起こし、`prepare_input` が範囲外の長さを拒むこと、スタイルの前の呼び出しが文を返すこと、スタイルでないバイト列を `init_style` がトラップせずに拒むことを確かめる（`linear_memory.mbt` は whitebox テストが host の import を引くので moonrun では試せない）。`npm test` の前に `npm run build` が要る（CI はその順）。
+  - `tess`：`ExtrusionBuffers::clear` のあとの再利用が新しいバッファと同じ出力になること。
+- 見つけたこと：
+  - `proj:golden` は 6 つの定義（球のカッシーニ、LAEA 3 つ、2 点の斜軸メルカトル、心射）で 1 点も比べていなかった。proj4js は `+x_0` / `+y_0` のない文字列に NaN を返し、golden は「proj4js の届かない点」として黙って外していた（エッケルト VI の逆変換も同じ）。文字列に `+x_0=0 +y_0=0` を足し、1 点も比べない行は失敗にした。足したあとも 97,200 点すべて 1 mm / 1e-8° 以内（最大 4.66e-9 m）。
+  - `libcxx_sort` は深さの上限（2 log2 n）を越えると libc++ のヒープソートの代わりに安定ソートを使う（コードの注記どおり）。500 個以上のオルガンパイプ形の同値キーではそこへ入り、同じキーの並びが libc++ と違う。テストはこの違いを違いとして固定した。Clipper2 との一致が要る入力で起きうるかは未確認。
+- 数（前 → 後）：`moon test --target all` は wasm 929、wasm-gc 941、js 987、native 929 で変わらず（3 つ減り 3 つ増えた）。npm は 446 → 449、bench は 20 のまま。js の行カバレッジは全体で 28467/39101（72.8%）→ 29664/39101（75.9%）。
+- 残した候補（判断待ち）：`core` の「Trig's methods call its functions」（委譲を 12 個なぞる）、`proj` の「Trig::moonbit is what a CRS computes with by default」、`raster` の「LOG2_WORLD_WIDTH is the log written out」（手書きの定数を式と比べる）、`globe` の「copy leaves the original alone」、`bench/backend/kernel` の 2 つ。
+- 残る穴：`clipper` の本体（`sweep.mbt` 62%、`horizontal.mbt` 54% など。`clipper:golden` は手元だけ）、`worker/query_geometry.mbt` 27%、`style/distance.mbt` 55%、`draco/edgebreaker_traversal.mbt` 38%。ほかの golden にも「比べた点が 0 の行」を失敗にする確かめが要るかは見ていない。

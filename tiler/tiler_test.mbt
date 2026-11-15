@@ -83,8 +83,10 @@ test "features near the antimeridian are copied across it when wrapping" {
     b.end_feature(LineString)
   })
   let wrapped = @tiler.Tiler::new(line)
-  // The western edge tile gets the part past 180°.
-  assert_true(wrapped.tile(2, 0, 1) is Some(_))
+  // The western edge tile gets the copy from -181° to -179° (x -91 to 91 of
+  // 8192), cut at its buffer.
+  let west = wrapped.tile(2, 0, 1).unwrap()
+  assert_eq(ring(west, 0), [-64, 8178, 91, 8101])
   let flat = @tiler.Tiler::new(line, options={
     ..@tiler.TilerOptions::default(),
     wrap: false,

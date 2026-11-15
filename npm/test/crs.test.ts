@@ -29,8 +29,8 @@ test("crsArg parses PROJ strings into a definition", async () => {
 
 test("crsArg looks names up, ahead of the codes", async () => {
   const named = new Map([["TOKYO", "+proj=longlat +ellps=bessel"], ["6677", "+proj=longlat +ellps=GRS80"]]);
-  assert.ok((await crsArg("tokyo", "analysis", named)) instanceof Float64Array);
-  assert.ok((await crsArg("6677", "analysis", named)) instanceof Float64Array);
+  assert.deepEqual(await crsArg("tokyo", "analysis", named), await crsArg("+proj=longlat +ellps=bessel", "analysis"));
+  assert.deepEqual(await crsArg("6677", "analysis", named), await crsArg("+proj=longlat +ellps=GRS80", "analysis"));
   assert.equal(await crsArg("EPSG:6677", "analysis", named), 6677);
 });
 
