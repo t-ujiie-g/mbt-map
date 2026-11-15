@@ -76,3 +76,10 @@ Where things stand, decisions and open issues. The development history before th
 - R5：改名の名残の「mbtmap's」などを、型定義に出る説明コメントと大きさの表で「mbt-map」にした（`mbtmap:overlay` などのキーはそのまま）。
 - R6：MoonBit の API の 2 つのモジュールに `preferred_target = "js"` を置き、`moon info` が `pkg.generated.mbti` を書くようにした。公開 API の差分は CI の `moon info` の差分の確かめが見る。
 - セキュリティ：`npm audit`（npm、bench、examples/react）0 件、Dependabot と秘密情報の警告 0 件。リポジトリの設定（`main` のルールセット、秘密情報の検出と押し込みの防止、Dependabot のセキュリティ更新）は改名の後も有効。新しいコードに `innerHTML`・`eval` はなく、外部コマンドはシェルを通さない。
+
+## GitHub Pages（2026-11-15、Mac）
+
+- 判断（ユーザー）：公開はリリースのタグ（`v*`）を打ったときだけ（手動でも流せる）、トップページは英語（`/`）と日本語（`/ja/`）の 2 枚。
+- `site/`：手書きのトップページ 2 枚（ヒーローに動く地図：地理院の淡色地図と東京駅まわりの駅、上に乗ると強調、クリックで移る）、`site.css`（明暗のテーマ、スマホ幅）、アイコン。`bench/site/build.mjs`（`npm run site`）が `_site/` に組み立てる：`docs/*.md` を marked 18.1.2（依存なし、MIT、既知の脆弱性なし、公開から 2 週間以上の版。bench の開発依存）で HTML にし（見出しのアンカーは GitHub と同じ、目次は `docs/README.md` から題名だけ、リンクは `bench/site/links.mjs` が文書と公開する例はサイトの中へ、それ以外は GitHub へ）、`npm/dist` の js と wasm を 1 度だけ `lib/` に置き、例（html、element、React、PLATEAU、rabbita）はソースを除いて写し import map を `lib/` に向ける。5.8MB。
+- 確かめ：`bench/lib/site.test.mjs`（アンカー、リンクの付け替え、文書の相対リンクとアンカーが切れていないこと）。CI は pack のジョブでサイトを組み立てる。ローカルで全ページを Chromium で開き、コンソールのエラーと 4xx がないこと、見た目（英語、日本語、スマホ幅、暗いテーマ、文書、例）を見た。
+- 公開の設定：Pages は GitHub Actions から、`github-pages` 環境は `main` と `v*` のタグから配備できる。
