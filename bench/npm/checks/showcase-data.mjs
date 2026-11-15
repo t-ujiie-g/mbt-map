@@ -4,7 +4,7 @@ import { awaitAfter, openTab } from "./step.mjs";
 
 export async function showcaseDataChecks(page) {
   await openTab(page, "data");
-  await awaitAfter(page, "data: sample", () => page.click("#data button >> text=サンプルを読む"), { event: "moveend" });
+  await awaitAfter(page, "data: sample", () => page.click("#data button >> text=Open the sample"), { event: "moveend" });
   await page.waitForFunction(() => window.__data.state.items.length === 1);
   const file = { type: "FeatureCollection", features: [{ type: "Feature", properties: { name: "線" }, geometry: { type: "LineString", coordinates: [[139.76, 35.68], [139.77, 35.69]] } }] };
   await page.setInputFiles("#data input[type=file]", { name: "line.geojson", mimeType: "application/geo+json", buffer: Buffer.from(JSON.stringify(file)) });

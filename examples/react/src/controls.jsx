@@ -25,16 +25,16 @@ function Buttons({ c }) {
   return (
     <div className="controls">
       <div className="control-group">
-        <button aria-label="拡大" title="拡大" disabled={!nav.canZoomIn} onClick={() => c.nav.zoomIn()}><Icon name="plus" /></button>
-        <button aria-label="縮小" title="縮小" disabled={!nav.canZoomOut} onClick={() => c.nav.zoomOut()}><Icon name="minus" /></button>
-        <button aria-label="北を上に" title="北を上に" onClick={() => c.nav.resetNorth(true)}>
+        <button aria-label="Zoom in" title="Zoom in" disabled={!nav.canZoomIn} onClick={() => c.nav.zoomIn()}><Icon name="plus" /></button>
+        <button aria-label="Zoom out" title="Zoom out" disabled={!nav.canZoomOut} onClick={() => c.nav.zoomOut()}><Icon name="minus" /></button>
+        <button aria-label="Reset north" title="Reset north" onClick={() => c.nav.resetNorth(true)}>
           <span className="needle" style={{ transform: `rotateX(${nav.pitch}deg) rotateZ(${-nav.bearing}deg)` }}><Icon name="north" /></span>
         </button>
       </div>
       <div className="control-group">
-        <button aria-label="最初の位置へ" title="最初の位置へ" onClick={() => c.nav.home()}><Icon name="home" /></button>
+        <button aria-label="Back to start" title="Back to start" onClick={() => c.nav.home()}><Icon name="home" /></button>
         <button aria-label={LOCATION_LABELS[geo.status]} title={LOCATION_LABELS[geo.status]} aria-pressed={geo.status !== "off" && geo.status !== "unavailable"} data-status={geo.status} disabled={geo.status === "unavailable"} onClick={() => c.geo.trigger()}><Icon name="locate" /></button>
-        <button aria-label="全画面" title="全画面" aria-pressed={full.active} onClick={() => c.full.toggle()}><Icon name="fullscreen" /></button>
+        <button aria-label="Full screen" title="Full screen" aria-pressed={full.active} onClick={() => c.full.toggle()}><Icon name="fullscreen" /></button>
       </div>
     </div>
   );

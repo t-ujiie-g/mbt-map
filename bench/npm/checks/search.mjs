@@ -36,8 +36,8 @@ export async function searchChecks(page) {
   const near = (r, lng, lat, tol) => r && Math.abs(r.lng - lng) < tol && Math.abs(r.lat - lat) < tol;
   const ok =
     names.length === 0 &&
-    kanji.map((r) => r.label).join() === "東京駅,東京タワー,東京スカイツリー" && kanji.every((r) => r.provider === "地点") &&
-    near(decimal[0], 139.7454, 35.6586, 1e-12) && decimal[0].provider === "座標" &&
+    kanji.map((r) => r.label).join() === "東京駅,東京タワー,東京スカイツリー" && kanji.every((r) => r.provider === "Places") &&
+    near(decimal[0], 139.7454, 35.6586, 1e-12) && decimal[0].provider === "Coordinates" &&
     plane.length === 1 && plane[0].detail === "第IX系" && near(plane[0], 139.7671, 35.6812, 1e-6) &&
     utm.length === 1 && utm[0].detail === "UTM 54N" && near(utm[0], 139.77, 35.68, 0.01) &&
     imeIgnored && chosen.label === "東京タワー" && !chosen.open && near({ lng: chosen.center.lng, lat: chosen.center.lat }, 139.7454, 35.6586, 1e-3);

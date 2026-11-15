@@ -8,7 +8,7 @@ export function Measure({ m, beforeStart }) {
   const s = useController(m);
   return (
     <>
-      <div id="measure" className="chips" role="toolbar" aria-label="計測">
+      <div id="measure" className="chips" role="toolbar" aria-label="Measure">
         {measureActions(m, s, beforeStart).map(([label, f, enabled], i) => (
           <button key={label} disabled={!enabled} aria-pressed={i < 2 ? s.mode === (i === 0 ? "distance" : "area") : undefined} onClick={f}>
             {label}
@@ -34,7 +34,7 @@ export function Profile({ map, profile }) {
           className="profile-chart"
           viewBox={`0 0 ${CHART.width} ${CHART.height}`}
           role="img"
-          aria-label="断面図"
+          aria-label="Elevation profile"
           onPointerMove={(e) => profile.highlight(distanceAt(s, ref.current, e.clientX))}
           onPointerLeave={() => profile.highlight(null)}
         >

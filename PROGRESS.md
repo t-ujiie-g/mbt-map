@@ -83,3 +83,10 @@ Where things stand, decisions and open issues. The development history before th
 - 原因：`maximumLoadedTiles`（既定 256）を超えると、描いているタイル以外を古い順に解放していた。REPLACE のタイルの子は兄弟が全部そろうまで描かれないので、読み終えた子が解放され、また読まれ、を続けていた（引いた視点で要るタイルが 256 を超えると止まらない）。
 - 直し：解放するのは、そのフレームが使わなかったタイル（`lastUsed` がそのフレームでないもの）だけ（`evictable`、`npm/src/tiles/tileset.ts`。loaders.gl のキャッシュも同じ考え）。そのフレームが上限より多く要るときは、上限を超えて持つ。
 - 確かめ：PLATEAU の例をズーム 14.6、傾き 55° にして 40 秒見た。直す前は要求が 789 まで増え続け、描くタイルは 23〜170 を行き来した。直した後は 22 秒で 527 要求、354 タイルで止まった。`tiles:golden`、`i3s:golden`、pack test の 3D の 5 項目、単体テスト（`evictable`）。
+
+## 例の画面を英語に（2026-11-15、Mac）
+
+- ショーケース（`examples/html`、`element`、`react`、共有の `examples/shared/`）、PLATEAU の例、例の一覧（`examples/index.html`）の画面の文言を英語にした：タブ、見出し、ボタン、入力欄の説明、ツールチップ、状態と誤りの文、凡例の名前と道路の種別、表の見出し、件数、計測と解析の読み出し、`<title>`、`lang="en"`。
+- 日本語のまま残したもの（データだから）：地名・駅名、地点の `kind`（駅・名所・山）、国土地理院のベクトルタイルと PLATEAU の属性の値と鍵、サンプルの CSV、同梱した WMTS の文書の名前（地理院タイル、淡色地図）、平面直角座標系の系の名前（`第IX系`。`mbt-map/search` が読む書き方で、検索のプロバイダの出力とも同じ）、出典の文言（国土地理院と PLATEAU の求める書き方）。PLATEAU の属性の表示名は英語（Name、Usage、Measured height など）。例が作る列は英語の名前にした（`area`、`area_km2`、印は `Marker N`）。
+- rabbita の例（MoonBit）は対象の外で、日本語のまま。
+- pack test の画面の文字を見る確かめ（`pack-test.mjs`、`checks/` の analyze、geo-tools、plateau、search、table、showcase-data、showcase-services）を英語の文言に合わせた。

@@ -18,13 +18,13 @@ export function ServicesPanel({ map }) {
   return (
     <div id="services">
       <form className="service-form" onSubmit={submit}>
-        <input type="url" placeholder="WMS・WMTS・ArcGIS の URL" aria-label="サービスの URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <button>読む</button>
+        <input type="url" placeholder="WMS, WMTS or ArcGIS URL" aria-label="Service URL" value={url} onChange={(e) => setUrl(e.target.value)} />
+        <button>Open</button>
       </form>
       <div className="chips">
-        <button disabled={s.loading} onClick={() => void loader.openSample()}>地理院タイル（WMTS）を読む</button>
+        <button disabled={s.loading} onClick={() => void loader.openSample()}>Open GSI tiles (WMTS)</button>
       </div>
-      <p className="hint">{s.title ? `${s.title}：重ねるレイヤーを選ぶ` : ""}</p>
+      <p className="hint">{s.title ? `${s.title}: choose a layer to overlay` : ""}</p>
       <div className="chips service-layers">
         {s.choices.map((c) => <button key={c.id} onClick={() => void loader.add(c)}>{c.title}</button>)}
       </div>
@@ -33,7 +33,7 @@ export function ServicesPanel({ map }) {
         {s.items.map((item) => (
           <li key={item.id}>
             <b>{item.name}</b>
-            <div className="chips"><button onClick={() => loader.remove(item.id)}>消す</button></div>
+            <div className="chips"><button onClick={() => loader.remove(item.id)}>Remove</button></div>
           </li>
         ))}
       </ul>

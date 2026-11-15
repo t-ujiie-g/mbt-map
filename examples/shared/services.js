@@ -58,7 +58,7 @@ export function createServiceLoader(map) {
           for (const layer of datasetLayers(id)) map.addLayer(layer);
         } else {
           const made = open.kind === "arcgis" ? arcgisSource(open.service, open.url) : open.kind === "wmts" ? wmtsSource(open.caps, { layer: choice.id }) : wmsSource(open.caps, { layers: choice.id });
-          if (made.type === "vector") throw new Error("ベクトルタイルのサービスはスタイルごと読む（arcgisStyle）");
+          if (made.type === "vector") throw new Error("Vector tile services are read as a whole style (arcgisStyle)");
           const source = made.tiles ? { ...made, tiles: made.tiles.map(tileUrl) } : made;
           serviceLayers.set(id, { name: choice.title, source });
           map.addSource(id, source);
@@ -93,14 +93,14 @@ export function mountServices(map) {
   const loader = createServiceLoader(map);
   const box = document.getElementById("services");
   const form = el("form", { className: "service-form" });
-  const url = el("input", { type: "url", placeholder: "WMS・WMTS・ArcGIS の URL" });
-  url.setAttribute("aria-label", "サービスの URL");
-  form.append(url, el("button", { textContent: "読む" }));
+  const url = el("input", { type: "url", placeholder: "WMS, WMTS or ArcGIS URL" });
+  url.setAttribute("aria-label", "Service URL");
+  form.append(url, el("button", { textContent: "Open" }));
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (url.value) void loader.open(url.value);
   });
-  const sample = el("button", { textContent: "地理院タイル（WMTS）を読む" });
+  const sample = el("button", { textContent: "Open GSI tiles (WMTS)" });
   sample.addEventListener("click", () => void loader.openSample());
   const actions = el("div", { className: "chips" });
   actions.append(sample);
@@ -111,7 +111,7 @@ export function mountServices(map) {
   box.append(form, actions, title, choices, error, list);
   const draw = (s) => {
     sample.disabled = s.loading;
-    title.textContent = s.title ? `${s.title}：重ねるレイヤーを選ぶ` : "";
+    title.textContent = s.title ? `${s.title}: choose a layer to overlay` : "";
     choices.replaceChildren(
       ...s.choices.map((c) => {
         const b = el("button", { textContent: c.title });
@@ -124,7 +124,7 @@ export function mountServices(map) {
     list.replaceChildren(
       ...s.items.map((item) => {
         const li = el("li");
-        const remove = el("button", { textContent: "消す" });
+        const remove = el("button", { textContent: "Remove" });
         remove.addEventListener("click", () => loader.remove(item.id));
         const buttons = el("div", { className: "chips" });
         buttons.append(remove);

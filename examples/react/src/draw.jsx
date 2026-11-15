@@ -14,7 +14,7 @@ export function Draw({ draw }) {
   const t = drawnText(s);
   return (
     <>
-      <div id="draw-modes" className="chips" role="toolbar" aria-label="作図">
+      <div id="draw-modes" className="chips" role="toolbar" aria-label="Draw">
         {DRAW_MODES.map(([m, label]) => (
           <button key={m} aria-pressed={s.mode === m} onClick={() => draw.setMode(s.mode === m ? null : m)}>{label}</button>
         ))}
@@ -29,7 +29,7 @@ export function Draw({ draw }) {
             <button onClick={(e) => (draw.state.mode !== "select" && draw.setMode("select"), draw.select(f.id, e.shiftKey))}>
               {DRAW_MODES.find(([m]) => m === f.properties.mode)?.[1]} {f.properties.name ?? <code>{f.id}</code>}
             </button>
-            <button aria-label={`${f.id} を消す`} onClick={() => draw.remove(f.id)}>×</button>
+            <button aria-label={`Delete ${f.id}`} onClick={() => draw.remove(f.id)}>×</button>
           </li>
         ))}
       </ol>

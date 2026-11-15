@@ -11,7 +11,7 @@ export function SearchBar({ map, places }) {
   });
   useEffect(() => () => search.destroy(), [search]);
   const s = useController(search);
-  const status = s.loading ? "検索中…" : s.errors.map((e) => `${e.provider}: ${e.message}`).join(" / ") || (s.query && !s.open && !s.results.length ? "見つかりません" : "");
+  const status = s.loading ? "Searching…" : s.errors.map((e) => `${e.provider}: ${e.message}`).join(" / ") || (s.query && !s.open && !s.results.length ? "No results" : "");
   return (
     <div id="search">
       <input
@@ -21,7 +21,7 @@ export function SearchBar({ map, places }) {
         aria-expanded={s.open}
         aria-controls="search-results"
         aria-activedescendant={s.active >= 0 ? `search-result-${s.active}` : undefined}
-        placeholder="地点名や座標で検索"
+        placeholder="Search places or coordinates"
         value={s.query}
         onChange={(e) => search.setQuery(e.target.value)}
         onKeyDown={(e) => onSearchKey(search, e.nativeEvent)}

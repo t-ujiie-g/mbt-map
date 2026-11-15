@@ -32,7 +32,7 @@ export function Legend({ c }) {
   const entries = s.entries.filter((e) => e.visible && e.items.length > 0);
   return (
     <details className="legend">
-      <summary>凡例</summary>
+      <summary>Legend</summary>
       <ul id="legend">
         {entries.map((e) =>
           e.kind === "single" ? (

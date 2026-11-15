@@ -2,7 +2,7 @@
 
 同じ地図アプリ（ショーケース）を、3 通りの書き方で作っています。機能も見た目も 3 つとも同じです。
 
-画面は地図を中心に、左のパネル（検索と「探す」「レイヤー」「作図」「計測」「解析」「データ」のタブ）、右上の 2D・3D と保存とコントロール、下のステータスバー（ポインタの座標、縮尺、出典）でできています。幅の狭い画面では、パネルは下のシートになります。駅の密度、散歩道、駅の略図は最初は切ってあり、「レイヤー」のタブで出します。
+画面は地図を中心に、左のパネル（検索と「Explore」「Layers」「Draw」「Measure」「Analyze」「Data」のタブ）、右上の 2D・3D と保存とコントロール、下のステータスバー（ポインタの座標、縮尺、出典）でできています。幅の狭い画面では、パネルは下のシートになります。駅の密度（Station density）、散歩道（Walk）、駅の略図（Station sketch）は最初は切ってあり、「Layers」のタブで出します。画面の文言は英語で、地名・駅名・国土地理院や PLATEAU の属性の値・出典は日本語のままです（データなので）。
 
 | 例 | 書き方 |
 |---|---|
@@ -33,17 +33,17 @@
 - 地点の属性テーブル（`createAttributeTable`）：見出しのクリックで並べ替え（名前・種別）、入力で絞り込み（全角半角・カタカナとひらがなを区別しない）、ページ送り。行のクリックで、その地点を `selected` の状態で強調して地図を合わせる（Shift で選択に足す）。印を置くと行が増える（`sourcedata`）。下の欄で列を足す・式で計算する・名前を変える・消す（`createFieldEditor`。式はスタイルの式を JSON で書き、`map.evaluateExpression` で地物ごとに計算する）。
 - 検索（`mbt-map/search`）：座標（度、度分秒、平面直角座標系、UTM）と地点の名前。`?gsi-search=1` で国土地理院の地名検索を外部のプロバイダとして足す（利用条件は [docs/search.md](../docs/search.md)）。
 - 作図（`mbt-map/draw`）：点、線、多角形、矩形、円（`mbt-map/geodesic` で楕円体の上の円）、フリーハンド、選択と編集、スナップ、分割と結合（`mbt-map/analysis` の `splitFeatures`・`mergeFeatures`）、名前とメモの属性、取り消しとやり直し。
-- データの読み込み（`mbt-map/data`）：ファイルの選択かドロップ、または「サンプルを読む」（東京の公園の CSV）。CSV、Shapefile（zip）、KML/KMZ、GPX、TopoJSON、FlatGeobuf、GeoJSON を GeoJSON ソースとして重ね、範囲に移動する。読んだデータは GeoJSON、CSV、KML に書き出せる。スタイルを切り替えても残る。
-- Web サービス（`mbt-map/services`、「データ」のタブ）：WMS・WMTS の GetCapabilities の URL か ArcGIS の MapServer・ImageServer・FeatureServer のレイヤーの URL を読み、レイヤーを選んで地図に重ねる（WMS・WMTS・ArcGIS はラスタのソース、Web メルカトル以外の座標系は `reprojected`、FeatureServer のレイヤーは地物）。「地理院タイル（WMTS）を読む」は、同梱した地理院の淡色地図の WMTS の GetCapabilities を読む。重ねたラスタは地点などのベクトルの重ねの下に入り、スタイルを切り替えても残る。
+- データの読み込み（`mbt-map/data`）：ファイルの選択かドロップ、または「Open the sample」（東京の公園の CSV）。CSV、Shapefile（zip）、KML/KMZ、GPX、TopoJSON、FlatGeobuf、GeoJSON を GeoJSON ソースとして重ね、範囲に移動する。読んだデータは GeoJSON、CSV、KML に書き出せる。スタイルを切り替えても残る。
+- Web サービス（`mbt-map/services`、「Data」のタブ）：WMS・WMTS の GetCapabilities の URL か ArcGIS の MapServer・ImageServer・FeatureServer のレイヤーの URL を読み、レイヤーを選んで地図に重ねる（WMS・WMTS・ArcGIS はラスタのソース、Web メルカトル以外の座標系は `reprojected`、FeatureServer のレイヤーは地物）。「Open GSI tiles (WMTS)」は、同梱した地理院の淡色地図の WMTS の GetCapabilities を読む。重ねたラスタは地点などのベクトルの重ねの下に入り、スタイルを切り替えても残る。
 - 計測（`createMeasurement` と `mbt-map/geodesic` の `measure`）：距離と面積。距離を測り終えると、その線の断面図（`createProfile`。標高は `mbt-map/analysis` の `sampleDem` で国土地理院の標高タイルから。グラフの上のポインタの位置は地図にも点で出る）。
-- 解析（`mbt-map/analysis`、「解析」のタブ）：
+- 解析（`mbt-map/analysis`、「Analyze」のタブ）：
   - 階級区分図：東京の地点のボロノイ領域（`voronoi`）の面積（`areas`）をフィールド演算で列にし（関数で m²、式で km²）、自然分類（`classBreaks` の jenks）の 5 階級で塗る（`classStep`）。凡例に階級が出る。
   - 道路での経路：表示しているタイルの道路（`querySourceFeatures`）から網を作り（`network`）、クリックした 2 点に近い道路の頂点の間の最短経路を描く。
   - 見通しと可視域：地図の中心（地上 2 m）から 2 km 以内で見える範囲を国土地理院の標高タイル（`loadDem`）から計算し（`viewshed`）、canvas のソースで塗る。続けてクリックした地点が見えるか（`lineOfSight`）を線で示し、遮る地点に赤い点を置く。
 - 画像の保存（`toBlob`。画面の 2 倍の解像度の PNG）。
 - 画面の中心から 5 km 以内の地点：中心の点を測地線で 5 km 広げ（`buffer`）、その中にある地点を数える（`pointsWithin`）。移動が終わるたびに計算する。
 
-3D の例は 1 つ別にある：[plateau/](plateau/) は、千代田区の PLATEAU の建物（LOD2、Draco で圧縮した b3dm の 3D Tiles）を配信元から直接読み、`mbt-map/3d` の `tilesLayer` で国土地理院の地図に重ねる（高さは楕円体高なので、東京駅のジオイド高 36.7 m を引く）。建物をクリックすると `queryFeature` で属性（名称、用途、計測高さ、階数、浸水ランクなど）を出す。チェックを外すと、地図の押し出しの建物に切り替わる。`?local=1` ではフィクスチャ（`bench/fixtures/plateau-chiyoda`、東京駅まわりのタイル）を読む。
+3D の例は 1 つ別にある：[plateau/](plateau/) は、千代田区の PLATEAU の建物（LOD2、Draco で圧縮した b3dm の 3D Tiles）を配信元から直接読み、`mbt-map/3d` の `tilesLayer` で国土地理院の地図に重ねる（高さは楕円体高なので、東京駅のジオイド高 36.7 m を引く）。建物をクリックすると `queryFeature` で属性（Name、Usage、Measured height、階数、浸水ランク（Flood rank）など）を出す。チェックを外すと、地図の押し出しの建物に切り替わる。`?local=1` ではフィクスチャ（`bench/fixtures/plateau-chiyoda`、東京駅まわりのタイル）を読む。
 
 共通のスタイル・データ・解析・コントロールと見た目（`app.css`）は [shared/](shared/) にあり、3 つの例が同じものを使う。HTML と Web Component の例は `shell.js`（画面の枠）と `app.js`（動き）を使い、地図の作り方とイベントの受け方だけが違う。React の例は同じコントローラと同じ構造を JSX で描く。新しい機能は 3 つの例すべてに足す。
 

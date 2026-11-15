@@ -6,7 +6,7 @@ import { coordinates, createSearch, datasetSearch } from "mbt-map/search";
 /** An external provider: GSI's place-name search, the shape any web API takes. */
 export function gsiPlaceSearch() {
   return {
-    name: "国土地理院 地名検索",
+    name: "GSI place names",
     async search(query, { signal, limit }) {
       const url = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(query)}`;
       const res = await fetch(url, { signal, credentials: "omit" });
@@ -23,7 +23,7 @@ export function gsiPlaceSearch() {
 
 /** The search over `map`, `places()` giving the current places. */
 export function createShowcaseSearch(map, places) {
-  const providers = [coordinates({ transform, name: "座標" }), datasetSearch(places, { fields: ["name"], name: "地点" })];
+  const providers = [coordinates({ transform, name: "Coordinates" }), datasetSearch(places, { fields: ["name"], name: "Places" })];
   if (new URLSearchParams(location.search).get("gsi-search") === "1") providers.push(gsiPlaceSearch());
   const search = createSearch(map, { providers });
   window.__search = search;
@@ -67,7 +67,7 @@ export function pinSelection(map, search, parent) {
 export function mountSearch(map, places) {
   const search = createShowcaseSearch(map, places);
   const box = document.getElementById("search");
-  const input = Object.assign(document.createElement("input"), { type: "search", placeholder: "地点名や座標で検索" });
+  const input = Object.assign(document.createElement("input"), { type: "search", placeholder: "Search places or coordinates" });
   input.setAttribute("role", "combobox");
   input.setAttribute("aria-autocomplete", "list");
   input.setAttribute("aria-controls", "search-results");
@@ -93,7 +93,7 @@ export function mountSearch(map, places) {
         return li;
       }),
     );
-    status.textContent = s.loading ? "検索中…" : s.errors.map((e) => `${e.provider}: ${e.message}`).join(" / ") || (s.query && !s.open && !s.results.length ? "見つかりません" : "");
+    status.textContent = s.loading ? "Searching…" : s.errors.map((e) => `${e.provider}: ${e.message}`).join(" / ") || (s.query && !s.open && !s.results.length ? "No results" : "");
   });
   pinSelection(map, search, document.body);
   return search;
