@@ -4,7 +4,7 @@ import { openTab } from "./step.mjs";
 
 export async function showcaseServicesChecks(page) {
   await openTab(page, "data");
-  await page.click("#services button >> text=地理院タイル（WMTS）を読む");
+  await page.click("#services button >> text=Open GSI tiles (WMTS)");
   await page.waitForFunction(() => window.__services.state.choices.length > 0);
   const choices = await page.evaluate(() => window.__services.state.choices.map((c) => c.title));
   await page.click("#services .service-layers button >> text=淡色地図");

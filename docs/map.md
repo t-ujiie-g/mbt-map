@@ -67,7 +67,7 @@ map.on("load", () => console.log(map.getCenter(), map.getZoom()));
 | `maxBounds` | | Keep the view inside these bounds. |
 | `interactive` | `true` | `false` turns off every handler. |
 | `dragPan`, `scrollZoom`, `boxZoom`, `dragRotate`, `keyboard`, `doubleClickZoom`, `touchZoomRotate`, `touchPitch` | `true` | Each input handler. |
-| `attributionControl` | `true` | Shows the `attribution` of the sources of visible layers and the terrain in the bottom right corner. They are shown as text: HTML in them is not interpreted. Set it to `false` to show them yourself (`getAttributions()`, or `createAttribution` in [mbt-map/ui](./ui.md)). |
+| `attributionControl` | `true` | Shows the `attribution` of the sources of visible layers and the terrain in the bottom right corner. Attributions written as HTML keep their http(s) links; other tags are dropped and nothing is parsed as HTML. Set it to `false` to show them yourself (`getAttributions()`, or `createAttribution` in [mbt-map/ui](./ui.md)). |
 | `fontFamily` | `"sans-serif"` | CSS font family for labels; see [labels](./style-support.md#symbol). |
 | `strict` | `false` | Refuse styles with anything that cannot be drawn yet, instead of leaving it out with a `warning`. |
 | `globalState` | | Initial values for [global state](#global-state), over the style's `state` defaults. |

@@ -44,20 +44,20 @@ const ELEVATION_RADIUS = ["+", 2, ["*", ["sqrt", ["max", ["to-number", ["get", "
 
 /** Layers the panel shows and hides together, by the name of each group. */
 export const LAYER_GROUPS = [
-  { name: "陰影", ids: ["hillshade"] },
-  { name: "等高線", ids: ["contour", "contour-label", "elevation"] },
-  { name: "建物", ids: ["building", "building-outline", "building-3d"] },
-  { name: "道路・鉄道", ids: ["road-casing", "road", "railway"] },
-  { name: "注記", ids: ["symbol", "label", "label-vertical"] },
-  { name: "地点", ids: ["places", "places-label"] },
-  { name: "駅の密度", ids: ["stations-heat"] },
-  { name: "山手線の駅", ids: ["stations-cluster", "stations", "stations-count"] },
-  { name: "散歩道", ids: ["walk"] },
-  { name: "駅の略図", ids: ["sketch"] },
+  { name: "Hillshade", ids: ["hillshade"] },
+  { name: "Contours", ids: ["contour", "contour-label", "elevation"] },
+  { name: "Buildings", ids: ["building", "building-outline", "building-3d"] },
+  { name: "Roads and railways", ids: ["road-casing", "road", "railway"] },
+  { name: "Labels", ids: ["symbol", "label", "label-vertical"] },
+  { name: "Places", ids: ["places", "places-label"] },
+  { name: "Station density", ids: ["stations-heat"] },
+  { name: "Yamanote Line stations", ids: ["stations-cluster", "stations", "stations-count"] },
+  { name: "Walk", ids: ["walk"] },
+  { name: "Station sketch", ids: ["sketch"] },
 ];
 
 /** The groups off at first: the map opens plain, and the panel turns these on. */
-export const HIDDEN_AT_START = new Set(["駅の密度", "散歩道", "駅の略図"]);
+export const HIDDEN_AT_START = new Set(["Station density", "Walk", "Station sketch"]);
 
 /** The datasets read with mbt-map/data by id, as `{ name, data }`: overlays that every new style keeps. */
 export const datasets = new Map();
@@ -76,27 +76,27 @@ export const tileUrl = (url) => (local ? url.replace(`${GSI}/pale/`, `${fixtures
 
 /** The basemaps (`createStyle`'s `basemap`): GSI's vector map, or its aerial photos with labels. */
 export const BASEMAPS = [
-  { id: "map", title: "地図" },
-  { id: "photo", title: "写真" },
+  { id: "map", title: "Map" },
+  { id: "photo", title: "Photo" },
 ];
 
 /** What the legend calls each layer. */
 export const LAYER_TITLES = {
-  waterarea: "水域", structurea: "構造物", "structurea-hatch": "構造物の斜線", building: "建物", "building-3d": "建物（3D）", "building-outline": "建物の輪郭",
-  contour: "等高線", "contour-label": "等高線の高さ", river: "河川", "road-casing": "道路の縁", road: "道路", railway: "鉄道", boundary: "境界",
-  elevation: "標高点", symbol: "記号", label: "注記", "label-vertical": "注記（縦書き）", places: "地点", "places-label": "地点名",
-  "stations-cluster": "駅のまとまり", stations: "山手線の駅", "stations-count": "駅の数", "stations-heat": "駅の密度", walk: "散歩道",
-  hillshade: "陰影", photo: "写真", sketch: "駅の略図", "analysis-cells": "地点の領域の面積", "analysis-cells-line": "地点の領域の境界",
-  "analysis-route": "経路", "analysis-route-end": "経路の端", "analysis-viewshed": "可視域", "analysis-sight": "見通し", "analysis-sight-point": "見通しの点",
+  waterarea: "Water", structurea: "Structures", "structurea-hatch": "Structure hatching", building: "Buildings", "building-3d": "Buildings (3D)", "building-outline": "Building outlines",
+  contour: "Contours", "contour-label": "Contour heights", river: "Rivers", "road-casing": "Road casings", road: "Roads", railway: "Railways", boundary: "Boundaries",
+  elevation: "Spot heights", symbol: "Symbols", label: "Labels", "label-vertical": "Labels (vertical)", places: "Places", "places-label": "Place names",
+  "stations-cluster": "Station clusters", stations: "Yamanote Line stations", "stations-count": "Station counts", "stations-heat": "Station density", walk: "Walk",
+  hillshade: "Hillshade", photo: "Aerial photo", sketch: "Station sketch", "analysis-cells": "Place cell area", "analysis-cells-line": "Place cell borders",
+  "analysis-route": "Route", "analysis-route-end": "Route ends", "analysis-viewshed": "Viewshed", "analysis-sight": "Line of sight", "analysis-sight-point": "Line of sight points",
 };
 
 // GSI's road classes (rdCtg).
-const ROAD_CLASSES = { 0: "国道", 1: "都道府県道", 2: "市区町村道", 3: "高速道路" };
+const ROAD_CLASSES = { 0: "National road", 1: "Prefectural road", 2: "Municipal road", 3: "Expressway" };
 
-/** A legend item's label: GSI's road classes by name, other codes as they are, or "その他". */
+/** A legend item's label: GSI's road classes by name, other codes as they are, or "Other". */
 export function legendLabel(layer, category) {
-  if (category.other) return "その他";
-  if (category.values) return category.values.map((v) => (layer.id === "road" || layer.id === "road-casing" ? ROAD_CLASSES[v] ?? v : v)).join("・");
+  if (category.other) return "Other";
+  if (category.values) return category.values.map((v) => (layer.id === "road" || layer.id === "road-casing" ? ROAD_CLASSES[v] ?? v : v)).join(", ");
   return undefined;
 }
 
@@ -241,7 +241,7 @@ export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, bas
 }
 
 /** The view's modes as [mode, label]. */
-export const MODES = [["2d", "2D"], ["3d", "3D"], ["globe", "地球儀"]];
+export const MODES = [["2d", "2D"], ["3d", "3D"], ["globe", "Globe"]];
 
 /** Where the camera goes for each mode: 3D tilts and turns. */
 export function modeCamera(mode) {

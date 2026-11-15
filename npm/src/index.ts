@@ -31,7 +31,7 @@ import { filterText as engineFilter, resolveTiles, splitGeoJSON } from "./engine
 import { removeStateError, stateIdError, stateLayer } from "./feature-state";
 import * as edit from "./style";
 import type { LayerSpecification, StyleSpecification } from "./style";
-import { attributionsOf } from "./attribution";
+import { attributionParts, attributionsOf } from "./attribution";
 import { Events } from "./events";
 import { GEOTIFF, tileJSONUrls, withoutSources } from "./tilejson";
 import type {
@@ -910,8 +910,22 @@ export class Map {
     el.style.cssText =
       "position:absolute;top:auto;left:auto;right:0;bottom:0;padding:0 5px;font:12px/20px sans-serif;" +
       "color:#333;background:rgba(255,255,255,0.7);pointer-events:none";
-    // Text only: attribution strings come from the style (AGENTS.md §8.3).
-    el.textContent = texts.join(" | ");
+    // Attributions come from the style: their text, and links only to http(s), never parsed as HTML (AGENTS.md §8.3).
+    texts.forEach((text, i) => {
+      if (i > 0) el.append(" | ");
+      for (const part of attributionParts(text)) {
+        if (!part.href) el.append(part.text);
+        else {
+          const a = document.createElement("a");
+          a.href = part.href;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = part.text;
+          a.style.cssText = "color:inherit;pointer-events:auto";
+          el.append(a);
+        }
+      }
+    });
     this.#container.append(el);
     this.#attribution = el;
   }

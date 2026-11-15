@@ -605,10 +605,10 @@ async function showcase(page) {
     const idle = () => map.once("idle");
     let wait = idle();
     const panel = window.__panel;
-    panel.layers.toggle("陰影");
+    panel.layers.toggle("Hillshade");
     await wait;
     const hillshade = map.getLayoutProperty("hillshade", "visibility");
-    const hillshadeItem = panel.layers.state.items.find((i) => i.id === "陰影");
+    const hillshadeItem = panel.layers.state.items.find((i) => i.id === "Hillshade");
     // Hidden but within its zoom range: still `inRange`.
     const listed = { visible: hillshadeItem.visible, inRange: hillshadeItem.inRange };
     wait = idle();
@@ -640,7 +640,7 @@ async function showcase(page) {
   const services = await showcaseServicesChecks(page);
   crumb("showcase: globe");
   // The globe zooms out to 2 and keeps the places; the custom layers (the ring, the tower model) go on it too.
-  await page.click("#modes button >> text=地球儀");
+  await page.click("#modes button >> text=Globe");
   await page.waitForFunction(() => Math.abs(window.__map.getZoom() - 2) < 1e-9 && !window.__map.isMoving(), null, { timeout: 30000 });
   const globe = await page.evaluate(async () => {
     const map = window.__map;
@@ -659,9 +659,9 @@ async function showcase(page) {
     coordinates.length === 4 && /^35\.68\d+, 139\.76\d+$/.test(coordinates[0][1]) && /N 139°46′/.test(coordinates[1][1]) &&
     coordinates[2][1].startsWith("第IX系 X -35") && coordinates[3][1].startsWith("54N ") &&
     hovered.id === "東京駅" && hovered.state.hover === true &&
-    styled.terrain?.source === "dem" && styled.hillshade === "none" && styled.listed.visible === false && styled.listed.inRange === true && styled.markers === "印 1" &&
-    JSON.stringify(styled.legend) === JSON.stringify({ title: "道路", kind: "match", labels: ["国道", "都道府県道", "その他"] }) &&
-    styled.photo.layers.includes("photo") && !styled.photo.layers.includes("road") && styled.photo.layers.at(-1) === "places-label" && styled.photo.marker === "印 1" && styled.back && styled.ring &&
+    styled.terrain?.source === "dem" && styled.hillshade === "none" && styled.listed.visible === false && styled.listed.inRange === true && styled.markers === "Marker 1" &&
+    JSON.stringify(styled.legend) === JSON.stringify({ title: "Roads", kind: "match", labels: ["National road", "Prefectural road", "Other"] }) &&
+    styled.photo.layers.includes("photo") && !styled.photo.layers.includes("road") && styled.photo.layers.at(-1) === "places-label" && styled.photo.marker === "Marker 1" && styled.back && styled.ring &&
     first.near.includes("東京駅") && !first.near.includes("新宿駅") &&
     first.plane.zone === "第IX系" &&
     Math.abs(first.plane.x - -5995.185) < 0.01 && Math.abs(first.plane.y - -35367.23) < 0.01 &&

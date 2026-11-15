@@ -5,8 +5,8 @@ import { cellText, createAttributeTable, createFieldEditor } from "mbt-map/ui";
 
 /** Each column's key and heading. */
 export const TABLE_COLUMNS = [
-  ["name", "名前"],
-  ["kind", "種別"],
+  ["name", "Name"],
+  ["kind", "Kind"],
 ];
 
 export function createPlacesTable(map) {
@@ -29,13 +29,13 @@ export function tableHeadings(s) {
 }
 
 /** The field form's starting values: a column name, its expression (JSON), the name to rename it to. */
-export const FIELD_DEFAULTS = { name: "label", expression: '["concat", ["get", "name"], "（", ["get", "kind"], "）"]', to: "名称" };
+export const FIELD_DEFAULTS = { name: "label", expression: '["concat", ["get", "name"], " (", ["get", "kind"], ")"]', to: "title" };
 
 /** The field form's placeholders, by the keys of FIELD_DEFAULTS. */
-export const FIELD_PLACEHOLDERS = { name: "列名", expression: "式（JSON）", to: "新しい名前" };
+export const FIELD_PLACEHOLDERS = { name: "Column", expression: "Expression (JSON)", to: "New name" };
 
 /** The form's operations as [action, label]. */
-export const FIELD_ACTIONS = [["calculate", "計算"], ["rename", "名前を変える"], ["remove", "削除"]];
+export const FIELD_ACTIONS = [["calculate", "Calculate"], ["rename", "Rename"], ["remove", "Remove"]];
 
 /** Runs field `action` with the form's `values`; resolves to what to tell the user. */
 export async function runField(fields, action, { name, expression, to }) {
@@ -45,17 +45,17 @@ export async function runField(fields, action, { name, expression, to }) {
       try {
         expr = JSON.parse(expression);
       } catch {
-        return "式を JSON で書いてください";
+        return "Write the expression as JSON";
       }
       await fields.calculate(name, expr);
-      return `「${name}」を計算しました`;
+      return `Calculated “${name}”`;
     }
     if (action === "rename") {
       await fields.renameColumn(name, to);
-      return `「${name}」を「${to}」にしました`;
+      return `Renamed “${name}” to “${to}”`;
     }
     await fields.removeColumn(name);
-    return `「${name}」を消しました`;
+    return `Removed “${name}”`;
   } catch (err) {
     return String(err.message).replace(/^mbt-map: /, "");
   }
@@ -67,9 +67,9 @@ export function sortOf(state, column) {
   return { mark: d === "asc" ? " ▲" : d === "desc" ? " ▼" : "", aria: d === "asc" ? "ascending" : d === "desc" ? "descending" : "none" };
 }
 
-/** "3 / 21 件" (shown of all), and the page as "1 / 4". */
+/** "3 / 21 rows" (shown of all), and the page as "1 / 4". */
 export function tableCounts(s) {
-  return { count: s.filtered === s.total ? `${s.total} 件` : `${s.filtered} / ${s.total} 件`, page: `${s.page + 1} / ${s.pages}` };
+  return { count: s.filtered === s.total ? `${s.total} rows` : `${s.filtered} / ${s.total} rows`, page: `${s.page + 1} / ${s.pages}` };
 }
 
 /** Selects the row (Shift adds it to the selection) and fits the map to it. */
@@ -93,7 +93,7 @@ export function mountTable(map) {
   const table = createPlacesTable(map);
   const fields = createPlacesFields(map, table);
   const box = document.getElementById("table");
-  const query = el("input", { type: "search", placeholder: "名前や種別で絞り込む" });
+  const query = el("input", { type: "search", placeholder: "Filter by name or kind" });
   query.addEventListener("input", () => table.setQuery(query.value));
   query.addEventListener("keydown", (e) => onTableKey(table, e));
   const grid = el("table", { className: "attributes" });

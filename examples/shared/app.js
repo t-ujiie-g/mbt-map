@@ -89,7 +89,7 @@ export function mountApp(map, status, applyStyle) {
   // From the source's data, which the table's field editor may have changed.
   document.getElementById("marker").addEventListener("click", async () => {
     places = await map.getSource("places").getData();
-    places = withMarker(places, map.getCenter(), `印 ${places.features.length - PLACES.features.length + 1}`);
+    places = withMarker(places, map.getCenter(), `Marker ${places.features.length - PLACES.features.length + 1}`);
     map.getSource("places").setData(places);
   });
   document.getElementById("save").addEventListener("click", () => saveImage(map));

@@ -70,7 +70,7 @@ function App() {
     const map = ref.current.map;
     if (!map) return;
     const data = await map.getSource("places").getData();
-    places.current = withMarker(data, ref.current.center, `印 ${data.features.length - PLACES.features.length + 1}`);
+    places.current = withMarker(data, ref.current.center, `Marker ${data.features.length - PLACES.features.length + 1}`);
     map.getSource("places").setData(places.current);
   };
 
@@ -107,10 +107,10 @@ function App() {
         <div className={collapsed ? "panel-card collapsed" : "panel-card"}>
           <header className="brand">
             <a className="logo" href="../">mbt-map</a>
-            <nav className="variants" aria-label="書き方">
+            <nav className="variants" aria-label="Variants">
               {VARIANTS.map(([path, label]) => <a key={path} href={`../${path}/`} aria-current={path === "react" ? "page" : undefined}>{label}</a>)}
             </nav>
-            <button className="collapse" title="パネルを畳む" aria-label="パネルを畳む" onClick={() => setCollapsed(!collapsed)}><Icon name="chevron" /></button>
+            <button className="collapse" title="Collapse the panel" aria-label="Collapse the panel" onClick={() => setCollapsed(!collapsed)}><Icon name="chevron" /></button>
           </header>
           {map ? <SearchBar map={map} places={() => places.current} /> : <div id="search" />}
           <div className="tabs" role="tablist">
@@ -118,45 +118,45 @@ function App() {
           </div>
           <div className="tab-body">
             <Tab id="explore" tab={tab}>
-              <h2>移動</h2>
+              <h2>Go to</h2>
               <div id="destinations" className="chips">
                 {DESTINATIONS.map((d) => <button key={d.name} onClick={() => go(d)}>{d.name}</button>)}
               </div>
-              <h2>クリックした地物</h2>
+              <h2>Clicked feature</h2>
               {tools?.picked}
-              <h2>中心から 5 km 以内の地点</h2>
+              <h2>Places within 5 km of the center</h2>
               <ul id="near" className="plain-list">{nearLines(described?.near ?? []).map((n) => <li key={n}>{n}</li>)}</ul>
-              <h2>カメラ</h2>
+              <h2>Camera</h2>
               <dl id="camera" className="rows">{rows.map(([k, v], i) => [<dt key={`k${i}`}>{k}</dt>, <dd key={`v${i}`}>{v}</dd>])}</dl>
             </Tab>
             <Tab id="layers" tab={tab}>
-              <h2>背景地図</h2>
+              <h2>Basemap</h2>
               {panel && <Basemaps c={panel.basemaps} />}
-              <h2>レイヤー</h2>
+              <h2>Layers</h2>
               {panel && <LayerChecklist c={panel.layers} />}
               {panel && <Legend c={panel.legend} />}
             </Tab>
             <Tab id="draw" tab={tab}>
-              <h2>形</h2>
+              <h2>Shapes</h2>
               {tools?.draw}
             </Tab>
             <Tab id="measure" tab={tab}>
-              <h2>距離と面積</h2>
+              <h2>Distance and area</h2>
               {tools?.measure}
-              <h2>断面図</h2>
+              <h2>Elevation profile</h2>
               {tools?.profile}
             </Tab>
             <Tab id="analysis" tab={tab}>
               {tools?.analysis}
             </Tab>
             <Tab id="data" tab={tab}>
-              <h2>読み込み</h2>
+              <h2>Open data</h2>
               {map && <DataPanel map={map} />}
-              <h2>Web サービス</h2>
+              <h2>Web services</h2>
               {map && <ServicesPanel map={map} />}
-              <h2>地点の一覧</h2>
+              <h2>Places table</h2>
               {map && <AttributeTable map={map} />}
-              <div className="chips"><button id="marker" onClick={addMarker}>中心に印を置く</button></div>
+              <div className="chips"><button id="marker" onClick={addMarker}>Add a marker at the center</button></div>
             </Tab>
           </div>
         </div>
@@ -165,7 +165,7 @@ function App() {
         <div id="modes" className="segmented">
           {MODES.map(([m, label]) => <button key={m} data-mode={m} aria-pressed={mode === m} onClick={() => switchMode(m)}>{label}</button>)}
         </div>
-        <button id="save" title="画像を保存" aria-label="画像を保存" onClick={() => ref.current.map && saveImage(ref.current.map)}><Icon name="camera" /></button>
+        <button id="save" title="Save as image" aria-label="Save as image" onClick={() => ref.current.map && saveImage(ref.current.map)}><Icon name="camera" /></button>
       </div>
       <div className="statusbar" ref={setStatus} />
     </>

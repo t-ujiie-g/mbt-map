@@ -23,7 +23,7 @@ export async function measureChecks(page) {
   };
   const before = await page.evaluate(() => ({ zoom: window.__map.getZoom(), point: window.__identify.state.point }));
   await openTab(page, "measure");
-  await page.click("#measure button >> text=距離");
+  await page.click("#measure button >> text=Distance");
   await page.mouse.click(420, 160);
   await page.mouse.click(620, 200);
   await page.mouse.move(560, 300, { steps: 2 });
@@ -32,11 +32,11 @@ export async function measureChecks(page) {
   const after = await page.evaluate(() => ({ zoom: window.__map.getZoom(), point: window.__identify.state.point, layers: window.__map.getStyle().layers.filter((l) => l.id.startsWith("mbt-map-measure")).map((l) => l.id) }));
   const text = await page.evaluate(() => document.getElementById("measured").textContent);
   const profiled = await profileChecks(page, line.length);
-  await page.click("#measure button >> text=面積");
+  await page.click("#measure button >> text=Area");
   for (const [x, y] of [[420, 160], [620, 200], [520, 380]]) await page.mouse.click(x, y);
-  await page.click("#measure button >> text=終える");
+  await page.click("#measure button >> text=Finish");
   const area = await measured(3, true);
-  await awaitAfter(page, "measure: 消す", () => page.click("#measure button >> text=消す"));
+  await awaitAfter(page, "measure: clear", () => page.click("#measure button >> text=Clear"));
   const cleared = await page.evaluate(() => {
     return { mode: window.__measurement.state.mode, features: window.__map.getStyle().sources["mbt-map-measure"].data.features.length, dblclick: window.__map.doubleClickZoom.isEnabled(), profile: window.__profile.state.distances.length };
   });
@@ -67,7 +67,7 @@ async function profileChecks(page, length) {
   const ok =
     s.distances[0] === 0 && ascending && Math.abs(s.distances.at(-1) - length) < 1e-6 && Math.abs(s.length - length) < 1e-6 &&
     s.elevations.length === s.path.length && s.elevations.every(Number.isFinite) && s.min <= s.max && s.error === null &&
-    !pointed.hidden && pointed.transform === pointed.want && pointed.caption.includes("登り");
+    !pointed.hidden && pointed.transform === pointed.want && pointed.caption.includes("Ascent");
   return { ok, samples: s.distances.length, min: s.min, max: s.max, gain: s.gain, pointed };
 }
 
@@ -83,30 +83,30 @@ export async function drawChecks(page) {
     }
   };
   const before = await page.evaluate(() => JSON.stringify(window.__identify.state.point));
-  await page.click("#draw-modes button >> text=多角形");
+  await page.click("#draw-modes button >> text=Polygon");
   await clicks([[420, 160], [650, 200], [560, 420], [424, 163]]);
   const polygon = await state();
-  await page.click("#draw-modes button >> text=線");
+  await page.click("#draw-modes button >> text=Line");
   await clicks([[450, 180], [620, 380]]);
   await page.keyboard.press("Enter");
   await clicks([[460, 200], [600, 300]]);
   await page.keyboard.press("Escape");
   const lines = await state();
-  await page.click("#draw-modes button >> text=円");
+  await page.click("#draw-modes button >> text=Circle");
   await clicks([[520, 300], [580, 300]]);
   await page.waitForFunction(() => window.__draw.state.features.length === 3);
   const circle = await state();
-  await page.click("#draw-actions button >> text=一つ戻す");
+  await page.click("#draw-actions button >> text=Undo");
   const undone = (await state()).features.length;
-  await page.click("#draw-actions button >> text=やり直す");
+  await page.click("#draw-actions button >> text=Redo");
   const redone = (await state()).features.length;
   const after = await page.evaluate(() => JSON.stringify(window.__identify.state.point));
   await openTab(page, "measure");
-  await page.click("#measure button >> text=距離");
+  await page.click("#measure button >> text=Distance");
   const handed = await state();
-  await page.click("#measure button >> text=消す");
+  await page.click("#measure button >> text=Clear");
   await openTab(page, "draw");
-  await page.click("#draw-actions button >> text=全部消す");
+  await page.click("#draw-actions button >> text=Clear all");
   const end = await page.evaluate(() => ({ features: window.__draw.state.features.length, dblclick: window.__map.doubleClickZoom.isEnabled() }));
   const ring = polygon.features[0]?.geometry.coordinates[0] ?? [];
   let twice = 0;
@@ -141,9 +141,9 @@ export async function editChecks(page) {
   };
   const ring = () => page.evaluate(() => window.__draw.state.features[0]?.geometry.coordinates[0]);
   const at = (p) => page.evaluate(([lng, lat]) => window.__map.project({ lng, lat }), p);
-  await page.click("#draw-modes button >> text=多角形");
+  await page.click("#draw-modes button >> text=Polygon");
   await clicks([[440, 180], [640, 180], [640, 380], [440, 380], [443, 183]]);
-  await page.click("#draw-modes button >> text=選択");
+  await page.click("#draw-modes button >> text=Select");
   await clicks([[540, 280]]);
   const selected = await page.evaluate(() => window.__draw.state.selected);
   const center = await page.evaluate(() => window.__map.getCenter());
@@ -168,18 +168,18 @@ export async function editChecks(page) {
   const allMoved = shifted.every((p, i) => p[0] > before[i][0] && Math.abs(p[1] - before[i][1]) < 1e-9);
   // A second shape whose first vertex is clicked 8 px from the first shape's: it snaps onto it.
   const corner = await at(shifted[0]);
-  await page.click("#draw-modes button >> text=点");
+  await page.click("#draw-modes button >> text=Point");
   await clicks([[corner.x + 6, corner.y + 5]]);
   const snapped = await page.evaluate(() => window.__draw.state.features[1].geometry.coordinates);
   // Fields: a name set, then undone; Delete removes the selected shape.
-  await page.click("#draw-modes button >> text=選択");
+  await page.click("#draw-modes button >> text=Select");
   await clicks([[560, 300]]);
   await page.fill("#draw-fields input[name=name]", "区画A");
   await page.press("#draw-fields input[name=name]", "Enter");
   await page.locator("#draw-fields input[name=name]").blur();
   await page.waitForTimeout(200);
   const named = await page.evaluate(() => window.__draw.state.features.find((f) => f.id === window.__draw.state.selected)?.properties.name);
-  await page.click("#draw-actions button >> text=一つ戻す");
+  await page.click("#draw-actions button >> text=Undo");
   const unnamed = await page.evaluate(() => window.__draw.state.features[0].properties.name ?? null);
   await clicks([[560, 300]]);
   await page.keyboard.press("Delete");
@@ -208,23 +208,23 @@ export async function splitChecks(page) {
   const shapes = () => page.evaluate(() => window.__draw.state.features.map((f) => ({ type: f.geometry.type, ring: f.geometry.coordinates[0] })));
   // Twice the planar area in degrees of a closed ring (counter-clockwise positive).
   const area = (r) => r.slice(1).reduce((a, p, i) => a + r[i][0] * p[1] - p[0] * r[i][1], 0);
-  await page.click("#draw-modes button >> text=矩形");
+  await page.click("#draw-modes button >> text=Rectangle");
   await clicks([[440, 180], [660, 400]]);
   const whole = area((await shapes())[0].ring);
-  await page.click("#draw-modes button >> text=分割");
+  await page.click("#draw-modes button >> text=Split");
   await clicks([[550, 140], [560, 450], [560, 450]]);
   await page.waitForFunction(() => window.__draw.state.features.length === 2, null, { timeout: 10000 });
   const halves = await shapes();
-  await page.click("#draw-modes button >> text=選択");
+  await page.click("#draw-modes button >> text=Select");
   await clicks([[470, 290]]);
   await page.keyboard.down("Shift");
   await clicks([[630, 290]]);
   await page.keyboard.up("Shift");
   const picked = await page.evaluate(() => window.__draw.state.selection.length);
-  await page.click("#draw-actions button >> text=結合");
+  await page.click("#draw-actions button >> text=Merge");
   await page.waitForFunction(() => window.__draw.state.features.length === 1, null, { timeout: 10000 });
   const merged = await shapes();
-  await page.click("#draw-actions button >> text=一つ戻す");
+  await page.click("#draw-actions button >> text=Undo");
   const undone = (await shapes()).length;
   await page.evaluate(() => (window.__draw.clear(), window.__draw.setMode(null)));
   const zooms = await page.evaluate(() => [window.__map.boxZoom.isEnabled(), window.__map.doubleClickZoom.isEnabled()]);

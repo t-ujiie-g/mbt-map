@@ -25,7 +25,7 @@ export async function plateauChecks(page) {
   await page.waitForFunction(() => window.__loaded !== undefined);
   const fixture = await page.evaluate(async () => (await fetch(new URL("../../bench/fixtures/plateau-chiyoda/tileset.json", location.href), { method: "HEAD" })).ok);
   if (!fixture) {
-    await page.waitForFunction(() => document.getElementById("status").textContent.includes("読めませんでした"));
+    await page.waitForFunction(() => document.getElementById("status").textContent.includes("Could not read"));
     return [true, { skipped: "no fixtures" }];
   }
   await page.evaluate(() => window.__layer.ready);
@@ -56,8 +56,8 @@ export async function plateauChecks(page) {
   await page.click("#tools input[value=feature]");
   const ok =
     drawn.tiles >= 10 && drawn.ready && blank < 0.6 &&
-    /^13101-bldg-/.test(rows["建物 ID"] ?? "") && typeof rows["用途"] === "string" &&
+    /^13101-bldg-/.test(rows["Building ID"] ?? "") && typeof rows["Usage"] === "string" &&
     !off.layer && off.extruded === "visible" && again >= 10 &&
-    /^直線 [\d,.]+ m・水平 [\d,.]+ m・高さの差 -?[\d,.]+ m$/.test(measured) && /^(見えます|遮られます（)/.test(sight) && viewshed.startsWith("緑") && tinted && section.startsWith("手前を切りました") && clipped;
+    /^Straight [\d,.]+ m · horizontal [\d,.]+ m · height difference -?[\d,.]+ m$/.test(measured) && /^(Visible$|Blocked )/.test(sight) && viewshed.startsWith("Green") && tinted && section.startsWith("Cut away") && clipped;
   return [ok, { drawn, blank, rows, off, again, measured, sight, viewshed, section }];
 }

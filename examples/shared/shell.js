@@ -5,40 +5,40 @@ import { icon } from "./icons.js";
 import { MODES } from "./style.js";
 
 /** The panel's tabs as [id, label]. */
-export const TABS = [["explore", "探す"], ["layers", "レイヤー"], ["draw", "作図"], ["measure", "計測"], ["analysis", "解析"], ["data", "データ"]];
+export const TABS = [["explore", "Explore"], ["layers", "Layers"], ["draw", "Draw"], ["measure", "Measure"], ["analysis", "Analyze"], ["data", "Data"]];
 
 /** The three ways the showcase is written as [path, label]. */
 export const VARIANTS = [["html", "HTML"], ["element", "Element"], ["react", "React"]];
 
 const TAB_BODIES = {
   explore: `
-    <h2>移動</h2><div id="destinations" class="chips"></div>
-    <h2>クリックした地物</h2><dl id="picked" class="rows"><dt>—</dt><dd>地図をクリック</dd></dl>
-    <h2>中心から 5 km 以内の地点</h2><ul id="near" class="plain-list"></ul>
-    <h2>カメラ</h2><dl id="camera" class="rows"></dl>`,
+    <h2>Go to</h2><div id="destinations" class="chips"></div>
+    <h2>Clicked feature</h2><dl id="picked" class="rows"><dt>—</dt><dd>Click the map</dd></dl>
+    <h2>Places within 5 km of the center</h2><ul id="near" class="plain-list"></ul>
+    <h2>Camera</h2><dl id="camera" class="rows"></dl>`,
   layers: `
-    <h2>背景地図</h2><div id="basemaps" class="segmented"></div>
-    <h2>レイヤー</h2><div id="layers" class="toggles"></div>
-    <details class="legend"><summary>凡例</summary><ul id="legend"></ul></details>`,
+    <h2>Basemap</h2><div id="basemaps" class="segmented"></div>
+    <h2>Layers</h2><div id="layers" class="toggles"></div>
+    <details class="legend"><summary>Legend</summary><ul id="legend"></ul></details>`,
   draw: `
-    <h2>形</h2><div id="draw-modes" class="chips"></div>
+    <h2>Shapes</h2><div id="draw-modes" class="chips"></div>
     <div id="draw-actions" class="chips"></div>
     <p id="drawn" class="hint"></p>
     <div id="draw-fields" hidden></div>`,
   measure: `
-    <h2>距離と面積</h2><div id="measure" class="chips"></div>
+    <h2>Distance and area</h2><div id="measure" class="chips"></div>
     <dl id="measured" class="rows"></dl>
-    <h2>断面図</h2><figure id="profile"></figure>`,
+    <h2>Elevation profile</h2><figure id="profile"></figure>`,
   analysis: `
-    <h2>階級区分図</h2><div id="analysis-cells" class="chips"></div><dl id="analysis-cells-rows" class="rows"></dl>
-    <h2>道路での経路</h2><div id="analysis-route" class="chips"></div><dl id="analysis-route-rows" class="rows"></dl>
-    <h2>見通しと可視域</h2><div id="analysis-sight" class="chips"></div><dl id="analysis-sight-rows" class="rows"></dl>
+    <h2>Choropleth</h2><div id="analysis-cells" class="chips"></div><dl id="analysis-cells-rows" class="rows"></dl>
+    <h2>Route on roads</h2><div id="analysis-route" class="chips"></div><dl id="analysis-route-rows" class="rows"></dl>
+    <h2>Line of sight and viewshed</h2><div id="analysis-sight" class="chips"></div><dl id="analysis-sight-rows" class="rows"></dl>
     <p id="analysis-error" class="hint" hidden></p>`,
   data: `
-    <h2>読み込み</h2><div id="data"></div>
-    <h2>Web サービス</h2><div id="services"></div>
-    <h2>地点の一覧</h2><div id="table"></div>
-    <div class="chips"><button id="marker">中心に印を置く</button></div>`,
+    <h2>Open data</h2><div id="data"></div>
+    <h2>Web services</h2><div id="services"></div>
+    <h2>Places table</h2><div id="table"></div>
+    <div class="chips"><button id="marker">Add a marker at the center</button></div>`,
 };
 
 /** Shows tab `id`, in the markup both ways of drawing the panel share. */
@@ -58,14 +58,14 @@ export function mountShell(current) {
   const logo = Object.assign(document.createElement("a"), { className: "logo", href: "../", textContent: "mbt-map" });
   const variants = document.createElement("nav");
   variants.className = "variants";
-  variants.setAttribute("aria-label", "書き方");
+  variants.setAttribute("aria-label", "Variants");
   for (const [path, label] of VARIANTS) {
     const a = Object.assign(document.createElement("a"), { href: `../${path}/`, textContent: label });
     if (path === current) a.setAttribute("aria-current", "page");
     variants.append(a);
   }
-  const collapse = Object.assign(document.createElement("button"), { className: "collapse", title: "パネルを畳む" });
-  collapse.setAttribute("aria-label", "パネルを畳む");
+  const collapse = Object.assign(document.createElement("button"), { className: "collapse", title: "Collapse the panel" });
+  collapse.setAttribute("aria-label", "Collapse the panel");
   collapse.append(icon("chevron"));
   collapse.addEventListener("click", () => card.classList.toggle("collapsed"));
   brand.append(logo, variants, collapse);
@@ -99,8 +99,8 @@ export function mountShell(current) {
     b.dataset.mode = m;
     modes.append(b);
   }
-  const save = Object.assign(document.createElement("button"), { id: "save", title: "画像を保存" });
-  save.setAttribute("aria-label", "画像を保存");
+  const save = Object.assign(document.createElement("button"), { id: "save", title: "Save as image" });
+  save.setAttribute("aria-label", "Save as image");
   save.append(icon("camera"));
   actions.append(modes, save);
 
