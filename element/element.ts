@@ -22,6 +22,9 @@ export interface MoonMapEventDetail {
   bearing: number;
   pitch: number;
   error?: Error;
+  /** For `moon-map-click`: the screen point (CSS pixels from the map's top-left) and the place under it. */
+  point?: { x: number; y: number };
+  lngLat?: LngLat;
 }
 
 const ATTRIBUTES = ["style-url", "center", "zoom", "bearing", "pitch", "worker-count", "worker-url", "wasm-url", "attribution-control"] as const;
@@ -198,6 +201,7 @@ export class MoonMapElement extends Base {
     map.on("move", () => this.#dispatch("moon-map-move"));
     map.on("moveend", () => this.#dispatch("moon-map-moveend"));
     map.on("error", (e) => this.#dispatch("moon-map-error", e.error));
+    map.on("click", (e) => e.point && e.lngLat && this.#dispatch("moon-map-click", undefined, { point: { x: e.point.x, y: e.point.y }, lngLat: e.lngLat }));
   }
 
   #destroy(): void {
@@ -219,7 +223,7 @@ export class MoonMapElement extends Base {
     else this.#create();
   }
 
-  #dispatch(type: string, error?: Error): void {
+  #dispatch(type: string, error?: Error, extra?: Pick<MoonMapEventDetail, "point" | "lngLat">): void {
     if (error) console.error(error);
     const map = this.#map;
     if (!map && !error) return;
@@ -230,6 +234,7 @@ export class MoonMapElement extends Base {
       bearing: this.bearing,
       pitch: this.pitch,
       ...(error ? { error } : {}),
+      ...extra,
     };
     this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
   }
@@ -243,4 +248,10 @@ declare global {
 
 if (typeof customElements !== "undefined" && !customElements.get("moon-map")) {
   customElements.define("moon-map", MoonMapElement);
+}
+
+/** The `<moon-map>` with id `id` in the document, or null (for bindings that hold an id, such as MoonBit's). */
+export function moonMapElement(id: string): MoonMapElement | null {
+  const el = typeof document === "undefined" ? null : document.getElementById(id);
+  return el instanceof MoonMapElement ? el : null;
 }

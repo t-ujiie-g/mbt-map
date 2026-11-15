@@ -451,7 +451,7 @@ const grid = await loadGrid(dem, { scale: 111120 });  // 経緯度の DEM の傾
 
 - 属性：`style-url`、`center`（`lng,lat`）、`zoom`（0〜22）、`bearing`、`pitch`（0〜85）、`worker-count`（0〜4）、`worker-url`、`wasm-url`、`attribution-control`（`true` か `false`。出典を自分で表示するときは `false`）。不正な値は受け付けず、`moon-map-error` を出す。
 - プロパティ：`map`（`Map`。作成前と削除後は null）、`mapStyle`（スタイルのオブジェクト。`style-url` より優先。変えると地図を作り直さず `setStyle` で差し替える）、`center`、`zoom`、`bearing`、`pitch`。
-- イベント：`moon-map-load`、`moon-map-movestart`、`moon-map-move`、`moon-map-moveend`、`moon-map-idle`、`moon-map-error`。`detail` は `{ map, center, zoom, bearing, pitch, error? }` で、Shadow DOM の外まで伝わる。
+- イベント：`moon-map-load`、`moon-map-movestart`、`moon-map-move`、`moon-map-moveend`、`moon-map-idle`、`moon-map-click`、`moon-map-error`。`detail` は `{ map, center, zoom, bearing, pitch, error? }`（`moon-map-click` には `point` と `lngLat` も）で、Shadow DOM の外まで伝わる。
 - 文書から外すと地図を解放し、戻すと同じカメラで作り直す。同じタスク内での移動では作り直さない。
 - React 19 からは、そのまま `<moon-map zoom={...} onmoon-map-move={...} />` と書ける（`examples/react`、`bench/npm/pages/element`）。
 

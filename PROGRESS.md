@@ -41,3 +41,15 @@ Where things stand, decisions and open issues. The development history before th
 - `t-ujiie-g/moonmap/style`：`Layer`・`Source`・`Style`（`Style::new(sources~, layers~, sprite?, …)`、`Style::url`、`Style::json`、`Layer::json`、`Source::json`）。層ごとの関数 10 個（`fill` … `background`；`paint`・`layout` のプロパティは省略できるラベル付きの引数で、型は `@expr.Expr`）とソースの関数 6 個（`vector_source` … `video_source`；層の `raster` と名前がぶつかるので `_source` 付き。数や文字列は型付き、複雑なものは JSON）は `bench/moonbit/gen-style.mjs` が style-spec 26.5.0 の `v8.json` から生成する（`npm run moonbit:style`）。生成したものと同じかは bench の `npm test` が確かめる（空白と閉じ括弧の前のカンマを除いて比べ、`moon fmt` の整形は無視する）。予約語の候補（`volatile`）は `_` を付ける。`background` は `source` を取らず、`source_layer` と `filter` は地物を描く層だけ。
 - `moonmap` の `Map::new`・`set_style` は `@style.Style`、`add_source` は `@style.Source`、`add_layer` は `@style.Layer`、`set_paint`・`set_layout`・`set_filter` は `@expr.Expr` を取るように変えた（M2 の `Style` の enum はなくした）。確かめのアプリと README も型付きの書き方に。
 - 確かめ：`expr`・`style` の単体テスト（8 件）、pack test の `moonbit`。
+
+## M4：rabbita の部品とデモ（2026-11-15、Mac）
+
+- 依存の確認（AGENTS §8.1）：`moonbit-community/rabbita` 0.16.7 と、それが引く `moonbitlang/async` 0.22.4・`moonbitlang/x` 0.5.1・`moonbitlang/moonback` 0.8.5。どれも Apache-2.0 で MoonBit の公式の組織のもの。rabbita のソースに `eval`・`new Function` はなく、`innerHTML` は `Attrs::inner_html`（XSS の警告付きで `#internal` の印）を使ったときだけ。通信（`fetch`、WebSocket）はそのパッケージを使ったときだけ。使うのは `html`・`cmd`・`sub` と最上位だけ。
+- rabbita の公開の API では任意の属性やイベントを要素に付けられない（`Attrs::attribute` と独自のイベントの受け手は非公開。`@html.node(tag, attrs, children)` はある）。そこで `t-ujiie-g/moonmap_rabbita`（`moonbit/moonmap_rabbita/`、js 専用）は、
+  - `view(id, css?, class?)`：id の付いた `<moon-map>` を置く。
+  - `setup(id, @style.Style, center?, zoom?, bearing?, pitch?)`：描いた後に動く Cmd。要素のプロパティにカメラを入れ、スタイルを渡す（URL なら `style-url`、JSON なら `mapStyle`）。ここで地図ができる。
+  - `events(id, on_load?, on_idle?, on_move?, on_moveend?, on_click?, on_error?)`：`subscriptions` から返す Sub。要素のイベントは泡立って Shadow DOM の外へ出るので、`document` で受けて id で選び、メッセージ（型付きの `Camera`・`Click`、エラーの文）にする。
+  - `with_map(id, f)`：型付きの `@moonmap.Map` で操作して、次の Cmd を返す。`query_features(id, point, layers?, emit)`：地物の問い合わせの答えをメッセージに。
+- 要素に `moon-map-click`（`detail` に `point` と `lngLat`）と、id で要素を返す `moonMapElement(id)` を足した。MoonBit 側は `#module("moon-map/element")` でこれを import するので、要素の定義も読まれる。
+- デモ `examples/rabbita/`（モジュール `t-ujiie-g/moonmap_rabbita_example`）：rabbita の `create_state_with_init` のアプリ。行き先のボタン（`fly_to`）、`moon-map-moveend` からの中心とズームの表示、クリックした点の座標と駅名（`query_features`）、点の大きさの切り替え（`set_paint`）。スタイルは MoonBit の型付きの関数で書く（地理院の淡色地図のラスタ、`?local=1` でフィクスチャの標準地図、駅の円とラベル）。Vite などは使わず、`bench/npm/prepare.mjs` が `moon build` の出力を esbuild で縮めて `examples/rabbita/app.js`（gitignore）に置き、ページは import map で `moon-map` を読む。`app.js` は gzip 25.9KB（rabbita 込み、moon-map 本体は別）。
+- 確かめ：`moonmap_rabbita` の whitebox テスト 3 件（イベントの `detail` の読み、受け手のある種類だけ答える）。rabbita の `Html` の等しさは物理的な比較なので `view` は単体で比べられず、pack test の `rabbita`（ボタンで富士山へ行って戻る、中心の点のクリックで「（東京駅）」、`circle-radius` の変更）で確かめる。

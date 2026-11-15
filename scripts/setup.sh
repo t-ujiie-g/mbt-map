@@ -43,6 +43,8 @@ elif [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$moon_home/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 moon version --all
+# The mooncakes registry index, which resolving MoonBit dependencies (rabbita) reads.
+moon update
 
 for dir in npm bench examples/react; do
   if [ ! -d "$dir/node_modules" ] || [ "$dir/package-lock.json" -nt "$dir/node_modules" ]; then

@@ -1,0 +1,10 @@
+import {
+  "moonbitlang/core/debug",
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/sub",
+  "t-ujiie-g/moonmap",
+  "t-ujiie-g/moonmap/style",
+}
+
+supported_targets = "js"

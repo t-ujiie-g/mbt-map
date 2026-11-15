@@ -22,3 +22,6 @@ bench/fixtures/*/
 .vscode/
 .idea/
 .claude/worktrees/
+
+# The rabbita example built from MoonBit (bench/npm/prepare.mjs)
+examples/rabbita/app.js
