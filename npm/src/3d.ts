@@ -70,7 +70,7 @@ export interface ModelLayerOptions extends ModelOptions {
 const client = new WorkerClient("3d");
 
 function start(options: ModelOptions): void {
-  client.start(options.workerUrl ?? new URL("./3d-worker.js", import.meta.url), (page) => ({
+  client.start(options.workerUrl, new URL("./3d-worker.js", import.meta.url), (page) => ({
     wasm: wasmUrl(options.wasmUrl ?? new URL("./3d.wasm", import.meta.url), page),
     proj: wasmUrl(new URL("./proj.wasm", import.meta.url), page),
     prj: new URL("./prjwkt.js", import.meta.url).href,

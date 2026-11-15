@@ -6,12 +6,18 @@ import { hostNumber, MAX_INPUT_BYTES, writeInput } from "../../wasmio/js/host.mj
 import { dataFetchInit, fetchInit, readCapped } from "../../worker/js/body.mjs";
 import { readString } from "../../worker/js/values.mjs";
 
-// Imported on first use: npm/scripts/build.mjs makes them files of their own.
-const zipModule = () => import("../../npm/src/zip.ts");
-const crsModule = () => import("./crs.mjs");
-const fgbModule = () => import("./fgb.mjs");
-const geotiffModule = () => import("./geotiff.mjs");
-const reprojectModule = () => import("./reproject.mjs");
+// Imported on first use: npm/scripts/build.mjs makes them files of their own, found by the init message's
+// `parts` URLs (where a bundler put them, `setDataParts`), else beside this file.
+let parts = {};
+export function setDataParts(given) {
+  if (given && typeof given === "object") parts = given;
+}
+const part = (name) => (typeof parts[name] === "string" ? parts[name] : null);
+const zipModule = () => (part("zip") ? import(part("zip")) : import("../../npm/src/zip.ts"));
+const crsModule = () => (part("crs") ? import(part("crs")) : import("./crs.mjs"));
+const fgbModule = () => (part("fgb") ? import(part("fgb")) : import("./fgb.mjs"));
+const geotiffModule = () => (part("geotiff") ? import(part("geotiff")) : import("./geotiff.mjs"));
+export const reprojectModule = () => (part("reproject") ? import(part("reproject")) : import("./reproject.mjs"));
 // Source images of reprojected tiles kept by URL (decoded), so that neighbouring tiles share them: at most
 // this many pixels in all (256 MB of RGBA).
 const MAX_KEPT_PIXELS = 64 * 1024 * 1024;

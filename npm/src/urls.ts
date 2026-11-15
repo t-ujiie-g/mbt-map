@@ -37,23 +37,51 @@ export function resolveTemplate(template: string, base: string | URL, what = "ti
 
 const BOOTSTRAPS = new Map<string, string>();
 
-/**
- * Where to start module worker `url`: on the page's origin as it is; inside `home`, the library's own folder (a
- * CDN's), through a same-origin blob importing it (browsers start no cross-origin workers). Others refused (§8.3).
- */
-export function workerScriptUrl(url: string | URL, base: URL, origin: string, home = new URL("./", import.meta.url).href): string {
-  const u = new URL(url, base);
-  const inHome = /^https?:$/.test(new URL(home).protocol) && u.href.startsWith(home);
-  if (!/^https?:$/.test(u.protocol) || (u.origin !== origin && !inHome)) {
-    throw new Error(`mbt-map: the worker must be an http(s) URL on the page's origin or beside the library: ${u.href}`);
-  }
-  if (u.origin === origin) return u.href;
-  let blob = BOOTSTRAPS.get(u.href);
+// The library's folder, cut from the string: bundlers take `new URL("./", import.meta.url)` for an asset.
+const HOME = import.meta.url.slice(0, import.meta.url.lastIndexOf("/") + 1);
+
+function bootstrap(key: string, script: () => BlobPart): string {
+  let blob = BOOTSTRAPS.get(key);
   if (!blob) {
-    blob = URL.createObjectURL(new Blob([`import ${JSON.stringify(u.href)};`], { type: "text/javascript" }));
-    BOOTSTRAPS.set(u.href, blob);
+    blob = URL.createObjectURL(new Blob([script()], { type: "text/javascript" }));
+    BOOTSTRAPS.set(key, blob);
   }
   return blob;
+}
+
+function dataUrlBody(href: string): BlobPart {
+  const comma = href.indexOf(",");
+  const body = href.slice(comma + 1).replace(/#.*$/s, "");
+  return /;base64$/i.test(href.slice(0, comma)) ? Uint8Array.from(atob(decodeURIComponent(body)), (c) => c.charCodeAt(0)) : decodeURIComponent(body);
+}
+
+/**
+ * Where to start a module worker. The page's `given` must be on its origin, or in `home` (the library's folder on a
+ * CDN: started through a same-origin blob importing it); others are refused (§8.3). Without it, the library's `own`,
+ * where a bundler put it: http(s) anywhere, or a `data:` URL (inlined), started from a blob of the same text.
+ */
+export function workerScriptUrl(given: string | URL | undefined, own: URL, base: URL, origin: string, home = HOME): string {
+  const u = new URL(given ?? own, base);
+  const http = /^https?:$/.test(u.protocol);
+  if (given === undefined) {
+    if (u.protocol === "data:") return bootstrap(u.href, () => dataUrlBody(u.href));
+    if (!http) throw new Error(`mbt-map: the library's worker must be an http(s) or inlined URL: ${u.protocol}`);
+  } else {
+    const inHome = /^https?:$/.test(new URL(home).protocol) && u.href.startsWith(home);
+    if (!http || (u.origin !== origin && !inHome)) {
+      throw new Error(`mbt-map: the worker must be an http(s) URL on the page's origin or beside the library: ${u.href}`);
+    }
+  }
+  return u.origin === origin ? u.href : bootstrap(u.href, () => `import ${JSON.stringify(u.href)};`);
+}
+
+/**
+ * The URLs of a worker's parts (files it imports on first use), sent in its init message so that a bundler's
+ * copies are found; undefined with the page's own worker (`given`), which imports the files beside itself.
+ */
+export function workerParts(given: unknown, parts: Record<string, URL>): Record<string, string> | undefined {
+  if (given !== undefined) return undefined;
+  return Object.fromEntries(Object.entries(parts).map(([name, url]) => [name, url.href]));
 }
 
 export function wasmUrl(url: string | URL, base: URL): string {

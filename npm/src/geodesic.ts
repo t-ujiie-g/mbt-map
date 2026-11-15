@@ -58,7 +58,7 @@ export interface Measurement {
 const client = new WorkerClient("geodesic");
 
 function start(options: GeodesicOptions): void {
-  client.start(options.workerUrl ?? new URL("./geodesic-worker.js", import.meta.url), (page) => ({
+  client.start(options.workerUrl, new URL("./geodesic-worker.js", import.meta.url), (page) => ({
     wasm: wasmUrl(options.wasmUrl ?? new URL("./geodesic.wasm", import.meta.url), page),
   }));
 }

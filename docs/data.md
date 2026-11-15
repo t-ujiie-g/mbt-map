@@ -360,6 +360,6 @@ The first call starts `data-worker.js` with `data.wasm`. These are fetched on fi
 | `projstring.js` | a PROJ string is given |
 | `data-reproject.js` | drawing a `reprojected` source's tiles |
 
-By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts always load from next to `data.js` or `data-worker.js`. See [getting-started.md](./getting-started.md).
+By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
 
 `terminate()` stops the worker and rejects pending calls. The next call starts a new one.

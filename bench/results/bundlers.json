@@ -1,0 +1,169 @@
+{
+  "env": {
+    "browser": "chromium",
+    "node": "v22.23.4",
+    "platform": "darwin"
+  },
+  "rows": [
+    {
+      "bundler": "vite",
+      "mode": "dev",
+      "version": "vite 8.3.8",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/node_modules/mbt-map/dist/analysis-worker.js",
+        "/node_modules/mbt-map/dist/data-worker.js",
+        "/node_modules/mbt-map/dist/geodesic-worker.js",
+        "/node_modules/mbt-map/dist/geojson-worker.js",
+        "/node_modules/mbt-map/dist/worker.js"
+      ]
+    },
+    {
+      "bundler": "vite",
+      "mode": "build",
+      "version": "vite 8.3.8",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/assets/analysis-worker-BOsh_sWd.js",
+        "/assets/data-worker-EI2eixn_.js",
+        "/assets/geojson-worker-CVNuldEI.js",
+        "/assets/worker-DPMmAZHM.js",
+        "blob:"
+      ]
+    },
+    {
+      "bundler": "vite",
+      "mode": "build, assets on another origin",
+      "version": "vite 8.3.8",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "blob:"
+      ]
+    },
+    {
+      "bundler": "webpack",
+      "mode": "dev",
+      "version": "webpack 5.112.2, webpack-cli 7.3.1, webpack-dev-server 6.1.0",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/5f66b22810af46cb277d.js",
+        "/679eb37cfe8eabefbca2.js",
+        "/9e3e685f1e0c89e5376e.js",
+        "/d77c667dd0167e2c65c8.js",
+        "/e770fbb925c1e021fd4b.js"
+      ]
+    },
+    {
+      "bundler": "webpack",
+      "mode": "build",
+      "version": "webpack 5.112.2, webpack-cli 7.3.1, webpack-dev-server 6.1.0",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/44b92832688cae70e403.js",
+        "/55bfd8da753e067974b4.js",
+        "/622c4414969063a3e1df.js",
+        "/e22dd942fee3d4d66cdb.js",
+        "/eeacdc8afbf69461b047.js"
+      ]
+    },
+    {
+      "bundler": "webpack",
+      "mode": "build, assets on another origin",
+      "version": "webpack 5.112.2, webpack-cli 7.3.1, webpack-dev-server 6.1.0",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "blob:"
+      ]
+    },
+    {
+      "bundler": "rollup",
+      "mode": "build",
+      "version": "rollup 4.68.3, @rollup/plugin-node-resolve 16.0.3, @web/rollup-plugin-import-meta-assets 3.0.1",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/assets/analysis-worker-BOsh_sWd.js",
+        "/assets/data-worker-EI2eixn_.js",
+        "/assets/geodesic-worker-Dq_gPbZl.js",
+        "/assets/geojson-worker-CVNuldEI.js",
+        "/assets/worker-DPMmAZHM.js"
+      ]
+    },
+    {
+      "bundler": "esbuild",
+      "mode": "build, files copied",
+      "version": "esbuild 0.28.2",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/analysis-worker.js",
+        "/data-worker.js",
+        "/geodesic-worker.js",
+        "/geojson-worker.js",
+        "/worker.js"
+      ]
+    },
+    {
+      "bundler": "parcel",
+      "mode": "dev",
+      "version": "parcel 2.16.4",
+      "ok": false,
+      "known": true,
+      "problems": [
+        "map error: mbt-map: GeoJSON: the worker failed",
+        "data: mbt-map: data: (intermediate value).toLonLat is not a function",
+        "the circle is not drawn: rgb 221, 221, 238 at the center",
+        "query: []",
+        "data: null"
+      ],
+      "workers": [
+        "/analysis-worker.7ac40b1a.js",
+        "/data-worker.b26696a8.js",
+        "/geodesic-worker.44f6cb99.js",
+        "/geojson-worker.js",
+        "/worker.aa67fd87.js"
+      ]
+    },
+    {
+      "bundler": "parcel",
+      "mode": "build",
+      "version": "parcel 2.16.4",
+      "ok": false,
+      "known": true,
+      "problems": [
+        "page.waitForFunction: Timeout 90000ms exceeded.",
+        "pageerror: Label 'e' has already been declared"
+      ],
+      "workers": []
+    },
+    {
+      "bundler": "parcel",
+      "mode": "build, library served unbundled",
+      "version": "parcel 2.16.4",
+      "ok": true,
+      "known": false,
+      "problems": [],
+      "workers": [
+        "/mbt-map/analysis-worker.js",
+        "/mbt-map/data-worker.js",
+        "/mbt-map/geodesic-worker.js",
+        "/mbt-map/geojson-worker.js",
+        "/mbt-map/worker.js"
+      ]
+    }
+  ]
+}

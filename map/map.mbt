@@ -193,7 +193,8 @@ fn Map::fire_move(self : Map, c : @core.Camera) -> Unit {
 ///|
 /// Creates a map drawing `style_json` into `canvas` with `workers` tile workers
 /// (0 picks half the hardware threads, up to `MAX_WORKERS`); `geojson` gives
-/// GeoJSON sources' tiles and `font` is the CSS font family labels are drawn in.
+/// GeoJSON sources' tiles, `font` is the CSS font family labels are drawn in and
+/// `worker_parts` where the workers find the files they import later.
 pub fn Map::new(
   canvas : @render_webgl2.Canvas,
   style_json : String,
@@ -205,6 +206,7 @@ pub fn Map::new(
   font~ : String = "sans-serif",
   limits~ : @core.Limits = @core.Limits::default(),
   strict~ : Bool = false,
+  worker_parts~ : WorkerParts = no_parts(),
 ) -> Map raise MapError {
   let json = parse_json(style_json)
   let style = @style.Style::from_json(json, strict~) catch {
@@ -311,7 +313,7 @@ pub fn Map::new(
     let w = spawn_worker(absolute_url(worker_url), msg => map.on_message(msg), message => {
       map.worker_failed(i, message)
     })
-    post_init(w, wasm, compiled, map.has_labels, font)
+    post_init(w, wasm, compiled, map.has_labels, font, worker_parts)
     map.workers.push(w)
     map.failed_workers.push(false)
   }

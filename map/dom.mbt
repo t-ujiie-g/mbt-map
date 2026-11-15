@@ -110,8 +110,19 @@ extern "js" fn post_init(
   style : Bytes,
   symbols : Bool,
   font : String,
+  parts : WorkerParts,
 ) -> Unit =
-  #|(w, wasm, style, symbols, font) => w.postMessage({ type: "init", wasm, style, symbols, font })
+  #|(w, wasm, style, symbols, font, parts) => w.postMessage({ type: "init", wasm, style, symbols, font, parts: parts ?? undefined })
+
+///|
+/// Where the display worker finds the files it imports on first use: a JS
+/// object `{labels, pmtiles, query}` of URLs, or JS null for beside the worker.
+#external
+pub type WorkerParts
+
+///|
+extern "js" fn no_parts() -> WorkerParts =
+  #|() => null
 
 ///|
 /// Asks worker `w` for a tile at `url`, passed first through `transform` (the

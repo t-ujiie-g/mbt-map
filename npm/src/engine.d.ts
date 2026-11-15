@@ -21,6 +21,7 @@ declare module "mbt-map-engine" {
     font: string,
     limits: number[],
     strict: boolean,
+    workerParts: Record<string, string> | null,
   ): EngineMap;
   export function map_camera(map: EngineMap): { lng: number; lat: number; zoom: number; bearing: number; pitch: number };
   export function map_set_camera(map: EngineMap, lng: number, lat: number, zoom: number, bearing: number, pitch: number): void;

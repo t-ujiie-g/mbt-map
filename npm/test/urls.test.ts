@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PMTILES, httpUrl, pmtilesArchive, resolveTemplate, wasmUrl, workerScriptUrl } from "../src/urls.ts";
+import { PMTILES, httpUrl, pmtilesArchive, resolveTemplate, wasmUrl, workerParts, workerScriptUrl } from "../src/urls.ts";
+
+const OWN = new URL("https://example.com/lib/worker.js");
 
 const base = new URL("https://example.com/styles/style.json");
 
@@ -35,23 +37,50 @@ test("tile templates must be http(s), PMTiles archives too", () => {
 
 test("workers load only from same-origin http(s) URLs", () => {
   const origin = "https://example.com";
-  assert.equal(workerScriptUrl("./worker.js", base, origin), "https://example.com/styles/worker.js");
-  assert.equal(workerScriptUrl(new URL("https://example.com/w.js"), base, origin), "https://example.com/w.js");
-  for (const bad of ["data:text/javascript,1", "blob:https://example.com/x", "https://evil.test/w.js", "javascript:1"]) {
-    assert.throws(() => workerScriptUrl(bad, base, origin, "https://cdn.test/npm/mbt-map@0.1.0/dist/"), /on the page's origin or beside the library/);
+  assert.equal(workerScriptUrl("./worker.js", OWN, base, origin), "https://example.com/styles/worker.js");
+  assert.equal(workerScriptUrl(new URL("https://example.com/w.js"), OWN, base, origin), "https://example.com/w.js");
+  assert.equal(workerScriptUrl(undefined, OWN, base, origin), OWN.href);
+  const bad = ["data:text/javascript,1", "blob:https://example.com/x", "https://evil.test/w.js", "javascript:1"];
+  for (const url of [...bad, ...bad.map((b) => new URL(b))]) {
+    assert.throws(() => workerScriptUrl(url, OWN, base, origin, "https://cdn.test/npm/mbt-map@0.1.0/dist/"), /on the page's origin or beside the library/);
   }
+});
+
+test("the library's own worker starts where a bundler put it: inlined from a blob of its text, another origin's through an importing blob", async () => {
+  const origin = "https://example.com";
+  const script = 'postMessage("é#1");';
+  const plain = new URL(`data:text/javascript,${encodeURIComponent(script)}`);
+  const base64 = new URL(`data:text/javascript;base64,${Buffer.from(script).toString("base64")}`);
+  for (const inlined of [plain, base64]) {
+    const url = workerScriptUrl(undefined, inlined, base, origin);
+    assert.match(url, /^blob:/);
+    assert.equal(await (await fetch(url)).text(), script);
+    assert.equal(workerScriptUrl(undefined, inlined, base, origin), url);
+  }
+  const asset = "https://static.test/assets/worker-abc123.js";
+  const url = workerScriptUrl(undefined, new URL(asset), base, origin, "file:///app/node_modules/mbt-map/dist/");
+  assert.equal(await (await fetch(url)).text(), `import "${asset}";`);
+  for (const bad of ["blob:https://example.com/x", "file:///w.js", "javascript:1"]) {
+    assert.throws(() => workerScriptUrl(undefined, new URL(bad), base, origin), /the library's worker must be/);
+  }
+});
+
+test("worker parts are sent only with the library's own worker", () => {
+  const parts = { query: new URL("https://example.com/assets/worker-query-abc.js") };
+  assert.deepEqual(workerParts(undefined, parts), { query: "https://example.com/assets/worker-query-abc.js" });
+  assert.equal(workerParts("/static/worker.js", parts), undefined);
 });
 
 test("a worker beside the library on a CDN starts through a same-origin blob; other folders of the CDN are refused", async () => {
   const origin = "https://example.com";
   const home = "https://cdn.test/npm/mbt-map@0.1.0/dist/";
   const cdn = `${home}worker.js`;
-  const url = workerScriptUrl(cdn, base, origin, home);
+  const url = workerScriptUrl(cdn, OWN, base, origin, home);
   assert.match(url, /^blob:/);
   assert.equal(await (await fetch(url)).text(), `import "${cdn}";`);
-  assert.equal(workerScriptUrl(cdn, base, origin, home), url);
+  assert.equal(workerScriptUrl(cdn, OWN, base, origin, home), url);
   for (const bad of ["https://cdn.test/npm/evil@1.0.0/worker.js", `${home}../../evil/worker.js`, "https://cdn.test.evil.example/npm/mbt-map@0.1.0/dist/worker.js"]) {
-    assert.throws(() => workerScriptUrl(bad, base, origin, home), /beside the library/);
+    assert.throws(() => workerScriptUrl(bad, OWN, base, origin, home), /beside the library/);
   }
 });
 
