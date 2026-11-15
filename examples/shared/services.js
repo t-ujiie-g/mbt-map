@@ -13,6 +13,12 @@ export function serviceKind(url) {
   return /wmts/i.test(url) ? "wmts" : "wms";
 }
 
+/** What to say when reading a service failed: browsers tell a request that got no answer only as "Failed to fetch". */
+export function serviceError(e) {
+  if (!/Failed to fetch|Load failed|NetworkError/.test(e.message)) return e.message;
+  return "Could not reach the service. Check the URL, and that the server allows requests from other sites (CORS).";
+}
+
 /** A small store of a service's layers and the overlays added: `state` is `{ title, choices, items, loading, error }`. */
 export function createServiceLoader(map) {
   const listeners = new Set();
@@ -41,7 +47,7 @@ export function createServiceLoader(map) {
         const choices = kind === "wmts" ? caps.layers.map((l) => ({ id: l.id, title: l.title || l.id })) : allLayers(caps.layers).filter((l) => l.name).map((l) => ({ id: l.name, title: l.title || l.name }));
         set({ loading: false, title: caps.title || url, choices });
       } catch (e) {
-        set({ loading: false, error: e.message });
+        set({ loading: false, error: serviceError(e) });
       }
     },
     openSample: () => loader.open(SAMPLE),
@@ -66,7 +72,7 @@ export function createServiceLoader(map) {
         }
         set({ loading: false, items: [...loader.state.items, { id, name: choice.title }] });
       } catch (e) {
-        set({ loading: false, error: e.message });
+        set({ loading: false, error: serviceError(e) });
       }
     },
     remove(id) {

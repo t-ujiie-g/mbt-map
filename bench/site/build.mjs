@@ -7,6 +7,7 @@ import { Marked } from "marked";
 import { ROOT } from "../lib/root.mjs";
 import { prepareExamples } from "../npm/prepare.mjs";
 import { anchors, REPOSITORY, SITE_EXAMPLES, siteLink } from "./links.mjs";
+import { deadLinks } from "./dead-links.mjs";
 import { highlight } from "./highlight.mjs";
 
 const OUT = path.join(ROOT, "_site");
@@ -24,6 +25,10 @@ const APPS = [
   ["react", "Showcase in React", "The showcase written with React 19 and the <mbt-map> element."],
   ["rabbita", "MoonBit app (rabbita)", "A web app written in MoonBit with rabbita, its map events as messages."],
 ];
+
+/** The extensions of a sample's text files, shown as code after index.html and main.js, with their language. */
+const SHOWN = new Map([[".json", "json"], [".geojson", "json"], [".js", "js"], [".css", "css"], [".csv", "text"], [".txt", "text"]]);
+const shownAs = (f) => SHOWN.get(path.extname(f));
 
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -66,7 +71,7 @@ ${main}
 }
 
 function docPage({ title, body, sidebar }) {
-  return page({ title, root: "../", main: `<div class="doc">\n  <nav class="side" aria-label="Documentation">${sidebar}</nav>\n  <main class="content">${body}</main>\n</div>` });
+  return page({ title, root: "../", main: `<div class="doc">\n  <nav class="side" aria-label="Documentation"><details class="side-menu" open><summary>Documentation pages</summary>${sidebar}</details></nav>\n  <main class="content">${body}</main>\n</div>` });
 }
 
 async function buildDocs() {
@@ -98,7 +103,9 @@ async function copyExample(src, dest) {
     if (entry.isDirectory()) await cp(from, to, { recursive: true });
     else if (entry.name.endsWith(".html")) {
       const html = await readFile(from, "utf8");
-      await writeFile(to, html.replaceAll("./node_modules/mbt-map/dist/", "../../lib/"));
+      // The showcase links only the variants the site publishes (examples/shared/shell.js `variants`).
+      const published = `<html lang="en" data-variants="${SITE_EXAMPLES.join(",")}">`;
+      await writeFile(to, html.replace('<html lang="en">', published).replaceAll("./node_modules/mbt-map/dist/", "../../lib/"));
     } else await cp(from, to);
   }
 }
@@ -138,8 +145,17 @@ async function buildExamples() {
     const imports = [...new Set([...code.matchAll(/(?:from|import) "(mbt-map[^"]*)"/g)].map((m) => m[1]))].join(" · ");
     if (!groups.has(group)) groups.set(group, []);
     groups.get(group).push(card(`./${id}.html`, title, description, imports));
-    // The page as one would copy it: the package from jsDelivr at this version, the shared CSS from the site.
-    const markup = html.replaceAll("../node_modules/mbt-map/dist/", `${CDN}`).replace('href="../sample.css"', `href="${SITE}examples/samples/sample.css"`);
+    // The page as one would copy it: the package from jsDelivr at this version, the shared CSS and the sample's
+    // binary files from the site; its other text files are shown after the two.
+    const others = (await readdir(src)).filter((f) => f !== "index.html" && f !== "main.js").sort();
+    const texts = others.filter(shownAs);
+    const binaries = others.filter((f) => !shownAs(f));
+    const absolute = (text) => binaries.reduce((t, f) => t.replaceAll(`"./${f}"`, `"${SITE}examples/samples/${id}/${f}"`), text);
+    const markup = absolute(html.replaceAll("../node_modules/mbt-map/dist/", `${CDN}`).replace('href="../sample.css"', `href="${SITE}examples/samples/sample.css"`));
+    const blocks = [["main.js", "js", absolute(code)], ["index.html", "html", markup]];
+    for (const f of texts) blocks.push([f, shownAs(f), await readFile(path.join(src, f), "utf8")]);
+    const assets = binaries.map((f) => `<a href="${SITE}examples/samples/${id}/${f}">${escape(f)}</a>`).join(", ");
+    const note = `Copy ${blocks.length === 2 ? "both" : "these"} files into a folder and serve it over http: the import map loads mbt-map ${escape(VERSION)} from jsDelivr${assets ? `, and the code reads ${assets} from this site` : ""}.`;
     const main = `<main class="wrap">
   <p class="crumbs"><a href="./">Examples</a> / ${escape(group)}</p>
   <div class="sample-head">
@@ -148,11 +164,8 @@ async function buildExamples() {
   </div>
   <iframe class="sample-frame" src="./samples/${id}/" title="${escape(title)}" loading="lazy"></iframe>
   <div class="sample-code">
-    <p class="sample-note">Copy both files into a folder and serve it over http: the import map loads mbt-map ${escape(VERSION)} from jsDelivr.</p>
-    <h2>main.js</h2>
-    <pre><code class="language-js">${escape(code)}</code></pre>
-    <h2>index.html</h2>
-    <pre><code class="language-html">${escape(markup)}</code></pre>
+    <p class="sample-note">${note}</p>
+    ${blocks.map(([name, language, text]) => `<h2>${escape(name)}</h2>\n    <pre><code class="language-${language}">${escape(text)}</code></pre>`).join("\n    ")}
   </div>
 </main>`;
     await writeFile(path.join(out, `${id}.html`), highlight(page({ title, root: "../", main, description })));
@@ -183,4 +196,6 @@ for (const page of ["index.html"]) await writeFile(path.join(OUT, page), highlig
 await buildLib();
 const samples = await buildExamples();
 const pages = await buildDocs();
+const dead = deadLinks(OUT);
+if (dead.length > 0) throw new Error(`site: dead internal links\n${dead.join("\n")}`);
 console.log(`site: ${pages} docs pages, ${samples} samples, ${SITE_EXAMPLES.length} apps in ${path.relative(ROOT, OUT)}/`);

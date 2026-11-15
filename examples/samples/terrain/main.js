@@ -17,6 +17,8 @@ const map = new Map({
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"],
         tileSize: 256,
         maxzoom: 14,
+        // GSI has no elevation tiles over open sea: none are asked for south of the coast.
+        bounds: [136.5, 34.61, 141, 37],
         encoding: "gsi",
         attribution: "国土地理院",
       },

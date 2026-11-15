@@ -158,10 +158,11 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 - `site/index.html` is the hand-written home page, with PLATEAU's 3D buildings turning slowly (`site/hero.js`).
 - `bench/site/build.mjs`:
   - renders `docs/*.md` (not `docs/dev/`) with marked, highlights code blocks at build time (`bench/site/highlight.mjs`: highlight.js, MoonBit by `moonbit-highlight.mjs`), anchors as GitHub's and links rewritten by `bench/site/links.mjs` (docs pages and the published examples stay on the site, other repository files go to GitHub);
-  - copies `npm/dist`'s modules, workers and wasm once to `lib/` and the example apps (`SITE_EXAMPLES`: html, react, plateau, rabbita) without their sources, their import maps pointed at `lib/`;
-  - makes the examples gallery from `examples/samples/index.json` (each sample's `<title>` and description, a page per sample with it running in an iframe beside its `main.js` and `index.html`).
-- Every page has the light/dark switch (`site/theme.js`, remembered in localStorage).
-- `bench/lib/site.test.mjs` checks the docs' relative links and anchors; CI builds the site in the pack job; `.github/workflows/pages.yml` publishes it on a `v*` tag or by hand (the `github-pages` environment allows `main` and `v*` tags).
+  - copies `npm/dist`'s modules, workers and wasm once to `lib/` and the example apps (`SITE_EXAMPLES`: html, react, plateau, rabbita) without their sources, their import maps pointed at `lib/` and `data-variants` on their `<html>` naming the showcase variants published (`variants` in `examples/shared/shell.js` links only those);
+  - makes the examples gallery from `examples/samples/index.json` (each sample's `<title>` and description, a page per sample with it running in an iframe beside its `main.js` and `index.html` as one would copy them: the package from jsDelivr, the shared CSS and the sample's binary files by their site URLs, its other text files shown as further code blocks);
+  - fails when an internal link of the built pages leads nowhere (`bench/site/dead-links.mjs`: every `href` and `src` outside shown code, fragments against the target's ids, the showcase's variant links).
+- Every page has the light/dark switch (`site/theme.js`, remembered in localStorage); the same script folds the documentation's navigation (a `<details>`) at phone width.
+- `bench/lib/site.test.mjs` checks the docs' relative links and anchors and `deadLinks`; CI builds the site in the pack job; `.github/workflows/pages.yml` publishes it on a `v*` tag or by hand (the `github-pages` environment allows `main` and `v*` tags).
 
 ## CI
 

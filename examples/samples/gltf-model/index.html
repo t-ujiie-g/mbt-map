@@ -24,7 +24,8 @@
 <div id="map"></div>
 <div class="panel">
   <h1>Clock towers</h1>
-  <label>Time <b id="time"></b><br><input id="hour" type="range" min="5" max="19" step="0.25" value="9"></label>
+  <label for="hour">Time <output id="time" for="hour"></output></label>
+  <input id="hour" type="range" min="5" max="19" step="0.25" value="9">
 </div>
 <script type="module" src="./main.js"></script>
 </html>

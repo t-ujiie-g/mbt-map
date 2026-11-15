@@ -42,6 +42,9 @@ const CONTOUR_LABELS = {
 // Spot heights grow with the square root of their height (GSI writes some as strings).
 const ELEVATION_RADIUS = ["+", 2, ["*", ["sqrt", ["max", ["to-number", ["get", "alti"], 0], 0]], 0.3]];
 
+// Below this zoom the map basemap is GSI's standard map of the world.
+const WORLD_MAXZOOM = 4;
+
 /** Layers the panel shows and hides together, by the name of each group. */
 export const LAYER_GROUPS = [
   { name: "Hillshade", ids: ["hillshade"] },
@@ -86,7 +89,7 @@ export const LAYER_TITLES = {
   contour: "Contours", "contour-label": "Contour heights", river: "Rivers", "road-casing": "Road casings", road: "Roads", railway: "Railways", boundary: "Boundaries",
   elevation: "Spot heights", symbol: "Symbols", label: "Labels", "label-vertical": "Labels (vertical)", places: "Places", "places-label": "Place names",
   "stations-cluster": "Station clusters", stations: "Yamanote Line stations", "stations-count": "Station counts", "stations-heat": "Station density", walk: "Walk",
-  hillshade: "Hillshade", photo: "Aerial photo", sketch: "Station sketch", "analysis-cells": "Place cell area", "analysis-cells-line": "Place cell borders",
+  hillshade: "Hillshade", world: "World map", photo: "Aerial photo", sketch: "Station sketch", "analysis-cells": "Place cell area", "analysis-cells-line": "Place cell borders",
   "analysis-route": "Route", "analysis-route-end": "Route ends", "analysis-viewshed": "Viewshed", "analysis-sight": "Line of sight", "analysis-sight-point": "Line of sight points",
 };
 
@@ -140,7 +143,8 @@ export function gsiSource() {
  * "2d", "3d" or "globe" over `basemap` ("map" or "photo") as a MapLibre style object, without the layer groups
  * named in `hidden`; the places are overlays, kept when the basemap changes. `walk` is a walk around Tokyo Station
  * (line metrics give its gradient), `sketch` a self-made sketch of the station yard placed by its corners along the
- * tracks, `photo` GSI's seamless aerial photos (the standard map with ?local=1), and `places-label` sits beside
+ * tracks, `photo` GSI's seamless aerial photos (the standard map with ?local=1), `world` GSI's standard map of the
+ * world below zoom 4, where its vector tiles (Japan from zoom 4) have nothing, and `places-label` sits beside
  * the dot: below it, or else above, right or left, whichever is free.
  */
 export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, basemap = "map") {
@@ -161,6 +165,10 @@ export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, bas
       ? { type: "raster", tiles: [`${fixtures}gsi-std/{z}/{x}/{y}.png`], tileSize: 256, minzoom: 14, maxzoom: 14 }
       : { type: "raster", tiles: [`${GSI}/seamlessphoto/{z}/{x}/{y}.jpg`], tileSize: 256, minzoom: 2, maxzoom: 18 },
   };
+  sources.world = local
+    ? { type: "raster", tiles: [`${fixtures}gsi-std-world/{z}/{x}/{y}.png`], tileSize: 256, maxzoom: 3 }
+    : { type: "raster", tiles: [`${GSI}/std/{z}/{x}/{y}.png`], tileSize: 256, maxzoom: WORLD_MAXZOOM };
+  sources.world.attribution = "国土地理院";
   sources.photo.attribution = "国土地理院 全国最新写真（シームレス）";
   sources.dem.attribution = "国土地理院 標高タイル";
   const overlay = { "mbt-map:overlay": true };
@@ -168,6 +176,7 @@ export function createStyle(mode, hidden = HIDDEN_AT_START, places = PLACES, bas
     basemap === "photo"
       ? [{ id: "photo", type: "raster", source: "photo" }, ...GSI_LAYERS.filter((l) => l.id.startsWith("label"))]
       : [
+          { id: "world", type: "raster", source: "world", maxzoom: WORLD_MAXZOOM },
           { id: "hillshade", type: "hillshade", source: "dem", paint: { "hillshade-exaggeration": 0.5, "hillshade-shadow-color": "#5a4a35" } },
           ...GSI_LAYERS.flatMap((l) => {
             if (l.id === "elevation") return [{ ...l, paint: { ...l.paint, "circle-radius": ELEVATION_RADIUS } }];
@@ -248,7 +257,11 @@ export function modeCamera(mode) {
   return mode === "3d" ? { pitch: 60, bearing: -20 } : { pitch: 0, bearing: 0 };
 }
 
-/** The camera move into `mode` from `zoom`: the globe zooms out until the whole of it shows. */
-export function modeEase(mode, zoom) {
-  return { ...modeCamera(mode), ...(mode === "globe" ? { zoom: Math.min(zoom, 2) } : {}), duration: 1000 };
+/**
+ * The camera move into `mode` from `zoom`: the globe zooms out until the whole of it shows, and a mode after it
+ * goes `back` to the `{ center, zoom }` the globe was entered from, unless the map has been zoomed in past it.
+ */
+export function modeEase(mode, zoom, back = null) {
+  const to = mode === "globe" ? { zoom: Math.min(zoom, 2) } : back && zoom < back.zoom ? back : {};
+  return { ...modeCamera(mode), ...to, duration: 1000 };
 }

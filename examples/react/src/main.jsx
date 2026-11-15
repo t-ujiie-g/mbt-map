@@ -12,7 +12,7 @@ import { DESTINATIONS, PLACES } from "../../shared/places.js";
 import { cameraRows, nearLines } from "../../shared/readout.js";
 import { keepModels } from "../../shared/models.js";
 import { keepRadiusRing } from "../../shared/ring.js";
-import { TABS, VARIANTS } from "../../shared/shell.js";
+import { TABS, variants } from "../../shared/shell.js";
 import { zoomIntoClusters } from "../../shared/stations.js";
 import { createStyle, MODES, modeCamera, modeEase, withMarker } from "../../shared/style.js";
 import { MapControls } from "./controls.jsx";
@@ -38,6 +38,7 @@ function App() {
   const [panel, setPanel] = useState(null);
   const [status, setStatus] = useState(null);
   const modeRef = useRef(mode);
+  const beforeGlobe = useRef(null);
   const [map, setMap] = useState(null);
   const tools = useIdentify(map, status);
   const places = useRef(PLACES);
@@ -63,7 +64,9 @@ function App() {
     modeRef.current = m;
     setMode(m);
     const map = ref.current.map;
-    map?.easeTo(modeEase(m, map.getZoom()));
+    if (!map) return;
+    if (m === "globe") beforeGlobe.current = { center: map.getCenter(), zoom: map.getZoom() };
+    map.easeTo(modeEase(m, map.getZoom(), mode === "globe" ? beforeGlobe.current : null));
   };
   // From the source's data, which the table's field editor may have changed.
   const addMarker = async () => {
@@ -108,7 +111,7 @@ function App() {
           <header className="brand">
             <a className="logo" href="../">mbt-map</a>
             <nav className="variants" aria-label="Variants">
-              {VARIANTS.map(([path, label]) => <a key={path} href={`../${path}/`} aria-current={path === "react" ? "page" : undefined}>{label}</a>)}
+              {variants().map(([path, label]) => <a key={path} href={`../${path}/`} aria-current={path === "react" ? "page" : undefined}>{label}</a>)}
             </nav>
             <button className="collapse" title="Collapse the panel" aria-label="Collapse the panel" onClick={() => setCollapsed(!collapsed)}><Icon name="chevron" /></button>
           </header>
