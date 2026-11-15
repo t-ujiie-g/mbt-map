@@ -32,7 +32,7 @@ core ← viewshed ← viewshed_worker
 geom ← route ← route_worker
 proj ← proj_worker
 core ← geodesic ← geodesic_worker
-core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← adapters
+core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← moonbit/mbtmap ← moonbit/mbtmap_rabbita
 (meshopt, draco, lepcc) ← model_worker
 wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 ```
@@ -119,7 +119,7 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 
 ## The npm facade
 
-- `npm/`, `element/`, `adapters/`, `examples/` are not MoonBit packages (TS/HTML side).
+- `npm/`, `element/`, `examples/` are not MoonBit packages (TS/HTML side).
 - `npm/src/index.ts` is a MapLibre-shaped TS facade (`Map`, `on`/`once`, `jumpTo`, …) over the `bundle/main` exports; esbuild aliases `mbt-map-engine` to that build and `npm/src/engine.d.ts` types it, so keep both in sync with `bundle/main/main.mbt` (`map_frame_count` and `map_placed_labels` are test hooks).
 - Pure parts of the facade live in their own modules for `npm test` (`engine-style.ts`, `feature-state.ts`, `query.ts`, `camera.ts` with the zoom and pitch limits that `element/parse.ts` mirrors).
 - The build rewrites `dist/*.d.ts` relative imports to `.js` so `moduleResolution: nodenext` resolves them, and `package.json` exports every file reached by URL (workers, wasm, worker parts).

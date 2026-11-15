@@ -81,7 +81,7 @@ Where things live (the reference is `docs/dev/ARCHITECTURE.md` and its companion
 - `examples/`: one showcase written three ways (`html/`, `element/`, `react/`) over `examples/shared/` (each phase adds its features to all three), `plateau/`, `rabbita/`, `samples/`. `site/` and `bench/site/`: the GitHub Pages site.
 - `bench/`: goldens, benchmarks, the pack test (`bench/npm/`), dev pages (`bench/pages/`), tooling (`bench/lib/`). `scripts/`: setup and the pinned toolchain.
 
-Dependency direction, never reversed (every chain is in `docs/dev/ARCHITECTURE.md`): `core ← pbf ← mvt ← tess/style ← worker`; `core ← geom ← formats/tiler ← … ← *_worker`; `core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← adapters`; `wasmio ← wasm-gc entries` only.
+Dependency direction, never reversed (every chain is in `docs/dev/ARCHITECTURE.md`): `core ← pbf ← mvt ← tess/style ← worker`; `core ← geom ← formats/tiler ← … ← *_worker`; `core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← moonbit/mbtmap ← moonbit/mbtmap_rabbita`; `wasmio ← wasm-gc entries` only.
 
 Invariants that prevent expensive mistakes:
 
