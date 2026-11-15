@@ -93,47 +93,4 @@ declare module "moon-map-engine" {
   export function map_set_feature_state(map: EngineMap, source: string, sourceLayer: string, id: string, state: Record<string, unknown> | null): void;
   export function map_set_transform_request(map: EngineMap, f: ((url: string, resourceType: "Tile") => unknown) | null): void;
   export function map_query_source(map: EngineMap, source: string, sourceLayer: string, filter: string, done: (tiles: TileResult[]) => void): string;
-
-  /** The style document (`@web.StyleDoc`): edits give a new one, or an Error (RangeError for ranges) to throw. */
-  export interface StyleDoc {
-    readonly __styleDoc: unique symbol;
-  }
-  /** What the engine is handed for a document (`@web.EngineStyle`). */
-  export interface EngineStyle {
-    readonly __engineStyle: unique symbol;
-  }
-  export function doc_from_js(style: unknown): StyleDoc | Error;
-  export function doc_keep_data(doc: StyleDoc, previous: StyleDoc | null): StyleDoc;
-  export function doc_to_js(doc: StyleDoc, custom: boolean): Record<string, unknown>;
-  export function doc_layer(doc: StyleDoc, id: string): Record<string, unknown> | undefined;
-  export function doc_layer_kinds(doc: StyleDoc): { id: string; type: string }[];
-  export function doc_layer_ids(doc: StyleDoc): string[];
-  export function doc_add_layer(doc: StyleDoc, layer: unknown, before: string | undefined): StyleDoc | Error;
-  export function doc_remove_layer(doc: StyleDoc, id: string): StyleDoc | Error;
-  export function doc_move_layer(doc: StyleDoc, id: string, before: string | undefined): StyleDoc | Error;
-  export function doc_set_property(doc: StyleDoc, id: string, layout: boolean, name: string, value: unknown): StyleDoc | Error;
-  export function doc_property(doc: StyleDoc, id: string, layout: boolean, name: string): unknown;
-  export function doc_set_filter(doc: StyleDoc, id: string, filter: unknown): StyleDoc | Error;
-  export function doc_filter(doc: StyleDoc, id: string): unknown;
-  export function doc_set_zoom_range(doc: StyleDoc, id: string, minzoom: number, maxzoom: number): StyleDoc | Error;
-  export function doc_has_source(doc: StyleDoc, id: string): boolean;
-  export function doc_source(doc: StyleDoc, id: string): Record<string, unknown> | undefined;
-  export function doc_source_data(doc: StyleDoc, id: string): unknown;
-  export function doc_add_source(doc: StyleDoc, id: string, source: unknown): StyleDoc | Error;
-  export function doc_remove_source(doc: StyleDoc, id: string): StyleDoc | Error;
-  export function doc_set_source_data(doc: StyleDoc, id: string, data: unknown): StyleDoc | Error;
-  export function doc_keep_source_key(doc: StyleDoc, id: string, key: string, value: unknown): void;
-  export function doc_keep_source_data(doc: StyleDoc, id: string, data: unknown): void;
-  export function doc_set_root(doc: StyleDoc, key: string, value: unknown): StyleDoc;
-  export function doc_root(doc: StyleDoc, key: string): unknown;
-  export function doc_changed_sources(doc: StyleDoc, previous: StyleDoc | null): string[];
-  export function doc_has_legacy(doc: StyleDoc): boolean;
-  export function is_legacy_filter(filter: unknown): boolean;
-  export function doc_tilejson_urls(doc: StyleDoc, base: string): [string, string][] | Error;
-  export function doc_engine(doc: StyleDoc, state: Record<string, unknown>, documents: (url: string) => unknown, base: string, convert: ((style: unknown) => unknown) | null): EngineStyle | Error;
-  export function doc_sources_of(doc: StyleDoc, types: string[]): { id: string; spec: Record<string, unknown> }[];
-  export function engine_text(e: EngineStyle): string;
-  export function engine_geojson(e: EngineStyle): { id: string; spec: Record<string, unknown> }[];
-  export function engine_attributions(e: EngineStyle, zoom: number): string[];
-  export function engine_warnings(e: EngineStyle, flat: string[]): { path: string; layer?: string; message: string }[];
 }

@@ -1,3 +1,0 @@
-// The map's page-facing layer in MoonBit: the style document and what the engine is handed.
-
-supported_targets = "js"

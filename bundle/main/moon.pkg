@@ -4,7 +4,6 @@ import {
   "t-ujiie-g/moonmap/core",
   "t-ujiie-g/moonmap/map",
   "t-ujiie-g/moonmap/render_webgl2",
-  "t-ujiie-g/moonmap/web",
 }
 
 supported_targets = "js"
