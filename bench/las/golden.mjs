@@ -298,7 +298,7 @@ for (const [name, bytes] of hostile) {
 }
 
 await mkdir(path.join(ROOT, "bench/results"), { recursive: true });
-await writeFile(path.join(ROOT, "bench/results/las-golden.json"), JSON.stringify({ env: { loaders: "@loaders.gl/las 4.5.4", pdalFiles }, results }, null, 2) + "\n");
+await writeFile(path.join(ROOT, "bench/results/las-golden.json"), JSON.stringify({ env: { loaders: "@loaders.gl/las 4.5.4", pdalFiles }, summary: { cases: results.length, differ: failed }, differing: results.filter((r) => !r.same) }, null, 2) + "\n");
 for (const r of results) if (!r.same || process.argv.includes("--verbose")) console.log(JSON.stringify(r));
 console.log(`las golden: ${results.length} cases, ${pdalFiles} PDAL files, ${failed} differ`);
 if (failed) process.exit(1);
