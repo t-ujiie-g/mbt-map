@@ -1,7 +1,6 @@
-// The map on the home page: PLATEAU's LOD2 buildings around Tokyo Station (3D Tiles, mbt-map/3d) over GSI's
-// pale map, lit as Tokyo is at the visitor's clock time: the sun's real direction and shadows by day, a
-// dark map by night. It turns slowly until someone touches it; the button swaps in the textured buildings.
-// `?time=18:30` shows another time.
+// The home page's map: PLATEAU's LOD2 buildings around Tokyo Station over GSI's pale map, lit as Tokyo is at
+// the visitor's clock time (the sun's shadows by day, a dark map by night; `?time=18:30` for another time).
+// It turns slowly until touched; the button swaps in the textured buildings.
 import { Map, sunPosition, timeOfDayLights } from "mbt-map";
 import { tilesLayer } from "mbt-map/3d";
 
