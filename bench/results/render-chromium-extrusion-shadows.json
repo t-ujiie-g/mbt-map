@@ -5,16 +5,16 @@
     "viewport": "1280x800",
     "dpr": 2,
     "pitch": 45,
-    "style": "bench/maplibre/style.json, buildings extruded 30 m (ftCode 3103) or 8 m, mbtmap: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"
+    "style": "bench/maplibre/style.json, buildings extruded 30 m (ftCode 3103) or 8 m, mbt-map: a sun at azimuth 210°, 40° from the zenith, casting shadows (MapLibre: none)"
   },
   "params": {
     "runs": 11,
     "statistic": "median of runs"
   },
   "sizes": {
-    "mbt-map": {
-      "main": 148160,
-      "worker": 96820
+    "mbtmap": {
+      "main": 152288,
+      "worker": 96813
     },
     "maplibre": {
       "main": 295496,
@@ -22,69 +22,69 @@
     }
   },
   "summary": {
-    "mbt-map": {
-      "idle": 242.07500004768372,
+    "mbtmap": {
+      "idle": 241.99500000476837,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 16.672999999920528,
-          "frameP95Ms": 18.37999999523163,
+          "frameMeanMs": 16.6745000001457,
+          "frameP95Ms": 18.51500004529953,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.190000057220459,
-          "rafCpuP95Ms": 1.9550000429153442
+          "rafCpuP50Ms": 1.5299999713897705,
+          "rafCpuP95Ms": 2.2649999856948853
         },
         "pan-back": {
-          "frameMeanMs": 16.67402777771155,
-          "frameP95Ms": 18.480000019073486,
+          "frameMeanMs": 16.674722222155996,
+          "frameP95Ms": 18.5900000333786,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.3550000190734863,
-          "rafCpuP95Ms": 1.9700000286102295
+          "rafCpuP50Ms": 1.6350000500679016,
+          "rafCpuP95Ms": 2.209999978542328
         },
         "zoom-in": {
-          "frameMeanMs": 16.670416666401756,
-          "frameP95Ms": 18.35499995946884,
+          "frameMeanMs": 16.67072222199705,
+          "frameP95Ms": 18.469999969005585,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.9749999642372131,
-          "rafCpuP95Ms": 1.684999942779541
+          "rafCpuP50Ms": 1.050000011920929,
+          "rafCpuP95Ms": 1.8600000143051147
         },
         "zoom-out": {
-          "frameMeanMs": 16.669611110952165,
-          "frameP95Ms": 18.37999999523163,
+          "frameMeanMs": 16.67613888879617,
+          "frameP95Ms": 18.3850000500679,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.8650000691413879,
-          "rafCpuP95Ms": 1.6200000047683716
+          "rafCpuP50Ms": 0.9800000190734863,
+          "rafCpuP95Ms": 1.9550000429153442
         }
       }
     },
     "maplibre": {
-      "idle": 398.8299999833107,
+      "idle": 398.77999997138977,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 16.674972066999146,
-          "frameP95Ms": 18.314999997615814,
+          "frameMeanMs": 16.676536312982357,
+          "frameP95Ms": 18.2950000166893,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.4800000190734863,
-          "rafCpuP95Ms": 2.3450000286102295
+          "rafCpuP50Ms": 1.7950000166893005,
+          "rafCpuP95Ms": 2.590000033378601
         },
         "pan-back": {
-          "frameMeanMs": 16.67564245808724,
-          "frameP95Ms": 18.349999964237213,
+          "frameMeanMs": 16.676499999894038,
+          "frameP95Ms": 18.389999985694885,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.784999966621399,
-          "rafCpuP95Ms": 2.3350000381469727
+          "rafCpuP50Ms": 2.084999918937683,
+          "rafCpuP95Ms": 2.6050000190734863
         },
         "zoom-in": {
-          "frameMeanMs": 16.674472222394414,
-          "frameP95Ms": 18.3649999499321,
+          "frameMeanMs": 16.676805555489327,
+          "frameP95Ms": 18.410000026226044,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.3550000190734863,
-          "rafCpuP95Ms": 2.184999942779541
+          "rafCpuP50Ms": 1.6600000262260437,
+          "rafCpuP95Ms": 2.4200000166893005
         },
         "zoom-out": {
-          "frameMeanMs": 16.674777777989707,
-          "frameP95Ms": 18.064999997615814,
+          "frameMeanMs": 16.67491666674614,
+          "frameP95Ms": 18.189999997615814,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.5649999380111694,
-          "rafCpuP95Ms": 2.1450000405311584
+          "rafCpuP50Ms": 1.659999966621399,
+          "rafCpuP95Ms": 2.3449999690055847
         }
       }
     }

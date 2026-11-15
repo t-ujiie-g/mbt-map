@@ -106,12 +106,23 @@ pub fn Transform::covering_tiles(
     let base = moved(footprint)
     let c : MercatorCoord = { x: center.x - shift, y: center.y, }
     let stack : Array[TileId] = [{ z: 0, x: 0, y: 0, }]
+    // The footprints made for this copy, by their heights: tiles under one DEM tile share theirs.
+    let ranges : Array[(Double, Double)] = []
+    let grounds : Array[Array[MercatorCoord]] = []
     while stack.pop() is Some(tile) {
       let b = tile.mercator_bounds()
       let ground = match heights {
         Some(f) => {
-          let (lo, hi) = f(tile)
-          moved(self.footprint(lo, hi))
+          let range = f(tile)
+          match ranges.search(range) {
+            Some(i) => grounds[i]
+            None => {
+              let g = moved(self.footprint(range.0, range.1))
+              ranges.push(range)
+              grounds.push(g)
+              g
+            }
+          }
         }
         None => base
       }
