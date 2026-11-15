@@ -1,5 +1,5 @@
 // Glue around the wasm-gc build of `services_worker`; messages are in
-// docs/FORMATS.md ("Services worker messages").
+// docs/dev/FORMATS.md ("Services worker messages").
 
 import { readEsri, servicesImports } from "./read.mjs";
 

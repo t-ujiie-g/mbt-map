@@ -1,4 +1,4 @@
-// Table bytes (docs/FORMATS.md "Table") taken to longitude and latitude through
+// Table bytes (docs/dev/FORMATS.md "Table") taken to longitude and latitude through
 // proj.wasm (proj_worker): each row from its SRID, or from the CRS the data does
 // not state otherwise.
 

@@ -30,7 +30,7 @@ extern "js" fn gl_glyph(
 ///|
 /// Uploads glyph quads after turning each vertex's glyph index and corner into atlas pixels from
 /// `rects` (x, y, width, height per glyph index), with the `format` sections' colors if any
-/// (docs/FORMATS.md "Symbol vertices"). Nothing is drawn until `gl_show`.
+/// (docs/dev/FORMATS.md "Symbol vertices"). Nothing is drawn until `gl_show`.
 extern "js" fn gl_upload_symbols(
   gl : Gl,
   vertices : JsBuffer,

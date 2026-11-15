@@ -1,5 +1,5 @@
 ///|
-/// The labels of one symbol layer entry (docs/FORMATS.md, "Labels"), built
+/// The labels of one symbol layer entry (docs/dev/FORMATS.md, "Labels"), built
 /// per group and reused across tiles; `fonts` the `text-font` stacks they use
 /// (the map's own font first) and the faces written for them.
 priv struct Labels {
@@ -213,7 +213,7 @@ priv struct Look {
 
 ///|
 /// A count, then each of `parts`: a property value, or a formatted text
-/// (docs/FORMATS.md "Labels").
+/// (docs/dev/FORMATS.md "Labels").
 fn Labels::write_values(self : Labels, parts : Array[@style.Value]) -> Unit {
   let w = self.w
   w.u32(parts.length())

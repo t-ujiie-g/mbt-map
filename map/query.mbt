@@ -1,6 +1,6 @@
 ///|
 /// Query results as JS: per tile asked, `{z, x, y, hits}`, each hit
-/// `{layer, index, distance, feature}` (docs/FORMATS.md, "Query result"; the
+/// `{layer, index, distance, feature}` (docs/dev/FORMATS.md, "Query result"; the
 /// layer as its id, or -1 for a source query, `feature` a GeoJSON feature).
 #external
 pub type TileResults

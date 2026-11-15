@@ -7,7 +7,7 @@ fn store_u32(out : FixedArray[Byte], at : Int32, v : Int32) -> Unit {
 }
 
 ///|
-/// The blob in `data[start, start + len)` decoded as `kind` and laid out as docs/FORMATS.md "LEPCC
+/// The blob in `data[start, start + len)` decoded as `kind` and laid out as docs/dev/FORMATS.md "LEPCC
 /// output", or None where its decoder refuses it (always for `FlagBytes`, which is not ported).
 pub fn decode(
   kind : BlobType,

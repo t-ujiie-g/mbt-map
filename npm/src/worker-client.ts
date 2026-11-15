@@ -1,5 +1,5 @@
 // The calls of a module entry to the worker it starts: `{type: "call", id, op, ...}` answered by
-// `{type: "result", id, value | error}` (docs/FORMATS.md).
+// `{type: "result", id, value | error}` (docs/dev/FORMATS.md).
 import { workerScriptUrl } from "./urls.ts";
 
 export class WorkerClient {

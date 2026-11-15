@@ -1,6 +1,6 @@
 // GDAL's viewshed of an analysis worker grid through viewshed_worker: a DEM grid in ground meters per cell at
 // its middle latitude (its slopes' scale), a GeoTIFF grid in its own projected CRS. Import-free; the worker
-// passes what it needs (docs/FORMATS.md "Analysis worker messages").
+// passes what it needs (docs/dev/FORMATS.md "Analysis worker messages").
 
 // GRS 80 and WGS 84 (and Web Mercator's sphere): GDAL's GetSemiMajor for the CRSs grids come in.
 const SEMI_MAJOR = 6378137;

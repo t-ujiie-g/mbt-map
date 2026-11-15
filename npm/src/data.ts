@@ -45,7 +45,7 @@ export interface ReadOptions extends DataOptions, CsvOptions {
   bbox?: [number, number, number, number];
 }
 
-/** A read's result as the data worker gives it (docs/FORMATS.md "Data worker messages"). */
+/** A read's result as the data worker gives it (docs/dev/FORMATS.md "Data worker messages"). */
 interface ReadResult {
   table: ArrayBuffer;
   ids: ArrayBuffer | null;
@@ -89,7 +89,7 @@ export class DataTable {
     return { table: this.#bytes.slice(0), ids: this.#ids?.slice(0) ?? null };
   }
 
-  /** A copy of the rows in @geom.Table's byte form (docs/FORMATS.md "Table"), which mbt-map/analysis's `load` takes. */
+  /** A copy of the rows in @geom.Table's byte form (docs/dev/FORMATS.md "Table"), which mbt-map/analysis's `load` takes. */
   tableBytes(): ArrayBuffer {
     return this.#bytes.slice(0);
   }

@@ -327,7 +327,7 @@ function readDraco(bytes: Uint8Array, decode: DracoDecode): Raw {
 
 /**
  * A node's geometry buffer (`buffer` indexes its definition's `geometryBuffers`) as one triangle primitive of material 0;
- * attributes are listed in docs/FORMATS.md "Model worker messages" (`op: "i3s"`).
+ * attributes are listed in docs/dev/FORMATS.md "Model worker messages" (`op: "i3s"`).
  */
 export function readI3sGeometry(bytes: Uint8Array, layer: I3sLayer, node: I3sNode, buffer: number, draco?: DracoDecode): I3sGeometry {
   checkSpatialReference(layer);

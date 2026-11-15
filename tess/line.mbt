@@ -54,7 +54,7 @@ const ROUND_SEGMENTS : Int32 = 8
 ///|
 /// Line geometry: `LINE_VERTEX_STRIDE` ints per vertex, triangle `indices`, and
 /// per vertex `distances` (dashed), `progress` (`line-progress`) and `offsets`
-/// (`a_offset_normal` at `EXTRUDE_SCALE`); docs/FORMATS.md "Packed tile".
+/// (`a_offset_normal` at `EXTRUDE_SCALE`); docs/dev/FORMATS.md "Packed tile".
 pub struct LineBuffers {
   vertices : Array[Int32]
   indices : Array[Int32]

@@ -3,7 +3,7 @@
 // Copyright (c) 2020 MapLibre contributors; see NOTICE.
 
 ///|
-/// A query of one tile, fields as docs/FORMATS.md "Query" lists them: `matrix` takes heights in
+/// A query of one tile, fields as docs/dev/FORMATS.md "Query" lists them: `matrix` takes heights in
 /// world pixels (`meters` per meter), `globe` the globe's matrix and the tile's mercator corner and
 /// unit size; `layers` None asks for all; `symbols` are (layer, feature) of labels found there.
 priv struct Query {
@@ -300,7 +300,7 @@ fn TileProcessor::query_padding(
 }
 
 ///|
-/// Answers `request` (docs/FORMATS.md "Query") about tile `bytes`: each asked
+/// Answers `request` (docs/dev/FORMATS.md "Query") about tile `bytes`: each asked
 /// layer's features meeting it (tile `z`, `x`, `y`), last drawn first, then the labels named, as
 /// feature records. None, with the error set, if anything is malformed.
 pub fn TileProcessor::query(
@@ -437,7 +437,7 @@ pub fn TileProcessor::source_features(
 }
 
 ///|
-/// Feature `i` of `layer` as a record (docs/FORMATS.md, "Query result"): its
+/// Feature `i` of `layer` as a record (docs/dev/FORMATS.md, "Query result"): its
 /// id (the property `promoted` names, if any), geometry type, extent, rings
 /// and properties. False if its geometry is malformed.
 fn TileProcessor::write_feature(

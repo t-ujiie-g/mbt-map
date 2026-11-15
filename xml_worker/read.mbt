@@ -29,7 +29,7 @@ fn table_out(table : @geom.Table) -> Int32 {
 }
 
 ///|
-/// The last read's feature ids at `output_addr`, a property value each (docs/FORMATS.md
+/// The last read's feature ids at `output_addr`, a property value each (docs/dev/FORMATS.md
 /// "Property values"); returns their length, 0 if it had none.
 #export_name("ids_out")
 pub fn ids_out() -> Int32 {
@@ -44,7 +44,7 @@ pub fn ids_out() -> Int32 {
 }
 
 ///|
-/// Reads the KML placed as input (docs/FORMATS.md "Data worker messages"), as
+/// Reads the KML placed as input (docs/dev/FORMATS.md "Data worker messages"), as
 /// `table_out` returns.
 #export_name("read_kml")
 pub fn read_kml() -> Int32 {

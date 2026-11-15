@@ -1,4 +1,4 @@
-// The wasm's meshopt and Draco decoders as gltf.ts calls them (docs/FORMATS.md "Draco output").
+// The wasm's meshopt and Draco decoders as gltf.ts calls them (docs/dev/FORMATS.md "Draco output").
 import { writeInput } from "../../wasmio/js/host.mjs";
 
 /** meshopt's modes and filters as the wasm numbers them. */
@@ -17,7 +17,7 @@ export function meshopt(exports) {
   };
 }
 
-/** The typed array of each Draco data type that glTF can hold (docs/FORMATS.md "Draco output"). */
+/** The typed array of each Draco data type that glTF can hold (docs/dev/FORMATS.md "Draco output"). */
 const DRACO_TYPES = { 1: [Int8Array, 5120], 2: [Uint8Array, 5121], 3: [Int16Array, 5122], 4: [Uint16Array, 5123], 6: [Uint32Array, 5125], 9: [Float32Array, 5126] };
 
 /** Decodes Draco data through the wasm's `draco_decode`; each attribute keeps its Draco attribute type as `dracoType`. */
@@ -53,7 +53,7 @@ export function draco(exports) {
 /** LEPCC blob kinds as the wasm's `lepcc_decode` numbers them, and each value's size in bytes. */
 const LEPCC_KINDS = { xyz: [0, 24], rgb: [1, 3], intensity: [2, 2] };
 
-/** Decodes I3S point clouds' LEPCC blobs through the wasm's `lepcc_decode` (docs/FORMATS.md "LEPCC output"). */
+/** Decodes I3S point clouds' LEPCC blobs through the wasm's `lepcc_decode` (docs/dev/FORMATS.md "LEPCC output"). */
 export function lepcc(exports) {
   const run = (kind, bytes) => {
     const [k, each] = LEPCC_KINDS[kind];

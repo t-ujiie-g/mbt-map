@@ -86,7 +86,7 @@ function randomPoints(seed, count) {
   return { type: "FeatureCollection", features };
 }
 
-// A columnar tile (docs/FORMATS.md) as [x, y, id, properties] per feature;
+// A columnar tile (docs/dev/FORMATS.md) as [x, y, id, properties] per feature;
 // null for no tile.
 function readColumnTile(bytes) {
   if (bytes.length === 0) return null;

@@ -1,11 +1,11 @@
-// Symbol layer entries: labels from the wasm (docs/FORMATS.md, "Labels") laid
+// Symbol layer entries: labels from the wasm (docs/dev/FORMATS.md, "Labels") laid
 // out into glyph quads, with SDF glyphs drawn here by TinySDF.
 import TinySDF from "./tiny-sdf.mjs";
 import { anchorShares, JUSTIFY, layoutLabel, SDF_BUFFER, SDF_RADIUS, SDF_SIZE } from "./text.mjs";
 import { EXTENT, lineAnchors, mergeLines } from "./line-labels.mjs";
 import { readString, readValue } from "./values.mjs";
 
-// Bytes per glyph quad vertex, and per vertex of `colors` (docs/FORMATS.md, "Symbol vertices").
+// Bytes per glyph quad vertex, and per vertex of `colors` (docs/dev/FORMATS.md, "Symbol vertices").
 export const SYMBOL_VERTEX_BYTES = 16;
 const COLOR_BYTES = 8;
 // Floats per label in an entry's `labels`; mirrored as LABEL_FLOATS in map/labels.mbt.
@@ -112,7 +112,7 @@ export class Glyphs {
 
 // setInt16 wraps around, so offsets past its range are clamped.
 const clamp16 = (v) => Math.max(-32768, Math.min(32767, Math.round(v)));
-// Glyph corners are kept in 16ths of a CSS px (docs/FORMATS.md "Symbol vertices").
+// Glyph corners are kept in 16ths of a CSS px (docs/dev/FORMATS.md "Symbol vertices").
 export const OFFSET_UNITS = 16;
 const offsetUnits = (px) => clamp16(px * OFFSET_UNITS);
 
@@ -384,7 +384,7 @@ export function buildSymbols(bytes, glyphs, images = new Map()) {
   };
 }
 
-// The icons of `labels`, one quad each (docs/FORMATS.md "Symbol vertices": corners in
+// The icons of `labels`, one quad each (docs/dev/FORMATS.md "Symbol vertices": corners in
 // OFFSET_PACK-ths of a px at size 1, sizes times SIZE_PACK); `sdf` as the first icon's (MapLibre's
 // `sdfIcons`), `rotated` if any icon is turned.
 function iconQuads(labels) {

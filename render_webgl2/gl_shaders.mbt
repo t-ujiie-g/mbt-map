@@ -375,7 +375,7 @@ extern "js" fn create_gl(
   #|    "  v_scale = size; v_gamma = 1.0; }",
   #|    sdf("a", "u_color", "uniform vec4 u_color; uniform bool u_sdf;"),
   #|    [...symbolUniforms, "u_sdf", "u_size", "u_persp", "u_pitch", "u_rotate", "u_angle", "u_units"]);
-  #|  // MapLibre's fill_extrusion shaders; vertices as in docs/FORMATS.md, a_ele the
+  #|  // MapLibre's fill_extrusion shaders; vertices as in docs/dev/FORMATS.md, a_ele the
   #|  // ground (m) under the centroid times u_ground (0 without terrain, which also
   #|  // skips the 10 m basement), u_scale world pixels per meter.
   #|  const extrusion = program(

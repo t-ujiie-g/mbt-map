@@ -1,5 +1,5 @@
 ///|
-/// The writer of docs/FORMATS.md "Compiled style".
+/// The writer of docs/dev/FORMATS.md "Compiled style".
 priv struct StyleWriter {
   w : @core.ByteWriter
 }
@@ -435,14 +435,14 @@ fn StyleWriter::source(self : StyleWriter, s : Source) -> Unit {
 }
 
 ///|
-/// Writes `e` (None as a 0 byte) in docs/FORMATS.md "Compiled style"'s form,
+/// Writes `e` (None as a 0 byte) in docs/dev/FORMATS.md "Compiled style"'s form,
 /// for `read_expr`.
 pub fn write_expr(w : @core.ByteWriter, e : Expr?) -> Unit {
   ({ w, } : StyleWriter).opt_expr(e)
 }
 
 ///|
-/// The style as display workers take it (docs/FORMATS.md "Compiled style"):
+/// The style as display workers take it (docs/dev/FORMATS.md "Compiled style"):
 /// what tiles are made from, without the paint only the main thread draws.
 pub fn Style::to_compiled(self : Style) -> Bytes {
   let out : StyleWriter = { w: @core.ByteWriter::new(), }
@@ -455,7 +455,7 @@ pub fn Style::to_compiled(self : Style) -> Bytes {
 
 ///|
 /// Writes cluster properties (`compile_cluster_properties`) for the GeoJSON worker
-/// (docs/FORMATS.md "Compiled style"): a count, then per key its name and its map
+/// (docs/dev/FORMATS.md "Compiled style"): a count, then per key its name and its map
 /// and reduce expressions.
 pub fn write_cluster_properties(props : Array[(String, Expr, Expr)]) -> Bytes {
   let w = StyleWriter::{ w: @core.ByteWriter::new(), }

@@ -1,5 +1,5 @@
 ///|
-/// Value tags past `@core.PROP_STRING` (docs/FORMATS.md "Compiled style").
+/// Value tags past `@core.PROP_STRING` (docs/dev/FORMATS.md "Compiled style").
 const VALUE_COLOR : Int32 = 6
 
 ///|
@@ -9,7 +9,7 @@ const VALUE_LIST : Int32 = 7
 const VALUE_FAILED : Int32 = 8
 
 ///|
-/// Tags of `Expr` variants (docs/FORMATS.md "Compiled style").
+/// Tags of `Expr` variants (docs/dev/FORMATS.md "Compiled style").
 const EXPR_LIT : Int32 = 0
 
 ///|
