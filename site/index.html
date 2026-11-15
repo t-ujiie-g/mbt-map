@@ -6,14 +6,13 @@
 <meta name="description" content="A lightweight WebGIS library for the browser, written in MoonBit: maps, GIS data, spatial analysis, web services and 3D.">
 <link rel="icon" href="./icon.svg">
 <link rel="stylesheet" href="./site.css">
-<script type="importmap">{ "imports": { "mbt-map": "./lib/index.js" } }</script>
+<script type="importmap">{ "imports": { "mbt-map": "./lib/index.js", "mbt-map/3d": "./lib/3d.js" } }</script>
 <header class="top">
   <a class="brand" href="./">mbt-map</a>
   <nav>
     <a href="./docs/">Docs</a>
     <a href="./examples/">Examples</a>
     <a href="https://github.com/t-ujiie-g/mbt-map">GitHub</a>
-    <a href="./ja/" lang="ja">日本語</a>
   </nav>
 </header>
 <main class="wrap">
@@ -30,7 +29,7 @@
     </div>
     <div class="map-card">
       <div id="map"></div>
-      <span class="hint">Drag, zoom, click a station</span>
+      <span class="hint">PLATEAU's 3D Tokyo · drag to look around</span>
     </div>
   </div>
 
@@ -51,7 +50,7 @@
     <h2>Write it your way</h2>
     <p class="sub">A JavaScript API shaped like MapLibre GL JS's, a web component for any framework, and a typed MoonBit API.</p>
     <div class="ways">
-      <div><h3>JavaScript</h3><pre><code>import { Map } from "mbt-map";
+      <div><h3>JavaScript</h3><pre><code class="language-js">import { Map } from "mbt-map";
 
 const map = new Map({
   container: "map",
@@ -59,13 +58,13 @@ const map = new Map({
   center: [139.7671, 35.6812],
   zoom: 14,
 });</code></pre></div>
-      <div><h3>Web component</h3><pre><code>&lt;script type="module"&gt;
+      <div><h3>Web component</h3><pre><code class="language-html">&lt;script type="module"&gt;
   import "mbt-map/element";
 &lt;/script&gt;
 &lt;mbt-map style-url="./style.json"
   center="139.7671,35.6812" zoom="14"&gt;
 &lt;/mbt-map&gt;</code></pre></div>
-      <div><h3>MoonBit</h3><pre><code>let map = @mbtmap.Map::new(
+      <div><h3>MoonBit</h3><pre><code class="language-moonbit">let map = @mbtmap.Map::new(
   "map",
   style=@style.Style::url("./style.json"),
   center=@mbtmap.lnglat(139.7671, 35.6812),

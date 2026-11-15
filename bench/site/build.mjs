@@ -7,6 +7,7 @@ import { Marked } from "marked";
 import { ROOT } from "../lib/root.mjs";
 import { prepareExamples } from "../npm/prepare.mjs";
 import { anchors, REPOSITORY, SITE_EXAMPLES, siteLink } from "./links.mjs";
+import { highlight } from "./highlight.mjs";
 
 const OUT = path.join(ROOT, "_site");
 /** Files of an example folder the site leaves out: sources, build scripts, packages. */
@@ -66,7 +67,7 @@ async function buildDocs() {
     const markdown = await readFile(path.join(dir, f), "utf8");
     const title = /^# (.*)$/m.exec(markdown)?.[1].replace(/`/g, "") ?? name;
     const body = render(markdown, `docs/${f}`, page);
-    await writeFile(path.join(OUT, page), docPage({ title, body, sidebar }));
+    await writeFile(path.join(OUT, page), highlight(docPage({ title, body, sidebar })));
   }
   return files.length;
 }
@@ -106,6 +107,7 @@ async function buildLib() {
 if (!process.argv.includes("--no-prepare")) await prepareExamples();
 await rm(OUT, { recursive: true, force: true });
 await cp(path.join(ROOT, "site"), OUT, { recursive: true });
+for (const page of ["index.html"]) await writeFile(path.join(OUT, page), highlight(await readFile(path.join(OUT, page), "utf8")));
 await buildLib();
 await buildExamples();
 const pages = await buildDocs();

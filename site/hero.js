@@ -1,16 +1,12 @@
-// The map on the home pages: GSI's pale map with stations around Tokyo, drawn by the package in lib/.
+// The map on the home page: PLATEAU's 3D buildings around Tokyo Station (3D Tiles, mbt-map/3d) over GSI's
+// pale map turned dark, lit by a low sun with shadows, turning slowly until someone touches it.
 import { Map } from "mbt-map";
+import { tilesLayer } from "mbt-map/3d";
 
-const STATIONS = [
-  ["東京", 139.7671, 35.6812],
-  ["有楽町", 139.7631, 35.6751],
-  ["神田", 139.7708, 35.6918],
-  ["新橋", 139.7583, 35.6662],
-  ["秋葉原", 139.7731, 35.6984],
-  ["日本橋", 139.7745, 35.684],
-  ["大手町", 139.7662, 35.6864],
-  ["銀座", 139.7671, 35.6717],
-];
+const TILESET =
+  "https://assets.cms.plateau.reearth.io/assets/72/e900e5-938c-4376-a9de-a124b270880c/13101_chiyoda-ku_pref_2025_citygml_1_op_bldg_3dtiles_13101_chiyoda-ku_lod2_no_texture/tileset.json";
+// PLATEAU's heights are above the ellipsoid; the geoid lies 36.7 m above it at Tokyo Station.
+const GEOID = -36.7;
 
 const map = new Map({
   container: "map",
@@ -22,56 +18,45 @@ const map = new Map({
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
         maxzoom: 18,
-        attribution: "国土地理院",
-      },
-      stations: {
-        type: "geojson",
-        promoteId: "name",
-        data: {
-          type: "FeatureCollection",
-          features: STATIONS.map(([name, lng, lat]) => ({ type: "Feature", properties: { name }, geometry: { type: "Point", coordinates: [lng, lat] } })),
-        },
+        attribution: "国土地理院 · 3D都市モデル（Project PLATEAU）千代田区（国土交通省）",
       },
     },
     layers: [
-      { id: "pale", type: "raster", source: "pale" },
+      { id: "background", type: "background", paint: { "background-color": "#0f141c" } },
       {
-        id: "stations",
-        type: "circle",
-        source: "stations",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 3, 16, 9],
-          "circle-color": ["case", ["boolean", ["feature-state", "hover"], false], "#d6604d", "#2f5bd0"],
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 2,
-        },
-      },
-      {
-        id: "station-names",
-        type: "symbol",
-        source: "stations",
-        layout: { "text-field": ["get", "name"], "text-size": 13, "text-offset": [0, 1.1], "text-anchor": "top" },
-        paint: { "text-color": "#18202d", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+        id: "pale",
+        type: "raster",
+        source: "pale",
+        // Brightness from light to dark turns the pale map into a night one.
+        paint: { "raster-brightness-min": 0.42, "raster-brightness-max": 0.08, "raster-saturation": -1, "raster-contrast": -0.2 },
       },
     ],
   },
   center: [139.7671, 35.6812],
-  zoom: 13.6,
-  pitch: 30,
+  zoom: 15.25,
+  pitch: 60,
+  bearing: -30,
+  maxPitch: 75,
 });
 
-let hovered = null;
-const setHover = (id) => {
-  if (hovered !== null) map.setFeatureState({ source: "stations", id: hovered }, { hover: false });
-  hovered = id;
-  if (id !== null) map.setFeatureState({ source: "stations", id }, { hover: true });
+map.on("load", () => {
+  map.setLights([
+    { id: "ambient", type: "ambient", properties: { color: "#b8c4dd", intensity: 0.45 } },
+    { id: "sun", type: "directional", properties: { color: "#fff1dc", intensity: 0.75, direction: [235, 55], "cast-shadows": true, "shadow-intensity": 0.6 } },
+  ]);
+  map.addLayer(tilesLayer({ id: "plateau", url: TILESET, height: GEOID }));
+});
+
+// A slow turn, stopped for good by the first touch (and never started for those who ask for less motion).
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let turning = !still;
+const stop = () => (turning = false);
+for (const type of ["pointerdown", "wheel", "touchstart", "keydown"]) map.getContainer().addEventListener(type, stop, { passive: true });
+let last = 0;
+const turn = (now) => {
+  if (!turning) return;
+  if (last && map.loaded()) map.setBearing(map.getBearing() + (now - last) * 0.0025);
+  last = now;
+  requestAnimationFrame(turn);
 };
-map.on("mousemove", "stations", (e) => {
-  map.getCanvas().style.cursor = "pointer";
-  setHover(e.features[0].id ?? null);
-});
-map.on("mouseleave", "stations", () => {
-  map.getCanvas().style.cursor = "";
-  setHover(null);
-});
-map.on("click", "stations", (e) => map.flyTo({ center: e.lngLat, zoom: 16, pitch: 50, duration: 1600 }));
+requestAnimationFrame(turn);

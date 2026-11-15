@@ -44,3 +44,15 @@ test("the user documentation's relative links and anchors resolve", () => {
   }
   assert.deepEqual(bad, []);
 });
+
+test("highlight colors code blocks by their language, MoonBit included, and leaves others alone", async () => {
+  const { highlight } = await import("../site/highlight.mjs");
+  const js = highlight('<pre><code class="language-js">const a = &quot;x&quot;;</code></pre>');
+  assert.match(js, /<code class="hljs language-js"><span class="hljs-keyword">const<\/span> a = <span class="hljs-string">&quot;x&quot;<\/span>;<\/code>/);
+  const mbt = highlight('<pre><code class="language-moonbit">let m = @mbtmap.lnglat(1.0, 2.0) // here</code></pre>');
+  assert.match(mbt, /<span class="hljs-keyword">let<\/span>/);
+  assert.match(mbt, /<span class="hljs-symbol">@mbtmap<\/span>/);
+  assert.match(mbt, /<span class="hljs-comment">\/\/ here<\/span>/);
+  const plain = '<pre><code class="language-text">a &lt; b</code></pre>';
+  assert.equal(highlight(plain), plain);
+});
