@@ -43,8 +43,9 @@ pub(all) struct Camera {
 }
 
 ///|
-/// What a camera may do: zoom and pitch ranges and, if set, `bounds` the
-/// view may not leave (MapLibre's `maxBounds`).
+/// What a camera may do: zoom and pitch ranges, if set `bounds` the view may not leave (MapLibre's
+/// `maxBounds`), and `world_copies`, whether the world repeats east and west (MapLibre's
+/// `renderWorldCopies`; without it the view stays within the antimeridian).
 #derive(Debug, Eq)
 pub(all) struct Limits {
   min_zoom : Double
@@ -52,10 +53,11 @@ pub(all) struct Limits {
   min_pitch : Double
   max_pitch : Double
   bounds : LngLatBounds?
+  world_copies : Bool
 }
 
 ///|
-/// Zoom 0 to 22, pitch 0 to `MAX_PITCH`, no bounds.
+/// Zoom 0 to 22, pitch 0 to `MAX_PITCH`, no bounds, world copies.
 pub fn Limits::default() -> Limits {
   {
     min_zoom: 0.0,
@@ -63,6 +65,7 @@ pub fn Limits::default() -> Limits {
     min_pitch: 0.0,
     max_pitch: MAX_PITCH,
     bounds: None,
+    world_copies: true,
   }
 }
 
@@ -441,19 +444,21 @@ pub fn Transform::projection(self : Transform) -> (Mat4, Double, Double) {
 }
 
 ///|
-/// Maps tile units (`extent` per edge) of `tile` to clip space; `aligned` puts it
-/// on the pixel grid as MapLibre draws raster tiles at rest (`alignedProjMatrix`).
+/// Maps tile units (`extent` per edge) of `tile` in world copy `wrap` to clip
+/// space; `aligned` puts it on the pixel grid as MapLibre draws raster tiles at
+/// rest (`alignedProjMatrix`).
 pub fn Transform::tile_matrix(
   self : Transform,
   tile : TileId,
   extent : Int32,
   aligned~ : Bool = false,
+  wrap~ : Int32 = 0,
 ) -> Mat4 {
   let ws = self.world_size()
   let tiles = (1 << tile.z).to_double()
   let c = self.camera.center.to_mercator()
   let units = self.tile_scale(tile, extent)
-  let mut tx = (tile.x.to_double() / tiles - c.x) * ws
+  let mut tx = (tile.x.to_double() / tiles + wrap.to_double() - c.x) * ws
   let mut ty = (tile.y.to_double() / tiles - c.y) * ws
   if aligned {
     let (x, y) = (c.x * ws, c.y * ws)

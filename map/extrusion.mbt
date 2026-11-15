@@ -134,9 +134,9 @@ fn Map::draw_extrusions(
   // Heights were taken at the tile's zoom and one deeper.
   let mix = @cmp.maximum(0.0, @cmp.minimum(1.0, zoom - d.id.z.to_double()))
   let exaggeration = if on_terrain { self.exaggeration() } else { 0.0 }
-  let shadow = self.tile_shadow(d.id)
+  let shadow = self.tile_shadow(d.id, wrap=d.wrap)
   let cut = self.cut_frame.map(f => {
-    self.transform.tile_light_matrix(f, d.id, @core.TILE_EXTENT)
+    self.transform.tile_light_matrix(f, d.id, @core.TILE_EXTENT, wrap=d.wrap)
   })
   for m in d.meshes {
     if m.layer != index || m.ground is None {

@@ -48,7 +48,7 @@ fn uncovered(
 ///|
 test "ground below an elevated center is covered down to sea level" {
   let t = summit()
-  let tiles = t.covering_tiles(12, 12)
+  let tiles = t.covering_tiles(12, 12).map(u => u.id)
   for height in [0.0, 1000.0, 2500.0, 4000.0, t.elevation] {
     assert_eq(uncovered(t, tiles, height), 0)
   }
@@ -61,26 +61,28 @@ test "ground below an elevated center is covered down to sea level" {
 ///|
 test "covering takes each tile's heights" {
   let t = summit()
-  let plain = t.covering_tiles(12, 12)
+  let plain = t.covering_tiles(12, 12).map(u => u.id)
   // Ground rising 5 km above the center everywhere comes into view nearer the
   // camera and needs tiles the center's heights do not reach.
   let peak = t.elevation + 5000.0
   assert_true(uncovered(t, plain, peak) > 0)
-  let tiles = t.covering_tiles(12, 12, heights=_ => (0.0, peak))
+  let tiles = t.covering_tiles(12, 12, heights=_ => (0.0, peak)).map(u => u.id)
   assert_eq(uncovered(t, tiles, peak), 0)
   assert_eq(uncovered(t, tiles, 0.0), 0)
   assert_true(plain.iter().all(id => tiles.contains(id)))
   // The center's own heights change nothing.
-  let same = t.covering_tiles(12, 12, heights=_ => (0.0, t.elevation))
+  let same = t
+    .covering_tiles(12, 12, heights=_ => (0.0, t.elevation))
+    .map(u => u.id)
   assert_eq(same, plain)
 }
 
 ///|
 test "heights above the camera cover the ground under it" {
   let t = summit()
-  let tiles = t.covering_tiles(12, 12, heights=_ => (0.0, 1.0e6))
+  let tiles = t.covering_tiles(12, 12, heights=_ => (0.0, 1.0e6)).map(u => u.id)
   let under = t.screen_to_mercator(t.width / 2.0, t.height)
-  assert_true(tiles.length() > t.covering_tiles(12, 12).length())
+  assert_true(tiles.length() > t.covering_tiles(12, 12).map(u => u.id).length())
   assert_eq(uncovered(t, tiles, 0.0), 0)
   // The camera stands south of the bottom of the screen.
   let camera = @core.tile_containing(
@@ -98,7 +100,7 @@ test "a view at sea level is covered as without heights" {
     600.0,
   )
   assert_eq(
-    t.covering_tiles(4, 14, heights=_ => (0.0, 0.0)),
-    t.covering_tiles(4, 14),
+    t.covering_tiles(4, 14, heights=_ => (0.0, 0.0)).map(u => u.id),
+    t.covering_tiles(4, 14).map(u => u.id),
   )
 }

@@ -28,7 +28,7 @@
     {
       "scene": "globe-pole",
       "ok": true,
-      "mean": 0.004,
+      "mean": 0,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -119,6 +119,26 @@
       "scene": "globe-map-circles",
       "ok": true,
       "mean": 0,
+      "p99": 0,
+      "limits": {
+        "mean": 0.05,
+        "p99": 1
+      }
+    },
+    {
+      "scene": "copies-antimeridian",
+      "ok": true,
+      "mean": 0.004,
+      "p99": 0,
+      "limits": {
+        "mean": 0.05,
+        "p99": 1
+      }
+    },
+    {
+      "scene": "copies-wide",
+      "ok": true,
+      "mean": 0.005,
       "p99": 0,
       "limits": {
         "mean": 0.05,

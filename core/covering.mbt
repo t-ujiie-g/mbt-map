@@ -35,21 +35,54 @@ const LOD_DISTANCE : Double = 1.5
 const MIN_ZOOM_SLACK : Int32 = 2
 
 ///|
-/// Non-overlapping tiles over the view, nearest the center first: `max_z` near
-/// the camera, lower zooms down to `min_z` (none past `MIN_ZOOM_SLACK` below),
-/// on ground between each tile's `heights` in meters (sea level and the center's).
+/// Most world copies drawn either side of the main one, as MapLibre's
+/// `coveringTiles` (three).
+pub const MAX_WORLD_COPIES : Int32 = 3
+
+///|
+/// The world copies the view's ground reaches (`wrap` -1 is the copy west of
+/// the main one, x in [-1, 0]); only the main one without `world_copies`.
+pub fn Transform::wraps(self : Transform) -> (Int32, Int32) {
+  if !self.limits.world_copies {
+    return (0, 0)
+  }
+  let mut x0 = @double.infinity
+  let mut x1 = @double.neg_infinity
+  for m in self.base_footprint() {
+    x0 = @cmp.minimum(x0, m.x)
+    x1 = @cmp.maximum(x1, m.x)
+  }
+  let clamp = (x : Double) => {
+    @cmp.maximum(
+      -MAX_WORLD_COPIES,
+      @cmp.minimum(MAX_WORLD_COPIES, x.floor().to_int()),
+    )
+  }
+  (clamp(x0), clamp(x1))
+}
+
+///|
+/// The footprint on ground between sea level and the center's height.
+fn Transform::base_footprint(self : Transform) -> Array[MercatorCoord] {
+  self.footprint(
+    @cmp.minimum(0.0, self.elevation),
+    @cmp.maximum(0.0, self.elevation),
+  )
+}
+
+///|
+/// Non-overlapping tiles over the view and the world copies it reaches, nearest the center first:
+/// `max_z` near the camera, lower zooms down to `min_z` (none past `MIN_ZOOM_SLACK` below), on
+/// ground between each tile's `heights` in meters (sea level and the center's).
 pub fn Transform::covering_tiles(
   self : Transform,
   min_z : Int32,
   max_z : Int32,
   heights? : (TileId) -> (Double, Double),
-) -> Array[TileId] {
+) -> Array[UnwrappedTile] {
   let ws = self.world_size()
-  let c = self.camera.center.to_mercator()
-  let footprint = self.footprint(
-    @cmp.minimum(0.0, self.elevation),
-    @cmp.maximum(0.0, self.elevation),
-  )
+  let center = self.camera.center.to_mercator()
+  let footprint = self.base_footprint()
   // The camera's ground position and height, in world pixels from the center.
   let d = center_distance(self.height)
   let pitch = radians(self.camera.pitch)
@@ -58,55 +91,67 @@ pub fn Transform::covering_tiles(
   let cam_x = -@math.sin(bearing) * behind
   let cam_y = @math.cos(bearing) * behind
   let cam_z = d * @math.cos(pitch)
-  let tiles : Array[(Double, TileId)] = []
-  let stack : Array[TileId] = [{ z: 0, x: 0, y: 0, }]
-  while stack.pop() is Some(tile) {
-    let b = tile.mercator_bounds()
-    let ground = match heights {
-      Some(f) => {
-        let (lo, hi) = f(tile)
-        self.footprint(lo, hi)
+  let tiles : Array[UnwrappedTile] = []
+  let distances : Array[Double] = []
+  let (first, last) = self.wraps()
+  for wrap in first..<=last {
+    // Each copy is walked in the main world's units, the view moved by `wrap` worlds.
+    let shift = wrap.to_double()
+    let moved = (poly : Array[MercatorCoord]) => {
+      poly.map(p => ({ x: p.x - shift, y: p.y, } : MercatorCoord))
+    }
+    let base = moved(footprint)
+    let c : MercatorCoord = { x: center.x - shift, y: center.y, }
+    let stack : Array[TileId] = [{ z: 0, x: 0, y: 0, }]
+    while stack.pop() is Some(tile) {
+      let b = tile.mercator_bounds()
+      let ground = match heights {
+        Some(f) => {
+          let (lo, hi) = f(tile)
+          moved(self.footprint(lo, hi))
+        }
+        None => base
       }
-      None => footprint
-    }
-    if !overlaps(ground, b) {
-      continue
-    }
-    // Distance from the camera to the tile's nearest ground point.
-    let nx = (
-        @cmp.maximum(b.min_x, @cmp.minimum(b.max_x, c.x + cam_x / ws)) - c.x
-      ) *
-      ws -
-      cam_x
-    let ny = (
-        @cmp.maximum(b.min_y, @cmp.minimum(b.max_y, c.y + cam_y / ws)) - c.y
-      ) *
-      ws -
-      cam_y
-    let dist = (nx * nx + ny * ny + cam_z * cam_z).sqrt()
-    let near = (levels : Int32) => {
-      dist < LOD_DISTANCE * d * @math.pow(2.0, levels.to_double())
-    }
-    let split = if tile.z < min_z {
-      if !near(max_z - min_z + MIN_ZOOM_SLACK) {
+      if !overlaps(ground, b) {
         continue
       }
-      true
-    } else {
-      tile.z < max_z && near(max_z - tile.z - 1)
-    }
-    if split && tile.children() is Some(kids) {
-      for k in kids {
-        stack.push(k)
+      // Distance from the camera to the tile's nearest ground point.
+      let nx = (
+          @cmp.maximum(b.min_x, @cmp.minimum(b.max_x, c.x + cam_x / ws)) - c.x
+        ) *
+        ws -
+        cam_x
+      let ny = (
+          @cmp.maximum(b.min_y, @cmp.minimum(b.max_y, c.y + cam_y / ws)) - c.y
+        ) *
+        ws -
+        cam_y
+      let dist = (nx * nx + ny * ny + cam_z * cam_z).sqrt()
+      let near = (levels : Int32) => {
+        dist < LOD_DISTANCE * d * @math.pow(2.0, levels.to_double())
       }
-    } else {
-      let dx = (b.min_x + b.max_x) / 2.0 - c.x
-      let dy = (b.min_y + b.max_y) / 2.0 - c.y
-      tiles.push((dx * dx + dy * dy, tile))
+      let split = if tile.z < min_z {
+        if !near(max_z - min_z + MIN_ZOOM_SLACK) {
+          continue
+        }
+        true
+      } else {
+        tile.z < max_z && near(max_z - tile.z - 1)
+      }
+      if split && tile.children() is Some(kids) {
+        for k in kids {
+          stack.push(k)
+        }
+      } else {
+        let dx = (b.min_x + b.max_x) / 2.0 - c.x
+        let dy = (b.min_y + b.max_y) / 2.0 - c.y
+        tiles.push({ id: tile, wrap, })
+        distances.push(dx * dx + dy * dy)
+      }
     }
   }
-  tiles.sort_by((a, b) => a.0.compare(b.0))
-  tiles.map(t => t.1)
+  // `stable_order` rather than a sort instantiated for the tile type (bundle size).
+  stable_order(distances[:]).iter().map(i => tiles[i]).to_array()
 }
 
 ///|

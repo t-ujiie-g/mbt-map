@@ -123,8 +123,8 @@ pub fn map_destroy(map : @map.Map) -> Unit {
 }
 
 ///|
-/// Limits from min zoom, max zoom, min pitch, max pitch and bounds (west,
-/// south, east, north; NaN west for none).
+/// Limits from min zoom, max zoom, min pitch, max pitch, bounds (west,
+/// south, east, north; NaN west for none) and world copies (0 for none).
 fn limits_of(a : FixedArray[Double]) -> @core.Limits {
   {
     min_zoom: a[0],
@@ -136,6 +136,7 @@ fn limits_of(a : FixedArray[Double]) -> @core.Limits {
     } else {
       Some({ west: a[4], south: a[5], east: a[6], north: a[7], })
     },
+    world_copies: a.length() < 9 || a[8] != 0.0,
   }
 }
 

@@ -65,6 +65,7 @@ map.on("load", () => console.log(map.getCenter(), map.getZoom()));
 | `minZoom`, `maxZoom` | `0`, `22` | Zoom limits (0 to 24). |
 | `minPitch`, `maxPitch` | `0`, `85` | Pitch limits (0 to 85). |
 | `maxBounds` | | Keep the view inside these bounds. |
+| `renderWorldCopies` | `true` | Repeat the world east and west of the antimeridian, as MapLibre (up to three copies either side). With `false` the view stays within ±180° and the zoom is raised until the world fills the view's width. |
 | `interactive` | `true` | `false` turns off every handler. |
 | `dragPan`, `scrollZoom`, `boxZoom`, `dragRotate`, `keyboard`, `doubleClickZoom`, `touchZoomRotate`, `touchPitch` | `true` | Each input handler. |
 | `attributionControl` | `true` | Shows the `attribution` of the sources of visible layers and the terrain in the bottom right corner. Attributions written as HTML keep their http(s) links; other tags are dropped and nothing is parsed as HTML. Set it to `false` to show them yourself (`getAttributions()`, or `createAttribution` in [mbt-map/ui](./ui.md)). |
@@ -149,9 +150,11 @@ const ll = map.unproject([200, 150]);        // { lng, lat }
 const box = map.getBounds();                 // LngLatBounds; up to the horizon when tilted
 ```
 
-With terrain, `project` and `unproject` use the ground height. Before the map has started they return NaN.
+With terrain, `project` and `unproject` use the ground height. Before the map has started they return NaN. As in MapLibre, longitudes are not wrapped: `unproject` over the world copy east of the antimeridian gives longitudes past 180°, and `project` puts `lng + 360` one world to the east.
 
 ### Limits
+
+`setRenderWorldCopies(bool)` turns the world copies on or off (undefined means true and null false, as MapLibre's) and `getRenderWorldCopies()` reads it. Tiles shown in several copies are loaded once and drawn in each; a tile's labels are placed in the copy nearest the center only, so when the world is narrower than the view (zoom below about 1) the other copies of a tile show no labels. Queries hit features in every copy (each feature once per tile, as MapLibre); `queryRenderedFeatures` gives their coordinates in the main world.
 
 `setMinZoom`, `setMaxZoom`, `setMinPitch`, `setMaxPitch` and `setMaxBounds` change the limits (null or nothing restores the default; `setMaxBounds(null)` lifts the bounds), and `getMinZoom()`, `getMaxZoom()`, `getMinPitch()`, `getMaxPitch()` and `getMaxBounds()` read them. `getMinZoom(true)` gives the zoom the camera can actually go down to at this place, as the latitude limits and `maxBounds` raise it. Limits outside 0-24 (zoom) or 0-85 (pitch), or a minimum above its maximum, throw.
 

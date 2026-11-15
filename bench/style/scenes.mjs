@@ -781,8 +781,23 @@ const GLOBE_SCENES = {
   },
 };
 
+// World copies in mercator (`renderWorldCopies`, on by default): the world's vectors across the
+// antimeridian, and a view wider than the world, where each tile is drawn in two copies.
+const mercatorWorld = (layers) => {
+  const { projection, ...style } = globe(layers);
+  return style;
+};
+const COPIES_SCENES = {
+  "copies-antimeridian": { style: mercatorWorld(GLOBE_LAYERS), camera: { center: [180, 10], zoom: 1.3, bearing: 0, pitch: 0 }, limits: { mean: 0.05, p99: 1 } },
+  "copies-wide": {
+    style: mercatorWorld([...GLOBE_LAYERS, { id: "heat", type: "heatmap", source: "world", filter: ["==", ["geometry-type"], "Point"], paint: { "heatmap-radius": 20, "heatmap-opacity": 0.6 } }]),
+    camera: { center: [30, 0], zoom: 0.25, bearing: 0, pitch: 0 }, limits: { mean: 0.05, p99: 1 },
+  },
+};
+
 export const SCENES = {
   ...GLOBE_SCENES,
+  ...COPIES_SCENES,
   ...FILLS_SCENES,
   ...EXPRESSIONS_STRINGS_SCENES,
   ...WITHIN_DISTANCE_SCENES,

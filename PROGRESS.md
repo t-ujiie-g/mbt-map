@@ -160,3 +160,16 @@ Where things stand, decisions and open issues. The development history before th
   - 直した後：警告 0、違う画素 0〜2000 弱（建物の縁。ラベルは同じ）。40 段で作り直しは 5 回、各 2〜5 ms（M2、Chromium）、アトラスは 2048 と 4096 を行き来。1 段 1800 字でも警告なし（4096 に広がる）。
 - `npm run labels:golden` は全シーン同じのまま。MoonBit のテスト（`label`：repack、`bitmap_at`、`GlyphStore`）とワーカーのテスト（送り直し、キャッシュを空にする）を足した。
 - 大きさ：`mbt-map` 162349 → 164177 バイト（+1.8KB、主に `Map[Int32, Bitmap]` の実体化）、ラベルのワーカー部分 9563 → 9612、表示ワーカー 85000 → 85032。記号のメッシュは頂点あたり CPU に 4 バイト（グリフの番号と角）、GPU に 4 バイト（`uv`）増える。
+
+## 世界のコピー（renderWorldCopies、2026-11-15、Mac）
+
+- メルカトルで経度 180 度の東西に世界を繰り返す（MapLibre の `renderWorldCopies`、既定 true）。低いズームで左右が空く、180 度付近（フィジー、太平洋、アラスカとロシアの間）で片側しか出ない、を直した。
+- main の取り込み：地形の高さの範囲（`covering_tiles` の `heights`）はコピーごとの歩きの中で正準のタイルについて引き、足跡をそのコピーへずらして使う。
+- 設計：`@core.UnwrappedTile`（MapLibre の `UnwrappedTileID`：正準のタイルと `wrap`）。`Transform::covering_tiles` は見える範囲の各コピー（`Transform::wraps`、左右 3 まで）を同じ四分木で歩き、`wrap` 付きで返す。タイルの読み込み・キャッシュは正準のタイルのまま（コピーごとに取り直さない）。`tile_matrix` / `tile_light_matrix` は `wrap~` で 1 世界ずらす。`Draw` は `wrap` と `copy`（同じメッシュを別のコピーでも描くもの）を持ち、地形のテクスチャやヒートマップのタイル内描画は `copy` を飛ばして二重に描かない。パターンの位置（`pattern_tile`）、影、クリッピング、地面の影、背景のパターン、画像・動画ソース（MapLibre の `getVisibleUnwrappedCoordinates` と同じく見えるコピーと左右 1 つずつ）もコピーごと。地形の高さ（`elevation_at`）は x を主の世界に戻して引く。
+- カメラ：`Limits.world_copies`。false のとき MapLibre の `defaultConstrain` と同じく経度範囲を ±(180 − 1e-10) に限り、中心の折り返しも `normalizeCenter` もしない。true のときは従来どおり（中心の経度は折り返す）。`project` / `unproject` / `getBounds` は MapLibre と同じく経度を折り返さない（もとから）。
+- ラベル：タイルのラベルの状態はメッシュごとに 1 つなので、複数のコピーに出るタイルのラベルは中心に最も近いコピーで配置し、そのコピーでだけ描く（`LabelSet.wrap`）。配置の順は MapLibre と同じ（深いタイル、`wrap`、x、y）。**残り**：世界が画面より狭い（ズーム約 1 未満）ときは、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
+- 問い合わせ：描いた (タイル, コピー) ごとにワーカーへ聞き、ファサードは正準のタイルごとに地物を 1 回にまとめる（MapLibre の `mergeRenderedFeatureLayers`）。並びは z、y、wrap、x（`sortTilesIn`）。ラベルの当たりは配置したコピーでだけ。
+- 塗りの輪郭は、層のすべてのタイルの塗りのあとにまとめて描くようにした（MapLibre の `drawFill`：全タイルの塗り、次に全タイルの輪郭）。コピーの境目（経度 ±180 の輪郭）で隣のコピーの塗りが輪郭を消していた。
+- ファサード：`renderWorldCopies` オプション、`setRenderWorldCopies` / `getRenderWorldCopies`（undefined は true、null は false）。`map_set_limits` の 9 番目の数。
+- 確かめ：`raster:golden` に世界のコピーの場面 5 つ（z0、z1、180 度、回転、`renderWorldCopies: false`）を足し、すべて MapLibre と画素まで同じ。傾けた場面は外した（遠くのタイルのズームの選び方が MapLibre と違うのは以前から）。`style:golden` に `copies-antimeridian`、`copies-wide`（各タイルが 2 つのコピーに出る、ヒートマップ込み）。`labels:golden` に `copies-points`、`copies-line`（69 場面すべて同じ）。`query:golden` に `copies`、`copies-wide`（750 問すべて同じ）。`style:golden` は全場面が限度内。`camera:golden` に `renderWorldCopies: false` の 3 場面（制約、easeTo、flyTo など）。core のテスト（`core/copies_test.mbt`）。
+- 大きさ：mbt-map（index.js）は gzip 165.0KB → 166.4KB（+1.4KB、予算 168KB。main を取り込んだあとの数）。被覆の並べ替えはタイルの型で整列を実体化せず `stable_order` で並べる（UnwrappedTile 用の整列が約 10KB の生コードを足していた）。

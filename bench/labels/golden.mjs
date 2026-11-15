@@ -107,7 +107,14 @@ function globeScenes() {
   });
   const POI = { "icon-image": "dot", "text-anchor": "top", "text-offset": [0, 0.8] };
   const asia = { center: [139.7, 35.7], zoom: 1.6 };
+  // The same in mercator across the antimeridian, labels placed in the world copy each tile is drawn in.
+  const mercator = (...layers) => {
+    const { projection, ...style } = globe(...layers);
+    return style;
+  };
   return {
+    "copies-points": { style: mercator(points_("p", POI)), camera: { center: [180, 20], zoom: 2.5 } },
+    "copies-line": { style: mercator(points_("p", POI), lines("l", { "icon-image": "dot" })), camera: { center: [178, 28], zoom: 3, bearing: 20, pitch: 30 }, along: true },
     "globe-points": { style: globe(points_("p", {})), camera: asia },
     "globe-points-icons": { style: globe(points_("p", POI)), camera: { center: [100, 20], zoom: 2.2 } },
     "globe-points-pitched": { style: globe(points_("p", POI)), camera: { center: [120, 30], zoom: 2.5, bearing: 30, pitch: 45 } },

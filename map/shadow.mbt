@@ -79,10 +79,20 @@ fn Map::frame_shadows(self : Map) -> Shadows? {
 }
 
 ///|
-/// The shadow map's matrix for tile units of `id`, while there are shadows.
-fn Map::tile_shadow(self : Map, id : @core.TileId) -> @core.Mat4? {
+/// The shadow map's matrix for tile units of `id` in copy `wrap`, while there
+/// are shadows.
+fn Map::tile_shadow(
+  self : Map,
+  id : @core.TileId,
+  wrap~ : Int32 = 0,
+) -> @core.Mat4? {
   self.shadows.map(s => {
-    self.transform.tile_light_matrix(s.flat.matrix, id, @core.TILE_EXTENT)
+    self.transform.tile_light_matrix(
+      s.flat.matrix,
+      id,
+      @core.TILE_EXTENT,
+      wrap~,
+    )
   })
 }
 
@@ -290,10 +300,15 @@ fn Map::draw_ground_shadows(self : Map, s : Shadows, dpr : Double) -> Unit {
       self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false)
     _ => t.covering_tiles(0, t.tile_zoom(0, @core.MAX_TILE_ZOOM))
   }
-  for id in tiles {
-    let light = t.tile_light_matrix(s.flat.matrix, id, @core.TILE_EXTENT)
+  for u in tiles {
+    let light = t.tile_light_matrix(
+      s.flat.matrix,
+      u.id,
+      @core.TILE_EXTENT,
+      wrap=u.wrap,
+    )
     self.renderer.draw_ground_shadow(
-      self.placement(id, None, dpr),
+      self.placement(u.id, None, dpr, wrap=u.wrap),
       light,
       s.ground,
     )

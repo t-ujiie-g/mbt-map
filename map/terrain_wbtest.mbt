@@ -13,7 +13,7 @@ test "texture_placement maps a tile and its child into the terrain texture" {
   let into = @core.TileId::new(10, 4, 6).unwrap()
   let e = @core.TILE_EXTENT.to_double()
   let own = texture_placement(
-    { id: into, at, meshes: [], bounds: None, },
+    { id: into, wrap: 0, copy: false, at, meshes: [], bounds: None, },
     into,
     1024,
   )
@@ -23,7 +23,7 @@ test "texture_placement maps a tile and its child into the terrain texture" {
   // The child's bottom-right quarter: x 1, y 1 at z 11.
   let kid = @core.TileId::new(11, 9, 13).unwrap()
   let k = texture_placement(
-    { id: kid, at, meshes: [], bounds: None, },
+    { id: kid, wrap: 0, copy: false, at, meshes: [], bounds: None, },
     into,
     1024,
   )
@@ -48,7 +48,14 @@ test "Draw::reaches a terrain tile by its picture's bounds, else by its tile" {
   }
   let tile = @core.TileId::new(1, 0, 0).unwrap()
   let right = @core.TileId::new(1, 1, 0).unwrap()
-  let plain : Draw = { id: tile, at, meshes: [], bounds: None, }
+  let plain : Draw = {
+    id: tile,
+    wrap: 0,
+    copy: false,
+    at,
+    meshes: [],
+    bounds: None,
+  }
   assert_false(plain.reaches(right))
   // A picture from x 0.25 to 0.6 of the world reaches past its tile.
   let picture : Draw = { ..plain, bounds: Some((0.25, 0.1, 0.6, 0.4)), }

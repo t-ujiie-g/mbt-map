@@ -45,6 +45,9 @@ const blocks = structuredClone(SCENES["globe-extrusions"].style);
 globe.sources.blocks = blocks.sources.blocks;
 globe.layers.push({ ...blocks.layers[1], minzoom: 4 });
 await writeFile(path.join(ROOT, "bench/dist/query-globe.json"), JSON.stringify(globe));
+// The same world in mercator, across the antimeridian and wider than the view (world copies).
+const { projection, ...world } = globe;
+await writeFile(path.join(ROOT, "bench/dist/query-world.json"), JSON.stringify(world));
 
 const tokyo = [139.7671, 35.6812];
 const views = [
@@ -58,6 +61,8 @@ const views = [
   { name: "moved", style: "query-moved", camera: { center: tokyo, zoom: 15.4, bearing: 35, pitch: 0 } },
   { name: "moved-tilted", style: "query-moved", camera: { center: tokyo, zoom: 15.4, bearing: -30, pitch: 50 }, tilted: true },
   { name: "extrusion", style: "query-extrusion", camera: { center: tokyo, zoom: 15.5, bearing: -20, pitch: 55 }, tilted: true },
+  { name: "copies", style: "query-world", camera: { center: [180, 20], zoom: 1.5, bearing: 0, pitch: 0 }, world: true },
+  { name: "copies-wide", style: "query-world", camera: { center: [30, 0], zoom: 0.25, bearing: 0, pitch: 0 }, world: true },
   { name: "globe", style: "query-globe", camera: { center: [139.7, 35.7], zoom: 1.2, bearing: 0, pitch: 0 }, globe: true },
   { name: "globe-tilted", style: "query-globe", camera: { center: [120, 40], zoom: 2.5, bearing: 30, pitch: 45 }, globe: true, tilted: true },
   { name: "globe-extrusion", style: "query-globe", camera: { center: [139.7, 35.6], zoom: 6.5, bearing: -30, pitch: 60 }, globe: true, tilted: true },
@@ -130,7 +135,7 @@ try {
     for (const [kind, geometry, options] of asks) {
       if (v.tilted && (kind === "source" || geometry === null)) continue;
       // The GSI asks name layers and properties of the GSI style.
-      if (v.globe && (options || kind === "source")) continue;
+      if ((v.globe || v.world) && (options || kind === "source")) continue;
       const r = await page.evaluate(([k, g, o]) => window.__query(k, g, o), [kind, geometry, options]);
       // A source query lists each tile's features in an order of tiles MapLibre
       // does not define, so it is compared as a multiset.

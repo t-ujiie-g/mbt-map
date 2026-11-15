@@ -12,7 +12,8 @@ fn globe_of(a : FixedArray[Double]) -> @globe.Globe {
     },
     a[0],
     a[1],
-    limits=t.limits,
+    // `a[15]` is the projection here, not `transform_of`'s world copies.
+    limits={ ..t.limits, world_copies: true, },
     projection=match a[15] {
       0.0 => Mercator
       2.0 => VerticalPerspective

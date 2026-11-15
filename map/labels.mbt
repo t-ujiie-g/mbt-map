@@ -68,8 +68,8 @@ const PLACEMENT_INTERVAL : Double = 100.0
 
 ///|
 /// A symbol mesh's labels and their placement state as of `round`: `keys` (atlas key per glyph index),
-/// `boxes` (text then icon, CSS px), terrain `heights` (DEM version `heights_at`), the `anchor`,
-/// `variant` and `shifts` each label took, and the y `order` it is drawn in when sorted.
+/// `boxes` (text then icon, CSS px), terrain `heights` (DEM version `heights_at`), the `anchor`, `variant` and
+/// `shifts` each label took, the y `order` when sorted, the world copy `wrap` placed and drawn in (round `chosen`).
 priv struct LabelSet {
   labels : @render_webgl2.JsBuffer
   keys : FixedArray[Int32]
@@ -90,6 +90,8 @@ priv struct LabelSet {
   heights : FixedArray[Double]
   mut heights_at : Int32
   mut round : Int32
+  mut chosen : Int32
+  mut wrap : Int32
   mut drawn : Int32
   mut changed : Bool
   mut moved : Bool
@@ -325,6 +327,8 @@ fn Map::symbol_mesh(self : Map, l : JsValue) -> (@render_webgl2.Mesh, LabelSet) 
       heights: FixedArray::make(count, 0.0),
       heights_at: 0,
       round: -1,
+      chosen: -1,
+      wrap: 0,
       drawn: -1,
       changed: false,
       moved: false,

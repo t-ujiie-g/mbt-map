@@ -241,6 +241,7 @@ export class Map {
       minPitch: options.minPitch ?? MIN_PITCH,
       maxPitch: options.maxPitch ?? MAX_PITCH,
       maxBounds: options.maxBounds ? LngLatBounds.convert(options.maxBounds) : null,
+      renderWorldCopies: options.renderWorldCopies ?? true,
     };
     const interactive = options.interactive ?? true;
     this.#enabled = Object.fromEntries(HANDLERS.map((h) => [h, interactive && (options[h] ?? true)])) as Record<HandlerName, boolean>;
@@ -1503,6 +1504,15 @@ export class Map {
 
   getMaxBounds(): LngLatBounds | null {
     return this.#limits.maxBounds;
+  }
+
+  /** Whether the world repeats east and west of the antimeridian; without copies the view stays within it. Undefined means true and null false, as MapLibre's. */
+  setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
+    return this.#setLimits({ renderWorldCopies: renderWorldCopies === undefined ? true : !!renderWorldCopies });
+  }
+
+  getRenderWorldCopies(): boolean {
+    return this.#limits.renderWorldCopies !== false;
   }
 
   /** Stops the workers, frees GPU memory and removes the map's elements. */

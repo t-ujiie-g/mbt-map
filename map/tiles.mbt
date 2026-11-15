@@ -404,10 +404,14 @@ fn Map::layer_mesh(
 fn Map::update_tiles(
   self : Map,
   src : SourceTiles,
-  cover : Array[@core.TileId],
+  cover : Array[@core.UnwrappedTile],
 ) -> Unit {
   let wanted = @hashset.HashSet([])
-  for id in cover {
+  for u in cover {
+    let id = u.id
+    if wanted.contains(id.key()) {
+      continue
+    }
     wanted.add(id.key())
     match src.tiles.get(id.key()) {
       Some({ state: Stale(meshes), .. }) =>

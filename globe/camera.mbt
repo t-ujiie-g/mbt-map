@@ -54,9 +54,9 @@ fn normalize_bearing(bearing : Double, current : Double) -> Double {
 
 ///|
 /// `center` a whole turn nearer the camera's (`normalizeCenter`), unless the
-/// longitudes are bounded.
+/// longitudes are bounded or the world does not repeat.
 fn Globe::normalize_center(self : Globe, c : @core.LngLat) -> @core.LngLat {
-  if self.limits.bounds is Some(_) {
+  if self.limits.bounds is Some(_) || !self.limits.world_copies {
     return c
   }
   let d = c.lng - self.center.lng

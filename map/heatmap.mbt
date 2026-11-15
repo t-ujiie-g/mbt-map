@@ -35,8 +35,10 @@ fn Map::draw_heatmap(
   for i, d in draws {
     // Kernels reach across tiles, so a tile is drawn once and whole, and an
     // ancestor standing in for some of its children draws instead of them all.
-    let skip = draws[:i].iter().any(o => o.id == d.id) ||
-      draws.iter().any(o => o.id.z < d.id.z && overlap(o.id, d.id))
+    let skip = draws[:i].iter().any(o => o.id == d.id && o.wrap == d.wrap) ||
+      draws
+      .iter()
+      .any(o => o.wrap == d.wrap && o.id.z < d.id.z && overlap(o.id, d.id))
     if skip {
       continue
     }

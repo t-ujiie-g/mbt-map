@@ -1,11 +1,13 @@
 ///|
-/// Where `id`'s meshes are drawn: only the part over the tile itself, or with
-/// `clip` over that descendant tile (an ancestor standing in for it).
+/// Where `id`'s meshes are drawn in world copy `wrap`: only the part over the
+/// tile itself, or with `clip` over that descendant tile (an ancestor standing
+/// in for it).
 fn Map::placement(
   self : Map,
   id : @core.TileId,
   clip : @core.TileId?,
   dpr : Double,
+  wrap~ : Int32 = 0,
 ) -> @render_webgl2.Placement {
   let t = self.transform
   let extent = @core.TILE_EXTENT
@@ -42,9 +44,14 @@ fn Map::placement(
       [x0, y0, x0 + size, y0 + size]
     }
   }
-  let matrix = t.tile_matrix(id, extent)
+  let matrix = t.tile_matrix(id, extent, wrap~)
   // Raster tiles at rest sit on the pixel grid, as MapLibre draws them.
-  let raster_matrix = t.tile_matrix(id, extent, aligned=!self.is_moving())
+  let raster_matrix = t.tile_matrix(
+    id,
+    extent,
+    aligned=!self.is_moving(),
+    wrap~,
+  )
   let (matrix, raster_matrix) = match self.window {
     None => (matrix, raster_matrix)
     Some(w) => (w.matrix.mul(matrix), w.matrix.mul(raster_matrix))
@@ -57,22 +64,24 @@ fn Map::placement(
     center_depth: t.center_depth(),
     clip: rect,
     latitudes: (bounds.max_y, bounds.min_y),
-    pattern: pattern_tile(t, id),
+    pattern: pattern_tile(t, id, wrap),
     globe,
   }
 }
 
 ///|
-/// Where patterns start in tile `id` (MapLibre's `patternUniformValues`): its
-/// corner and size in CSS pixels of the world at the integer zoom.
+/// Where patterns start in tile `id` of copy `wrap` (MapLibre's
+/// `patternUniformValues`): its corner and size in CSS pixels of the world at
+/// the integer zoom.
 fn pattern_tile(
   t : @core.Transform,
   id : @core.TileId,
+  wrap : Int32,
 ) -> @render_webgl2.PatternTile {
   let zoom = @cmp.maximum(0.0, t.camera.zoom.floor())
   let size = @core.TILE_SIZE * @math.pow(2.0, zoom - id.z.to_double())
   {
-    x: size * id.x.to_double(),
+    x: size * (id.x + (wrap << id.z)).to_double(),
     y: size * id.y.to_double(),
     units: size / @core.TILE_EXTENT.to_double(),
     // MapLibre's -2^z / tileSize / 8.
@@ -81,8 +90,8 @@ fn pattern_tile(
 }
 
 ///|
-/// The tiles of `src` the view covers at its zoom.
-fn Map::cover(self : Map, src : SourceTiles) -> Array[@core.TileId] {
+/// The tiles of `src` the view covers at its zoom, with their world copies.
+fn Map::cover(self : Map, src : SourceTiles) -> Array[@core.UnwrappedTile] {
   let t = self.transform
   let s = src.source
   let z = t.tile_zoom(s.min_zoom, s.max_zoom, tile_size=s.tile_size)
@@ -92,7 +101,7 @@ fn Map::cover(self : Map, src : SourceTiles) -> Array[@core.TileId] {
     let round = s.kind is (Raster | RasterDem)
     self
     .globe_cover(g, s.tile_size, s.min_zoom, s.max_zoom, round)
-    .filter(id => s.covers(id.z, id.x, id.y))
+    .filter(u => s.covers(u.id.z, u.id.x, u.id.y))
   } else if t.camera.zoom + @core.zoom_shift(s.tile_size).to_double() <
     s.min_zoom.to_double() {
     []
@@ -100,14 +109,14 @@ fn Map::cover(self : Map, src : SourceTiles) -> Array[@core.TileId] {
     // Tiles outside the source's bounds are never asked for.
     t
     .covering_tiles(s.min_zoom, z, heights?=self.ground_heights())
-    .filter(id => s.covers(id.z, id.x, id.y))
+    .filter(u => s.covers(u.id.z, u.id.x, u.id.y))
   }
 }
 
 ///|
-/// Per source: where its covering tiles' meshes go this frame (once for all
-/// of the source's layers), and whether every covering tile has settled.
-/// `load` asks for the tiles missing.
+/// Per source: where its covering tiles' meshes go this frame (once for all of the source's layers),
+/// and whether every covering tile has settled; `load` asks for the tiles missing. A tile in several
+/// world copies is loaded once and drawn in each, all but the first marked `copy`.
 fn Map::draws(
   self : Map,
   dpr : Double,
@@ -122,40 +131,35 @@ fn Map::draws(
       self.update_tiles(src, cover)
     }
     let draws = []
-    for id in cover {
+    let copies = cover.iter().any(u => u.wrap != cover[0].wrap)
+    for i, u in cover {
+      let id = u.id
+      let wrap = u.wrap
+      let copy = copies && cover[:i].iter().any(o => o.id == id)
+      let draw = (id : @core.TileId, clip : @core.TileId?, meshes) => {
+        draws.push({
+          id,
+          wrap,
+          copy,
+          at: self.placement(id, clip, dpr, wrap~),
+          meshes,
+          bounds: None,
+        })
+      }
       match src.fallback(id) {
-        Own(id, meshes) =>
-          draws.push({
-            id,
-            at: self.placement(id, None, dpr),
-            meshes,
-            bounds: None,
-          })
-        Ancestor(id, meshes, clip~) =>
-          draws.push({
-            id,
-            at: self.placement(id, Some(clip), dpr),
-            meshes,
-            bounds: None,
-          })
+        Own(id, meshes) => draw(id, None, meshes)
+        Ancestor(id, meshes, clip~) => draw(id, Some(clip), meshes)
         Children(kids) =>
           for kid in kids {
-            draws.push({
-              id: kid.0,
-              at: self.placement(kid.0, None, dpr),
-              meshes: kid.1,
-              bounds: None,
-            })
+            draw(kid.0, None, kid.1)
           }
         Nothing => ()
       }
       settled = settled && src.settled(id)
     }
     if s.kind is Image {
-      let (draw, shown) = self.media_draw(src, dpr)
-      if draw is Some(d) {
-        draws.push(d)
-      }
+      let (media, shown) = self.media_draws(src, dpr)
+      draws.append(media)
       settled = settled && shown
     }
     draws_of.set(s.id, draws)

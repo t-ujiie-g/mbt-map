@@ -28,6 +28,10 @@ views.push({ w: 800, h: 600, center: [10, -84], zoom: 2, pitch: 0, bearing: 0 })
 views.push({ w: 800, h: 600, center: [150, 20], zoom: 9, pitch: 10, bearing: 0, bounds: [139, 35, 140, 36] });
 views.push({ w: 800, h: 600, center: TOKYO, zoom: 3, pitch: 0, bearing: 0, bounds: [139, 35, 140, 36] });
 views.push({ w: 800, h: 600, center: TOKYO, zoom: 9, pitch: 0, bearing: 0, minZoom: 10, maxZoom: 12, minPitch: 10, maxPitch: 40 });
+// One world only (`renderWorldCopies: false`): the view kept within the antimeridian.
+views.push({ w: 800, h: 600, center: [175, 20], zoom: 3, pitch: 0, bearing: 0, copies: false });
+views.push({ w: 800, h: 600, center: [179.5, 70], zoom: 4, pitch: 30, bearing: -45, copies: false });
+views.push({ w: 800, h: 600, center: [-170, 10], zoom: 0.5, pitch: 0, bearing: 0, copies: false });
 
 function maplibre(v) {
   const frames = [];
@@ -38,6 +42,7 @@ function maplibre(v) {
     maxZoom: v.maxZoom ?? 22,
     minPitch: v.minPitch ?? 0,
     maxPitch: v.maxPitch ?? 85,
+    renderWorldCopies: v.copies ?? true,
   });
   cam.transform.resize(v.w, v.h);
   if (v.bounds) cam.transform.setMaxBounds(new LngLatBounds([v.bounds[0], v.bounds[1]], [v.bounds[2], v.bounds[3]]));
@@ -50,7 +55,7 @@ function maplibre(v) {
   };
   return cam;
 }
-const ours = (v) => [v.w, v.h, v.center[0], v.center[1], v.zoom, v.bearing, v.pitch, v.minZoom ?? 0, v.maxZoom ?? 22, v.minPitch ?? 0, v.maxPitch ?? 85, ...(v.bounds ?? [NaN, 0, 0, 0])];
+const ours = (v) => [v.w, v.h, v.center[0], v.center[1], v.zoom, v.bearing, v.pitch, v.minZoom ?? 0, v.maxZoom ?? 22, v.minPitch ?? 0, v.maxPitch ?? 85, ...(v.bounds ?? [NaN, 0, 0, 0]), v.copies === false ? 0 : 1];
 const state = (tr) => [tr.center.lng, tr.center.lat, tr.zoom, tr.bearing, tr.pitch];
 
 const rows = [];
@@ -68,7 +73,7 @@ function cameraDiff(a, b) {
   return { deg: a.length === b.length ? deg : Infinity, zoom: a.length === b.length ? zoom : Infinity };
 }
 function record(op, v, d) {
-  rows.push({ op, view: `${v.w}x${v.h} z${v.zoom} p${v.pitch} b${v.bearing}${v.bounds ? " bounds" : ""}${v.minZoom !== undefined ? " limits" : ""}`, ...d });
+  rows.push({ op, view: `${v.w}x${v.h} z${v.zoom} p${v.pitch} b${v.bearing}${v.bounds ? " bounds" : ""}${v.minZoom !== undefined ? " limits" : ""}${v.copies === false ? " one world" : ""}`, ...d });
   for (const k of Object.keys(d)) worst[k] = Math.max(worst[k], d[k]);
 }
 
