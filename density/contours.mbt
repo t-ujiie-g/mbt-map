@@ -3,24 +3,24 @@
 
 ///|
 /// Most grid cells `contours` and `contour_density` walk (AGENTS.md §8.2).
-pub const MAX_CONTOUR_CELLS : Int64 = 16_777_216
+const MAX_CONTOUR_CELLS : Int64 = 16_777_216
 
 ///|
 /// Most thresholds `contours` and `contour_density` take.
-pub const MAX_THRESHOLDS : Int32 = 4096
+const MAX_THRESHOLDS : Int32 = 4096
 
 ///|
 /// Most grid cells times thresholds one call walks.
-pub const MAX_CONTOUR_WORK : Int64 = 134_217_728
+const MAX_CONTOUR_WORK : Int64 = 134_217_728
 
 ///|
 /// Most marching-squares segments one call stitches over all its thresholds.
-pub const MAX_CONTOUR_SEGMENTS : Int64 = 4_000_000
+const MAX_CONTOUR_SEGMENTS : Int64 = 4_000_000
 
 ///|
 /// Most hole-in-polygon edge tests one call spends (d3's nesting is quadratic
 /// in rings).
-pub const MAX_CONTOUR_NESTING_TESTS : Int64 = 100_000_000
+const MAX_CONTOUR_NESTING_TESTS : Int64 = 100_000_000
 
 ///|
 /// The segments and nesting tests a call has spent so far, and the most it may.

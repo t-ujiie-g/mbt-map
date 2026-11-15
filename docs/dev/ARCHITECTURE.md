@@ -32,7 +32,7 @@ core ← viewshed ← viewshed_worker
 geom ← route ← route_worker
 proj ← proj_worker
 core ← geodesic ← geodesic_worker
-core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← adapters
+core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← moonbit/mbtmap ← moonbit/mbtmap_rabbita
 (meshopt, draco, lepcc) ← model_worker
 wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 ```
@@ -42,7 +42,6 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 - `core`, `pbf`, `mvt`, `tess`, `style` are pure MoonBit and must pass tests on every backend.
 - `render_webgl2` and `map` are js-target only (`supported_targets = "js"`).
 - On the js backend `FixedArray[Byte]`/`Bytes` are `Uint8Array`, but `FixedArray[Float]` is a plain JS `Array`, so GPU buffers need `extern "js"` typed-array wrappers; `Array[T]` is not a JS array, so exports hand JS a `FixedArray`.
-- `bench/backend/{kernel,entry}` are MoonBit packages inside this module used only for the Phase 0 backend comparison.
 - The decode loop is intentionally duplicated there (safe arrays vs raw addresses vs JS typed array); do not "deduplicate" it.
 
 ## Entry points and modules
@@ -119,10 +118,10 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 
 ## The npm facade
 
-- `npm/`, `element/`, `adapters/`, `examples/` are not MoonBit packages (TS/HTML side).
+- `npm/`, `element/`, `examples/` are not MoonBit packages (TS/HTML side).
 - `npm/src/index.ts` is a MapLibre-shaped TS facade (`Map`, `on`/`once`, `jumpTo`, …) over the `bundle/main` exports; esbuild aliases `mbt-map-engine` to that build and `npm/src/engine.d.ts` types it, so keep both in sync with `bundle/main/main.mbt` (`map_frame_count` and `map_placed_labels` are test hooks).
 - Pure parts of the facade live in their own modules for `npm test` (`engine-style.ts`, `feature-state.ts`, `query.ts`, `camera.ts` with the zoom and pitch limits that `element/parse.ts` mirrors).
-- The build rewrites `dist/*.d.ts` relative imports to `.js` so `moduleResolution: nodenext` resolves them, and `package.json` exports every file reached by URL (workers, wasm, worker parts).
+- The build rewrites `dist/*.d.ts` relative imports to `.js` so `moduleResolution: nodenext` resolves them, keeps only the declarations the entries' `types` reach (`npm/scripts/declarations.mjs`; internal modules' are deleted), and `package.json` exports every file reached by URL (workers, wasm, worker parts).
 - Sibling chunks by dynamic import need no entry.
 - `bench/pages/basic`, `bench/pages/terrain` and `bench/render/page.mjs` call those exports directly (`create_map` and others): change them with the signatures (the pack test starts both examples).
 - The facade resolves tile URLs against the style URL and loads `worker.js`/`mbt-map.wasm` next to itself via `new URL(..., import.meta.url)`.

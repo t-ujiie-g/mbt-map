@@ -57,9 +57,11 @@ const summary = {
 };
 const out = {
   env: { browser: `chromium ${browser.version()}`, headless: !headed, uncapped, cpuThrottle: throttle, viewport: "1280x800", dpr, renderer: results[0].renderer, maplibre: results[0].version, userAgent: results[0].userAgent },
-  params: { runs, statistic: "median of runs" }, sizes, summary, runs: results,
+  params: { runs, statistic: "median of runs" }, sizes, summary,
 };
 await mkdir(path.join(ROOT, "bench/results"), { recursive: true });
 const name = `maplibre-render-chromium${headed ? "-headed" : ""}${uncapped ? "-uncapped" : ""}${throttle > 1 ? `-cpu${throttle}x` : ""}.json`;
+// The summary is committed; each run's numbers go beside it as *.raw.json (gitignored).
 await writeFile(path.join(ROOT, "bench/results", name), JSON.stringify(out, null, 2) + "\n");
+await writeFile(path.join(ROOT, "bench/results", name.replace(/\.json$/, ".raw.json")), JSON.stringify({ ...out, runs: results }, null, 2) + "\n");
 console.log(JSON.stringify({ env: out.env, sizes, summary }, null, 2));

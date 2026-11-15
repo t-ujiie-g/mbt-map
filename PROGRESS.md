@@ -11,14 +11,13 @@ Where things stand, decisions and open issues. The development history before th
   - 文書：README、docs/ の入口ごとのガイド、その後の点検（リファクタリングとセキュリティ）。
   - GitHub Pages：手書きのトップ、docs の HTML、動く例。サンプル集とテーマの切り替え、例の画面の英語化。
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
-  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test。
+  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）。
 - **次**：公開のあと、単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
 - **未解決**：
   - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。
   - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
   - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
-  - `setViewshed`・`setClipping`・`triggerRepaint` のあとに `idle` が来ない（MapLibre は描き終えるたびに `idle`）。合わせるかは別に決める。
   - Linux の WebKit で `antialias: false` のキャンバスの最後のフレームが出ない件が headless だけのことか。Linux の headless Firefox に WebGL2 がない（pack test は飛ばす）。
   - 世界が画面より狭い（ズーム約 1 未満）とき、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
 - **文書の置き場所**：毎回読む決まりは AGENTS.md、仕組みの詳しい説明は docs/dev/ARCHITECTURE.md とその分冊、コマンドの一覧は docs/dev/COMMANDS.md、ツールチェーンと計測で分かったことは docs/dev/TOOLCHAIN.md（AGENTS.md を 130KB から分けた）。
@@ -268,6 +267,59 @@ Where things stand, decisions and open issues. The development history before th
 - 大きさ（gzip）：mbt-map（index.js）166.4KB → 166.7KB（+0.3KB、予算 168KB）。GeoJSON ソース 4.65 → 4.85KB（予算 5KB）、mbt-map/analysis 8.50 → 8.74KB（9KB）、mbt-map/data 4.87 → 5.14KB（6KB）、mbt-map/geodesic 1.41 → 1.61KB（2KB）、mbt-map/3d 9.26 → 9.46KB（10KB）、mbt-map/services 11.49 → 11.66KB（12KB）。`urls.ts` が各エントリに入るため。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`、npm のテストと大きさ、pack test（Chromium 23/23、WebKit の npm・cdn・geojson・analysis・data）、`npm run bundlers`。
 - 残り：AGENTS.md §8.3 の「例外は 1 つ」の文は、ライブラリ自身の既定のワーカー（バンドラが置いた場所、`data:` の埋め込み）をまだ書いていない。`bundlers` はバンドラを npm から取るので CI には入れていない。Rollup でプラグインなしにファイルをコピーする形と、Firefox・WebKit でのバンドラの出力は確かめていない。
+## 公開前の整理：使っていないものを外す（2026-11-15）
+
+監査で見つかったもののうち、ユーザーが認めた分を外した。追跡しているファイルは 1530 個・11.5MB から 1492 個・9.2MB になった。外した実験（バックエンドの比較、モジュール分割の計測）のスクリプトと結果は、前のリポジトリ `t-ujiie-g/mbmap` に残っている。
+
+- **点群のフィクスチャ**：`bench/npm/pages/pointcloud/cloud.las`（1.2MB）を追跡から外した。`bench/las/synthetic.mjs` が毎回同じものを作れるので、パックテストの準備（`bench/npm/prepare.mjs`）が書き、`las:golden` は同じバイト列を関数から受け取る。
+- **bench の依存**：どこからも import していない `@turf/difference`、`@turf/points-within-polygon`、`robust-predicates` と、下の実験だけが使っていた `binaryen` を外した。
+- **結果のファイル**：一度きりの `draw-many-{before,after}-*.json`（6 個）を消した。`render-chromium*.json` と `maplibre-render-chromium*.json` は中央値などの要約だけにし、各回の値は `*.raw.json`（コミットしない）に書く。`query`・`globe`・`proj`・`las` の黄金テストは、要約と合わなかった行だけを書く（読むスクリプトも文書もなかった）。`bench/results/` は 1.5MB から 0.6MB。描画の数字は古いので、本線で測り直す。
+- **bench/entry**：呼ぶスクリプトのない export（`geojson_read`、`geojson_tiler_table`、`geojson_tile_mem`、`last_counts`）を消した。
+- **adapters/**：README だけの予約場所だった。役目は `moonbit/mbtmap_rabbita/` が果たしている。
+- **bench/backend と bench/split**：Wasm バックエンドの比較（Phase 0）とモジュール分割の計測（Phase 6.5）。結論（wasm-gc で出す、wasm-gc に `wasm-opt` をかけない、入口ごとに 1 つの wasm）は docs/dev/TOOLCHAIN.md と AGENTS.md §4 に事実として残し、MoonBit のパッケージ、スクリプト、npm の `backend:*`・`split`・`opt`、結果の `backend-*.json`・`split.json` を消した。`build:moon` は wasm（線形メモリ）のビルドと `wasm-opt` をしなくなった。
+- **CI**：`pack` と `pack-browsers` は npm パッケージを 2 回ビルドしていた（ジョブの手順と `prepareExamples()`）。手順の方を外した。`prepare.mjs` は、`examples/react/node_modules` がロックファイルどおりなら `npm ci` をやり直さない（npm が書く `node_modules/.package-lock.json` と比べる）。
+- **型定義**：tsc は内部のモジュールごとに `.d.ts` を書くので、tarball に 104 個入っていた。ビルドの最後に、`package.json` の `exports` の `types` から相対 import をたどって届くものだけを残す（`npm/scripts/declarations.mjs`、64 個）。たどった先がなければビルドが失敗する。11 の入口すべてを `moduleResolution` が `NodeNext` と `Bundler` の tsc（`skipLibCheck: false`）で読めることを確かめた。
+- **MoonBit の `pub`**：パッケージの外から使われていない上限の定数や補助の関数を非公開にした（`clusters`、`core`、`delaunay`、`density`、`draco`、`globe`、`hull`、`isolines`、`relate_worker`、`render_webgl2`、`route`、`simplify`、`tiff`、`viewshed`、`xml` の計 38 個）。それを名前で使っていたブラックボックステストは、中身を変えずにホワイトボックスのファイルへ移した。単独で出すかもしれない移植（`clipper`、`relate`、`proj`、`geodesic`、`mvt`、`pbf`、`tiler`、`tess`）、JS のテストが写しを確かめる定数（`worker` の `ENTRY_*`、`core` の `MAX_ZOOM`・`MAX_PITCH`）、トレイトの実装はそのまま。**残したもの**：ブラックボックステストがファイル内の補助関数と一緒に使っている上限など（`formats`、`style`、`tiff`、`isolines`、`kml`、`analysis` など約 35 個）は、テストのファイルごとホワイトボックスにするか補助関数を写すことになるので公開のままにした。
+- **文書**：`examples/README.md` にサンプル集（`examples/samples/`）、docs/dev/COMMANDS.md に `las:synthetic`・`tiles:synthetic`・`i3s:synthetic`・`i3s:pcsl-synthetic`、`bench/README.md` に結果の置き方。
+
+## サイトの計測タグ（2026-11-15）
+
+- ユーザーの依頼で、GitHub Pages に Google タグ マネージャー（`GTM-MWGLDWNP`）を入れた。`site/analytics.js` を、サイトの各ページ（トップ、文書、例の目次、サンプルの解説ページ、4 つのアプリ）が読む。解説ページに埋め込んで動かすサンプル本体には入れない（閲覧の二重計上と、見せるコードへの混入を避ける）。
+- 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに入れた「Google Analytics で訪問を数えている」の一文は、一般的でないので外した（ユーザー判断）。
+- 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに「Google Analytics で訪問を数えている」と書いた。
+
+## 公開前の QA の直し：タッチ操作、`idle`、`<mbt-map>`、キャンバスの名前、バッファ（2026-11-15）
+
+公開前の QA で見つかった 5 件。ブランチ `fix/touch-and-events`。
+
+1. **タッチ操作がページに漏れる（ブロッカー）**
+   - 原因：キャンバスの `touch-action` が `auto` のままで、リスナーも passive。スマートフォンで地図をピンチするとブラウザもページを拡大し（`visualViewport.scale` が 1 → 5）、1 本指のドラッグでページもスクロールした。
+   - 直し：MapLibre のキャンバスコンテナと同じ値を、有効なハンドラからキャンバスの `touch-action` に入れる（`map/camera.mbt` の `touch_action`。`attach_input` と `Map::set_handler` で設定するので `map.dragPan.disable()` などにも追随する）。`dragPan` と 2 本指のハンドラ（`touchZoomRotate` か `touchPitch`）の両方 → `none`、`dragPan` だけ → `pinch-zoom`、2 本指だけ → `pan-x pan-y`、どちらもなし（`interactive: false` も）→ `auto`。`touchPitch` は MapLibre では値に関わらないが、2 本指の操作なので `touchZoomRotate` と同じ扱いにした。cooperative gestures は入れていない。
+   - `touch-action` を見ないブラウザのために、地図が受け取る操作の `touchmove` は passive でないリスナーで `preventDefault` する（`Map::takes_touches`）。`wheel` はもとから passive でなく、`scrollZoom` が有効なあいだ `preventDefault` している（確かめた）。
+   - テスト：pack test の `touch`（`bench/npm/checks/touch.mjs`、ページ `bench/npm/pages/touch/`：ビューポートより長いページに `Map`・`<mbt-map>`・ただの箱）。タッチ有効の 400 × 700 のコンテキストで、Chromium では CDP の `Input.dispatchTouchEvent` で本物のタッチを送る：ピンチのあと `visualViewport.scale` は 1 のままズームが 14.5 → 17.08（`Map` もシャドウルートの中の `<mbt-map>` も）、1 本指のドラッグのあと `scrollY` は 0 で中心が動く、`dragPan` を切ると同じドラッグでページが 105 px スクロールして地図は動かない、ただの箱の上の同じピンチはページを 3 倍にする（テストの仕掛けが漏れを見つけられることの確認）。ハンドラごとの `touch-action` の値とホイール（ページは動かずズームだけ変わる）は 3 つのブラウザで見る。Firefox と WebKit には CDP のタッチ入力がないので、本物のタッチの部分は理由をつけて飛ばす。`touch_action` の単体テストは `map/helpers_wbtest.mbt`。
+
+2. **1 フレームだけの変更のあとに `idle` が来ない**
+   - 原因：`idle` は「前の変更のあと最初に落ち着いたフレーム」で 1 回だけ出していて（`idle_fired`）、`setViewshed`・`setClipping`・`triggerRepaint` は `idle_fired` を倒さずにフレームだけ頼んでいた。
+   - 直し（`map/render.mbt`）：MapLibre の `_render` と同じく、フレームの終わりに、読み込み中のものがなく（タイル、ワーカーに聞いている feature state の範囲）、動いておらず（操作・慣性・アニメーション：`moving`）、次のフレームも頼まれていなければ `idle`。止まっている地図はフレームを描かないので繰り返さない。
+   - MapLibre と違えたところ：フレームが続くあいだ（再生中の動画、`render` の中で `triggerRepaint` するカスタムレイヤー）は、落ち着いた最初の 1 回と、止まったときの 1 回だけ（MapLibre は毎フレーム）。`toBlob` が `idle` を待つので、最初の 1 回は残した。
+   - 変わったところ：アニメーションや操作の途中では `idle` が出なくなった（これまではタイルがそろっていれば途中でも出ていた。MapLibre は出さない）。操作の終わり（指を離す、ホイールの 200 ms 後）に 1 フレーム頼むので、そこで `idle` が来る。
+   - テスト：pack test の `npm` に `idleChecks`（`bench/npm/checks/idle.mjs`）：止まっているあいだは 0 回、`triggerRepaint`・`setClipping`（設定と解除）・`setViewshed`（設定と解除）のそれぞれで描画 1 回と `idle` 1 回、`easeTo` の `moveend` までは 0 回、毎フレーム `triggerRepaint` するリスナーでは止まったときの 1 回だけ、そのあとの `toBlob` が返る。`bench/npm/checks/plateau.mjs` の回避（視域と断面は `render` を待つ）は `idle` を待つ形に戻した。
+
+3. **`<mbt-map>` に `render-world-copies` がない**：属性 `render-world-copies`（`true` / `false` だけ。ほかは `mbt-map-error` で前の値のまま）とプロパティ `renderWorldCopies`（真偽値か属性の文字列）を足した。地図があれば `setRenderWorldCopies`、作り直しても値を持ち越す。`element/parse.ts` に `checkBoolean`、テストは `element/parse.test.ts` と pack test の `touch`。
+
+4. **キャンバスの役割と名前**：`tabindex="0"` でフォーカスできるのに role も名前もなかった。MapLibre 6.16 と同じく `role="region"` と `aria-label="Map"` を付ける（`npm/src/index.ts`）。コンテナに `aria-label` があればそれを名前にし、`<mbt-map aria-label="…">` は自分の値をキャンバスへ渡す（属性の変更にも追随）。あとから `map.getCanvas().setAttribute("aria-label", …)` でも変えられる。MapLibre は `interactive: false` のとき `tabindex="-1"` にするが、そこは変えていない。テストは pack test の `touch`。
+
+5. **`mbt-map/analysis` の `buffer` の距離**
+   - 負の距離：Clipper のオフセットは開いたパスと点を距離の絶対値で太らせるので、点と線の `-100` が `+100` と同じ結果になっていた。負の距離では点と線を入れない（`overlay/ops.mbt`）。結果は Turf の `buffer`（点と線の負のバッファは undefined）と同じく図形なしで、行と属性は残る。ポリゴンはこれまでどおり縮む。
+   - 大きな距離：測地バッファの上限を 20,000 km から 10,000 km（`@overlay.MAX_GEODESIC_BUFFER`、子午線の 4 分の 1）にした。超えると `a geodesic buffer takes at most 10,000 km` で断る。点の円が半球に収まる範囲で、その先は円が対蹠点側の小さい円になり、リングとして意味を持たない。平面バッファは CRS の単位で 1e9 まで（変えていない）。
+   - QA が「でたらめ」とした `999999`（12 点で 37,519,784 km²）は正しかった：半径約 1,000 km の円 1 つが約 3.13 百万 km²、12 個で 37.5 百万 km²（重なりは足したまま）。GeographicLib で測った点の円の誤差は、緯度 0〜89.9° で 100 km が 0.01% 以下、1,000 km が 0.08% 以下、3,000 km が 0.23% 以下、10,000 km が 0.58% 以下。
+   - 文書（docs/analysis.md）：負の距離、上限、精度、経度が ±180 を越えても折り返さないこと、極を越えるバッファは極を囲むリングになること。
+   - テスト：`overlay/overlay_wbtest.mbt`（点と線の負のバッファは `NoGeometry` で属性は残る、上限とその文言）、pack test の `analysis`（点の `buffer(-100)` は geometry が null、`buffer(1.5e7)` は断る）。
+
+- 大きさ（gzip）：mbt-map（index.js）166.7KB → 166.9KB（+0.2KB、予算 168KB）。mbt-map/element 1.71KB → 1.86KB（予算 5KB）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 929、wasm-gc 941、js 988、native 929）、npm のテスト（453）と大きさ、bench のテスト、pack test（Chromium・WebKit 27.2・Firefox 157 とも 24/24。本物のタッチは Chromium だけ）、`camera:golden`・`globe:golden`・`query:golden`（750/750）・`export:golden`・`clipper:golden`（全部一致）・`buffer:check`・`sight:golden`（0 differ）。
+- 残り：実機（iOS Safari、Android Chrome）でのタッチは確かめていない（Playwright の Chromium のタッチ入力まで）。`interactive: false` でもキャンバスは `tabindex="0"` のまま（MapLibre は `-1`）。バッファは日付変更線や極で切らない。
+
 ## サイト・サンプル・例の公開前 QA の直し（2026-11-15、Mac）
 
 公開前の QA で見つかった、サイト（`site/`、`bench/site/`）・サンプル（`examples/samples/`）・例のアプリの不具合を直した。ライブラリ（`npm/src`、`element/`、MoonBit）は触っていない。

@@ -15,6 +15,7 @@ import { parseLAS as parseLazRs } from "../node_modules/@loaders.gl/las/dist/lib
 import { readLas } from "../../npm/src/model/las.ts";
 import { parseProjString } from "../../npm/src/projstring.ts";
 import { ROOT } from "../lib/root.mjs";
+import { cloudBytes } from "./synthetic.mjs";
 import { geoKeys, RGB_AT, writeLas, wktRecord } from "./write.mjs";
 
 // Mulberry32: the same files on every run.
@@ -224,7 +225,7 @@ async function workerDiffers(bytes, maxPoints, crs, from) {
 const PLANE = "+proj=tmerc +lat_0=36 +lon_0=139.833333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs";
 const PLANE_WKT =
   'PROJCS["plane IX",GEOGCS["JGD2011",DATUM["Japanese_Geodetic_Datum_2011",SPHEROID["GRS 1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",36],PARAMETER["central_meridian",139.833333333333],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1]]';
-const fixture = new Uint8Array(await readFile(path.join(ROOT, "bench/npm/pages/pointcloud/cloud.las")));
+const fixture = cloudBytes();
 const tokyo = (args) => writeLas({ format: 2, scale: [0.001, 0.001, 0.001], offset: [-6000, -35400, 0], points: points(2000, 2, 200_000, true), ...args });
 const definition = parseProjString(PLANE);
 for (const [name, bytes, maxPoints, crs, from] of [
@@ -297,7 +298,7 @@ for (const [name, bytes] of hostile) {
 }
 
 await mkdir(path.join(ROOT, "bench/results"), { recursive: true });
-await writeFile(path.join(ROOT, "bench/results/las-golden.json"), JSON.stringify({ env: { loaders: "@loaders.gl/las 4.5.4", pdalFiles }, results }, null, 2) + "\n");
+await writeFile(path.join(ROOT, "bench/results/las-golden.json"), JSON.stringify({ env: { loaders: "@loaders.gl/las 4.5.4", pdalFiles }, summary: { cases: results.length, differ: failed }, differing: results.filter((r) => !r.same) }, null, 2) + "\n");
 for (const r of results) if (!r.same || process.argv.includes("--verbose")) console.log(JSON.stringify(r));
 console.log(`las golden: ${results.length} cases, ${pdalFiles} PDAL files, ${failed} differ`);
 if (failed) process.exit(1);

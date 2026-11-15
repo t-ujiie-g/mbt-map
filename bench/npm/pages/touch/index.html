@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mbt-map: touch gestures on a page that scrolls</title>
+<style>
+  html, body { margin: 0; }
+  #map, mbt-map { height: 250px; }
+  #plain { height: 150px; background: #ccd; }
+  #below { height: 2000px; }
+</style>
+<!-- `npm --prefix bench run npm:pack` installs the packed tarball into ./node_modules. -->
+<script type="importmap">
+  { "imports": { "mbt-map": "./node_modules/mbt-map/dist/index.js", "mbt-map/element": "./node_modules/mbt-map/dist/element.js" } }
+</script>
+<div id="map"></div>
+<mbt-map style-url="/bench/pages/basic/style.json" center="139.7671,35.6812" zoom="14.5" render-world-copies="false" aria-label="Tokyo Station"></mbt-map>
+<div id="plain"></div>
+<div id="below"></div>
+<script type="module" src="./main.js"></script>

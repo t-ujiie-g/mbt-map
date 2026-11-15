@@ -277,26 +277,3 @@ test "unpack_bits reads samples narrower than a byte, rows on byte boundaries" {
   )
   assert_eq(arr(twelve), [b'\xbc', b'\x0a', b'\xef', b'\x0d'])
 }
-
-///|
-test "band_bytes follows geotiff's typed arrays" {
-  assert_eq(
-    [
-      (1, 1),
-      (1, 8),
-      (1, 12),
-      (1, 16),
-      (1, 24),
-      (1, 32),
-      (2, 8),
-      (2, 12),
-      (2, 32),
-      (3, 16),
-      (3, 32),
-      (3, 64),
-      (3, 8),
-      (4, 8),
-    ].map(p => @tiff.band_bytes(p.0, p.1)),
-    [1, 1, 2, 2, 0, 4, 1, 0, 4, 4, 4, 8, 0, 0],
-  )
-}

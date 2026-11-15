@@ -60,6 +60,7 @@ function page({ title, root, main, description = "" }) {
 <link rel="icon" href="${root}icon.svg">
 <link rel="stylesheet" href="${root}site.css">
 <script src="${root}theme.js"></script>
+<script src="${root}analytics.js"></script>
 <header class="top">
   <a class="brand" href="${root}">mbt-map</a>
   <nav><a href="${root}docs/">Docs</a><a href="${root}examples/">Examples</a><a href="${REPOSITORY}">GitHub</a><button class="theme" type="button" aria-label="Switch the color theme">☾</button></nav>
@@ -103,9 +104,11 @@ async function copyExample(src, dest) {
     if (entry.isDirectory()) await cp(from, to, { recursive: true });
     else if (entry.name.endsWith(".html")) {
       const html = await readFile(from, "utf8");
-      // The showcase links only the variants the site publishes (examples/shared/shell.js `variants`).
+      // The apps are pages of the site too: its analytics tag (not in the samples run inside the viewers), and
+      // links only to the variants the site publishes (examples/shared/shell.js `variants`).
       const published = `<html lang="en" data-variants="${SITE_EXAMPLES.join(",")}">`;
-      await writeFile(to, html.replace('<html lang="en">', published).replaceAll("./node_modules/mbt-map/dist/", "../../lib/"));
+      const tagged = html.replace('<html lang="en">', published).replace(/<meta charset="utf-8">\n/, '<meta charset="utf-8">\n<script src="../../analytics.js"></script>\n');
+      await writeFile(to, tagged.replaceAll("./node_modules/mbt-map/dist/", "../../lib/"));
     } else await cp(from, to);
   }
 }

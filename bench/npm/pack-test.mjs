@@ -17,12 +17,14 @@ import { moonbitChecks } from "./checks/moonbit.mjs";
 import { rabbitaChecks } from "./checks/rabbita.mjs";
 import { samplesChecks } from "./checks/samples.mjs";
 import { cdnChecks } from "./checks/cdn.mjs";
+import { touchChecks } from "./checks/touch.mjs";
 import { tilesChecks } from "./checks/tiles.mjs";
 import { plateauChecks } from "./checks/plateau.mjs";
 import { pointCloudChecks } from "./checks/pointcloud.mjs";
 import { i3sChecks } from "./checks/i3s.mjs";
 import { globeChecks } from "./checks/globe.mjs";
 import { cameraChecks } from "./checks/camera.mjs";
+import { idleChecks } from "./checks/idle.mjs";
 import { controlChecks } from "./checks/controls.mjs";
 import { atCentre } from "./checks/pixels.mjs";
 import { queryChecks } from "./checks/query.mjs";
@@ -65,6 +67,7 @@ const PAGES = {
   i3s: "bench/npm/pages/i3s/",
   globe: "bench/npm/pages/globe/",
   moonbit: "bench/npm/pages/moonbit/",
+  touch: "bench/npm/pages/touch/",
   basic: "bench/pages/basic/",
   terrain: "bench/pages/terrain/",
   "showcase-html": "examples/html/?local=1",
@@ -174,9 +177,11 @@ const checks = {
     const camera = await cameraChecks(page);
     crumb("imageChecks");
     const images = await imageChecks(page);
+    crumb("idleChecks");
+    const idle = await idleChecks(page);
     return [
-      ok && lazyParts && query.ok && state.ok && tiles.ok && exported.ok && style.ok && camera.ok && images.ok,
-      { ...r, workerParts, query, state, tiles, exported, style, camera, images },
+      ok && lazyParts && query.ok && state.ok && tiles.ok && exported.ok && style.ok && camera.ok && images.ok && idle.ok,
+      { ...r, workerParts, query, state, tiles, exported, style, camera, images, idle },
     ];
   },
 
@@ -306,6 +311,9 @@ const checks = {
       const erased = (await (await squares.erase(await load(fc([sq(0.5, "c")])))).toGeoJSON()).features;
       const overlaid = (await (await squares.intersect(await load(fc([sq(0.5, "c")])))).toGeoJSON()).features;
       const badBuffer = await pt.buffer(NaN).then(() => "", (e) => e.message);
+      // A negative distance leaves a point without geometry; a geodesic buffer past 10,000 km is refused.
+      const shrunkPoint = (await (await pt.buffer(-100)).toGeoJSON()).features[0].geometry;
+      const wideBuffer = await pt.buffer(1.5e7).then(() => "", (e) => e.message);
       // Spatial relations (relate.wasm, loaded now): a overlaps c, b equals it.
       const third = await load(fc([sq(0.5, "c")]));
       const relations = {
@@ -394,6 +402,8 @@ const checks = {
         erased: erased.map((f) => f.properties.name),
         overlaid: overlaid.map((f) => `${f.properties.name}/${f.properties.name_2}`),
         badBuffer,
+        shrunkPoint,
+        wideBuffer,
         relations,
         shapes,
         classes,
@@ -442,6 +452,7 @@ const checks = {
       JSON.stringify(r.geometry.erased) === JSON.stringify(["a"]) &&
       JSON.stringify(r.geometry.overlaid) === JSON.stringify(["a/c", "b/c"]) &&
       /invalid buffer options/.test(r.geometry.badBuffer) &&
+      r.geometry.shrunkPoint === null && /at most 10,000 km/.test(r.geometry.wideBuffer) &&
       JSON.stringify(r.geometry.relations.overlaps) === "[0,0]" && JSON.stringify(r.geometry.relations.equals) === "[1,0]" &&
       r.geometry.relations.matrix === "212111212" && /disjoint features match/.test(r.geometry.relations.disjoint) &&
       JSON.stringify(r.geometry.shapes.convex) === "[5]" && r.geometry.shapes.triangles === 4 &&
@@ -473,6 +484,10 @@ const checks = {
 
   async media(page, requests) {
     return mediaChecks(page, requests);
+  },
+
+  async touch(page) {
+    return touchChecks(page, browserName);
   },
 
   async custom(page) {

@@ -47,8 +47,6 @@ pub const MAX_TILE_ZOOM : Int32 = 28
 
 pub const MAX_VALID_LATITUDE : Double = 85.051129
 
-pub const MAX_WORLD_COPIES : Int32 = 3
-
 pub const MAX_ZOOM : Double = 22.0
 
 pub const NORTH_POLE_Y : Int32 = -32768

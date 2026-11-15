@@ -206,27 +206,6 @@ pub fn geojson_read_mem(addr : Int32, len : Int32) -> Int32 {
 }
 
 ///|
-extern "wasm" fn store_i32(addr : Int32, v : Int32) =
-  #|(func (param i32) (param i32) (i32.store align=1 (local.get 0) (local.get 1)))
-
-///|
-/// Writes `geojson_tile(z, x, y)` as i32s at `addr` (growing memory as
-/// needed) and returns its length.
-#export_name("geojson_tile_mem")
-pub fn geojson_tile_mem(z : Int32, x : Int32, y : Int32, addr : Int32) -> Int32 {
-  let flat = geojson_tile(z, x, y)
-  let need = addr + flat.length() * 4
-  let have = memory_grow(0) * 65536
-  if need > have {
-    memory_grow((need - have + 65535) / 65536) |> ignore
-  }
-  for i, v in flat {
-    store_i32(addr + i * 4, v)
-  }
-  flat.length()
-}
-
-///|
 /// `table_tiler` on a table in `@geom.Table::to_bytes` form at
 /// `[addr, addr + len)` (pipeline B of the GeoJSON bench).
 #export_name("geojson_tiler_table_mem")
@@ -336,4 +315,29 @@ pub fn proj_mem(
     store_f64(out + i * 8, v)
   }
   values.length()
+}
+
+///|
+/// Only `@formats.read_geojson`, to separate its cost in the bench; returns
+/// the feature count or -1.
+fn read_only(
+  bytes : BytesView,
+  slow_number~ : (Int32, Int32) -> Double = (s, e) => {
+    @core.strconv_number(bytes[s:e])
+  },
+) -> Int32 {
+  (@formats.read_geojson(bytes, slow_number~) catch { _ => return -1 }).length()
+}
+
+///|
+/// `Tiler::new` on a table in `@geom.Table::to_bytes` form; returns the row
+/// count or -1 if the bytes are malformed.
+fn table_tiler(
+  bytes : BytesView,
+  options : @tiler.TilerOptions,
+  trig : @tiler.Trig,
+) -> Int32 {
+  guard @geom.Table::from_bytes(bytes) is Some(table) else { return -1 }
+  current_tiler.val = Some(@tiler.Tiler::new(table, options~, trig~))
+  table.length()
 }

@@ -4,7 +4,7 @@
 
 ///|
 /// The most faces a mesh may have (Draco takes up to 2^32 / 3).
-pub const MAX_FACES : Int32 = 0x400000
+const MAX_FACES : Int32 = 0x400000
 
 ///|
 /// The most points a mesh or point cloud may have.
@@ -12,11 +12,11 @@ pub const MAX_POINTS : Int32 = 0x400000
 
 ///|
 /// The most attributes a mesh or point cloud may have.
-pub const MAX_ATTRIBUTES : Int32 = 256
+const MAX_ATTRIBUTES : Int32 = 256
 
 ///|
 /// The most bytes one attribute's values may take.
-pub const MAX_ATTRIBUTE_BYTES : Int32 = 0x10000000
+const MAX_ATTRIBUTE_BYTES : Int32 = 0x10000000
 
 ///|
 /// Draco's `DataType` numbers, `DT_INT8` (1) to `DT_BOOL` (11); 0 is `DT_INVALID`.

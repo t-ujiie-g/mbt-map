@@ -1,6 +1,7 @@
 import { Map, type LngLat, type MapOptions, type StyleSpecification } from "mbt-map";
 import {
   checkBearing,
+  checkBoolean,
   checkCenter,
   checkPitch,
   checkZoom,
@@ -27,7 +28,7 @@ export interface MbtMapEventDetail {
   lngLat?: LngLat;
 }
 
-const ATTRIBUTES = ["style-url", "center", "zoom", "bearing", "pitch", "worker-count", "worker-url", "wasm-url", "attribution-control"] as const;
+const ATTRIBUTES = ["style-url", "center", "zoom", "bearing", "pitch", "worker-count", "worker-url", "wasm-url", "attribution-control", "render-world-copies", "aria-label"] as const;
 
 // Lets the module load where HTMLElement does not exist (server rendering);
 // the element is only defined in browsers.
@@ -48,6 +49,7 @@ export class MbtMapElement extends Base {
   #zoom = 0;
   #bearing = 0;
   #pitch = 0;
+  #copies = true;
 
   /** The underlying map, or null before it is created or after removal. */
   get map(): Map | null {
@@ -124,6 +126,21 @@ export class MbtMapElement extends Base {
     this.#map?.jumpTo({ pitch });
   }
 
+  get renderWorldCopies(): boolean {
+    return this.#map?.getRenderWorldCopies() ?? this.#copies;
+  }
+
+  /** Whether the world repeats east and west: a boolean or the attribute form (`"true"`, `"false"`). */
+  set renderWorldCopies(value: boolean | string) {
+    const copies = typeof value === "string" ? parseBoolean(value) : checkBoolean(value);
+    if (copies === null) {
+      this.#reject("render-world-copies", String(value));
+      return;
+    }
+    this.#copies = copies;
+    this.#map?.setRenderWorldCopies(copies);
+  }
+
   connectedCallback(): void {
     if (!this.#box) {
       const root = this.attachShadow({ mode: "open" });
@@ -146,6 +163,7 @@ export class MbtMapElement extends Base {
   }
 
   attributeChangedCallback(name: (typeof ATTRIBUTES)[number], _old: string | null, value: string | null): void {
+    if (name === "aria-label") this.#label();
     if (value === null) return;
     if (name === "center") {
       this.center = value;
@@ -157,6 +175,8 @@ export class MbtMapElement extends Base {
       this.pitch = value;
     } else if (name === "worker-count") {
       if (parseWorkerCount(value) === null) this.#reject(name, value);
+    } else if (name === "render-world-copies") {
+      this.renderWorldCopies = value;
     } else if (name === "attribution-control") {
       if (parseBoolean(value) === null) this.#reject(name, value);
     } else if (name === "style-url" && !this.#style) {
@@ -181,6 +201,7 @@ export class MbtMapElement extends Base {
       workerUrl: this.getAttribute("worker-url") ?? undefined,
       wasmUrl: this.getAttribute("wasm-url") ?? undefined,
       attributionControl: parseBoolean(this.getAttribute("attribution-control") ?? "true") ?? true,
+      renderWorldCopies: this.#copies,
     };
   }
 
@@ -195,6 +216,7 @@ export class MbtMapElement extends Base {
       return;
     }
     this.#map = map;
+    this.#label();
     map.on("load", () => this.#dispatch("mbt-map-load"));
     map.on("idle", () => this.#dispatch("mbt-map-idle"));
     map.on("movestart", () => this.#dispatch("mbt-map-movestart"));
@@ -204,6 +226,11 @@ export class MbtMapElement extends Base {
     map.on("click", (e) => e.point && e.lngLat && this.#dispatch("mbt-map-click", undefined, { point: { x: e.point.x, y: e.point.y }, lngLat: e.lngLat }));
   }
 
+  /** The canvas takes the element's `aria-label` as its accessible name ("Map" without one). */
+  #label(): void {
+    this.#map?.getCanvas().setAttribute("aria-label", this.getAttribute("aria-label") ?? "Map");
+  }
+
   #destroy(): void {
     if (!this.#map) return;
     // Keep the camera so that a re-attached element resumes where it was.
@@ -211,6 +238,7 @@ export class MbtMapElement extends Base {
     this.#zoom = this.#map.getZoom();
     this.#bearing = this.#map.getBearing();
     this.#pitch = this.#map.getPitch();
+    this.#copies = this.#map.getRenderWorldCopies();
     this.#map.remove();
     this.#map = null;
   }

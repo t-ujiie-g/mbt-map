@@ -7,7 +7,7 @@ using @core {type Trig}
 ///|
 /// Most ticks `contour_density` turns a threshold count into; d3 makes
 /// `new Array(n)` of any length.
-pub const MAX_TICKS : Int32 = 16384
+const MAX_TICKS : Int32 = 16384
 
 ///|
 /// JavaScript's `Math.log10` as V8 computes it (fdlibm's e_log10.c over

@@ -1,10 +1,10 @@
 ///|
 /// The most (segment, grid cell) entries `snap_lines` makes.
-pub const MAX_SNAP_CELLS : Int32 = 8_000_000
+const MAX_SNAP_CELLS : Int32 = 8_000_000
 
 ///|
 /// The most grid cells and distances `snap_lines` looks at.
-pub const MAX_SNAP_TESTS : Int64 = 200_000_000L
+const MAX_SNAP_TESTS : Int64 = 200_000_000L
 
 ///|
 /// Meters per degree of latitude on Turf's sphere.

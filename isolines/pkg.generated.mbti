@@ -7,8 +7,6 @@ import {
 }
 
 // Values
-pub const MAX_ABS_VALUE : Double = 1.0e300
-
 pub const MAX_BREAKS : Int32 = 4096
 
 pub const MAX_CELL_BREAKS : Int64 = 67_108_864
