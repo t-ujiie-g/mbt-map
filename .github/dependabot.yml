@@ -12,7 +12,7 @@ updates:
       actions:
         patterns: ["*"]
   - package-ecosystem: npm
-    directories: ["/npm", "/bench", "/examples/react"]
+    directories: ["/npm", "/examples/react"]
     schedule:
       interval: weekly
     cooldown:
@@ -21,3 +21,10 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+  # bench/ pins the goldens' reference implementations on purpose: no version updates (a limit of 0
+  # stops them, security updates still come); a reference is raised in a PR that reruns its golden.
+  - package-ecosystem: npm
+    directory: /bench
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
