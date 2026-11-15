@@ -2,8 +2,6 @@
 
 A lightweight WebGIS library for the browser, written in [MoonBit](https://www.moonbitlang.com/). Vector and raster maps, GIS data formats, spatial analysis, GIS web services and 3D city models come together in one toolkit, and each part loads only when a page first uses it.
 
-[日本語](README.ja.md)
-
 ```js
 import { Map } from "mbt-map";
 
