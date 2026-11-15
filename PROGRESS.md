@@ -108,3 +108,16 @@ Where things stand, decisions and open issues. The development history before th
 - `examples/samples/`：23 個（地図 8：基本、ベクトルのスタイル、GeoJSON とクリック、クラスタ、ヒートマップ、富士山の地形、建物と影、地球儀／データ 2：読み込み、書き出し／解析 3：バッファ・ボロノイ・凸包、階級区分図、経路／道具 4：作図、計測、UI のコントローラ、検索／Web サービス 2：GIBS の WMTS と WMS、ArcGIS の地物／3D 3：PLATEAU、glTF、見通し／Web Component 1）。3 つのエージェントが worktree で並行して書き、API はソースと照らし、画面写真で見た目を確かめた。
 - サイト：例の目次をサンプルのカード（グループごと）とアプリ（ショーケース、PLATEAU、React、rabbita）から組み立て、サンプルごとのページに動くサンプル（iframe）と `main.js`・`index.html` の全文（色分け）を並べる。全ページにライト・ダークの切り替え（既定は端末の設定、選んだものを覚える）。
 - 書きながら見つかったエンジンの課題：中心を高い山頂（富士山頂）に置いて傾けると、手前の低い土地のタイルが描かれない（地形のある時の覆うタイルの計算が中心の高さで見ているらしい）。経度 180 度を越えて地図が繰り返さない。地面に沿わない 3D の線がない。漢字の多い地図で都市を何か所も回るとグリフのアトラスがあふれ、文字が欠ける（rabbita の例で）。
+
+## rabbita の例を中国の都市でも見せるショーケースに（2026-11-15、Mac）
+
+- `examples/rabbita/` を作り直した：MoonBit で書いた WebGIS のアプリ。左のサイドバー（rabbita）と右の地図。UI の文は英語、地名は現地の表記。
+  - 飛ぶ先：北京・上海・深圳・香港・成都・杭州・東京・大阪（`fly_to`）。都市は GeoJSON の点と名前の層（`cities`、`city-names`）で、`name:zh`・`name:ja`・`name:en` を持つ。
+  - ベースマップ：OpenFreeMap の Liberty（世界、OpenStreetMap のベクトルタイル、キー不要）と地理院の淡色地図（日本）を `Map::set_style` で切り替える。Liberty は文書を取ってきて MoonBit の `Json` として直す（都市の層を足す、ラベルの言語と建物の高さを入れる、出典を文字にする：TileJSON の出典は HTML で、ソース自身の `attribution` が勝つ）。地理院と都市の層は型付きの関数で書く。
+  - ラベルの言語：中文・日本語・English・現地名。`Map::style()` の記号の層のうち `text-field` が名前を読むもの（道路番号の盾や矢印は除く）を MoonBit で数え上げ、`@expr.coalesce([@expr.get("name:zh-Hans"), @expr.get("name:zh"), @expr.get("name")])` などを `set_layout` で入れる。OpenFreeMap のタイル（OpenMapTiles）は `name:zh`・`name:zh-Hans`・`name:ja`・`name:en`・`name_en` を持つ（フィクスチャで確かめた。日本の地名の `name:zh` は繁体字のことが多い）。
+  - 3D の建物：Liberty の `building-3d` の高さを `render_height` / `render_min_height` と 0 で切り替え（`set_paint`）、傾きを 60° にする（`ease_to`）。地理院のときは押せない。
+  - クリックした地物の名前（選んだ言語で）、層、種類（`class`、なければソースの層）と、`on_moveend` からのカメラを表示する。
+- スタイルの文書は `extern "js"` の `fetch` と `JsValue::to_json` で読む。rabbita の `@http` は `moonbitlang/async` と MoonBit の JSON の読み手を引き、`app.js` が gzip 80KB になったのでやめた（29.5KB。前の例は 25.9KB）。
+- `?local=1`：Liberty の文書は `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が `style/public-styles.mjs` の固定した版を sha256 で確かめて取る。取れなければ警告して地理院で始まる）、タイルは `bench/fixtures/ofm-planet`（東京駅の周りの z14 だけ）と `gsi-std`、スプライトは `bench/fixtures/sprites/ofm`。そこで東京で始まる。CI はタイルのフィクスチャを持たないが、確かめはスタイルと都市の層だけで足りる（タイルのフィクスチャを外しても通ることを確かめた）。
+- pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
+- 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。

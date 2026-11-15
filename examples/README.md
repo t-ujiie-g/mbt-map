@@ -10,7 +10,7 @@
 | [element/](element/) | `<mbt-map>` の属性・プロパティ・イベント |
 | [react/](react/) | React 19 から `<mbt-map>` を JSX で（esbuild でバンドル） |
 
-ほかに、MoonBit の例として [rabbita/](rabbita/) があります。MoonBit の Web フレームワーク rabbita のアプリに、`t-ujiie-g/mbtmap_rabbita` で地図を置いています。スタイルは MoonBit の型付きの関数（`t-ujiie-g/mbtmap/style`）で書き、ボタンでの移動、カメラの表示、クリックした駅の名前、点の大きさの切り替えをします。`npm --prefix bench run examples` が `moon build` して `app.js` を作ります。
+ほかに、MoonBit の例として [rabbita/](rabbita/) があります。MoonBit で書いた WebGIS のアプリで、サイドバーを Web フレームワーク rabbita が、地図を `t-ujiie-g/mbtmap_rabbita` で置いた mbt-map が描きます。北京・上海・深圳・香港・成都・杭州・東京・大阪へ飛ぶボタン、ベースマップの切り替え（OpenFreeMap の Liberty（世界、OpenStreetMap のベクトルタイル）と地理院の淡色地図（日本））、ラベルの言語の切り替え（中文・日本語・English・現地名：スタイルの記号の層を MoonBit で数え上げ、`text-field` を `@expr.coalesce([@expr.get("name:zh"), …])` にする）、3D の建物（Liberty の `building-3d` の高さを `render_height` に）と傾き、クリックした地物の名前と層と種類、カメラの表示があります。スタイルは MoonBit で組みます（地理院と都市の点は型付きの関数、Liberty は取ってきた文書を MoonBit の `Json` として直す）。`?local=1` では Liberty の文書を `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が sha256 を確かめて取る）、タイルを `bench/fixtures/ofm-planet`（東京駅の周りの z14）と `gsi-std` から読むので、東京で始まります。`npm --prefix bench run examples` が `moon build` して `app.js` を作ります。
 
 ## 入っている機能
 

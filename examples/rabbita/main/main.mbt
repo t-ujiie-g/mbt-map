@@ -1,30 +1,19 @@
 ///|
-/// Where the buttons go: name, place and zoom (with `?local=1` only Tokyo Station has tiles).
-let destinations : Array[(String, @mbtmap.LngLat, Double)] = [
-  ("東京駅", @mbtmap.lnglat(139.7671, 35.6812), 15.0),
-  ("富士山", @mbtmap.lnglat(138.7274, 35.3606), 11.5),
-  ("大阪駅", @mbtmap.lnglat(135.4959, 34.7025), 15.0),
-  ("京都駅", @mbtmap.lnglat(135.7588, 34.9858), 14.0),
-  ("札幌駅", @mbtmap.lnglat(141.3508, 43.0686), 15.0),
-]
-
-///|
-let stations : Array[(String, Double, Double)] = [
-  ("東京駅", 139.7671, 35.6812),
-  ("有楽町駅", 139.7631, 35.6751),
-  ("神田駅", 139.7708, 35.6918),
-  ("日本橋", 139.7745, 35.6840),
-  ("二重橋前駅", 139.7614, 35.6806),
-  ("大手町駅", 139.7662, 35.6864),
-  ("京橋駅", 139.7701, 35.6767),
-]
-
-///|
 let map_id = "map"
 
 ///|
-extern "js" fn local_fixtures() -> String =
-  #|() => (new URLSearchParams(location.search).get("local") === "1" ? new URL("../../bench/fixtures/", location.href).href : "")
+let liberty_url = "https://tiles.openfreemap.org/styles/liberty"
+
+///|
+extern "js" fn fixtures_url() -> String =
+  #|() => (typeof location !== "undefined" && new URLSearchParams(location.search).get("local") === "1" ? new URL("../../bench/fixtures/", location.href).href : "")
+
+///|
+/// The bench fixtures' URL with `?local=1` (tiles and styles from them only), else None.
+let fixtures : String? = match fixtures_url() {
+  "" => None
+  url => Some(url)
+}
 
 ///|
 /// When the map first drew (as the other examples leave it for the pack test).
@@ -32,98 +21,105 @@ extern "js" fn mark_loaded() -> Unit =
   #|() => { window.__loaded = performance.now(); }
 
 ///|
-/// GSI's pale map (the bench fixtures' standard map with `?local=1`) and the stations above.
-fn style() -> @style.Style {
-  let fixtures = local_fixtures()
-  let tiles = if fixtures == "" {
-    @style.raster_source(
-      tiles=["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
-      tile_size=256.0,
-      maxzoom=18.0,
-      attribution="国土地理院",
-    )
-  } else {
-    @style.raster_source(
-      tiles=["\{fixtures}gsi-std/{z}/{x}/{y}.png"],
-      tile_size=256.0,
-      minzoom=14.0,
-      maxzoom=14.0,
-    )
-  }
-  let features = stations.map(s => {
-    let (name, lng, lat) = s
-    let feature : Json = {
-      "type": "Feature",
-      "properties": { "name": name },
-      "geometry": { "type": "Point", "coordinates": [lng, lat] },
-    }
-    feature
+extern "js" fn fetch_json(
+  url : String,
+  ok : (@mbtmap.JsValue) -> Unit,
+  failed : (String) -> Unit,
+) -> Unit =
+  #|(url, ok, failed) => {
+  #|  fetch(url, { credentials: "omit" })
+  #|    .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+  #|    .then(ok, (e) => failed(String(e?.message ?? e)));
+  #|}
+
+///|
+/// Fetches the JSON document at `url` (a style) and sends it, or why it failed, as a message.
+/// The browser parses it, which keeps a JSON parser out of the app.
+fn fetch_style(
+  url : String,
+  done : @rabbita.Emit[Result[Json, String]],
+) -> @rabbita.Cmd {
+  @cmd.custom_cmd(scheduler => {
+    fetch_json(url, doc => scheduler.add((done.0)(Ok(doc.to_json()))), e => {
+      scheduler.add((done.0)(Err(e)))
+    })
   })
-  @style.Style::new(
-    sources=[
-      ("gsi", tiles),
-      (
-        "stations",
-        @style.geojson_source(data={
-          "type": "FeatureCollection",
-          "features": Json::array(features),
-        }),
-      ),
-    ],
-    layers=[
-      @style.raster("gsi", source="gsi"),
-      @style.circle(
-        "stations",
-        source="stations",
-        circle_radius=@expr.interpolate(@expr.zoom(), [
-          (10.0, @expr.num(3.0)),
-          (16.0, @expr.num(9.0)),
-        ]),
-        circle_color=@expr.case_(
-          [
-            (
-              @expr.eq(@expr.get("name"), @expr.str("東京駅")),
-              @expr.color("#d6604d"),
-            ),
-          ],
-          default=@expr.color("#2166ac"),
-        ),
-        circle_stroke_color=@expr.color("#ffffff"),
-        circle_stroke_width=@expr.num(2.0),
-      ),
-      @style.symbol(
-        "station-names",
-        source="stations",
-        text_field=@expr.get("name"),
-        text_size=@expr.num(13.0),
-        text_offset=@expr.nums([0.0, 1.2]),
-        text_anchor=@expr.str("top"),
-        text_color=@expr.color("#1c2330"),
-        text_halo_color=@expr.color("#ffffff"),
-        text_halo_width=@expr.num(1.5),
-      ),
-    ],
-  )
 }
 
 ///|
+extern "js" fn fixed(x : Double, digits : Int32) -> String =
+  #|(x, d) => x.toFixed(d)
+
+///|
+/// What a click found: the feature's name, its style layer and what kind of thing it is.
+#derive(Eq)
+priv struct Picked {
+  name : String
+  layer : String
+  kind : String
+}
+
+///|
+/// `liberty` is OpenFreeMap's style document once fetched; `picked` is None before a click and
+/// `Some(None)` after one on nothing.
 #derive(Eq)
 priv struct Model {
+  liberty : Json?
+  base : Base
+  labels : Lang
+  raised : Bool
   camera : @mbtmap_rabbita.Camera?
-  clicked : @mbtmap_rabbita.Click?
-  station : String?
-  loaded : Bool
-  large : Bool
+  picked : Picked??
+  status : String?
 }
 
 ///|
 priv enum Msg {
+  LibertyFetched(Result[Json, String])
   Loaded
   Moved(@mbtmap_rabbita.Camera)
   Clicked(@mbtmap_rabbita.Click)
-  Picked(Array[@mbtmap.Feature])
-  Go(Int32)
-  Resize
+  Found(Array[@mbtmap.Feature])
+  FlyTo(City)
+  SetBase(Base)
+  SetLabels(Lang)
+  ToggleBuildings
+}
+
+///|
+/// The style the model asks for: Liberty once it has come, else GSI.
+fn Model::style(self : Model) -> @style.Style {
+  match (self.base, self.liberty) {
+    (OpenFreeMap, Some(doc)) =>
+      openfreemap_style(doc, labels=self.labels, raised=self.raised, fixtures~)
+    _ => gsi_style(labels=self.labels, fixtures~)
+  }
+}
+
+///|
+/// Where the map opens: Beijing, or Tokyo with `?local=1` (the fixtures hold Tokyo only).
+fn start_city() -> City {
+  let key = if fixtures is Some(_) { "tokyo" } else { "beijing" }
+  cities.filter(c => c.key == key)[0]
+}
+
+///|
+/// What the sidebar says about the topmost feature found.
+fn picked(features : Array[@mbtmap.Feature], labels : Lang) -> Picked? {
+  guard features is [feature, ..] else { None }
+  let props = feature.properties
+  let kind = match (props, feature.source_layer) {
+    ({ "class": String(c), "subclass": String(s), .. }, _) if c != s =>
+      "\{c} · \{s}"
+    ({ "class": String(c), .. }, _) => c
+    (_, Some(layer)) => layer
+    _ => feature.source
+  }
+  Some({
+    name: labels.name_of(props).unwrap_or("(no name)"),
+    layer: feature.layer,
+    kind,
+  })
 }
 
 ///|
@@ -133,57 +129,91 @@ fn update(
   emit : @rabbita.Emit[Msg],
 ) -> (Model, @rabbita.Cmd) {
   match msg {
+    LibertyFetched(result) => {
+      let model = match result {
+        Ok(doc) => { ..model, liberty: Some(doc), }
+        Err(e) =>
+          {
+            ..model,
+            base: Gsi,
+            status: Some(
+              "OpenFreeMap's style did not load (\{e}); showing GSI.",
+            ),
+          }
+      }
+      let start = start_city()
+      (
+        model,
+        @mbtmap_rabbita.setup(
+          map_id,
+          model.style(),
+          center=start.center,
+          zoom=start.zoom,
+        ),
+      )
+    }
     Loaded => {
       mark_loaded()
-      ({ ..model, loaded: true, }, @rabbita.none)
+      (model, @rabbita.none)
     }
     Moved(camera) => ({ ..model, camera: Some(camera), }, @rabbita.none)
     Clicked(click) =>
       (
-        { ..model, clicked: Some(click), },
+        model,
         @mbtmap_rabbita.query_features(
           map_id,
           click.point,
-          layers=["stations"],
-          emit.map(features => Picked(features)),
+          emit.map(features => Found(features)),
         ),
       )
-    Picked(features) => {
-      let station = match features {
-        [first, ..] =>
-          match first.properties {
-            { "name": String(name), .. } => Some(name)
-            _ => None
-          }
-        [] => None
-      }
-      ({ ..model, station, }, @rabbita.none)
-    }
-    Go(i) => {
-      let (_, center, zoom) = destinations[i]
+    Found(features) =>
+      (
+        { ..model, picked: Some(picked(features, model.labels)), },
+        @rabbita.none,
+      )
+    FlyTo(city) =>
       (
         model,
         @mbtmap_rabbita.with_map(map_id, map => {
-          map.fly_to(center~, zoom~, duration=1200.0)
+          map.fly_to(center=city.center, zoom=city.zoom, duration=2500.0)
+          @rabbita.none
+        }),
+      )
+    SetBase(base) => {
+      let model = { ..model, base, }
+      (
+        model,
+        @mbtmap_rabbita.with_map(map_id, map => {
+          map.set_style(model.style())
           @rabbita.none
         }),
       )
     }
-    Resize => {
-      let large = !model.large
-      let radius = if large { 14.0 } else { 9.0 }
+    SetLabels(labels) =>
       (
-        { ..model, large, },
+        { ..model, labels, },
         @mbtmap_rabbita.with_map(map_id, map => {
-          map.set_paint(
-            "stations",
-            "circle-radius",
-            Some(
-              @expr.interpolate(@expr.zoom(), [
-                (10.0, @expr.num(radius / 3.0)),
-                (16.0, @expr.num(radius)),
-              ]),
-            ),
+          guard map.style() is Some(style) else { @rabbita.none }
+          for id in name_layers(style) {
+            map.set_layout(id, "text-field", Some(labels.text_field()))
+          }
+          @rabbita.none
+        }),
+      )
+    ToggleBuildings => {
+      let raised = !model.raised
+      (
+        { ..model, raised, },
+        @mbtmap_rabbita.with_map(map_id, map => {
+          if map.layer_ids().contains(buildings_layer) {
+            for p in building_paint(raised) {
+              map.set_paint(buildings_layer, p.0, Some(p.1))
+            }
+          }
+          map.ease_to(
+            pitch=if raised { 60.0 } else { 0.0 },
+            bearing=if raised { -20.0 } else { 0.0 },
+            duration=1200.0,
           )
           @rabbita.none
         }),
@@ -193,105 +223,146 @@ fn update(
 }
 
 ///|
-extern "js" fn fixed(x : Double, digits : Int32) -> String =
-  #|(x, d) => x.toFixed(d)
-
-///|
-fn readout(model : Model) -> Array[@html.Html] {
-  let lines = []
-  if model.camera is Some(c) {
-    lines.push(
-      @html.p(
-        id="camera",
-        "中心 \{fixed(c.center.lng, 5)}, \{fixed(c.center.lat, 5)}　ズーム \{fixed(c.zoom, 2)}",
-      ),
-    )
-  } else {
-    lines.push(
-      @html.p(
-        id="camera",
-        if model.loaded {
-          "地図を動かすと中心が出ます"
-        } else {
-          "読み込み中…"
-        },
-      ),
-    )
-  }
-  match model.clicked {
-    Some(click) =>
-      lines.push(
-        @html.p(
-          id="clicked",
-          "クリック \{fixed(click.lnglat.lng, 5)}, \{fixed(click.lnglat.lat, 5)}" +
-          (match model.station {
-            Some(name) => "（\{name}）"
-            None => ""
-          }),
-        ),
+/// A row of buttons of which one or none is chosen (`aria-pressed`).
+fn choice(
+  items : Array[(String, String, Bool, @rabbita.Cmd)],
+  disabled~ : Bool = false,
+) -> @html.Html {
+  @html.div(
+    class="choice",
+    items.map(item => {
+      let (id, text, on, click) = item
+      @html.button(
+        id~,
+        class=if on { "on" } else { "" },
+        disabled~,
+        attrs=@html.Attrs::build().aria_pressed(on.to_string()),
+        on_click=click,
+        text,
       )
-    None =>
-      lines.push(
-        @html.p(
-          id="clicked",
-          "駅の点をクリックすると名前が出ます",
-        ),
-      )
-  }
-  lines
+    }),
+  )
 }
 
 ///|
-fn view(model : Model, emit : @rabbita.Emit[Msg]) -> @html.Html {
-  let buttons = destinations.mapi((i, d) => {
-    @html.button(class="go", on_click=emit(Go(i)), d.0)
-  })
-  buttons.push(
-    @html.button(
-      id="resize",
-      on_click=emit(Resize),
-      if model.large {
-        "点を小さく"
-      } else {
-        "点を大きく"
-      },
-    ),
-  )
-  @html.div(class="app", [
+fn panel(title : String, body : Array[@html.Html]) -> @html.Html {
+  @html.section(class="panel", [@html.h2(title), ..body])
+}
+
+///|
+fn camera_text(model : Model) -> String {
+  match model.camera {
+    Some(c) =>
+      "\{fixed(c.center.lng, 5)}, \{fixed(c.center.lat, 5)} · zoom \{fixed(c.zoom, 2)} · pitch \{fixed(c.pitch, 0)}°"
+    None => "Move the map to see the camera."
+  }
+}
+
+///|
+fn feature_view(model : Model) -> @html.Html {
+  match model.picked {
+    None => @html.p(id="feature", class="hint", "Click a place on the map.")
+    Some(None) => @html.p(id="feature", class="hint", "Nothing drawn there.")
+    Some(Some(f)) =>
+      @html.div(id="feature", [
+        @html.strong(class="name", f.name),
+        @html.dl([
+          @html.dt("Layer"),
+          @html.dd(f.layer),
+          @html.dt("Kind"),
+          @html.dd(f.kind),
+        ]),
+      ])
+  }
+}
+
+///|
+fn sidebar(model : Model, emit : @rabbita.Emit[Msg]) -> @html.Html {
+  let on_gsi = model.base is Gsi
+  let open_openfreemap = if model.liberty is Some(_) {
+    emit(SetBase(OpenFreeMap))
+  } else {
+    @rabbita.none
+  }
+  @html.aside(class="sidebar", [
     @html.header([
       @html.h1("mbt-map × rabbita"),
       @html.p(
         class="lead",
-        "MoonBit の Web フレームワーク rabbita のアプリに、mbt-map の地図を <mbt-map> 要素として置いています。",
+        "A WebGIS app written in MoonBit: rabbita draws this sidebar, mbt-map draws the map.",
       ),
     ]),
-    @html.nav(buttons),
-    @mbtmap_rabbita.view(
-      map_id,
-      css="display:block;height:60vh;min-height:320px",
-    ),
-    @html.section(class="readout", readout(model)),
+    panel("Fly to", [
+      @html.div(
+        class="cities",
+        cities.map(city => {
+          @html.button(id="go-\{city.key}", on_click=emit(FlyTo(city)), [
+            @html.span(class="native", city.name),
+            @html.span(city.en),
+          ])
+        }),
+      ),
+    ]),
+    panel("Base map", [
+      choice([
+        ("base-openfreemap", "OpenFreeMap", !on_gsi, open_openfreemap),
+        ("base-gsi", "GSI (Japan)", on_gsi, emit(SetBase(Gsi))),
+      ]),
+    ]),
+    panel("Labels", [
+      choice(
+        languages.map(lang => {
+          (
+            "labels-\{lang.code()}",
+            lang.label(),
+            lang == model.labels,
+            emit(SetLabels(lang)),
+          )
+        }),
+      ),
+    ]),
+    panel("Buildings", [
+      choice(
+        [("buildings", "3D buildings", model.raised, emit(ToggleBuildings))],
+        disabled=on_gsi,
+      ),
+    ]),
+    panel("Camera", [@html.p(id="camera", class="mono", camera_text(model))]),
+    panel("Feature", [feature_view(model)]),
+    match model.status {
+      Some(text) => @html.p(id="status", class="status", text)
+      None => @html.fragment([])
+    },
+  ])
+}
+
+///|
+fn view(model : Model, emit : @rabbita.Emit[Msg]) -> @html.Html {
+  @html.div(class="app", [
+    sidebar(model, emit),
+    @mbtmap_rabbita.view(map_id, class="map"),
   ])
 }
 
 ///|
 fn app() -> @rabbita.Val[@html.Html] {
   let (model, emit) = @rabbita.create_state_with_init(
-    init=_ => {
+    init=emit => {
+      let url = match fixtures {
+        Some(dir) => "\{dir}styles/ofm-liberty.json"
+        None => liberty_url
+      }
       (
         {
+          liberty: None,
+          base: OpenFreeMap,
+          labels: Chinese,
+          raised: false,
           camera: None,
-          clicked: None,
-          station: None,
-          loaded: false,
-          large: false,
+          picked: None,
+          status: None,
         },
-        @mbtmap_rabbita.setup(
-          map_id,
-          style(),
-          center=destinations[0].1,
-          zoom=destinations[0].2,
-        ),
+        fetch_style(url, emit.map(r => LibertyFetched(r))),
       )
     },
     update~,
