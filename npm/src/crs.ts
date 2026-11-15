@@ -8,7 +8,7 @@
  */
 export type Crs = string | number;
 
-/** An EPSG code, or a definition as docs/FORMATS.md "CRS definition" encodes it. */
+/** An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it. */
 export type CrsArg = number | Float64Array;
 
 /** `crs` as the workers take it, `named` PROJ strings looked up by name; PROJ strings load their parser on first use. */

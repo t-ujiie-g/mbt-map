@@ -1,5 +1,5 @@
 // Glue around the wasm-gc build of `data_worker`; messages are in
-// docs/FORMATS.md ("Data worker messages").
+// docs/dev/FORMATS.md ("Data worker messages").
 
 import { hostText, MAX_INPUT_BYTES } from "../../wasmio/js/host.mjs";
 import { dataFetchInit, readCapped } from "../../worker/js/body.mjs";

@@ -29,7 +29,7 @@ let needed : Ref[Double] = Ref(0)
 
 ///|
 /// Reads the image directories of the TIFF whose first bytes are the input and
-/// writes them as docs/FORMATS.md "GeoTIFF images" lays them out; returns their
+/// writes them as docs/dev/FORMATS.md "GeoTIFF images" lays them out; returns their
 /// length, minus an error message's, or -3 when `need` bytes are needed.
 #export_name("parse")
 pub fn parse() -> Int32 {

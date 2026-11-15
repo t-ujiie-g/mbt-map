@@ -1,5 +1,5 @@
 ///|
-/// A query (docs/FORMATS.md, "Query") at `points` of a tile drawn 8192 px wide,
+/// A query (docs/dev/FORMATS.md, "Query") at `points` of a tile drawn 8192 px wide,
 /// one tile unit per pixel, looking straight down.
 fn query_request(
   points : Array[(Double, Double)],
@@ -240,7 +240,7 @@ test "source_features gives a source layer's features that pass the filter, laye
 }
 
 ///|
-/// Feature ranges (docs/FORMATS.md, "Feature ranges") as (entry, id, first,
+/// Feature ranges (docs/dev/FORMATS.md, "Feature ranges") as (entry, id, first,
 /// count, outline first, outline count) records.
 fn ranges_of(
   b : Bytes,

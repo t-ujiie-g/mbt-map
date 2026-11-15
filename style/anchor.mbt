@@ -34,7 +34,7 @@ fn anchor_of(j : Json, path : String) -> TextAnchor raise StyleError {
 }
 
 ///|
-/// The anchor's code in a symbol entry (docs/FORMATS.md "Labels"): its place
+/// The anchor's code in a symbol entry (docs/dev/FORMATS.md "Labels"): its place
 /// in `TextAnchor`'s order.
 pub fn TextAnchor::code(self : TextAnchor) -> Int32 {
   match self {

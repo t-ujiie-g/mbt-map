@@ -69,7 +69,7 @@ pub fn layers_out() -> Int32 {
 }
 
 ///|
-/// The last read's feature ids at `output_addr`, a property value each (docs/FORMATS.md
+/// The last read's feature ids at `output_addr`, a property value each (docs/dev/FORMATS.md
 /// "Property values"); returns their length, 0 if it had none.
 #export_name("ids_out")
 pub fn ids_out() -> Int32 {
@@ -122,7 +122,7 @@ fn column_names(input : BytesView, names : Int32) -> Array[String]? {
 
 ///|
 /// Reads the CSV placed as input after `names` bytes of column names, as
-/// docs/FORMATS.md "Data worker messages" has it. Returns the length of the table
+/// docs/dev/FORMATS.md "Data worker messages" has it. Returns the length of the table
 /// written, or minus the length of a UTF-8 error message at `output_addr`.
 #export_name("read_csv")
 pub fn read_csv(

@@ -1,5 +1,5 @@
 // What the GeoJSON worker's wasm reads: a source's `promoteId` before its GeoJSON (in the
-// worker), and MapLibre's GeoJSONSourceDiff as docs/FORMATS.md "GeoJSON diff" (on the main
+// worker), and MapLibre's GeoJSONSourceDiff as docs/dev/FORMATS.md "GeoJSON diff" (on the main
 // thread, which sends it as bytes). Import-free.
 
 const encoder = new TextEncoder();

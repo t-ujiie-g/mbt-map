@@ -1,6 +1,6 @@
 ///|
 /// Decodes the input, a Draco mesh (a KHR_draco_mesh_compression buffer view) or point cloud,
-/// into the output as docs/FORMATS.md "Draco output"; returns its length, -1 for data draco3d
+/// into the output as docs/dev/FORMATS.md "Draco output"; returns its length, -1 for data draco3d
 /// would refuse (or past `@draco`'s caps), -2 without memory.
 #export_name("draco_decode")
 pub fn draco_decode() -> Int32 {

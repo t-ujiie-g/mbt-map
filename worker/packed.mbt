@@ -8,11 +8,11 @@ pub const FILL_VERTEX_BYTES : Int32 = 4
 pub const LINE_VERTEX_BYTES : Int32 = 8
 
 ///|
-/// u32s per layer entry (docs/FORMATS.md, "Packed tile").
+/// u32s per layer entry (docs/dev/FORMATS.md, "Packed tile").
 pub const LAYER_ENTRY_WORDS : Int32 = 23
 
 ///|
-/// Word indices in a layer entry (docs/FORMATS.md, "Packed tile"); mirrored by the
+/// Word indices in a layer entry (docs/dev/FORMATS.md, "Packed tile"); mirrored by the
 /// names `unpack` in worker/js/worker.mjs gives them.
 pub const ENTRY_LAYER : Int32 = 0
 
@@ -87,7 +87,7 @@ pub const ENTRY_DASHES_COUNT : Int32 = 22
 const MAX_PACKED_BYTES : Int32 = 64 * 1024 * 1024
 
 ///|
-/// One tile's GPU-ready buffers in one blob (docs/FORMATS.md, "Packed tile").
+/// One tile's GPU-ready buffers in one blob (docs/dev/FORMATS.md, "Packed tile").
 /// Reused across tiles.
 pub struct PackedTile {
   priv store : Store
@@ -530,7 +530,7 @@ fn PackedTile::add_alias(
 }
 
 ///|
-/// Attaches `props` (docs/FORMATS.md, "Packed tile"), the properties shared by the last
+/// Attaches `props` (docs/dev/FORMATS.md, "Packed tile"), the properties shared by the last
 /// entry's features, to it.
 fn PackedTile::set_props(self : PackedTile, props : Bytes) -> Unit {
   if self.layers == 0 || !self.reserve(props.length() + 3) {
@@ -563,7 +563,7 @@ fn PackedTile::begin_paint(self : PackedTile, words : Int32) -> Int32? {
 }
 
 ///|
-/// Writes a gradient line's progress for the last entry (docs/FORMATS.md,
+/// Writes a gradient line's progress for the last entry (docs/dev/FORMATS.md,
 /// "Packed tile"); false without room.
 fn PackedTile::put_progress(
   self : PackedTile,

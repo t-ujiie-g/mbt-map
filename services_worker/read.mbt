@@ -59,7 +59,7 @@ pub fn exceeded() -> Int32 {
 }
 
 ///|
-/// The last read's feature ids at `output_addr`, a property value each (docs/FORMATS.md
+/// The last read's feature ids at `output_addr`, a property value each (docs/dev/FORMATS.md
 /// "Property values"); returns their length, 0 if it had none.
 #export_name("ids_out")
 pub fn ids_out() -> Int32 {

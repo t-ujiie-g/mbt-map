@@ -1,4 +1,4 @@
-// The data worker's reads (docs/FORMATS.md "Data worker messages") on bytes already
+// The data worker's reads (docs/dev/FORMATS.md "Data worker messages") on bytes already
 // fetched, apart from its messages so that bench/data/golden.mjs runs them in Node.
 // Code pages as parsedbf 2.0.0's: MIT License, Copyright (c) 2013 Calvin Metcalf. See NOTICE.
 
@@ -24,7 +24,7 @@ const encoder = new TextEncoder();
 // `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
 
-/** An EPSG code, or a definition as docs/FORMATS.md "CRS definition" encodes it. */
+/** An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it. */
 export const isCrs = (c) => (Number.isInteger(c) && c > 0) || (c instanceof Float64Array && c.length === DEFINITION_SLOTS);
 
 // Code pages by number (a .cpg's `936`, `CP932`, `ANSI 1252`) and by DBF language driver id.
@@ -237,7 +237,7 @@ export function dataReader(wasm, imports, { proj, prj, xml, geotiff }) {
   }
   /**
    * `table` (and its `ids`, property values, or null) as `format` ("csv" or "kml") in UTF-8;
-   * CSV `options` as docs/FORMATS.md "Data worker messages" has them.
+   * CSV `options` as docs/dev/FORMATS.md "Data worker messages" has them.
    */
   async function write(format, table, ids, options) {
     const t = new Uint8Array(table);

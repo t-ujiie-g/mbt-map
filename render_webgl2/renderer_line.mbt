@@ -24,7 +24,7 @@ pub fn Renderer::draw_line(
 }
 
 ///|
-/// Adds a dashed line mesh's distances along its lines (docs/FORMATS.md,
+/// Adds a dashed line mesh's distances along its lines (docs/dev/FORMATS.md,
 /// "Packed tile").
 pub fn Renderer::upload_distances(
   self : Renderer,
@@ -35,7 +35,7 @@ pub fn Renderer::upload_distances(
 }
 
 ///|
-/// Adds an offset line mesh's offset normals (docs/FORMATS.md, "Packed tile").
+/// Adds an offset line mesh's offset normals (docs/dev/FORMATS.md, "Packed tile").
 pub fn Renderer::upload_offsets(
   self : Renderer,
   mesh : Mesh,
@@ -45,7 +45,7 @@ pub fn Renderer::upload_offsets(
 }
 
 ///|
-/// Adds a gradient line mesh's progress (docs/FORMATS.md, "Packed tile").
+/// Adds a gradient line mesh's progress (docs/dev/FORMATS.md, "Packed tile").
 pub fn Renderer::upload_progress(
   self : Renderer,
   mesh : Mesh,
@@ -111,7 +111,7 @@ pub fn Renderer::dash(
 }
 
 ///|
-/// Adds a line mesh's dash patterns by feature (docs/FORMATS.md, "Packed tile"):
+/// Adds a line mesh's dash patterns by feature (docs/dev/FORMATS.md, "Packed tile"):
 /// `patterns` as the atlas places them (None where it cannot), `marks` per vertex.
 pub fn Renderer::upload_feature_dashes(
   self : Renderer,

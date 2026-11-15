@@ -1,4 +1,4 @@
-// A @geom.Table in its byte form (docs/FORMATS.md, "Table") as a GeoJSON
+// A @geom.Table in its byte form (docs/dev/FORMATS.md, "Table") as a GeoJSON
 // FeatureCollection, or its row count and keys. Imports only values.mjs.
 
 import { readString, readValue } from "../../worker/js/values.mjs";
@@ -57,7 +57,7 @@ export function tableToGeoJSON(buffer) {
   return { type: "FeatureCollection", features };
 }
 
-// `fc`'s features with the ids of `ids`, a property value per feature (docs/FORMATS.md
+// `fc`'s features with the ids of `ids`, a property value per feature (docs/dev/FORMATS.md
 // "Property values"): each gets its `id` unless absent or null.
 export function withIds(fc, ids) {
   const v = new DataView(ids.buffer ?? ids, ids.byteOffset ?? 0, ids.byteLength);

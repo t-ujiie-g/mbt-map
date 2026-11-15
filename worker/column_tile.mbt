@@ -1,5 +1,5 @@
 ///|
-/// A GeoJSON source's tile in columns (docs/FORMATS.md, "Columnar tile");
+/// A GeoJSON source's tile in columns (docs/dev/FORMATS.md, "Columnar tile");
 /// `ids` are the features' GeoJSON ids (None without one).
 priv struct ColumnTile {
   types : FixedArray[Int32]

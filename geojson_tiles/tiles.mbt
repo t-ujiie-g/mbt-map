@@ -14,7 +14,7 @@ priv enum Index {
 let sources : Map[Int32, (@geom.Table, Index)] = Map([])
 
 ///|
-/// Reads the input (`promoteId`, GeoJSON) as source `source` with its options (docs/FORMATS.md
+/// Reads the input (`promoteId`, GeoJSON) as source `source` with its options (docs/dev/FORMATS.md
 /// "GeoJSON worker messages"; `properties` for clusters; the host's `trig`, `slow_number`). Returns
 /// the feature count, or minus the length of a UTF-8 error message at `output_addr`.
 pub fn load(
@@ -116,7 +116,7 @@ fn read_features(
 }
 
 ///|
-/// Applies the input, a diff (docs/FORMATS.md "GeoJSON diff"), to source `source`
+/// Applies the input, a diff (docs/dev/FORMATS.md "GeoJSON diff"), to source `source`
 /// as geojson-vt's `updateData` does. Returns 1 if it changed the source, 0 if
 /// not, or minus the length of an error message at `output_addr`.
 pub fn update(source : Int32, slow_number : (Int32, Int32) -> Double) -> Int32 {
@@ -189,7 +189,7 @@ pub fn cluster_expansion_zoom(source : Int32, id : Int32) -> Int32 {
 }
 
 ///|
-/// Writes `fs` at `output_addr` as docs/FORMATS.md's "Cluster features" and
+/// Writes `fs` at `output_addr` as docs/dev/FORMATS.md's "Cluster features" and
 /// returns their length; -1 if there are none (no such cluster), -2 if
 /// memory ran out.
 fn write_features(

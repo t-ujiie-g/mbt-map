@@ -67,7 +67,7 @@ pub fn load(
 }
 
 ///|
-/// `@geojson_tiles.update` (docs/FORMATS.md "GeoJSON diff").
+/// `@geojson_tiles.update` (docs/dev/FORMATS.md "GeoJSON diff").
 #export_name("update")
 pub fn update(source : Int32) -> Int32 {
   @geojson_tiles.update(source, @wasmio.input_number)

@@ -74,7 +74,7 @@ function clusterFunctions(clusterProperties) {
   };
 }
 
-// A columnar tile (docs/FORMATS.md) as {type, id, props, rings} per feature; null for none.
+// A columnar tile (docs/dev/FORMATS.md) as {type, id, props, rings} per feature; null for none.
 function readTile(bytes) {
   if (bytes.length === 0) return null;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

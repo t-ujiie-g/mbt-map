@@ -2,7 +2,7 @@
 // MapLibre contributors, and ISC License, Copyright (c) 2024, Mapbox. See NOTICE.
 
 ///|
-/// One tile's features in tile units as docs/FORMATS.md's "Columnar tile" (`rows`:
+/// One tile's features in tile units as docs/dev/FORMATS.md's "Columnar tile" (`rows`:
 /// table rows), wound as MVT wants; `clips`: with line metrics, each feature's
 /// start and end as shares of its line's length (NaN if none).
 pub struct TileData {

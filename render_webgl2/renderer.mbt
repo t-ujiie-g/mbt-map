@@ -120,7 +120,7 @@ pub fn PaintSlots::per_vertex(
 }
 
 ///|
-/// Uploads a layer's per-vertex paint (docs/FORMATS.md, "Vertex paint").
+/// Uploads a layer's per-vertex paint (docs/dev/FORMATS.md, "Vertex paint").
 pub fn Renderer::upload_paint(self : Renderer, data : JsBuffer) -> PaintBuffer {
   gl_upload_paint(self.gl, data)
 }

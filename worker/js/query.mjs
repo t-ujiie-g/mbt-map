@@ -1,4 +1,4 @@
-// Query results from the wasm (docs/FORMATS.md, "Query result") as GeoJSON
+// Query results from the wasm (docs/dev/FORMATS.md, "Query result") as GeoJSON
 // features. Geometry follows @mapbox/vector-tile 3.0.0's `toGeoJSON`
 // (BSD-3-Clause, Copyright (c) 2024, Mapbox; see NOTICE), as MapLibre returns it.
 import { readString, readValue } from "./values.mjs";

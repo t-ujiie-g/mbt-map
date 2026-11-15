@@ -4,7 +4,7 @@ let lepcc_kinds : FixedArray[@lepcc.BlobType] = [Xyz, Rgb, Intensity]
 
 ///|
 /// Decodes the input, an I3S point cloud's LEPCC blob of `kind` (0 xyz, 1 rgb, 2 intensity),
-/// into the output as docs/FORMATS.md "LEPCC output"; returns its length, -1 for blobs Esri's
+/// into the output as docs/dev/FORMATS.md "LEPCC output"; returns its length, -1 for blobs Esri's
 /// decoder refuses (or past `@lepcc.MAX_POINTS`), -2 without memory.
 #export_name("lepcc_decode")
 pub fn lepcc_decode(kind : Int32) -> Int32 {

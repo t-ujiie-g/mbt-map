@@ -43,7 +43,7 @@ function fakeProj({ unknown = [], reach = Infinity } = {}) {
   };
 }
 
-// Table bytes (docs/FORMATS.md "Table") of `rows`: a list of [x, y] points each, an empty one without geometry.
+// Table bytes (docs/dev/FORMATS.md "Table") of `rows`: a list of [x, y] points each, an empty one without geometry.
 function table(rows) {
   const f = rows.length;
   const filled = rows.filter((row) => row.length > 0);

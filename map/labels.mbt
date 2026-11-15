@@ -1,5 +1,5 @@
 ///|
-/// Columns of a label's floats in a symbol entry's `labels` (docs/FORMATS.md
+/// Columns of a label's floats in a symbol entry's `labels` (docs/dev/FORMATS.md
 /// "Symbol vertices"); mirrored in worker/js/symbols.mjs.
 const LABEL_X : Int32 = 0
 

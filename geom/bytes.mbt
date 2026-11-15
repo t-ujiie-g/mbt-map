@@ -26,7 +26,7 @@ fn kind_of_code(c : Int32) -> GeomKind? {
 }
 
 ///|
-/// The tag a property value is written with (docs/FORMATS.md, "Property values").
+/// The tag a property value is written with (docs/dev/FORMATS.md, "Property values").
 fn prop_tag(v : Prop?) -> Int32 {
   match v {
     None => @core.PROP_ABSENT
@@ -39,7 +39,7 @@ fn prop_tag(v : Prop?) -> Int32 {
 }
 
 ///|
-/// Writes a property value (docs/FORMATS.md, "Property values").
+/// Writes a property value (docs/dev/FORMATS.md, "Property values").
 pub fn write_prop(w : @core.ByteWriter, v : Prop?) -> Unit {
   w.u8(prop_tag(v))
   match v {
@@ -72,7 +72,7 @@ pub fn read_prop(r : @core.ByteReader) -> Prop? {
 }
 
 ///|
-/// Random access to table bytes (docs/FORMATS.md, "Table"), little-endian: a
+/// Random access to table bytes (docs/dev/FORMATS.md, "Table"), little-endian: a
 /// `BytesView`, or linear memory in the wasm-gc entries. `Table::read_from`
 /// checks every offset against the length before it reads.
 pub(open) trait TableSource {
@@ -238,7 +238,7 @@ fn[S : TableSink] write_text(out : S, at : Int32, s : String) -> Int32 {
 }
 
 ///|
-/// The table, without feature ids, as bytes (docs/FORMATS.md, "Table").
+/// The table, without feature ids, as bytes (docs/dev/FORMATS.md, "Table").
 pub fn Table::to_bytes(self : Table) -> Bytes {
   let out = Growing::{ buf: FixedArray::make(256, b'\x00'), }
   let n = self.write_to(out)

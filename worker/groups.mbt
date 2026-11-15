@@ -113,7 +113,7 @@ fn Groups::of(self : Groups, feature : FeatureRef) -> Int32 {
 }
 
 ///|
-/// Group `g`'s shared inputs (docs/FORMATS.md, "Packed tile"): properties by name (absent
+/// Group `g`'s shared inputs (docs/dev/FORMATS.md, "Packed tile"): properties by name (absent
 /// ones omitted, so `has` stays correct), the feature id under
 /// `@style.FEATURE_ID_KEY` and the geometry type under `@core.GEOMETRY_TYPE_KEY`.
 fn Groups::props(self : Groups, g : Int32) -> Bytes {

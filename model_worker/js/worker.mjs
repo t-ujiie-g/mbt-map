@@ -1,6 +1,6 @@
 // Glue around the wasm-gc build of `model_worker` (meshopt, Draco): glTF models and their images, 3D tiles,
 // I3S nodes, and LAS point clouds taken to WGS 84 through proj.wasm, for mbt-map/3d (`npm/src/model`,
-// `tiles`, `i3s`); messages are in docs/FORMATS.md ("Model worker messages").
+// `tiles`, `i3s`); messages are in docs/dev/FORMATS.md ("Model worker messages").
 
 import { transformPairs } from "../../data_worker/js/crs.mjs";
 import { draco, lepcc, meshopt } from "./decode.mjs";

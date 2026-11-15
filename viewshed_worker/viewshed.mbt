@@ -93,7 +93,7 @@ pub fn viewshed_window(
 ///|
 /// `@viewshed.viewshed` of the input's f64 elevations, the `cw` x `ch` cells from
 /// (`cx`, `cy`) (`cw` 0 for the whole grid): arguments and output as
-/// docs/FORMATS.md "Analysis worker messages" `viewshed` lists them.
+/// docs/dev/FORMATS.md "Analysis worker messages" `viewshed` lists them.
 #export_name("viewshed")
 pub fn viewshed(
   width : Int32,

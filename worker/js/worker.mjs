@@ -1,5 +1,5 @@
 // Glue around the wasm-gc build of `worker`. Messages and the packed tile are in
-// docs/FORMATS.md ("Display worker messages", "Packed tile").
+// docs/dev/FORMATS.md ("Display worker messages", "Packed tile").
 
 import { hostText } from "../../wasmio/js/host.mjs";
 import { fetchInit, readCapped } from "./body.mjs";

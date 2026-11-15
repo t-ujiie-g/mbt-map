@@ -1,4 +1,4 @@
-// Property values as the wasm writes them (docs/FORMATS.md, "Property values").
+// Property values as the wasm writes them (docs/dev/FORMATS.md, "Property values").
 
 // `@core.PROP_*`.
 const PROP_NULL = 0;

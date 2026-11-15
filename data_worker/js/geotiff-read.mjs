@@ -16,7 +16,7 @@ const ARRAYS = {
   "3:4": Float32Array, "3:8": Float64Array,
 };
 
-/** The images of a "GeoTIFF images" summary (docs/FORMATS.md). */
+/** The images of a "GeoTIFF images" summary (docs/dev/FORMATS.md). */
 function readSummary(buffer) {
   const v = new DataView(buffer);
   const bytes = new Uint8Array(buffer);

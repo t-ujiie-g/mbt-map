@@ -24,7 +24,7 @@ fn TileProcessor::track(
 
 ///|
 /// Writes the ranges of group `group` as those of packed entry `entry`
-/// (docs/FORMATS.md, "Feature ranges") and empties the group's list.
+/// (docs/dev/FORMATS.md, "Feature ranges") and empties the group's list.
 fn TileProcessor::flush_ranges(
   self : TileProcessor,
   index : Int32,
@@ -55,7 +55,7 @@ fn TileProcessor::flush_ranges(
 }
 
 ///|
-/// The feature ranges of the last tile processed (docs/FORMATS.md, "Feature
+/// The feature ranges of the last tile processed (docs/dev/FORMATS.md, "Feature
 /// ranges"): where each feature's indices lie in the entries of layers whose
 /// paint reads the feature state.
 pub fn TileProcessor::feature_ranges(self : TileProcessor) -> Bytes {
