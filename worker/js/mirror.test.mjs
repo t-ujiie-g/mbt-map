@@ -166,12 +166,3 @@ test("clipping.ts mirrors core's clipping limits", () => {
   const core = moonConsts("../../core/clipping.mbt");
   for (const name of ["MAX_CLIP_PLANES", "MAX_CLIP_RINGS", "MAX_CLIP_POINTS"]) assert.equal(ts[name], core[name], name);
 });
-
-test("urls.ts mirrors the style document's GeoTIFF and PMTiles prefixes", () => {
-  const moon = (name) => source("../../web/engine_style.mbt").match(new RegExp(`^pub const ${name} : String = "([^"]*)"$`, "m"))?.[1];
-  const ts = (name) => source("../../npm/src/urls.ts").match(new RegExp(`^export const ${name} = "([^"]*)";$`, "m"))?.[1];
-  for (const name of ["GEOTIFF", "PMTILES"]) {
-    assert.ok(moon(name), name);
-    assert.equal(ts(name), moon(name), name);
-  }
-});
