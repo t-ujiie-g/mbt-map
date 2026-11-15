@@ -7,7 +7,7 @@ mbt-map is a WebGIS library: a MoonBit engine compiled to wasm-gc and JS, a MapL
 | Read | For |
 | --- | --- |
 | `PROGRESS.md` | Where things stand (its top), decisions, measurements, open issues. Read it and VISION before starting a phase. |
-| `docs/dev/VISION.md` | The authoritative spec: goals, perf targets and budgets (§2), architecture (§3), design principles (§4), scope (§5), API (§6), work rules (§7), phase plan (§8). |
+| `docs/dev/VISION.md` | The authoritative spec: goals, perf targets and budgets (§2), architecture (§3), design principles (§4), what is deferred or out of scope (§5), API policy (§6), work rules (§7), the plan from here (§8). The history of Phases 0–20 is in the earlier repository `t-ujiie-g/mbmap`. |
 | `docs/dev/ARCHITECTURE.md` | Per-subsystem reference and its index (`-RENDERING`, `-MODULES`, `-3D`). Read the part you are about to change. |
 | `docs/dev/FORMATS.md` | Binary formats and worker messages; code cites its section names instead of restating layouts. |
 | `docs/dev/COMMANDS.md` | Every command and golden, with what it compares and its pass condition. |
@@ -108,7 +108,7 @@ Invariants that prevent expensive mistakes:
 - Every `pub fn` gets ≥1 direct test; every error path (`raise`, `None`) is covered. Tests run on all backends (CI runs wasm-gc and js; wasm and native are tested by the local loop only).
 - Prefer `assert_eq` (or `assert_true(x is Pattern(...))`) over snapshots for stable results; derive `Debug` + `debug_inspect` for structured output.
 - A test that only re-runs the type checker (`let _ = …`) duplicates `moon check`; delete it.
-- Fixtures from external sources carry their attribution (fixtures README and `NOTICE`).
+- Fixtures from external sources carry their attribution (fixtures README and `NOTICE-dev.md`; `NOTICE`, which ships, lists only third-party code that is distributed).
 
 ## 7. Refactoring checklist
 
@@ -181,7 +181,7 @@ Everything fetched at runtime is attacker-controllable. Decoders must fail safel
 
 ### 8.3 Web platform
 - No `innerHTML`/`outerHTML`/`insertAdjacentHTML` with data from tiles, styles or attributes. Use `textContent` and DOM APIs (labels, attribution strings in `<mbt-map>`).
-- Work under a strict CSP: no `eval`, no `new Function`, and workers loaded from same-origin URLs. The one documented exception: a worker in the library's own folder on another origin (its `dist/` on a CDN) starts through a same-origin `blob:` script that only imports it (`workerScriptUrl` in `npm/src/urls.ts`). Anything else, other folders of the same CDN origin included (CDNs serve every package from one origin), and `data:`/`blob:` URLs given as options, is refused, so markup (`<mbt-map worker-url>`) cannot start foreign code.
+- Work under a strict CSP: no `eval`, no `new Function`, and workers loaded from same-origin URLs. Documented exceptions, all in `workerScriptUrl` (`npm/src/urls.ts`): a worker URL the page gives (`workerUrl`, `<mbt-map worker-url>`) must be http(s) on the page's origin or inside the library's own folder (its `dist/` on a CDN; other folders of that origin are refused, since CDNs serve every package from one origin), never `data:` or `blob:`; the library's own default worker, whose URL comes from its code and the bundler and never from run-time input, may be on any http(s) origin (a bundler's asset host) or a `data:` URL a bundler inlined, and is then started through a same-origin `blob:` script (`worker-src blob:` under a CSP).
 - Fetches for tiles, styles and sprites send no credentials by default. URL templates may only substitute MapLibre's placeholders (`{z}/{x}/{y}`, `{prefix}`, `{ratio}`, `{quadkey}`, `{bbox-epsg-3857}`, `{bbox}`; `TILE_PLACEHOLDERS` in `npm/src/urls.ts`, `tile_url` in `map/dom.mbt`), with no open redirects or arbitrary schemes. Any request transform hook is the caller's responsibility and documented as such.
 - `postMessage` handlers check message shape and type and ignore unknown messages.
 - `<mbt-map>` attributes (`style-url`, `center`, …) are parsed strictly; invalid values are rejected, not coerced.

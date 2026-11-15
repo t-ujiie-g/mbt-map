@@ -210,6 +210,17 @@ Where things stand, decisions and open issues. The development history before th
 - CI：`pack-browsers`（`pack firefox …` / `pack webkit …`、小さいページとショーケース 3 つの 2 つずつ）を足した。必須の `moon` と `pack …` 4 つの名前は変えていない。
 - 未解決：`setViewshed`・`setClipping`・`triggerRepaint` のあとに `idle` が来ないのは MapLibre（描き終えるたびに `idle`）と違う。合わせるかは別に決める。Linux の WebKit で最後のフレームが出ない件が headless だけのことか（実際の WebKitGTK の利用者にも出るなら、`antialias: true` か最後にもう 1 フレーム描くかを測って決める。MapLibre も `antialias: false` が既定）。Linux の Firefox の WebGL2。
 
+## NOTICE と VISION の整理（2026-11-15、Mac）
+
+- NOTICE（74.8KB、1278 行）を組み直した：1「mbt-map に含まれる第三者のコード」（移植ごとに、元のプロジェクトと URL、版、著作権表示、ライセンス、由来するファイル）、2「ライセンスの本文」（MIT、ISC、BSD 2-Clause、BSD 3-Clause、Boost 1.0、EDL 1.0、Unlicense を 1 回ずつ。Apache-2.0 は LICENSE）。MIT 16 回・ISC 13 回の同じ本文の繰り返しをやめ、46.4KB になった。名前を挙げる条項など文言が違うもの（MapLibre と Mapbox の BSD 3-Clause、Apple・flatgeobuf・TinySDF の BSD 2-Clause、topojson の旧い ISC、fdlibm）は、その部品の下にそのまま残した。1 行目の製品名を `mbt-map` に直した。
+- 配布しないもの（テストデータ、フィクスチャ、bench の比べる相手）は `NOTICE-dev.md`（5.2KB、リポジトリだけ）に分けた。npm の tarball には `NOTICE` と `LICENSE` だけが入る（`npm/package.json` の `files` とビルドの写しは変えていない）。
+- 確かめ（リポジトリの外のスクリプト）：著作権表示は前 71 行、後 71 行（NOTICE 61、NOTICE-dev 10）で欠けなし。URL 70、名前と版の組 72 も欠けなし。ライセンスの本文は空白の違いを除いて同じものだけをまとめた。
+- ソースの先頭の表記と突き合わせて足したもの：earcut に `tess/earcut_holes.mbt`・`earcut_zorder.mbt`、flatqueue に `analysis/queue.mbt`、geotiff に `data_worker/js/geotiff-read.mjs`、style-spec に `moonbit/mbtmap/style/*.g.mbt`（`v8.json` の名前から生成）。
+- 未解決（ユーザーの判断）：
+  - mooncakes の `mbtmap` と `mbtmap_rabbita` のディレクトリに LICENSE と NOTICE がない（`moon.mod` の `license` だけ）。`moon publish` に入れるなら、それぞれに LICENSE と短い NOTICE（style-spec の BSD 3-Clause）を置く。
+  - 振る舞いを合わせているが NOTICE にないもの：OpenLayers（`npm/src/services/` の GML の属性の読みと要求の形）、terra-draw（`npm/src/draw/` の既定のしきい値）、gl-matrix（`core/matrix.mbt` などの行列の演算）。コードを写したものなら項目を足す。
+- VISION.md（44.8KB）を、いまも効いているものだけにした：ゴールと柱、性能目標とサイズ予算（`npm/scripts/size.mjs` に合わせた。メインは 168KB）、アーキテクチャの原則、設計原則、後回し・やらない、API 方針（MoonBit は npm の上の型付きの API と rabbita の部品）、作業ルール、これからの計画（0.1.0、単独の移植、Phase 21）。Phase 0〜20 の表、最初の指示（§9）、ほかのライブラリとの突き合わせ（§10）、パッケージの一覧、予算を上げた経緯は外した（mbmap にある）。節の番号（§1〜§8、§4 の 1〜10）は変えていないので、コードや文書の「VISION §n」はそのまま通る。
+- 追加（本線）：MoonBit の 2 モジュールに `LICENSE` を置き、`mbtmap` には生成したスタイルの関数の出どころ（style-spec、BSD-3）を書いた `NOTICE` を置いた（mooncakes に出るのはモジュールのディレクトリだけなので）。ふるまいを合わせて書いた部分にも念のため記載を足した：OpenLayers（GML・WMS・WMTS の読み、BSD-2）、terra-draw（作図のモードとしきい値、MIT）、gl-matrix（行列とベクトル、MIT）。
 ## バンドラでの動作（2026-11-15、Mac）
 
 - 調べたこと：公開する配置のままでは、既定の設定で動くのは Vite の dev サーバだけだった。
