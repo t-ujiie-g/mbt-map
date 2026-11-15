@@ -59,7 +59,7 @@ const PROJSTRING = separate(same(["projstring"]));
 // their tiles), the main entry for the element and the controllers (they take a `Map`), 3d-tiles.js's
 // engine for I3S.
 const ENTRIES = [
-  ["index.js", "npm/src/index.ts", { alias: { "moon-map-engine": path.join(ROOT, "_build/js/release/build/bundle/main/main.js") }, plugins: [separate(MAP_PARTS)] }],
+  ["index.js", "npm/src/index.ts", { alias: { "moon-map-engine": path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js") }, plugins: [separate(MAP_PARTS)] }],
   ...Object.keys(MAP_PARTS).filter((file) => file !== "./geotiff-source.js").map((file) => [file.slice(2), `npm/src/${file.slice(2, -3)}.ts`]),
   ["geotiff-source.js", "npm/src/geotiff-source.ts", { plugins: [separate({ "./data": "./data.js" })] }],
   ["ui.js", "npm/src/ui.ts"],
@@ -92,7 +92,7 @@ for (const [file, source, options] of ENTRIES) {
   await build({ ...common, ...options, entryPoints: [path.join(ROOT, source)], outfile: path.join(DIST, file) });
 }
 for (const [name, file] of Object.entries(WASM)) {
-  await copyFile(path.join(ROOT, `_build/wasm-gc/release/build/${name}/${name}.wasm`), path.join(DIST, file));
+  await copyFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`), path.join(DIST, file));
 }
 const tsc = path.join(PKG, "node_modules/typescript/bin/tsc");
 run(process.execPath, [tsc, "-p", path.join(PKG, "tsconfig.json")], PKG);

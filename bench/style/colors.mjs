@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 import { parseCssColor } from "../node_modules/@maplibre/maplibre-gl-style-spec/src/expression/types/parse_css_color.ts";
 import { ROOT } from "../lib/root.mjs";
 
-const { color_parse } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/bench/expr/expr.js")).href);
+const { color_parse } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bench/expr/expr.js")).href);
 
 const SOURCE = path.join(ROOT, "bench/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/types/parse_css_color.ts");
 const namedColors = () => [...readFileSync(SOURCE, "utf8").matchAll(/^\s+(\w+): \[\d+, \d+, \d+\],?$/gm)].map((m) => m[1]);

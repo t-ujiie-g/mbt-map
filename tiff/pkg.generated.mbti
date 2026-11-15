@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/tiff"
+package "t-ujiie-g/moonmap_engine/tiff"
 
 // Values
 pub const MAX_VALUES : Int32 = 16777216

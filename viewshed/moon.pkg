@@ -2,7 +2,7 @@
 // gdal_viewshed runs). Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap_engine/core",
   "moonbitlang/core/double",
   "moonbitlang/core/int",
 }

@@ -2,12 +2,12 @@
 // geojson-path-finder 2.1.0. Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
   "moonbitlang/core/double",
 }
 
 import {
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/geom",
   "moonbitlang/core/double",
 } for "test"

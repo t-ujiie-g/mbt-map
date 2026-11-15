@@ -2,8 +2,8 @@
 // as the engine does, for comparing with MapLibre's style-spec.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/style",
   "moonbitlang/core/double",
   "moonbitlang/core/json",
 }

@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "moonmap",
-      "bytes": 161831,
+      "bytes": 161843,
       "budget": 163000
     },
     {
@@ -81,7 +81,7 @@
     },
     {
       "name": "services worker (ArcGIS f=json and f=pbf; loaded by moon-map/services on the first such read)",
-      "bytes": 20295,
+      "bytes": 20305,
       "budget": 21000
     },
     {
@@ -91,7 +91,7 @@
     },
     {
       "name": "display worker",
-      "bytes": 85159,
+      "bytes": 85172,
       "budget": 100000
     },
     {
@@ -111,12 +111,12 @@
     },
     {
       "name": "GeoJSON worker",
-      "bytes": 36946,
+      "bytes": 36991,
       "budget": 37000
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 56527,
+      "bytes": 56522,
       "budget": 57000
     },
     {
@@ -131,42 +131,42 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 30314,
+      "bytes": 30307,
       "budget": 31000
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 41680,
+      "bytes": 41692,
       "budget": 50000
     },
     {
       "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
-      "bytes": 26801,
+      "bytes": 26864,
       "budget": 30000
     },
     {
       "name": "shapes (simplify, hulls, Delaunay, Voronoi, line slices; loaded by the analysis worker on first use)",
-      "bytes": 27964,
+      "bytes": 27948,
       "budget": 30000
     },
     {
       "name": "surfaces (grids, IDW, clusters, contours, density; loaded by the analysis worker on first use)",
-      "bytes": 29214,
+      "bytes": 29262,
       "budget": 30000
     },
     {
       "name": "viewshed (GDAL's; loaded by the analysis worker on first use)",
-      "bytes": 10727,
+      "bytes": 10744,
       "budget": 12000
     },
     {
       "name": "routing (geojson-path-finder; loaded by the analysis worker on first use)",
-      "bytes": 16038,
+      "bytes": 16041,
       "budget": 17000
     },
     {
       "name": "coordinate systems (loaded by the analysis and data workers on first use)",
-      "bytes": 21620,
+      "bytes": 21665,
       "budget": 25000
     },
     {
@@ -176,7 +176,7 @@
     },
     {
       "name": "geodesic worker",
-      "bytes": 12030,
+      "bytes": 12051,
       "budget": 15000
     },
     {
@@ -201,7 +201,7 @@
     },
     {
       "name": "3d worker",
-      "bytes": 44100,
+      "bytes": 44075,
       "budget": 50000
     },
     {
@@ -211,7 +211,7 @@
     },
     {
       "name": "data worker",
-      "bytes": 40640,
+      "bytes": 40646,
       "budget": 41000
     },
     {
@@ -241,12 +241,12 @@
     },
     {
       "name": "KML and GPX (loaded by the data worker on the first such read)",
-      "bytes": 26730,
+      "bytes": 26709,
       "budget": 27000
     },
     {
       "name": "GeoTIFF (loaded by the data worker on the first raster read)",
-      "bytes": 19806,
+      "bytes": 19801,
       "budget": 20000
     },
     {

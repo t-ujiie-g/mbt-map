@@ -11,7 +11,7 @@ import { median } from "../lib/rows.mjs";
 
 const POINTS = Number(arg("points", 1_000_000));
 const RUNS = Number(arg("runs", 7));
-const wasm = await readFile(path.join(ROOT, "_build/wasm-gc/release/build/proj_worker/proj_worker.wasm"));
+const wasm = await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/proj_worker/proj_worker.wasm"));
 const { instance } = await WebAssembly.instantiate(wasm, { Math });
 const p = instance.exports;
 

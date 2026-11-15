@@ -1,9 +1,9 @@
 // JS-facing exports of the main thread; the npm TypeScript facade wraps these.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/map",
-  "t-ujiie-g/moonmap/render_webgl2",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/map",
+  "t-ujiie-g/moonmap_engine/render_webgl2",
 }
 
 supported_targets = "js"

@@ -2,8 +2,8 @@
 // only): what a monolithic worker would weigh.
 
 import {
-  "t-ujiie-g/moonmap/worker",
-  "t-ujiie-g/moonmap/bench/split/analysis_entry",
+  "t-ujiie-g/moonmap_engine/worker",
+  "t-ujiie-g/moonmap_engine/bench/split/analysis_entry",
 }
 
 supported_targets = "+wasm-gc"

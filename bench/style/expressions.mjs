@@ -12,7 +12,7 @@ import * as legacy from "../../npm/src/legacy.ts";
 import { ROOT } from "../lib/root.mjs";
 import { CASES, CONVERTED_OTHERWISE, LEGACY_FILTERS, LEGACY_FUNCTIONS, MAPLIBRE_REJECTS } from "./expression-cases.mjs";
 
-const { expr_eval } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/bench/expr/expr.js")).href);
+const { expr_eval } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bench/expr/expr.js")).href);
 const ZOOMS = [0, 9.5, 14, 17.25, 22];
 
 function features() {

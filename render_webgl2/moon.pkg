@@ -1,6 +1,6 @@
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/globe",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/globe",
   "moonbitlang/core/cmp",
   "moonbitlang/core/math",
 }

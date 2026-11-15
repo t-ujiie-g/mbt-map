@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/robust"
+package "t-ujiie-g/moonmap_engine/robust"
 
 // Values
 pub fn orient2d(Double, Double, Double, Double, Double, Double) -> Double

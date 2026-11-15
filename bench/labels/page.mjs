@@ -1,6 +1,6 @@
 // moonmap's engine and MapLibre side by side with one style and camera; bench/labels/golden.mjs
 // reads the labels each placed through `window.__placed`. Needs `npm --prefix npm run build`.
-import * as moonmap from "/_build/js/release/build/bundle/main/main.js";
+import * as moonmap from "/_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js";
 import * as maplibregl from "/bench/node_modules/maplibre-gl/dist/maplibre-gl.mjs";
 
 const params = new URLSearchParams(location.search);
@@ -22,7 +22,7 @@ if (geojson.length) {
 }
 const canvas = document.getElementById("moonmap");
 const mb = moonmap.create_map(canvas, engineStyle, lng, lat, zoom, bearing, pitch, "/worker/js/worker.mjs",
-  "/_build/wasm-gc/release/build/worker/worker.wasm", 0, provider, "sans-serif", [0, 22, 0, 85, NaN, 0, 0, 0], false);
+  "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm", 0, provider, "sans-serif", [0, 22, 0, 85, NaN, 0, 0, 0], false);
 const ml = new maplibregl.Map({ container: "maplibre", style: JSON.parse(styleText), ...camera, maxPitch: 85, attributionControl: false, pixelRatio: 1, fadeDuration: 0, zoomLevelsToOverscale: undefined });
 // The same images in both, drawn from functions of the pixel: a dot, a framed box, a pin at
 // 2x, an SDF ring (alpha 192 on its edge); scenes also ask for "nope", which neither has.

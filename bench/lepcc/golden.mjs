@@ -12,7 +12,7 @@ import { arg } from "../lib/args.mjs";
 import { COMMIT, KINDS, buildUpstream, decodeUpstream, encodeIntensity, encodeRgb, encodeXyz } from "./upstream.mjs";
 
 const CASES = Number(arg("cases", 6));
-const MODEL_WASM = "_build/wasm-gc/release/build/model_worker/model_worker.wasm";
+const MODEL_WASM = "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/model_worker/model_worker.wasm";
 const MAX_POINTS = 0x400000;
 const EACH = [24, 3, 2];
 

@@ -17,7 +17,7 @@ import { eastNorthUp } from "../../npm/src/tiles/geo.ts";
 import { ROOT } from "../lib/root.mjs";
 
 setLoaderOptions({ worker: false, modules: { draco3d } });
-const MODEL_WASM = path.join(ROOT, "_build/wasm-gc/release/build/model_worker/model_worker.wasm");
+const MODEL_WASM = path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/model_worker/model_worker.wasm");
 const { instance } = await WebAssembly.instantiate(await readFile(MODEL_WASM), {});
 const decode = draco(instance.exports);
 

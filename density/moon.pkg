@@ -3,12 +3,12 @@
 // d3-array 3.2.5. Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap_engine/core",
   "moonbitlang/core/cmp",
   "moonbitlang/core/double",
 }
 
 import {
-  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap_engine/core",
   "moonbitlang/core/double",
 } for "test"

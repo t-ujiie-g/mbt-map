@@ -107,10 +107,10 @@ const dpr = 2;
 // Shipped sizes: moonmap's js bundle minified as a bundler would, its worker
 // glue and wasm; MapLibre's dist files.
 const gz = async (file) => gzipSync(await readFile(path.join(ROOT, file)), { level: 9 }).length;
-await build({ entryPoints: [path.join(ROOT, "_build/js/release/build/bundle/main/main.js")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/moon-map-main.min.js"), logLevel: "warning" });
+await build({ entryPoints: [path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/moon-map-main.min.js"), logLevel: "warning" });
 await build({ entryPoints: [path.join(ROOT, "worker/js/worker.mjs")], bundle: true, minify: true, format: "esm", outfile: path.join(ROOT, "bench/dist/moon-map-worker.min.js"), logLevel: "warning" });
 const sizes = {
-  moonmap: { main: await gz("bench/dist/moon-map-main.min.js"), worker: await gz("bench/dist/moon-map-worker.min.js") + await gz("_build/wasm-gc/release/build/worker/worker.wasm") },
+  moonmap: { main: await gz("bench/dist/moon-map-main.min.js"), worker: await gz("bench/dist/moon-map-worker.min.js") + await gz("_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm") },
   maplibre: { main: await gz("bench/node_modules/maplibre-gl/dist/maplibre-gl.mjs"), worker: await gz("bench/node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs") },
 };
 

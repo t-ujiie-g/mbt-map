@@ -2,10 +2,10 @@
 // RelateOp as JSTS 2.12.1 ships it. Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
 }
 
 import {
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/geom",
 } for "test"

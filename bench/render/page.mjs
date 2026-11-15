@@ -27,7 +27,7 @@ async function createMoonmap() {
   canvas.id = "map";
   document.body.append(canvas);
   const map = moonmap.create_map(canvas, styleText, START.lng, START.lat, START.zoom, 0, pitch,
-    "/worker/js/worker.mjs", "/_build/wasm-gc/release/build/worker/worker.wasm", 0, null, "sans-serif",
+    "/worker/js/worker.mjs", "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm", 0, null, "sans-serif",
     [0, 22, 0, 85, NaN, 0, 0, 0], false);
   let idle = null;
   moonmap.map_on_idle(map, () => idle?.());

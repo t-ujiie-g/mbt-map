@@ -9,7 +9,7 @@ import { hostNumber, hostText, writeInput } from "../../wasmio/js/host.mjs";
 import { ROOT } from "./root.mjs";
 
 const IMPORTS = { relate: () => ({}), shapes: () => ({ Math }), surface: () => ({ Math, host: hostText() }), viewshed: () => ({ Math }), route: () => ({ Math }) };
-const wasmPath = (name) => path.join(ROOT, `_build/wasm-gc/release/build/${name}/${name}.wasm`);
+const wasmPath = (name) => path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`);
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 

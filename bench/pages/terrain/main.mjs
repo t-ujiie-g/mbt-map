@@ -1,7 +1,7 @@
 // `npm --prefix bench run example`, then /bench/pages/terrain/: Mt Fuji in 3D
 // with its hillshade, from the z12 DEM fixtures or GSI's live DEM tiles
 // (z1-14) with `?remote=1`. `?zoom=`, `?bearing=` and `?pitch=` set the camera.
-import * as moonmap from "/_build/js/release/build/bundle/main/main.js";
+import * as moonmap from "/_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js";
 
 const GSI_DEM = "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png";
 
@@ -15,7 +15,7 @@ const map = moonmap.create_map(
   138.7274, 35.3606, Number(params.get("zoom") ?? 11.3),
   Number(params.get("bearing") ?? -20), Number(params.get("pitch") ?? 60),
   "/worker/js/worker.mjs",
-  "/_build/wasm-gc/release/build/worker/worker.wasm",
+  "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm",
   0,
   null,
   "sans-serif",

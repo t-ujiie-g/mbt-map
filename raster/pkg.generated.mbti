@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/raster"
+package "t-ujiie-g/moonmap_engine/raster"
 
 // Values
 pub fn dem_edges(FixedArray[Double], Int32) -> FixedArray[Double]

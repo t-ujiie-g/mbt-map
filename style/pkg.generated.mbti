@@ -1,10 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/style"
+package "t-ujiie-g/moonmap_engine/style"
 
 import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
-  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap_engine/core",
 }
 
 // Values
