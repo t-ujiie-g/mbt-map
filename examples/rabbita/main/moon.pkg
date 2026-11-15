@@ -1,6 +1,7 @@
 import {
   "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/cmd",
   "t-ujiie-g/mbtmap",
   "t-ujiie-g/mbtmap/expr",
   "t-ujiie-g/mbtmap/style",

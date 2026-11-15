@@ -200,4 +200,32 @@ fn main {
 }
 ```
 
-[`examples/rabbita/`](../examples/rabbita/) is a complete app: buttons that fly, the camera shown from `on_moveend`, the station clicked found by `query_features`, and a paint change through `with_map`.
+### The example app
+
+[`examples/rabbita/`](../examples/rabbita/) is a complete WebGIS app in MoonBit: a rabbita sidebar beside the map, buttons that fly to Beijing, Shanghai, Shenzhen, Hong Kong, Chengdu, Hangzhou, Tokyo and Osaka, a base map switch between OpenFreeMap's Liberty (OpenStreetMap vector tiles of the world) and GSI's pale map (raster tiles of Japan), labels in Chinese, Japanese, English or each place's own name, 3D buildings, the camera from `on_moveend` and the feature clicked from `query_features`. Its styles are built in MoonBit: GSI's and the cities' with the typed functions, Liberty's from the style document it fetches, edited as `Json`.
+
+Switching the labels' language finds the symbol layers that draw names in the style the map draws and sets their `text-field`:
+
+```moonbit
+fn Lang::text_field(self : Lang) -> @expr.Expr {
+  match self.keys() {   // ["name:ja", "name"], ["name:en", "name_en", "name"], …
+    [key] => @expr.get(key)
+    keys => @expr.coalesce(keys.map(@expr.get))
+  }
+}
+
+// in update:
+SetLabels(labels) =>
+  (
+    { ..model, labels, },
+    @mbtmap_rabbita.with_map(map_id, map => {
+      guard map.style() is Some(style) else { @rabbita.none }
+      for id in name_layers(style) {
+        map.set_layout(id, "text-field", Some(labels.text_field()))
+      }
+      @rabbita.none
+    }),
+  )
+```
+
+`npm --prefix bench run examples` builds it (`moon build --target js`, then esbuild) and serves it at `/examples/rabbita/`.
