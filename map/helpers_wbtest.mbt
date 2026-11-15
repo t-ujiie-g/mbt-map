@@ -24,6 +24,7 @@ fn placement_stub() -> @render_webgl2.Placement {
 fn label_set(labels : @render_webgl2.JsBuffer, count : Int32) -> LabelSet {
   {
     labels,
+    keys: [],
     count,
     allow_overlap: false,
     cooperative: false,

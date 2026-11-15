@@ -11,9 +11,22 @@ pub struct Atlas {
   height : Int32
   // private fields
 }
+pub fn Atlas::bitmap_at(Self, Int32) -> (Int32, Int32)?
 pub fn Atlas::new(Int32, Int32) -> Self
 pub fn Atlas::place(Self, Int32, Int32, Int32) -> (Int32, Int32)?
 pub fn Atlas::rect(Self, Int32) -> (Int32, Int32, Int32, Int32)?
+pub fn Atlas::repack(Array[(Int32, Int32, Int32)], Int32, Int32) -> Self
+
+pub struct GlyphStore[B] {
+  // private fields
+}
+pub fn[B] GlyphStore::add(Self[B], Int32, B) -> Unit
+pub fn[B] GlyphStore::forget(Self[B], Int32) -> Int32
+pub fn[B] GlyphStore::forgotten(Self[B], Int32) -> Unit
+pub fn[B] GlyphStore::get(Self[B], Int32) -> B?
+pub fn[B] GlyphStore::keep(Self[B], Array[Int32]) -> Array[(Int32, B)]
+pub fn[B] GlyphStore::new() -> Self[B]
+pub fn[B] GlyphStore::sizes(Self[B]) -> (Int32, Int32)
 
 pub struct Grid {
   // private fields

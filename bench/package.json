@@ -85,6 +85,7 @@
     "style:public": "npm --prefix ../npm run build && node style/public.mjs",
     "style:compat": "npm --prefix ../npm run build && node style/compat.mjs",
     "labels:golden": "npm --prefix ../npm run build && node labels/golden.mjs",
+    "labels:atlas": "npm --prefix ../npm run build && node labels/atlas.mjs",
     "expression:golden": "cd .. && moon build bench/expr --release --target js && cd bench && node style/expressions.mjs",
     "color:golden": "cd .. && moon build bench/expr --release --target js && cd bench && node lib/run-bundled.mjs bench/style/colors.mjs",
     "draw:golden": "npm --prefix ../npm run build && node draw/golden.mjs",

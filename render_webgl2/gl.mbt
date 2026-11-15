@@ -80,6 +80,7 @@ extern "js" fn gl_release(gl : Gl, mesh : Mesh) -> Unit =
   #|  if (m.shift) c.gl.deleteBuffer(m.shift);
   #|  if (m.glyph) c.gl.deleteBuffer(m.glyph);
   #|  if (m.colored) c.gl.deleteBuffer(m.colored);
+  #|  if (m.uv) c.gl.deleteBuffer(m.uv);
   #|}
 
 ///|
