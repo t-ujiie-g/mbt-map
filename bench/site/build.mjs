@@ -55,12 +55,13 @@ function page({ title, root, main, description = "" }) {
 <link rel="icon" href="${root}icon.svg">
 <link rel="stylesheet" href="${root}site.css">
 <script src="${root}theme.js"></script>
+<script src="${root}analytics.js"></script>
 <header class="top">
   <a class="brand" href="${root}">mbt-map</a>
   <nav><a href="${root}docs/">Docs</a><a href="${root}examples/">Examples</a><a href="${REPOSITORY}">GitHub</a><button class="theme" type="button" aria-label="Switch the color theme">☾</button></nav>
 </header>
 ${main}
-<footer class="foot">Apache License 2.0 · <a href="${REPOSITORY}">${REPOSITORY.replace("https://", "")}</a></footer>
+<footer class="foot">Apache License 2.0 · <a href="${REPOSITORY}">${REPOSITORY.replace("https://", "")}</a> · This site uses Google Analytics to count visits.</footer>
 </html>
 `;
 }
@@ -98,7 +99,9 @@ async function copyExample(src, dest) {
     if (entry.isDirectory()) await cp(from, to, { recursive: true });
     else if (entry.name.endsWith(".html")) {
       const html = await readFile(from, "utf8");
-      await writeFile(to, html.replaceAll("./node_modules/mbt-map/dist/", "../../lib/"));
+      // The apps are pages of the site too: they get its analytics tag (the samples run inside the viewers do not).
+      const tagged = html.replace(/<meta charset="utf-8">\n/, '<meta charset="utf-8">\n<script src="../../analytics.js"></script>\n');
+      await writeFile(to, tagged.replaceAll("./node_modules/mbt-map/dist/", "../../lib/"));
     } else await cp(from, to);
   }
 }

@@ -282,3 +282,8 @@ Where things stand, decisions and open issues. The development history before th
 - **型定義**：tsc は内部のモジュールごとに `.d.ts` を書くので、tarball に 104 個入っていた。ビルドの最後に、`package.json` の `exports` の `types` から相対 import をたどって届くものだけを残す（`npm/scripts/declarations.mjs`、64 個）。たどった先がなければビルドが失敗する。11 の入口すべてを `moduleResolution` が `NodeNext` と `Bundler` の tsc（`skipLibCheck: false`）で読めることを確かめた。
 - **MoonBit の `pub`**：パッケージの外から使われていない上限の定数や補助の関数を非公開にした（`clusters`、`core`、`delaunay`、`density`、`draco`、`globe`、`hull`、`isolines`、`relate_worker`、`render_webgl2`、`route`、`simplify`、`tiff`、`viewshed`、`xml` の計 38 個）。それを名前で使っていたブラックボックステストは、中身を変えずにホワイトボックスのファイルへ移した。単独で出すかもしれない移植（`clipper`、`relate`、`proj`、`geodesic`、`mvt`、`pbf`、`tiler`、`tess`）、JS のテストが写しを確かめる定数（`worker` の `ENTRY_*`、`core` の `MAX_ZOOM`・`MAX_PITCH`）、トレイトの実装はそのまま。**残したもの**：ブラックボックステストがファイル内の補助関数と一緒に使っている上限など（`formats`、`style`、`tiff`、`isolines`、`kml`、`analysis` など約 35 個）は、テストのファイルごとホワイトボックスにするか補助関数を写すことになるので公開のままにした。
 - **文書**：`examples/README.md` にサンプル集（`examples/samples/`）、docs/dev/COMMANDS.md に `las:synthetic`・`tiles:synthetic`・`i3s:synthetic`・`i3s:pcsl-synthetic`、`bench/README.md` に結果の置き方。
+
+## サイトの計測タグ（2026-11-15）
+
+- ユーザーの依頼で、GitHub Pages に Google タグ マネージャー（`GTM-MWGLDWNP`）を入れた。`site/analytics.js` を、サイトの各ページ（トップ、文書、例の目次、サンプルの解説ページ、4 つのアプリ）が読む。解説ページに埋め込んで動かすサンプル本体には入れない（閲覧の二重計上と、見せるコードへの混入を避ける）。
+- 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに「Google Analytics で訪問を数えている」と書いた。
