@@ -1,6 +1,8 @@
 import {
   "moonbitlang/core/builtin",
   "moonbitlang/core/debug",
+  "t-ujiie-g/moonmap/expr",
+  "t-ujiie-g/moonmap/style",
 }
 
 supported_targets = "js"

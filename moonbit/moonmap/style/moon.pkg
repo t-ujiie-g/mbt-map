@@ -1,0 +1,5 @@
+import {
+  "t-ujiie-g/moonmap/expr",
+}
+
+supported_targets = "js"
