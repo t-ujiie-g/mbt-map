@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An attribute table with field calculation</title>
+<meta name="description" content="The world's countries as a sortable, filterable table linked to the map: rows and countries select each other, style expressions compute new columns, and any numeric column colors the map by class.">
+<link rel="stylesheet" href="../sample.css">
+<style>
+  :root { --line: #e1e5eb; --muted: #5b6676; --accent: #2f5bd0; --pick: #e8590c; --pick-tint: #fff0e6; }
+  body { display: flex; flex-direction: column; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  #stage { position: relative; flex: 1 1 0; min-height: 150px; }
+  #legend { position: absolute; left: 10px; bottom: 10px; z-index: 1; padding: 8px 10px; background: rgba(255, 255, 255, 0.94); border: 1px solid var(--line); border-radius: 10px; font-size: 12px; line-height: 1.3; }
+  #legend:empty { display: none; }
+  #legend b { display: block; margin-bottom: 4px; }
+  #legend div { display: grid; grid-template-columns: 14px auto; gap: 3px 7px; align-items: center; }
+  #legend i { width: 14px; height: 11px; border: 1px solid #0002; }
+
+  #tools { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; border-block: 1px solid var(--line); background: #f7f8fa; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .bar label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .bar input, .bar select { padding: 3px 8px; border: 1px solid #d5dae2; border-radius: 7px; background: #fff; color: #18202d; }
+  .bar button { padding: 3px 10px; border: 1px solid #d5dae2; border-radius: 7px; background: #fff; cursor: pointer; }
+  .bar button:hover { border-color: var(--accent); }
+  .bar button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #count { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .push { margin-left: auto; }
+  #calc summary { cursor: pointer; font-weight: 600; }
+  #calc .bar { margin-top: 6px; }
+  #field-name { width: 11em; }
+  .grow, .grow input { flex: 1 1 16em; min-width: 0; }
+  #field-expression { font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #field-status { color: var(--muted); }
+  #field-status.error { color: #c92a2a; }
+
+  #rows { position: relative; flex: 0 0 38%; overflow: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { position: sticky; top: 0; z-index: 1; padding: 0; background: #fff; box-shadow: inset 0 -1px var(--line); text-align: left; white-space: nowrap; }
+  th button { padding: 6px 4px; border: 0; background: none; cursor: pointer; }
+  th .sort { width: 100%; padding: 6px 12px; font-weight: 600; text-align: inherit; }
+  th.computed .sort { width: auto; padding-right: 2px; color: var(--accent); }
+  th .tool { color: var(--muted); }
+  th .tool:hover { color: var(--pick); }
+  th input { width: 9em; margin: 3px 8px; padding: 2px 6px; border: 1px solid var(--accent); border-radius: 6px; }
+  td { padding: 4px 12px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
+  .number { text-align: right; }
+  tbody tr { cursor: pointer; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  tbody tr:hover { background: #eef3fd; }
+  tbody tr[aria-selected="true"] { background: var(--pick-tint); box-shadow: inset 3px 0 var(--pick); }
+  #empty { padding: 16px 12px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    #rows { flex-basis: 44%; }
+    #tools > .bar > label:first-child { flex: 1 1 100%; }
+    #filter { flex: 1; min-width: 0; }
+    .push { margin-left: 0; }
+    #field-name { width: 8em; }
+  }
+</style>
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="stage">
+  <div id="map"></div>
+  <div id="legend"></div>
+</div>
+<section id="tools">
+  <div class="bar">
+    <label>Filter <input id="filter" type="search" placeholder="land, asia, high income…"></label>
+    <span id="count" role="status"></span>
+    <button id="clear" type="button">Clear selection</button>
+    <label class="push">Color by <select id="color"></select></label>
+    <label>Classes
+      <select id="method">
+        <option value="quantile">quantiles</option>
+        <option value="jenks">natural breaks (jenks)</option>
+        <option value="equalInterval">equal intervals</option>
+      </select>
+    </label>
+    <button id="globe" type="button" aria-pressed="false">Globe</button>
+  </div>
+  <details id="calc">
+    <summary>Field calculator</summary>
+    <form id="field" class="bar">
+      <label>Column <input id="field-name" required placeholder="new_column" autocomplete="off"></label>
+      <label class="grow">= <input id="field-expression" required aria-label="Expression (style expression as JSON)" placeholder='["/", ["get", "gdp"], ["get", "population"]]' autocomplete="off" spellcheck="false"></label>
+      <button>Add / update column</button>
+    </form>
+    <div class="bar">
+      <span id="presets" class="bar">Try:</span>
+      <span id="field-status" role="status"></span>
+    </div>
+  </details>
+</section>
+<div id="rows">
+  <table>
+    <thead><tr id="head"></tr></thead>
+    <tbody id="body"></tbody>
+  </table>
+  <p id="empty" hidden>No country matches the filter.</p>
+</div>
+<script type="module" src="./main.js"></script>
+</html>
