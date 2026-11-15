@@ -21,7 +21,7 @@ Run from `npm/`:
 
 - `npm ci && npm run build` writes `dist/` (index.js + .d.ts, worker.js, mbt-map.wasm).
 - `npm run size` checks the gzip budgets of VISION §2 (rows in `npm/scripts/size.mjs`).
-- `npm test` runs the unit tests (`npm/test/*.test.ts`, `element/*.test.ts` and the `*.test.mjs` of `worker/js`, `geojson_worker/js`, `wasmio/js`, `data_worker/js`) with Node type stripping, so modules under test must be import-free or import other files with their extension (`./images.ts`, `./style.ts`, `./urls.ts`, `./camera.ts`).
+- `npm test` runs the unit tests (`npm/test/*.test.ts`, `element/*.test.ts` and the `*.test.mjs` of `worker/js`, `geojson_worker/js`, `wasmio/js`, `data_worker/js`) with Node type stripping, so modules under test must be import-free or import other files with their extension (`./images.ts`, `./style.ts`, `./urls.ts`, `./camera.ts`). `worker/js/wasm.test.mjs` instantiates `dist/mbt-map.wasm` (the display worker's input bounds), so build first.
 - `worker/js/mirror.test.mjs` checks the constants JS mirrors from MoonBit (`KIND_*`, `LAYER_ENTRY_WORDS`, `ENTRY_*`, label columns).
 
 ## Benchmarks and goldens
@@ -128,7 +128,7 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run clipper:golden`: clipper vs Clipper2 (clipper2-wasm 0.4.0): boolean ops, trees, offsets (must stay all identical).
 - `npm run buffer:check`: geodesic buffers measured on WGS84 with GeographicLib.
 - `npm run geometry:node`: dissolve / buffer / clip on GSI buildings vs Turf.js.
-- `npm run proj:golden`: proj vs proj4js 2.22.0: every EPSG code it knows and PROJ strings for each projection, both ways (must stay within 1 mm / 1e-8°).
+- `npm run proj:golden`: proj vs proj4js 2.22.0: every EPSG code it knows and PROJ strings for each projection, both ways (must stay within 1 mm / 1e-8°); a row that compares no point fails). `node proj/unit-cases.mjs` regenerates `proj/projections_test.mbt` (one point per PROJ string, for `moon test`).
 - `npm run proj:node`: proj.wasm vs proj4js speed, 1M points per CRS.
 - `npm run geodesic:golden`: geodesic.wasm vs geographiclib-geodesic 2.2.0: inverse, direct, polygons, densified paths (must stay all identical).
 

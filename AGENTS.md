@@ -7,7 +7,7 @@ mbt-map is a WebGIS library: a MoonBit engine compiled to wasm-gc and JS, a MapL
 | Read | For |
 | --- | --- |
 | `PROGRESS.md` | Where things stand (its top), decisions, measurements, open issues. Read it and VISION before starting a phase. |
-| `docs/dev/VISION.md` | The authoritative spec: goals, perf targets and budgets (§2), architecture (§3), design principles (§4), scope (§5), API (§6), work rules (§7), phase plan (§8). |
+| `docs/dev/VISION.md` | The authoritative spec: goals, perf targets and budgets (§2), architecture (§3), design principles (§4), what is deferred or out of scope (§5), API policy (§6), work rules (§7), the plan from here (§8). The history of Phases 0–20 is in the earlier repository `t-ujiie-g/mbmap`. |
 | `docs/dev/ARCHITECTURE.md` | Per-subsystem reference and its index (`-RENDERING`, `-MODULES`, `-3D`). Read the part you are about to change. |
 | `docs/dev/FORMATS.md` | Binary formats and worker messages; code cites its section names instead of restating layouts. |
 | `docs/dev/COMMANDS.md` | Every command and golden, with what it compares and its pass condition. |
@@ -108,7 +108,7 @@ Invariants that prevent expensive mistakes:
 - Every `pub fn` gets ≥1 direct test; every error path (`raise`, `None`) is covered. Tests run on all backends (CI runs wasm-gc and js; wasm and native are tested by the local loop only).
 - Prefer `assert_eq` (or `assert_true(x is Pattern(...))`) over snapshots for stable results; derive `Debug` + `debug_inspect` for structured output.
 - A test that only re-runs the type checker (`let _ = …`) duplicates `moon check`; delete it.
-- Fixtures from external sources carry their attribution (fixtures README and `NOTICE`).
+- Fixtures from external sources carry their attribution (fixtures README and `NOTICE-dev.md`; `NOTICE`, which ships, lists only third-party code that is distributed).
 
 ## 7. Refactoring checklist
 

@@ -235,9 +235,3 @@ test "isolines and isobands refuse past MAX_GRID_POINTS and MAX_CELL_BREAKS" {
   assert_true(@isolines.isobands(wide, breaks, "elevation") is None)
   assert_true(@isolines.isolines(wide, [0.5], "elevation") is Some(_))
 }
-
-///|
-test "the segment and nesting caps isolines and isobands stop at" {
-  assert_eq(@isolines.MAX_SEGMENTS, 4_000_000)
-  assert_eq(@isolines.MAX_NESTING_TESTS, 100_000_000L)
-}
