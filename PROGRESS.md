@@ -121,3 +121,11 @@ Where things stand, decisions and open issues. The development history before th
 - `?local=1`：Liberty の文書は `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が `style/public-styles.mjs` の固定した版を sha256 で確かめて取る。取れなければ警告して地理院で始まる）、タイルは `bench/fixtures/ofm-planet`（東京駅の周りの z14 だけ）と `gsi-std`、スプライトは `bench/fixtures/sprites/ofm`。そこで東京で始まる。CI はタイルのフィクスチャを持たないが、確かめはスタイルと都市の層だけで足りる（タイルのフィクスチャを外しても通ることを確かめた）。
 - pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
 - 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。
+
+## 公開の流れ（2026-11-15、Mac）
+
+- 判断（ユーザー）：タグを打ったら各所に公開されるように。少なくとも npm は自動で、pptx-svg の流れ（信頼された公開と段階公開、2FA で承認）を参考に。
+- `.github/workflows/release.yml`（`v*` のタグ）：`verify`（タグ・版・CHANGELOG のそろい、MoonBit のテスト、npm のビルド・テスト・大きさ）→ `npm`（`npm stage publish`、OIDC、npm 11.15 以上。その版がもうあれば飛ばす）、`mooncakes`（secret `MOONCAKES_TOKEN` があれば `mbtmap`、`mbtmap_rabbita` の順。索引に載るのを待って 5 回まで）、`github-release`（`CHANGELOG.md` の節を本文に）。Pages は `pages.yml` が同じタグで。
+- 版：npm と MoonBit の 2 モジュールは同じ版（0.1.0）。`bench/lib/release.mjs` が版と CHANGELOG のそろいを見る（`release.test.mjs` が今の版でも確かめる）。npm の `package.json` は `private` を外し、説明、キーワード、ホームページ（Pages）、`publishConfig.access: public`。`npm pack` は 167 ファイル、0.91MB（展開 2.51MB）。`moon publish --dry-run` は通る。
+- npm の信頼された公開はパッケージが npm にないと設定できないので、0.1.0 は手元から一度出し、その後に信頼された公開（段階公開だけ）を設定する。手順は docs/dev/RELEASING.md。
+- Pages を手動で一度公開した（https://t-ujiie-g.github.io/mbt-map/ ）。

@@ -138,6 +138,7 @@ How the user works with agents (standing instructions; they hold in every sessio
 - Each step ends the same way: validation (below), commit, push, a PR, CI green, then a short Japanese report of what changed, measured results and open questions, and stop. The user merges and answers 「マージしました」 (often with 「続けて下さい」); never start the next step before that. When several PRs are ready, report and get them merged one at a time, merging `main` into the next before reporting it.
 - Phase starts, budget changes and design changes are asked with `AskUserQuestion`, with a recommended option first.
 - Use parallel agents wherever the work splits (see "Parallel work" below): the user prefers starting independent lines at once over proposing them and waiting.
+- Releases: one version for the npm package and the MoonBit API modules; a `v*` tag publishes it (`.github/workflows/release.yml`: npm staged through trusted publishing and approved with 2FA, mooncakes with the `MOONCAKES_TOKEN` secret, a GitHub release from `CHANGELOG.md`; `pages.yml` the site). docs/dev/RELEASING.md has the steps; the user tags and approves.
 - Never force-push or amend a pushed commit; to bring a branch up to date, merge `origin/main` into it.
 
 - Never commit to `main` directly: `git switch -c <kind>/<short-description>` (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `phaseN/`), then `gh pr create`.

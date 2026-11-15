@@ -1,0 +1,146 @@
+name: release
+
+# A v* tag publishes its version: the npm package (staged through trusted publishing, approved by a maintainer
+# with 2FA), the MoonBit modules on mooncakes, and a GitHub release with the CHANGELOG's notes. Pages is
+# published by pages.yml on the same tag. docs/dev/RELEASING.md has the steps around it.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            npm/package-lock.json
+            bench/package-lock.json
+            examples/react/package-lock.json
+      - name: Toolchain and dependencies
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: The tag agrees with the versions and the changelog
+        working-directory: bench
+        run: node lib/release.mjs "$GITHUB_REF_NAME"
+      - name: MoonBit tests (shipped backends)
+        run: moon test --target wasm-gc && moon test --target js
+      - name: Build and test the npm package
+        working-directory: npm
+        run: npm run build && npm test && npm run size
+
+  npm:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: |
+            npm/package-lock.json
+            bench/package-lock.json
+            examples/react/package-lock.json
+      # Trusted publishing (OIDC, no token) with staged publishing needs npm CLI >= 11.15.0; Node 22 has npm 10.
+      - name: Update npm
+        run: npm install -g npm@^11.15.0
+      - name: Toolchain and dependencies
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Build
+        working-directory: npm
+        run: npm run build
+      # The first version is published by hand (trusted publishing needs the package to exist); skip it here.
+      - name: Stage the publish on npm
+        working-directory: npm
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if npm view "mbt-map@$version" version >/dev/null 2>&1; then
+            echo "mbt-map@$version is already on npm" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npm stage publish
+          {
+            echo "### mbt-map@$version is staged on npm"
+            echo "Approve it with 2FA to publish: npmjs.com → mbt-map → **Staged Packages** → Approve, or \`npm stage approve <stage-id>\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  mooncakes:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.MOONCAKES_TOKEN != ''
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        if: env.MOONCAKES_TOKEN != ''
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Credentials
+        if: env.MOONCAKES_TOKEN != ''
+        run: |
+          umask 077
+          mkdir -p "$HOME/.moon"
+          node -e 'process.stdout.write(JSON.stringify({ token: process.env.MOONCAKES_TOKEN, username: "t-ujiie-g", registry_api: "https://mooncakes.io/" }))' > "$HOME/.moon/credentials.json"
+      - name: Publish t-ujiie-g/mbtmap
+        if: env.MOONCAKES_TOKEN != ''
+        working-directory: moonbit/mbtmap
+        run: moon publish
+      # mbtmap_rabbita depends on the version just published; the registry's index may take a while to show it.
+      - name: Publish t-ujiie-g/mbtmap_rabbita
+        if: env.MOONCAKES_TOKEN != ''
+        working-directory: moonbit/mbtmap_rabbita
+        run: |
+          for attempt in 1 2 3 4 5; do
+            moon update && moon publish && exit 0
+            sleep 60
+          done
+          exit 1
+      - name: No token
+        if: env.MOONCAKES_TOKEN == ''
+        run: echo "MOONCAKES_TOKEN is not set; publish the MoonBit modules by hand (docs/dev/RELEASING.md)." >> "$GITHUB_STEP_SUMMARY"
+
+  github-release:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Release notes from CHANGELOG.md
+        run: node bench/lib/release.mjs "$GITHUB_REF_NAME" --notes > "$RUNNER_TEMP/notes.md"
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"
