@@ -1,0 +1,106 @@
+name: release
+
+# A v* tag publishes its version: the npm package (staged through trusted publishing, approved by a maintainer
+# with 2FA) and a GitHub release with the CHANGELOG's notes; pages.yml publishes the site on the same tag.
+# The MoonBit modules are published by hand (no mooncakes token in CI); docs/dev/RELEASING.md has the steps.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            npm/package-lock.json
+            bench/package-lock.json
+            examples/react/package-lock.json
+      - name: Toolchain and dependencies
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: The tag agrees with the versions and the changelog
+        working-directory: bench
+        run: node lib/release.mjs "$GITHUB_REF_NAME"
+      - name: MoonBit tests (shipped backends)
+        run: moon test --target wasm-gc && moon test --target js
+      - name: Build and test the npm package
+        working-directory: npm
+        run: npm run build && npm test && npm run size
+
+  npm:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: |
+            npm/package-lock.json
+            bench/package-lock.json
+            examples/react/package-lock.json
+      # Trusted publishing (OIDC, no token) with staged publishing needs npm CLI >= 11.15.0; Node 22 has npm 10.
+      - name: Update npm
+        run: npm install -g npm@^11.15.0
+      - name: Toolchain and dependencies
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Build
+        working-directory: npm
+        run: npm run build
+      # The first version is published by hand (trusted publishing needs the package to exist); skip it here.
+      - name: Stage the publish on npm
+        working-directory: npm
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if npm view "mbt-map@$version" version >/dev/null 2>&1; then
+            echo "mbt-map@$version is already on npm" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npm stage publish
+          {
+            echo "### mbt-map@$version is staged on npm"
+            echo "Approve it with 2FA to publish: npmjs.com → mbt-map → **Staged Packages** → Approve, or \`npm stage approve <stage-id>\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  github-release:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Release notes from CHANGELOG.md
+        run: node bench/lib/release.mjs "$GITHUB_REF_NAME" --notes > "$RUNNER_TEMP/notes.md"
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"
