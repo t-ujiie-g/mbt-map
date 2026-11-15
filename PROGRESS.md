@@ -179,6 +179,7 @@ Where things stand, decisions and open issues. The development history before th
 - 判断（ユーザー）：トップの 3D を端末の時刻で変える（実際の太陽の影、地図はライトグレーとダークグレー）。建物はテクスチャ付きの LOD2 も見せたいが、重さとの兼ね合いで「軽い版で始め、ボタンでテクスチャ」。
 - `site/hero.js`：端末の時計の時刻を東京の時刻として、`sunPosition` と `timeOfDayLights` で太陽の向きと影（日が出ている間）を置き、太陽の高さ −6°〜+6° で地理院の淡色地図をダークグレーからライトグレーへ移す。夜は青みのある環境光を明るめに保つ（建物が見分けられるように）。1 分ごとに更新、`?time=18:30` で確かめられる。
 - 測った通信量（読み込みが落ち着くまで、1280×900、昼）：これまでのトップ（テクスチャなし、ズーム 15.25・傾き 60°）は 89MB・16 秒で、トップページには重すぎた。視点を寄せて（ズーム 16.2・傾き 45°）、`maximumScreenSpaceError: 16` にして 25MB・4 秒。テクスチャ付き（WebP、Draco、1 タイル約 1MB）は同じ視点で約 64MB なので、「Textures」ボタンを押したときだけ読む。
+- 追加の直し（同日、ユーザーの指摘）：傾けると地平線の上が暗い背景色のままだった（空を描いていなかった）ので、スタイルの `sky` と背景色も時刻で変える（昼は水色と明るい灰色、夜は濃紺）。夜は太陽の光がなく面に明暗が付かず、建物が一色のかたまりに見えたので、夜は影なしの弱い月明かり（南西から）を当て、環境光の紫を抑えた。
 ## Firefox と WebKit での pack test（2026-11-15、Mac）
 
 - `bench/npm/pack-test.mjs` に `--browser=chromium|firefox|webkit`（既定 chromium。Metal の GPU フラグは macOS の Chromium だけ）と `--no-prepare`（前の pack を使い回す）を足した。WebGL2 か WebAssembly GC のないブラウザのビルドでは全項目を落とさず、理由を書いて飛ばす（CI では `::warning::`）。
