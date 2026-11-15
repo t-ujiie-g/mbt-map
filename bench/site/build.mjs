@@ -61,7 +61,7 @@ function page({ title, root, main, description = "" }) {
   <nav><a href="${root}docs/">Docs</a><a href="${root}examples/">Examples</a><a href="${REPOSITORY}">GitHub</a><button class="theme" type="button" aria-label="Switch the color theme">☾</button></nav>
 </header>
 ${main}
-<footer class="foot">Apache License 2.0 · <a href="${REPOSITORY}">${REPOSITORY.replace("https://", "")}</a> · This site uses Google Analytics to count visits.</footer>
+<footer class="foot">Apache License 2.0 · <a href="${REPOSITORY}">${REPOSITORY.replace("https://", "")}</a></footer>
 </html>
 `;
 }
