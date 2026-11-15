@@ -159,11 +159,13 @@ fn Map::draw_icons(
   for d in draws {
     for m in d.meshes {
       guard m.layer == index &&
-        m.labels is Some({ icon: Some(ic), .. }) &&
+        m.labels is Some({ icon: Some(ic), wrap, .. }) &&
+        wrap == d.wrap &&
         ic.drawn != self.frame_count else {
         continue
       }
-      // An ancestor standing in for several tiles is drawn once.
+      // An ancestor standing in for several tiles is drawn once, in the copy
+      // its labels were placed in.
       ic.drawn = self.frame_count
       let s = m.labels.unwrap()
       let along = s.line is Some(_) && ic.rotate_with_map

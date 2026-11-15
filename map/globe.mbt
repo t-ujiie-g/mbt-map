@@ -103,9 +103,11 @@ fn Map::globe_cover(
   min_zoom : Int32,
   max_zoom : Int32,
   round : Bool,
-) -> Array[@core.TileId] {
+) -> Array[@core.UnwrappedTile] {
   let _ = self
-  g.covering_tiles(tile_size~, min_zoom~, max_zoom~, round_zoom=round)
+  g
+  .covering_tiles(tile_size~, min_zoom~, max_zoom~, round_zoom=round)
+  .map(id => { id, wrap: 0, })
 }
 
 ///|
@@ -116,8 +118,8 @@ fn Map::draw_globe_background(self : Map, layer : @style.StyleLayer) -> Unit {
   let p = paint_of(layer, self.transform.camera.zoom, JsProps::none())
   let color = rgba_of(p.color)
   color[3] = color[3] * p.opacity
-  for id in self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false) {
-    self.renderer.draw_globe_background(self.placement(id, None, 1.0), color)
+  for u in self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false) {
+    self.renderer.draw_globe_background(self.placement(u.id, None, 1.0), color)
   }
 }
 
@@ -156,8 +158,8 @@ fn Map::draw_globe_atmosphere(self : Map) -> Unit {
 /// The globe's surface into the depth buffer, once a frame before extrusions.
 fn Map::draw_globe_depth(self : Map) -> Unit {
   guard self.globe is Some(g) && g.is_globe() else { return }
-  for id in self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false) {
-    self.renderer.draw_globe_depth(self.placement(id, None, 1.0))
+  for u in self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false) {
+    self.renderer.draw_globe_depth(self.placement(u.id, None, 1.0))
   }
 }
 

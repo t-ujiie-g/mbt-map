@@ -159,7 +159,7 @@ fn Transform::move_to(self : Transform, target : CameraTarget) -> Move {
   )
   let ws = self.world_size()
   let f = at_offset.to_mercator()
-  let t = (if self.limits.bounds is None {
+  let t = (if self.limits.bounds is None && self.limits.world_copies {
     normalize_center(to.center, c.center)
   } else {
     to.center

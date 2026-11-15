@@ -26,11 +26,11 @@ fn Map::placement_due(self : Map) -> Bool {
 /// and by x and y.
 fn placement_order(
   draws : Array[Draw],
-  wrap~ : (@core.TileId) -> Int32 = _ => 0,
+  wrap~ : (Draw) -> Int32 = d => d.wrap,
 ) -> Array[Draw] {
   let before = (a : Draw, b : Draw) => {
     let (p, q) = (a.id, b.id)
-    let (u, v) = (wrap(p), wrap(q))
+    let (u, v) = (wrap(a), wrap(b))
     p.z > q.z ||
     (
       p.z == q.z &&
@@ -83,8 +83,8 @@ fn Map::place_labels(
   let zoom = t.camera.zoom
   // The globe puts tiles on the world copy nearest the center.
   let wrap = match self.globe {
-    Some(g) if g.is_globe() => (id : @core.TileId) => g.tile_wrap(id)
-    _ => _ => 0
+    Some(g) if g.is_globe() => (d : Draw) => g.tile_wrap(d.id)
+    _ => d => d.wrap
   }
   for k in 0..<self.style.layers.length() {
     let index = self.style.layers.length() - 1 - k
@@ -102,9 +102,22 @@ fn Map::place_labels(
     }
     let by_y = layer.text is Some({ z_order: ViewportY, .. })
     let draws = draws_of.get(layer.source).unwrap_or([])
+    // A tile shown in several world copies has its labels in the one nearest
+    // the center (draws come nearest first).
+    for d in draws {
+      for m in d.meshes {
+        if m.layer == index && m.labels is Some(s) && s.chosen != round {
+          s.chosen = round
+          s.wrap = d.wrap
+        }
+      }
+    }
     for d in placement_order(draws, wrap~) {
       for m in d.meshes {
-        guard m.layer == index && m.labels is Some(s) && s.round != round else {
+        guard m.layer == index &&
+          m.labels is Some(s) &&
+          s.round != round &&
+          s.wrap == d.wrap else {
           continue
         }
         s.round = round

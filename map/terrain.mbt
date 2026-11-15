@@ -21,10 +21,13 @@ priv struct TerrainTarget {
 }
 
 ///|
-/// One tile's meshes and where they go this frame; a picture reaching past its
-/// tile has its Mercator `bounds` (min x, min y, max x, max y).
+/// One tile's meshes and where they go this frame, in world copy `wrap` (`copy`
+/// when the same meshes are drawn in another copy too); a picture reaching past
+/// its tile has its Mercator `bounds` (min x, min y, max x, max y) in the main world.
 priv struct Draw {
   id : @core.TileId
+  wrap : Int32
+  copy : Bool
   at : @render_webgl2.Placement
   meshes : Array[LayerMesh]
   bounds : (Double, Double, Double, Double)?
@@ -62,6 +65,8 @@ fn Map::terrain_source(self : Map) -> SourceTiles? {
 /// The terrain's height in meters at `m`, from the deepest loaded DEM tile
 /// there, or None where none has loaded.
 fn elevation_at(src : SourceTiles, m : @core.MercatorCoord) -> Double? {
+  // World copies stand on the main world's terrain.
+  let m : @core.MercatorCoord = { ..m, x: m.x - m.x.floor(), }
   let mut z = src.source.max_zoom
   while z >= src.source.min_zoom {
     let n = (1 << z).to_double()
@@ -192,7 +197,8 @@ fn Map::render_terrain(
       )
     _ => (t.covering_tiles(src.source.min_zoom, z), self.fog())
   }
-  for id in tiles {
+  for u in tiles {
+    let id = u.id
     guard dem_under(src, id) is Some((mesh, part)) else { continue }
     let size = if id.z >= z { full } else { TERRAIN_TEXTURE }
     let (target, current) = self.target_for(
@@ -203,7 +209,7 @@ fn Map::render_terrain(
     if !current {
       self.draw_texture(id, target, size, draws_of)
     }
-    let at = self.placement(id, None, dpr)
+    let at = self.placement(id, None, dpr, wrap=u.wrap)
     self.renderer.draw_terrain(
       mesh, target, at, scale, skirt, per_meter, part, fog,
     )
@@ -279,7 +285,7 @@ fn Map::texture_signature(
   h = mix(h, self.content_version.to_int64())
   for _, draws in draws_of {
     for d in draws {
-      if d.reaches(id) {
+      if !d.copy && d.reaches(id) {
         h = mix(h, d.id.key())
         for c in d.at.clip {
           h = mix(h, c.reinterpret_as_int64())
@@ -318,14 +324,14 @@ fn Map::draw_texture(
       let draws = draws_of
         .get(layer.source)
         .unwrap_or([])
-        .filter(s => overlap(s.id, id))
+        .filter(s => !s.copy && overlap(s.id, id))
         .map(s => { ..s, at: texture_placement(s, id, size), })
       let scale = HEATMAP_TILE_SIZE / size.to_double()
       self.draw_heatmap(index, h, shared, draws, px, scale)
       continue
     }
     for s in draws_of.get(layer.source).unwrap_or([]) {
-      if s.reaches(id) {
+      if !s.copy && s.reaches(id) {
         self.draw_layer(
           index,
           layer,

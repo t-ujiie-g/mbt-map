@@ -150,7 +150,7 @@ The pitch goes up to 85°. Past about 70° the horizon comes on screen; with a `
 
 ### Projection
 
-`projection.type`: `"mercator"` (default), `"globe"` (a globe up to zoom 11, Mercator from zoom 12, crossing over in between) and `"vertical-perspective"` (always a globe). Layers, terrain and labels are drawn onto the globe. Symbol `*-translate` is not applied on the globe, and extrusions are not hit by queries there.
+`projection.type`: `"mercator"` (default; the world repeats across the antimeridian unless the map's `renderWorldCopies` is false), `"globe"` (a globe up to zoom 11, Mercator from zoom 12, crossing over in between) and `"vertical-perspective"` (always a globe). Layers, terrain and labels are drawn onto the globe. Symbol `*-translate` is not applied on the globe, and extrusions are not hit by queries there.
 
 ### Light
 

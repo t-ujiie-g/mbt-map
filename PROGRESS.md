@@ -121,3 +121,15 @@ Where things stand, decisions and open issues. The development history before th
 - `?local=1`：Liberty の文書は `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が `style/public-styles.mjs` の固定した版を sha256 で確かめて取る。取れなければ警告して地理院で始まる）、タイルは `bench/fixtures/ofm-planet`（東京駅の周りの z14 だけ）と `gsi-std`、スプライトは `bench/fixtures/sprites/ofm`。そこで東京で始まる。CI はタイルのフィクスチャを持たないが、確かめはスタイルと都市の層だけで足りる（タイルのフィクスチャを外しても通ることを確かめた）。
 - pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
 - 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。
+
+## 世界のコピー（renderWorldCopies、2026-11-15、Mac）
+
+- メルカトルで経度 180 度の東西に世界を繰り返す（MapLibre の `renderWorldCopies`、既定 true）。低いズームで左右が空く、180 度付近（フィジー、太平洋、アラスカとロシアの間）で片側しか出ない、を直した。
+- 設計：`@core.UnwrappedTile`（MapLibre の `UnwrappedTileID`：正準のタイルと `wrap`）。`Transform::covering_tiles` は見える範囲の各コピー（`Transform::wraps`、左右 3 まで）を同じ四分木で歩き、`wrap` 付きで返す。タイルの読み込み・キャッシュは正準のタイルのまま（コピーごとに取り直さない）。`tile_matrix` / `tile_light_matrix` は `wrap~` で 1 世界ずらす。`Draw` は `wrap` と `copy`（同じメッシュを別のコピーでも描くもの）を持ち、地形のテクスチャやヒートマップのタイル内描画は `copy` を飛ばして二重に描かない。パターンの位置（`pattern_tile`）、影、クリッピング、地面の影、背景のパターン、画像・動画ソース（MapLibre の `getVisibleUnwrappedCoordinates` と同じく見えるコピーと左右 1 つずつ）もコピーごと。地形の高さ（`elevation_at`）は x を主の世界に戻して引く。
+- カメラ：`Limits.world_copies`。false のとき MapLibre の `defaultConstrain` と同じく経度範囲を ±(180 − 1e-10) に限り、中心の折り返しも `normalizeCenter` もしない。true のときは従来どおり（中心の経度は折り返す）。`project` / `unproject` / `getBounds` は MapLibre と同じく経度を折り返さない（もとから）。
+- ラベル：タイルのラベルの状態はメッシュごとに 1 つなので、複数のコピーに出るタイルのラベルは中心に最も近いコピーで配置し、そのコピーでだけ描く（`LabelSet.wrap`）。配置の順は MapLibre と同じ（深いタイル、`wrap`、x、y）。**残り**：世界が画面より狭い（ズーム約 1 未満）ときは、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
+- 問い合わせ：描いた (タイル, コピー) ごとにワーカーへ聞き、ファサードは正準のタイルごとに地物を 1 回にまとめる（MapLibre の `mergeRenderedFeatureLayers`）。並びは z、y、wrap、x（`sortTilesIn`）。ラベルの当たりは配置したコピーでだけ。
+- 塗りの輪郭は、層のすべてのタイルの塗りのあとにまとめて描くようにした（MapLibre の `drawFill`：全タイルの塗り、次に全タイルの輪郭）。コピーの境目（経度 ±180 の輪郭）で隣のコピーの塗りが輪郭を消していた。
+- ファサード：`renderWorldCopies` オプション、`setRenderWorldCopies` / `getRenderWorldCopies`（undefined は true、null は false）。`map_set_limits` の 9 番目の数。
+- 確かめ：`raster:golden` に世界のコピーの場面 5 つ（z0、z1、180 度、回転、`renderWorldCopies: false`）を足し、すべて MapLibre と画素まで同じ。傾けた場面は外した（遠くのタイルのズームの選び方が MapLibre と違うのは以前から）。`style:golden` に `copies-antimeridian`、`copies-wide`（各タイルが 2 つのコピーに出る、ヒートマップ込み）。`labels:golden` に `copies-points`、`copies-line`（69 場面すべて同じ）。`query:golden` に `copies`、`copies-wide`（750 問すべて同じ）。`style:golden` は全場面が限度内。`camera:golden` に `renderWorldCopies: false` の 3 場面（制約、easeTo、flyTo など）。core のテスト（`core/copies_test.mbt`）。
+- 大きさ：mbt-map（index.js）は gzip 162.3KB → 163.8KB（+1.5KB。予算は #22 で 168KB に上がる）。被覆の並べ替えはタイルの型で整列を実体化せず `stable_order` で並べる（UnwrappedTile 用の整列が約 10KB の生コードを足していた）。

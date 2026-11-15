@@ -1,7 +1,7 @@
 ///|
 /// The transform `a` describes: viewport width and height, camera (lng, lat,
-/// zoom, bearing, pitch), limits (min/max zoom, min/max pitch) and bounds
-/// (west, south, east, north; NaN west for none).
+/// zoom, bearing, pitch), limits (min/max zoom, min/max pitch), bounds (west,
+/// south, east, north; NaN west for none) and world copies (0 for none).
 fn transform_of(a : FixedArray[Double]) -> @core.Transform {
   let bounds : @core.LngLatBounds? = if a[11].is_nan() {
     None
@@ -23,6 +23,7 @@ fn transform_of(a : FixedArray[Double]) -> @core.Transform {
       min_pitch: a[9],
       max_pitch: a[10],
       bounds,
+      world_copies: a.length() < 16 || a[15] != 0.0,
     },
   )
 }

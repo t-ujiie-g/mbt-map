@@ -25,12 +25,14 @@ priv enum Waiting {
 }
 
 ///|
-/// One tile's part of a query: the query, the worker asked, the tile, and the
-/// style its layer indices refer to (None for a source query, whose hits name no layer).
+/// One tile's part of a query: the query, the worker asked, the tile and its
+/// world copy, and the style its layer indices refer to (None for a source
+/// query, whose hits name no layer).
 priv struct QueryPart {
   query : Int32
   worker : Int32
   tile : @core.TileId
+  wrap : Int32
   style : @style.Style?
 }
 
@@ -44,9 +46,10 @@ extern "js" fn add_result(
   z : Int32,
   x : Int32,
   y : Int32,
+  wrap : Int32,
   hits : JsValue,
 ) -> Unit =
-  #|(r, z, x, y, hits) => { r.push({ z, x, y, hits: Array.isArray(hits) ? hits : [] }) }
+  #|(r, z, x, y, wrap, hits) => { r.push({ z, x, y, wrap, hits: Array.isArray(hits) ? hits : [] }) }
 
 ///|
 extern "js" fn hits_of(msg : JsValue) -> JsValue =
@@ -118,12 +121,13 @@ fn Map::send_part(
   entry : TileEntry,
   request : Bytes,
   style : @style.Style?,
+  wrap~ : Int32 = 0,
 ) -> Bool {
   let (worker, tile) = entry.kept
   guard worker >= 0 && !self.failed_workers[worker] else { return false }
   let part = self.next_query
   self.next_query += 1
-  self.waiting.set(part, Part({ query, worker, tile: entry.id, style, }))
+  self.waiting.set(part, Part({ query, worker, tile: entry.id, wrap, style, }))
   q.left += 1
   let id = entry.id
   post_query(
@@ -161,7 +165,7 @@ fn Map::on_query(self : Map, msg : JsValue) -> Unit {
       hits = drop_hits(hits, _ => false)
     }
   }
-  add_result(q.results, p.tile.z, p.tile.x, p.tile.y, hits)
+  add_result(q.results, p.tile.z, p.tile.x, p.tile.y, p.wrap, hits)
   q.left -= 1
   self.finish_query(p.query)
 }
@@ -183,18 +187,24 @@ fn Map::end_queries(self : Map) -> Unit {
 }
 
 ///|
-/// The tiles of `src` drawn in the last frame, each once.
-fn Map::drawn_tiles(self : Map, src : SourceTiles) -> Array[TileEntry] {
+/// The tiles of `src` drawn in the last frame, each once with the world copy it
+/// was drawn in, or once for all its copies without `copies` (wrap 0 then).
+fn Map::drawn_tiles(
+  self : Map,
+  src : SourceTiles,
+  copies~ : Bool = false,
+) -> Array[(TileEntry, Int32)] {
   let seen : @hashmap.HashMap[Int64, Unit] = @hashmap.HashMap([])
   let out = []
   for d in self.drawn.get(src.source.id).unwrap_or([]) {
-    let key = d.id.key()
+    let wrap = if copies { d.wrap } else { 0 }
+    let key = ({ id: d.id, wrap, } : @core.UnwrappedTile).key()
     if seen.contains(key) {
       continue
     }
     seen.set(key, ())
-    if src.tiles.get(key) is Some(e) {
-      out.push(e)
+    if src.tiles.get(d.id.key()) is Some(e) {
+      out.push((e, wrap))
     }
   }
   out
@@ -283,16 +293,19 @@ pub fn Map::query_rendered(
     let camera = if extruded { camera_screen } else { points }
     let camera_mercator = camera.map(p => self.screen_mercator(p.0, p.1))
     let symbols = self.symbols_under(src, points, wanted)
-    for e in self.drawn_tiles(src) {
-      let labels = symbols.get(e.id.key()).unwrap_or([])
+    for drawn in self.drawn_tiles(src, copies=true) {
+      let (e, wrap) = drawn
+      let id = e.id
+      let labels = symbols
+        .get(({ id, wrap, } : @core.UnwrappedTile).key())
+        .unwrap_or([])
       if indices.is_empty() && labels.is_empty() {
         continue
       }
-      let id = e.id
       let n = (1 << id.z).to_double()
       let tile_point = (m : @core.MercatorCoord) => {
         (
-          (m.x * n - id.x.to_double()) * extent,
+          ((m.x - wrap.to_double()) * n - id.x.to_double()) * extent,
           (m.y * n - id.y.to_double()) * extent,
         )
       }
@@ -305,7 +318,7 @@ pub fn Map::query_rendered(
       w.f64(t.center_depth())
       w.f64(t.pixels_per_meter())
       w.f64(@core.radians(t.camera.bearing))
-      for v in t.tile_matrix(id, @core.TILE_EXTENT).m {
+      for v in t.tile_matrix(id, @core.TILE_EXTENT, wrap~).m {
         w.f64(v)
       }
       match self.globe_tile(id) {
@@ -343,7 +356,16 @@ pub fn Map::query_rendered(
         w.u32(l.1)
       }
       @style.write_expr(w, filter)
-      self.send_part(query, q, "rendered", src, e, w.to_bytes(), Some(style))
+      self.send_part(
+        query,
+        q,
+        "rendered",
+        src,
+        e,
+        w.to_bytes(),
+        Some(style),
+        wrap~,
+      )
       |> ignore
     }
   }
@@ -352,9 +374,9 @@ pub fn Map::query_rendered(
 }
 
 ///|
-/// The labels of `src` shown under `points` (screen pixels) at the last
-/// placement, of the style layers `wanted` marks, by tile: (layer, feature)
-/// pairs, each once (MapLibre's `queryRenderedSymbols`).
+/// The labels of `src` shown under `points` (screen pixels) at the last placement, of the style layers
+/// `wanted` marks, by tile and the world copy they were placed in (`UnwrappedTile::key`): (layer,
+/// feature) pairs, each once (MapLibre's `queryRenderedSymbols`).
 fn Map::symbols_under(
   self : Map,
   src : SourceTiles,
@@ -368,14 +390,16 @@ fn Map::symbols_under(
         m.layer >= 0 &&
         m.layer < wanted.length() &&
         wanted[m.layer] &&
-        s.round == self.placement_round else {
+        s.round == self.placement_round &&
+        s.wrap == d.wrap else {
         continue
       }
-      let list = match out.get(d.id.key()) {
+      let key = ({ id: d.id, wrap: d.wrap, } : @core.UnwrappedTile).key()
+      let list = match out.get(key) {
         Some(l) => l
         None => {
           let l = []
-          out.set(d.id.key(), l)
+          out.set(key, l)
           l
         }
       }
@@ -434,8 +458,9 @@ pub fn Map::query_source(
     w.utf8(source_layer)
     @style.write_expr(w, filter)
     let request = w.to_bytes()
-    for e in self.drawn_tiles(src) {
-      self.send_part(query, q, "features", src, e, request, None) |> ignore
+    for drawn in self.drawn_tiles(src) {
+      self.send_part(query, q, "features", src, drawn.0, request, None)
+      |> ignore
     }
   }
   later(() => self.finish_query(query))

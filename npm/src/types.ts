@@ -96,6 +96,8 @@ export interface MapOptions {
   minPitch?: number;
   maxPitch?: number;
   maxBounds?: LngLatBoundsLike;
+  /** Whether the world repeats east and west of the antimeridian (default true, as MapLibre); without copies the view stays within it. */
+  renderWorldCopies?: boolean;
   bounds?: LngLatBoundsLike;
   fitBoundsOptions?: FitBoundsOptions;
   interactive?: boolean;

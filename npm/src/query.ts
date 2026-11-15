@@ -12,11 +12,12 @@ export interface GeoJSONFeature {
   tile?: { z: number; x: number; y: number };
 }
 
-/** One tile's answer from the engine: each hit's layer id, feature index, depth (extrusions) and feature. */
+/** One tile's answer from the engine in world copy `wrap`: each hit's layer id, feature index, depth (extrusions) and feature. */
 export interface TileResult {
   z: number;
   x: number;
   y: number;
+  wrap?: number;
   hits: { layer: string | number; index: number; distance: number; feature: GeoJSONFeature }[];
 }
 
@@ -30,14 +31,17 @@ export function queryPoints(geometry: QueryGeometry, width: number, height: numb
 
 /**
  * The hits of `tiles` in MapLibre's order: top layer first, each layer's features by tile (zoom,
- * row, column), last drawn first, once per tile; extrusions, which hide one another, nearest first
- * wherever the first of their layers stands.
+ * row, world copy, column), last drawn first, once per tile and its copies; extrusions, which hide
+ * one another, nearest first wherever the first of their layers stands.
  */
 export function orderRendered(tiles: TileResult[], layers: { id: string; type: string }[]): { layer: string; feature: GeoJSONFeature }[] {
-  const sorted = [...tiles].sort((a, b) => a.z - b.z || a.y - b.y || a.x - b.x);
+  const sorted = [...tiles].sort((a, b) => a.z - b.z || a.y - b.y || (a.wrap ?? 0) - (b.wrap ?? 0) || a.x - b.x);
   const byLayer = new Map<string, { index: number; distance: number; feature: GeoJSONFeature }[]>();
+  const seenOf = new Map<string, Set<string>>();
   for (const t of sorted) {
-    const seen = new Set<string>();
+    const tile = `${t.z}/${t.x}/${t.y}`;
+    let seen = seenOf.get(tile);
+    if (!seen) seenOf.set(tile, (seen = new Set<string>()));
     const ofTile = new Map<string, { index: number; distance: number; feature: GeoJSONFeature }[]>();
     for (const h of t.hits) {
       if (typeof h.layer !== "string") continue;

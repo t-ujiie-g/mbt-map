@@ -49,6 +49,16 @@ test("orderRendered: top layer first, tiles by zoom, row, column, last drawn fir
   assert.deepEqual(orderRendered(tiles, layers)[0].layer, "line");
 });
 
+test("orderRendered: a tile hit in two world copies gives each feature once, the western copy first", () => {
+  const layers = [{ id: "fill", type: "fill" }];
+  const hit = (index: number, name: string) => ({ layer: "fill", index, distance: NaN, feature: f(name) });
+  const tiles: TileResult[] = [
+    { z: 0, x: 0, y: 0, wrap: 1, hits: [hit(1, "east-1"), hit(2, "east-2")] },
+    { z: 0, x: 0, y: 0, wrap: 0, hits: [hit(1, "main-1")] },
+  ];
+  assert.deepEqual(names(orderRendered(tiles, layers)), ["main-1", "east-2"]);
+});
+
 test("orderRendered: extrusions nearest first where the first of their layers stands", () => {
   const layers = [{ id: "low", type: "fill" }, { id: "a3d", type: "fill-extrusion" }, { id: "mid", type: "line" }, { id: "b3d", type: "fill-extrusion" }];
   const tiles: TileResult[] = [{

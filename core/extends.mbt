@@ -26,6 +26,12 @@ pub extend TileId with Eq::{not_equal, equal}
 pub extend TileId with Hash::{hash, hash_combine}
 
 ///|
+pub extend UnwrappedTile with @debug.Debug::{to_repr}
+
+///|
+pub extend UnwrappedTile with Eq::{not_equal, equal}
+
+///|
 pub extend Camera with @debug.Debug::{to_repr}
 
 ///|

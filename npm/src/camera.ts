@@ -162,6 +162,8 @@ export interface Limits {
   minPitch: number;
   maxPitch: number;
   maxBounds: LngLatBounds | null;
+  /** Whether the world repeats east and west (MapLibre's `renderWorldCopies`); true unless false. */
+  renderWorldCopies?: boolean;
 }
 
 /** Throws unless the limits are finite, within `MIN_ZOOM`-`MAX_ZOOM_LIMIT` and `MIN_PITCH`-`MAX_PITCH`, min not above max. */
@@ -176,7 +178,7 @@ export function checkLimits(l: Limits): void {
 
 export function limitsArray(l: Limits): number[] {
   const b = l.maxBounds;
-  return [l.minZoom, l.maxZoom, l.minPitch, l.maxPitch, b ? b.west : NaN, b ? b.south : 0, b ? b.east : 0, b ? b.north : 0];
+  return [l.minZoom, l.maxZoom, l.minPitch, l.maxPitch, b ? b.west : NaN, b ? b.south : 0, b ? b.east : 0, b ? b.north : 0, l.renderWorldCopies === false ? 0 : 1];
 }
 
 /** The engine's `camera_for_bounds` input. */
