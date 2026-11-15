@@ -137,4 +137,4 @@ Styles, TileJSON, tiles, sprites, GeoJSON and images are fetched without credent
 ## Next steps
 
 - [The map](./map.md) and [style support](./style-support.md)
-- [Examples](../examples/): the showcase app (search, layers, drawing, measurement, analysis, data, web services) in three styles, a 3D city page and a rabbita app
+- [Examples](../examples/): the showcase app (search, layers, drawing, measurement, analysis, data, web services) written with plain HTML and with React (and, in the repository, [with the `<mbt-map>` element alone](../examples/element/)), a 3D city page and a rabbita app

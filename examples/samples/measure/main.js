@@ -11,6 +11,7 @@ const map = new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院",
       },
@@ -31,7 +32,8 @@ measurement.subscribe((s) => {
   if (!s.mode) return (result.textContent = "");
   const lines = [`${s.mode === "area" ? "Perimeter" : "Length"}: ${formatLength(s.length)}`];
   if (s.area !== null) lines.push(`Area: ${formatArea(s.area)}`);
-  lines.push(...s.segments.map((m, i) => `  ${i + 1}. ${formatLength(m)}`));
+  // The last segment follows the pointer: it has no length right after a click.
+  lines.push(...s.segments.filter((m) => m > 0).map((m, i) => `  ${i + 1}. ${formatLength(m)}`));
   result.textContent = lines.join("\n");
 });
 

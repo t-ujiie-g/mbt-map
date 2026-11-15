@@ -250,7 +250,7 @@ extern "js" fn listen(
   #|(t, type, f) => {
   #|  const h = (e) => f(e);
   #|  // The handlers that call preventDefault cannot be passive.
-  #|  const opts = { passive: !["wheel", "dblclick", "keydown"].includes(type) };
+  #|  const opts = { passive: !["wheel", "dblclick", "keydown", "touchmove"].includes(type) };
   #|  t.addEventListener(type, h, opts);
   #|  return () => t.removeEventListener(type, h, opts);
   #|}
@@ -265,6 +265,24 @@ extern "js" fn observe_resize(
 ///|
 extern "js" fn prevent_default(e : JsValue) -> Unit =
   #|(e) => e.preventDefault()
+
+///|
+/// Whether the event can still be cancelled (a touch the browser has not taken).
+extern "js" fn cancelable(e : JsValue) -> Bool =
+  #|(e) => e.cancelable
+
+///|
+/// How many fingers a touch event has down.
+extern "js" fn touch_count(e : JsValue) -> Int32 =
+  #|(e) => e.touches.length
+
+///|
+/// Sets the canvas's CSS `touch-action`: the touch gestures left to the browser.
+extern "js" fn set_touch_action(
+  target : @render_webgl2.Canvas,
+  value : String,
+) -> Unit =
+  #|(t, v) => { t.style.touchAction = v; }
 
 ///|
 extern "js" fn capture_pointer(

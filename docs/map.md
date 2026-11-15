@@ -93,6 +93,23 @@ map.scrollZoom.disable();
 map.dragRotate.isEnabled(); // true
 ```
 
+### Touch, the wheel and the page
+
+On a touch screen the map takes the gestures of its enabled handlers and leaves the others to the browser. It sets the canvas's CSS `touch-action` for that, as MapLibre GL JS does on its canvas container, and updates it when a handler is enabled or disabled:
+
+| Enabled | `touch-action` | The browser still does |
+|---|---|---|
+| `dragPan` and a two-finger handler (`touchZoomRotate` or `touchPitch`) | `none` | Nothing: drags and pinches on the map never scroll or zoom the page. |
+| `dragPan` only | `pinch-zoom` | Page zoom by pinching. |
+| A two-finger handler only | `pan-x pan-y` | Scrolling by one-finger drags. |
+| Neither (`interactive: false` too) | `auto` | Everything. |
+
+A map that fills a scrolling page therefore traps one-finger scrolling; turn `dragPan` off (`map.dragPan.disable()`) to let drags scroll the page and keep pinch zoom on the map. The map also cancels the `touchmove` events of the gestures it takes, for browsers that ignore `touch-action`, and the `wheel` events over it while `scrollZoom` is on (the page does not scroll; with `scrollZoom` off it does). There are no cooperative gestures (MapLibre's `cooperativeGestures`).
+
+### Accessibility
+
+The canvas is focusable (`tabindex="0"`, for the keyboard handler) and is a `role="region"` named `Map`, as MapLibre's. To name it yourself, give the container an `aria-label` before creating the map, or set it on the canvas: `map.getCanvas().setAttribute("aria-label", "Route to the venue")`. `<mbt-map>` passes its own `aria-label` on.
+
 ## Camera
 
 ```ts
@@ -173,13 +190,15 @@ map.on("mouseenter", "buildings", () => (map.getCanvas().style.cursor = "pointer
 map.on("mouseleave", "buildings", () => (map.getCanvas().style.cursor = ""));
 ```
 
+`idle` follows MapLibre's: any change that draws ends with one, a single frame included (`triggerRepaint`, `setViewshed`, `setClipping`, a paint change), so `await map.once("idle")` after a change waits until it is on screen. A map at rest draws no frames and fires none. While frames keep coming without anything loading (a playing video, a custom layer that calls `triggerRepaint` in `render`), `idle` fires once when the map first settles and again when the repainting stops. Do not change the map in an `idle` listener without a condition: the change draws a frame, which fires `idle` again.
+
 `on`, `off` and `once` take an event type and a listener, or for mouse events a type, a layer id (or an array of ids) and a listener. A listener given layers is called only when features of those layers are under the pointer, with them in `e.features`. Since the geometry lives in the workers, layer events come after a feature query, a little after the DOM event.
 
 | Event | When | Fields |
 |---|---|---|
 | `load` | The first view has been drawn. | |
 | `render` | After each frame. | |
-| `idle` | When the map settles: nothing loading, no animation. | |
+| `idle` | After each frame that leaves the map settled: nothing loading, no gesture or animation, no further frame asked for. | |
 | `styledata` | The style was loaded or changed. | |
 | `sourcedata` | After `styledata`, for each source added or changed (new data, a new style). Not fired on tile loads. | `sourceId`, `dataType: "source"` |
 | `styleimagemissing` | A tile uses an image the map lacks (once per name). Add it with `addImage` in the listener. | `id` |
@@ -285,7 +304,7 @@ map.on("click", "clusters", async (e) => {
 | `play()`, `pause()` | For videos and canvases. |
 | `getVideo()`, `getCanvas()` | The element. |
 
-A playing video and an animating canvas are uploaded every frame. The map still fires `idle` meanwhile.
+A playing video and an animating canvas are uploaded every frame. The map still fires `idle` meanwhile, once it has settled.
 
 ## Images and sprites
 

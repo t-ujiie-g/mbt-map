@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MAX_PITCH, MAX_ZOOM, parseBearing, parseBoolean, parseCenter, parsePitch, parseWorkerCount, parseZoom } from "./parse.ts";
+import { MAX_PITCH, MAX_ZOOM, checkBoolean, parseBearing, parseBoolean, parseCenter, parsePitch, parseWorkerCount, parseZoom } from "./parse.ts";
 
 test("center is two in-range decimals", () => {
   assert.deepEqual(parseCenter("139.7671,35.6812"), { lng: 139.7671, lat: 35.6812 });
@@ -39,4 +39,10 @@ test("parseBoolean: only true and false", () => {
   assert.equal(parseBoolean("true"), true);
   assert.equal(parseBoolean("false"), false);
   for (const bad of ["", "TRUE", "1", "no", " false"]) assert.equal(parseBoolean(bad), null);
+});
+
+test("checkBoolean: the render-world-copies property takes booleans only", () => {
+  assert.equal(checkBoolean(true), true);
+  assert.equal(checkBoolean(false), false);
+  for (const bad of [0, 1, null, undefined, "yes", {}]) assert.equal(checkBoolean(bad), null);
 });

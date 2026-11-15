@@ -11,14 +11,13 @@ Where things stand, decisions and open issues. The development history before th
   - 文書：README、docs/ の入口ごとのガイド、その後の点検（リファクタリングとセキュリティ）。
   - GitHub Pages：手書きのトップ、docs の HTML、動く例。サンプル集とテーマの切り替え、例の画面の英語化。
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
-  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test。
+  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）。
 - **次**：公開のあと、単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
 - **未解決**：
   - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。
   - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
   - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
-  - `setViewshed`・`setClipping`・`triggerRepaint` のあとに `idle` が来ない（MapLibre は描き終えるたびに `idle`）。合わせるかは別に決める。
   - Linux の WebKit で `antialias: false` のキャンバスの最後のフレームが出ない件が headless だけのことか。Linux の headless Firefox に WebGL2 がない（pack test は飛ばす）。
   - 世界が画面より狭い（ズーム約 1 未満）とき、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
 - **文書の置き場所**：毎回読む決まりは AGENTS.md、仕組みの詳しい説明は docs/dev/ARCHITECTURE.md とその分冊、コマンドの一覧は docs/dev/COMMANDS.md、ツールチェーンと計測で分かったことは docs/dev/TOOLCHAIN.md（AGENTS.md を 130KB から分けた）。
@@ -286,8 +285,67 @@ Where things stand, decisions and open issues. The development history before th
 ## サイトの計測タグ（2026-11-15）
 
 - ユーザーの依頼で、GitHub Pages に Google タグ マネージャー（`GTM-MWGLDWNP`）を入れた。`site/analytics.js` を、サイトの各ページ（トップ、文書、例の目次、サンプルの解説ページ、4 つのアプリ）が読む。解説ページに埋め込んで動かすサンプル本体には入れない（閲覧の二重計上と、見せるコードへの混入を避ける）。
+- 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに入れた「Google Analytics で訪問を数えている」の一文は、一般的でないので外した（ユーザー判断）。
 - 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに「Google Analytics で訪問を数えている」と書いた。
 
+## 公開前の QA の直し：タッチ操作、`idle`、`<mbt-map>`、キャンバスの名前、バッファ（2026-11-15）
+
+公開前の QA で見つかった 5 件。ブランチ `fix/touch-and-events`。
+
+1. **タッチ操作がページに漏れる（ブロッカー）**
+   - 原因：キャンバスの `touch-action` が `auto` のままで、リスナーも passive。スマートフォンで地図をピンチするとブラウザもページを拡大し（`visualViewport.scale` が 1 → 5）、1 本指のドラッグでページもスクロールした。
+   - 直し：MapLibre のキャンバスコンテナと同じ値を、有効なハンドラからキャンバスの `touch-action` に入れる（`map/camera.mbt` の `touch_action`。`attach_input` と `Map::set_handler` で設定するので `map.dragPan.disable()` などにも追随する）。`dragPan` と 2 本指のハンドラ（`touchZoomRotate` か `touchPitch`）の両方 → `none`、`dragPan` だけ → `pinch-zoom`、2 本指だけ → `pan-x pan-y`、どちらもなし（`interactive: false` も）→ `auto`。`touchPitch` は MapLibre では値に関わらないが、2 本指の操作なので `touchZoomRotate` と同じ扱いにした。cooperative gestures は入れていない。
+   - `touch-action` を見ないブラウザのために、地図が受け取る操作の `touchmove` は passive でないリスナーで `preventDefault` する（`Map::takes_touches`）。`wheel` はもとから passive でなく、`scrollZoom` が有効なあいだ `preventDefault` している（確かめた）。
+   - テスト：pack test の `touch`（`bench/npm/checks/touch.mjs`、ページ `bench/npm/pages/touch/`：ビューポートより長いページに `Map`・`<mbt-map>`・ただの箱）。タッチ有効の 400 × 700 のコンテキストで、Chromium では CDP の `Input.dispatchTouchEvent` で本物のタッチを送る：ピンチのあと `visualViewport.scale` は 1 のままズームが 14.5 → 17.08（`Map` もシャドウルートの中の `<mbt-map>` も）、1 本指のドラッグのあと `scrollY` は 0 で中心が動く、`dragPan` を切ると同じドラッグでページが 105 px スクロールして地図は動かない、ただの箱の上の同じピンチはページを 3 倍にする（テストの仕掛けが漏れを見つけられることの確認）。ハンドラごとの `touch-action` の値とホイール（ページは動かずズームだけ変わる）は 3 つのブラウザで見る。Firefox と WebKit には CDP のタッチ入力がないので、本物のタッチの部分は理由をつけて飛ばす。`touch_action` の単体テストは `map/helpers_wbtest.mbt`。
+
+2. **1 フレームだけの変更のあとに `idle` が来ない**
+   - 原因：`idle` は「前の変更のあと最初に落ち着いたフレーム」で 1 回だけ出していて（`idle_fired`）、`setViewshed`・`setClipping`・`triggerRepaint` は `idle_fired` を倒さずにフレームだけ頼んでいた。
+   - 直し（`map/render.mbt`）：MapLibre の `_render` と同じく、フレームの終わりに、読み込み中のものがなく（タイル、ワーカーに聞いている feature state の範囲）、動いておらず（操作・慣性・アニメーション：`moving`）、次のフレームも頼まれていなければ `idle`。止まっている地図はフレームを描かないので繰り返さない。
+   - MapLibre と違えたところ：フレームが続くあいだ（再生中の動画、`render` の中で `triggerRepaint` するカスタムレイヤー）は、落ち着いた最初の 1 回と、止まったときの 1 回だけ（MapLibre は毎フレーム）。`toBlob` が `idle` を待つので、最初の 1 回は残した。
+   - 変わったところ：アニメーションや操作の途中では `idle` が出なくなった（これまではタイルがそろっていれば途中でも出ていた。MapLibre は出さない）。操作の終わり（指を離す、ホイールの 200 ms 後）に 1 フレーム頼むので、そこで `idle` が来る。
+   - テスト：pack test の `npm` に `idleChecks`（`bench/npm/checks/idle.mjs`）：止まっているあいだは 0 回、`triggerRepaint`・`setClipping`（設定と解除）・`setViewshed`（設定と解除）のそれぞれで描画 1 回と `idle` 1 回、`easeTo` の `moveend` までは 0 回、毎フレーム `triggerRepaint` するリスナーでは止まったときの 1 回だけ、そのあとの `toBlob` が返る。`bench/npm/checks/plateau.mjs` の回避（視域と断面は `render` を待つ）は `idle` を待つ形に戻した。
+
+3. **`<mbt-map>` に `render-world-copies` がない**：属性 `render-world-copies`（`true` / `false` だけ。ほかは `mbt-map-error` で前の値のまま）とプロパティ `renderWorldCopies`（真偽値か属性の文字列）を足した。地図があれば `setRenderWorldCopies`、作り直しても値を持ち越す。`element/parse.ts` に `checkBoolean`、テストは `element/parse.test.ts` と pack test の `touch`。
+
+4. **キャンバスの役割と名前**：`tabindex="0"` でフォーカスできるのに role も名前もなかった。MapLibre 6.16 と同じく `role="region"` と `aria-label="Map"` を付ける（`npm/src/index.ts`）。コンテナに `aria-label` があればそれを名前にし、`<mbt-map aria-label="…">` は自分の値をキャンバスへ渡す（属性の変更にも追随）。あとから `map.getCanvas().setAttribute("aria-label", …)` でも変えられる。MapLibre は `interactive: false` のとき `tabindex="-1"` にするが、そこは変えていない。テストは pack test の `touch`。
+
+5. **`mbt-map/analysis` の `buffer` の距離**
+   - 負の距離：Clipper のオフセットは開いたパスと点を距離の絶対値で太らせるので、点と線の `-100` が `+100` と同じ結果になっていた。負の距離では点と線を入れない（`overlay/ops.mbt`）。結果は Turf の `buffer`（点と線の負のバッファは undefined）と同じく図形なしで、行と属性は残る。ポリゴンはこれまでどおり縮む。
+   - 大きな距離：測地バッファの上限を 20,000 km から 10,000 km（`@overlay.MAX_GEODESIC_BUFFER`、子午線の 4 分の 1）にした。超えると `a geodesic buffer takes at most 10,000 km` で断る。点の円が半球に収まる範囲で、その先は円が対蹠点側の小さい円になり、リングとして意味を持たない。平面バッファは CRS の単位で 1e9 まで（変えていない）。
+   - QA が「でたらめ」とした `999999`（12 点で 37,519,784 km²）は正しかった：半径約 1,000 km の円 1 つが約 3.13 百万 km²、12 個で 37.5 百万 km²（重なりは足したまま）。GeographicLib で測った点の円の誤差は、緯度 0〜89.9° で 100 km が 0.01% 以下、1,000 km が 0.08% 以下、3,000 km が 0.23% 以下、10,000 km が 0.58% 以下。
+   - 文書（docs/analysis.md）：負の距離、上限、精度、経度が ±180 を越えても折り返さないこと、極を越えるバッファは極を囲むリングになること。
+   - テスト：`overlay/overlay_wbtest.mbt`（点と線の負のバッファは `NoGeometry` で属性は残る、上限とその文言）、pack test の `analysis`（点の `buffer(-100)` は geometry が null、`buffer(1.5e7)` は断る）。
+
+- 大きさ（gzip）：mbt-map（index.js）166.7KB → 166.9KB（+0.2KB、予算 168KB）。mbt-map/element 1.71KB → 1.86KB（予算 5KB）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 929、wasm-gc 941、js 988、native 929）、npm のテスト（453）と大きさ、bench のテスト、pack test（Chromium・WebKit 27.2・Firefox 157 とも 24/24。本物のタッチは Chromium だけ）、`camera:golden`・`globe:golden`・`query:golden`（750/750）・`export:golden`・`clipper:golden`（全部一致）・`buffer:check`・`sight:golden`（0 differ）。
+- 残り：実機（iOS Safari、Android Chrome）でのタッチは確かめていない（Playwright の Chromium のタッチ入力まで）。`interactive: false` でもキャンバスは `tabindex="0"` のまま（MapLibre は `-1`）。バッファは日付変更線や極で切らない。
+
+## サイト・サンプル・例の公開前 QA の直し（2026-11-15、Mac）
+
+公開前の QA で見つかった、サイト（`site/`、`bench/site/`）・サンプル（`examples/samples/`）・例のアプリの不具合を直した。ライブラリ（`npm/src`、`element/`、MoonBit）は触っていない。
+
+- **切れたリンク**：サイトに出していない `examples/element/` へのリンクが 3 か所にあった。
+  - トップのカードは Web コンポーネントのサンプル（`examples/web-component.html`）へ。
+  - ショーケースの見出しのリンクは、ページの `<html data-variants="…">` に名前のあるものだけにした（`examples/shared/shell.js` の `variants()`。サイトのビルドが `SITE_EXAMPLES` を書き込む。リポジトリから開けば 3 つとも）。React も同じ関数を使う。
+  - `docs/getting-started.md` の「three styles」は、HTML と React（リポジトリには要素だけの版も）と書き直した。
+  - `bench/site/dead-links.mjs`：ビルドした `_site/` の全ページの `href` / `src`（`<pre>` の中の見せているコードは除く）がサイト内のファイルに届くこと、`#` がその先のページの id にあること、ショーケースの `data-variants` の先があることを確かめる。`bench/site/build.mjs` は 1 つでも切れていれば失敗する。直す前のビルドに当てると `index.html: ./examples/element/` だけを挙げた。`bench/lib/site.test.mjs` にテスト。
+- **ショーケースの Globe**：既定の地図（GSI のベクトルタイルは z4 以上・日本だけ）で地球にするとベージュの球になり、2D に戻してもズーム 2 のまま真っ白だった。
+  - ズーム 4 未満に GSI の標準地図（`std`、世界の z0〜。`?local=1` では `bench/fixtures/gsi-std-world` の z0〜3）をラスタで敷く（`examples/shared/style.js` の `world`。レイヤーの `maxzoom: 4`）。
+  - 地球に入るときの中心とズームを覚え、地球から出るときに戻す（`modeEase(mode, zoom, back)`。その間に元より寄っていれば戻さない）。HTML・要素・React とも。
+- **コピーしても動くサンプル**：サンプルのページは `main.js` と `index.html` のほかのファイルも載せる。テキスト（`style.json` など、拡張子で決める）は 3 つめのコードとして、バイナリ（`tower.glb`）はサイトの絶対 URL のリンクとして載せ、見せるコードの中の `"./tower.glb"` もその URL にする。全 23 サンプルの見せているコードを別オリジンに置いて開き直し、どれも描けてエラーなし（Chromium）。
+- **光**：
+  - `examples/samples/buildings-shadows`：19:00（日没）で建物だけが黒かった。太陽の高さ 10° から地平線にかけて、影を薄くし、環境光を足し、地面のレイヤーの色を暗くする。
+  - `site/hero.js`：日の出・日の入りの前後で建物が夜より暗い平らな塊になり、朝は日の当たる壁が白く飛んでいた。光を太陽の高さ（-6°・0°・10°）の折れ線にした：環境光と平行光の和は 0.96 まで、薄明の環境光は夜より明るく、影は 0°〜10° で濃くなる。平行光の向きは地平線の下で月（南西）から太陽へ回し、太陽は天頂から 68° より低くは描かない（すれすれの光では屋根が暗く、影が全面を覆う）。`?time=` は 00:00〜23:59 だけ読む。
+- **サンプルの細かい直し**：`draw` の Ctrl+Shift+Z（`e.key` が "Z" になる）、`classify` の凡例の数（小数 1 桁まで）、`buffer-voronoi` の距離の確かめとエラーの表示、`web-component` のズームボタン（0〜22 で止める）、`measure` のクリック直後の長さ 0 の区間、`read-data` の「1 rows」とファイル入力の名前、`wmts-wms` はレイヤーを選ぶたびに中心のタイルを 1 枚確かめて、なければそう書く。GSI の淡色地図を使うサンプルとトップの地図は `minzoom: 2`。`terrain` は標高タイルの `bounds` で海の上のタイル（404）を求めない。スライダーの `<label>` は `for` で結んだ。
+- **スマホの幅**：docs のナビゲーションは `<details>` にして `site/theme.js` が 860px 以下で畳む（全 13 ページで見出しが最初の画面に入る）。長いインラインコードは折り返す（`style-support.html` の横スクロールがなくなった）。PLATEAU の例の出典は上に移した（下のパネルに重なっていた）。
+- **ショーケース**：サービスの URL に届かないときの「Failed to fetch」を、URL と CORS を確かめるよう促す文にした（`serviceError`）。
+- **直していないもの（ライブラリ側、または仕様どおり）**：
+  - 平行光が 1 つなので、光に背を向けた面はどれも環境光だけの同じ色になる（`npm/src/model/draw.ts` の `max(dot(n, l), 0)`）。トップの地図を太陽の反対側から見たときの一様な灰色はこれで、サイトの側では直せない。半球光か補助光がライブラリに要る。
+  - スタイルの途中に置いた半透明の `background` レイヤーが、地面ではなく押し出しの建物の上にだけ描かれる（`buildings-shadows` で地面を暗くするのに使おうとして分かった。サンプルは地面のレイヤーの色を変える形にした）。
+  - `?local=1` のショーケースで Globe のあと 3D を押すとページが固まる（直す前のコードでも同じ。DEM が z14 だけのスタイルでズーム 2 から地形つきに入るとき。GSI の実タイルでは起きない）。
+  - ショーケースのコロプレスの区切りの最後が重なる（`… / 24.91 / 24.91`）のは `classBreaks` の jenks が simple-statistics と同じく各クラスの下限と最大値を返すためで、いちばん上のクラスが 1 つの値だけのときに起きる。
+  - OpenFreeMap のスタイルの `symbol-placement` の式の警告、Firefox の WebGL の性能の警告、GSI のデータの質。
+- 確かめ：`npm --prefix bench test`（20 → 21）、`node site/build.mjs`（切れたリンクなし）、pack test の `samples,showcase-html,showcase-element,showcase-react,plateau,rabbita,globe`（Chromium）と `samples,showcase-html`（WebKit）、`node bench/lib/long-comments.mjs`（46 のまま）。
 ## サンプル：属性テーブルとフィールド演算（2026-11-15）
 
 - ユーザーの要望（属性テーブルの例がない、フィールド演算を見せたい）で `examples/samples/attribute-table/` を足した（一覧では Tools の先頭）。世界の国（Natural Earth 1:110m、176 件）を地図と表で見せる。表は `createAttributeTable`（見出しで並べ替え、絞り込み、行の選択を feature state で地図に、`zoomTo`）、地図のクリックで行を選んで表をそこまで送る。`createFieldEditor` で式（JSON のスタイル式）から列を足し、見出しから改名・削除できる。プリセットは 4 つ（1 人あたり GDP、人口の割合、1 億人以上、経済規模）。数値の列は `classBreaks`（分位・jenks・等間隔）と `classStep` で塗り分け、凡例を出す。地球儀の切り替えつき。

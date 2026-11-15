@@ -21,8 +21,22 @@ let wms = null;
 function showLayer(id) {
   if (map.getLayer("wmts")) map.removeLayer("wmts");
   if (map.getSource("wmts")) map.removeSource("wmts");
-  map.addSource("wmts", { ...wmtsSource(wmts, { layer: id }), attribution: ATTRIBUTION });
+  const source = wmtsSource(wmts, { layer: id });
+  map.addSource("wmts", { ...source, attribution: ATTRIBUTION });
   map.addLayer({ id: "wmts", type: "raster", source: "wmts" }, map.getLayer("wms") ? "wms" : undefined);
+  checkTile(id, source);
+}
+
+/** Says so when layer `id` has no tile at the map's center: many of GIBS's have none at their default time. */
+async function checkTile(id, source) {
+  status.textContent = "";
+  const z = Math.min(Math.floor(map.getZoom()), source.maxzoom);
+  const { lng, lat } = map.getCenter();
+  const x = Math.floor(((lng + 180) / 360) * 2 ** z);
+  const y = Math.floor(((1 - Math.asinh(Math.tan((lat * Math.PI) / 180)) / Math.PI) / 2) * 2 ** z);
+  const url = source.tiles[0].replace("{z}", z).replace("{x}", x).replace("{y}", y);
+  const found = await fetch(url).then((r) => r.ok, () => false);
+  if (!found && select.value === id) status.textContent = "This layer has no tiles here at its default time. Try another.";
 }
 
 async function showWms(on) {
@@ -41,7 +55,6 @@ async function listLayers() {
   select.replaceChildren(...layers.map((l) => new Option(l.title, l.id)));
   select.value = "BlueMarble_ShadedRelief_Bathymetry";
   select.disabled = false;
-  status.textContent = `${layers.length} layers`;
   showLayer(select.value);
 }
 

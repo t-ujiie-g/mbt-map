@@ -105,9 +105,9 @@ fn tree_of(paths : Array[Array[@clipper.Point64]]) -> @clipper.PolyPath64 {
 }
 
 ///|
-/// Every feature of `t` grown by `meters` (shrunk if negative; lines and points
-/// only grow) as polygons with its properties, shaped by `join`, `cap` and
-/// `arc_tolerance` (meters, 0 for distance / 500); vanished ones keep their row.
+/// Every feature of `t` grown by `meters` as polygons with its properties, shaped by `join`, `cap`
+/// and `arc_tolerance` (meters, 0 for distance / 500). A negative distance shrinks polygons and
+/// empties lines and points (as Turf's `buffer`); vanished features keep their row.
 pub fn buffer(
   t : @geom.Table,
   meters : Double,
@@ -149,8 +149,11 @@ pub fn buffer(
       arc_tolerance=arc_tolerance * METER_SCALE,
     )
     o.add_paths(normalized(shape.polygons), join, Polygon)
-    o.add_paths(shape.lines, join, cap)
-    o.add_paths(shape.points.map(p => [p]), join, Polygon)
+    // Clipper offsets open paths and points by the distance's size, whatever its sign.
+    if meters >= 0.0 {
+      o.add_paths(shape.lines, join, cap)
+      o.add_paths(shape.points.map(p => [p]), join, Polygon)
+    }
     let parts = add_tree(b, tree_of(o.execute(meters * METER_SCALE)), to_xy)
     copy_props(b, t, f)
     b.end_feature(polygon_kind(parts), id=t.ids[f])

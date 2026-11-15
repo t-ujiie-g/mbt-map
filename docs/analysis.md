@@ -101,7 +101,7 @@ These are a port of Clipper2 2.0.1, with results identical to the C++ library. T
 
 | Method | What it does |
 |---|---|
-| `buffer(meters, { mode, join, cap, arcTolerance, crs })` | Grows each feature by `meters`, or shrinks it when `meters` is negative (only polygons shrink). Properties are kept. A feature that vanishes keeps its row without geometry. |
+| `buffer(meters, { mode, join, cap, arcTolerance, crs })` | Grows each feature by `meters` into polygons. A negative distance shrinks polygons and leaves points and lines without geometry (as Turf's `buffer`, which gives nothing for them). Properties are kept. A feature that vanishes keeps its row without geometry. |
 | `dissolve()` | Merges all polygons into one feature without properties. Lines and points are left out. |
 | `clip(other)` | Cuts this dataset's features to the area of `other`'s polygons. Lines stay lines, points are kept or dropped. Properties are kept. |
 | `erase(other)` | Removes the area of `other`'s polygons from this dataset's features. Properties are kept. |
@@ -119,6 +119,8 @@ These are a port of Clipper2 2.0.1, with results identical to the C++ library. T
 | `cap` | Line ends: `"round"`, `"butt"`, `"square"` | `"round"` |
 | `arcTolerance` | How far round edges may stray from a true arc, in meters | distance / 500 |
 | `crs` | The CRS a planar buffer is measured in | EPSG:3857 |
+
+Distances: `meters` must be a finite number. A geodesic buffer takes at most 10,000 km (`10_000_000`, a quarter of a meridian); a larger one rejects with `a geodesic buffer takes at most 10,000 km`. A point's circle is within millimeters of the distance at 1 km, 2 m at 50 km, 0.1% at 1,000 km and 0.6% at 10,000 km (measured with GeographicLib). Wide buffers are not cut at the antimeridian or the poles: longitudes may pass ±180, and a buffer that reaches over a pole is a ring around it, which planar tools misread. A planar buffer takes up to 1e9 of the CRS's units.
 
 ```js
 const roads = await load(roadsGeoJSON);

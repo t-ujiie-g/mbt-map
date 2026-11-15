@@ -269,6 +269,9 @@ export class Map {
     if (getComputedStyle(container).position === "static") container.style.position = "relative";
     this.#canvas = document.createElement("canvas");
     this.#canvas.style.cssText = "display:block;width:100%;height:100%";
+    // MapLibre's canvas: a region named "Map", here by the container's own `aria-label` when it has one.
+    this.#canvas.setAttribute("role", "region");
+    this.#canvas.setAttribute("aria-label", container.getAttribute("aria-label") ?? "Map");
     container.append(this.#canvas);
 
     try {

@@ -247,3 +247,11 @@ test "same_layers keeps tiles while paint changes, not when a filter does" {
   assert_false(same_layers(src, a, refiltered))
   assert_true(same_layers(raster, a, refiltered))
 }
+
+///|
+test "touch_action leaves the browser the gestures the map does not take" {
+  assert_eq(touch_action(true, true), "none")
+  assert_eq(touch_action(true, false), "pinch-zoom")
+  assert_eq(touch_action(false, true), "pan-x pan-y")
+  assert_eq(touch_action(false, false), "auto")
+}
