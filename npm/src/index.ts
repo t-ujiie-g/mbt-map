@@ -54,7 +54,7 @@ import type {
   Tracker,
   Handler,
 } from "./types";
-import { httpUrl, pmtilesArchive, resolveTemplate, wasmUrl, workerScriptUrl } from "./urls";
+import { httpUrl, pmtilesArchive, resolveTemplate, wasmUrl, workerParts, workerScriptUrl } from "./urls";
 import { MAX_DATA_BYTES, MAX_DOCUMENT_BYTES, readJsonCapped } from "../../worker/js/body.mjs";
 import type { ImageInput, StyleImageOptions } from "./images";
 import { StyleImages } from "./style-images";
@@ -796,13 +796,18 @@ export class Map {
       c.zoom,
       c.bearing,
       c.pitch,
-      workerScriptUrl(o.workerUrl ?? new URL("./worker.js", import.meta.url), page, location.origin),
+      workerScriptUrl(o.workerUrl, new URL("./worker.js", import.meta.url), page, location.origin),
       wasmUrl(o.wasmUrl ?? new URL("./mbt-map.wasm", import.meta.url), page),
       o.workerCount ?? 0,
       (source, z, x, y) => this.#providedTile(source, z, x, y),
       o.fontFamily ?? "sans-serif",
       limitsArray(this.#limits),
       o.strict ?? false,
+      workerParts(o.workerUrl, {
+        labels: new URL("./worker-labels.js", import.meta.url),
+        pmtiles: new URL("./worker-pmtiles.js", import.meta.url),
+        query: new URL("./worker-query.js", import.meta.url),
+      }) ?? null,
     );
     this.#engine = map;
     this.#warn(resolved);

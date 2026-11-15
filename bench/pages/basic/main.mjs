@@ -48,6 +48,7 @@ const map = mbtmap.create_map(
   "sans-serif", // labels' font family
   [0, 22, 0, 85, NaN, 0, 0, 0], // zoom 0-22, pitch 0-85, no bounds (bundle/main limits_of)
   false, // draw what is supported, as the facade does unless `strict`
+  null, // the worker's parts are beside it
 );
 window.__map = map;
 window.__mbtmap = mbtmap;

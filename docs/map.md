@@ -539,7 +539,7 @@ map.evaluateExpression(["interpolate", ["linear"], ["zoom"], 10, 1, 16, 8], [{}]
 
 ## Where the workers and wasm come from
 
-By default every file is loaded from next to the module that loads it, such as `new URL("./worker.js", import.meta.url)`. Serving the package's `dist/` directory as is (for instance with an import map) works without options. A bundler must keep those URLs: esbuild leaves `new URL(...)` alone and bundles dynamic imports, so copying the workers and wasm (`dist/*.wasm` and `dist/*worker*.js`) next to the bundle is enough (see `examples/react/build.mjs`). Other bundlers have not been checked; if one does not keep them, serve the files yourself and pass their URLs:
+By default every file is loaded from next to the module that loads it, such as `new URL("./worker.js", import.meta.url)`. Serving the package's `dist/` directory as is (for instance with an import map) works without options. Vite and webpack find and emit the files by themselves; what the other bundlers need is in [Getting started](./getting-started.md#bundlers). To serve the files yourself, pass their URLs:
 
 | Option | File |
 |---|---|

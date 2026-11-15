@@ -61,7 +61,7 @@ export function createGeoJSONTiles(
 ): GeoJSONTiles {
   const page = new URL(document.baseURI);
   const worker = new Worker(
-    workerScriptUrl(urls.workerUrl ?? new URL("./geojson-worker.js", import.meta.url), page, location.origin),
+    workerScriptUrl(urls.workerUrl, new URL("./geojson-worker.js", import.meta.url), page, location.origin),
     { type: "module" },
   );
   const pending = new Map<number, (bytes: ArrayBuffer | null) => void>();

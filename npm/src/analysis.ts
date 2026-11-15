@@ -6,7 +6,7 @@ import { packPattern } from "./relate-pattern";
 import { CURVATURE_COEFF, distance, sight } from "./sight";
 
 export { classBreaks, classStep, MAX_CKMEANS_CELLS, MAX_CLASS_VALUES, MAX_CLASSES, MAX_JENKS_WORK, statistics, type ClassMethod, type Statistics } from "./classify";
-import { httpUrl, resolveTemplate, wasmUrl } from "./urls";
+import { httpUrl, resolveTemplate, wasmUrl, workerParts } from "./urls";
 import { WorkerClient } from "./worker-client";
 
 export { distance };
@@ -192,7 +192,7 @@ export interface Collected {
 const client = new WorkerClient("analysis");
 
 function start(options: AnalysisOptions): void {
-  client.start(options.workerUrl ?? new URL("./analysis-worker.js", import.meta.url), (page) => ({
+  client.start(options.workerUrl, new URL("./analysis-worker.js", import.meta.url), (page) => ({
     wasm: wasmUrl(options.wasmUrl ?? new URL("./analysis.wasm", import.meta.url), page),
     geometry: wasmUrl(options.geometryWasmUrl ?? new URL("./geometry.wasm", import.meta.url), page),
     relate: wasmUrl(options.relateWasmUrl ?? new URL("./relate.wasm", import.meta.url), page),
@@ -201,6 +201,7 @@ function start(options: AnalysisOptions): void {
     viewshed: wasmUrl(options.viewshedWasmUrl ?? new URL("./viewshed.wasm", import.meta.url), page),
     route: wasmUrl(options.routeWasmUrl ?? new URL("./route.wasm", import.meta.url), page),
     proj: wasmUrl(options.projWasmUrl ?? new URL("./proj.wasm", import.meta.url), page),
+    parts: workerParts(options.workerUrl, { viewshed: new URL("./analysis-viewshed.js", import.meta.url) }),
   }));
 }
 

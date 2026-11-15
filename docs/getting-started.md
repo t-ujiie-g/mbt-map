@@ -91,7 +91,7 @@ Feature queries (`queryRenderedFeatures`, `querySourceFeatures`) return Promises
 
 ## How files are loaded
 
-Every module loads its workers and wasm with `new URL("./worker.js", import.meta.url)`, that is, from the same folder as itself, and its optional parts by dynamic `import()` from the same folder. Some examples:
+Every module names its workers, their wasm and the parts the workers import later with `new URL("./worker.js", import.meta.url)`, that is, in the same folder as itself, and loads its own optional parts by dynamic `import()` from the same folder. The main thread sends those URLs to each worker when it starts it. Some examples:
 
 | File | Loaded when |
 |---|---|
@@ -107,16 +107,28 @@ So the rule is: **keep the files of `dist/` together**. Serving `dist/` as it is
 
 ### Bundlers
 
-Bundlers differ in how they treat `new URL(…, import.meta.url)`. esbuild leaves it as it is and bundles the dynamic imports, so it works when the workers and wasm are copied next to the bundle: every `*.wasm` file and the worker files and worker parts (`*worker*.js`, `data-*.js`, `analysis-*.js`, `prjwkt.js`, `projstring.js`). The React example does this in [`examples/react/build.mjs`](../examples/react/build.mjs). Other bundlers have not been checked yet; if one rewrites or drops these URLs, serve the files yourself and pass their locations:
+Bundlers that understand `new URL("./file", import.meta.url)` find every worker, wasm file and worker part by themselves and emit them with the build. Checked by `npm run bundlers` in `bench/` (dev server and production build, in Chromium):
+
+| Bundler | What it needs |
+|---|---|
+| Vite 8 | Nothing: `vite` and `vite build` work with the default configuration. The build inlines files under 4 KB (`build.assetsInlineLimit`), two small workers among them; see the Content Security Policy below. |
+| webpack 5 | Nothing: `webpack serve` and `webpack` work with the default configuration (also with `output.publicPath` on another origin). |
+| Rollup 4 | `@rollup/plugin-node-resolve` and [`@web/rollup-plugin-import-meta-assets`](https://www.npmjs.com/package/@web/rollup-plugin-import-meta-assets), which emits the files named by `new URL(…, import.meta.url)`. |
+| esbuild | It leaves `new URL(…, import.meta.url)` as it is, so copy the files next to the bundle: every `*.wasm` file and the workers and their parts (`*worker*.js`, `data-*.js`, `analysis-*.js`, `prjwkt.js`, `projstring.js`). The React example does this in [`examples/react/build.mjs`](../examples/react/build.mjs). |
+| Parcel 2 | Not supported as a bundled dependency: Parcel compiles every file named by `new URL(…, import.meta.url)` into its own module format, which breaks the library's module workers. Serve the package unbundled instead: copy `node_modules/mbt-map/dist/` next to the build and import it at run time, `const { Map } = await import(new URL("mbt-map/index.js", document.baseURI).href)`. |
+
+When the build's files are served from another origin (a CDN for static assets), that origin must allow the page's with CORS; the workers then start as they do from a CDN.
+
+To serve the workers and wasm yourself, pass their locations:
 
 - `new Map({ workerUrl, wasmUrl, geojsonWorkerUrl, geojsonWasmUrl, geojsonPropertiesWasmUrl })` for the map's workers.
 - The last argument of `mbt-map/analysis`, `mbt-map/data` and `mbt-map/geodesic` functions takes `workerUrl`, `wasmUrl` and the URLs of the extra wasm files (`geometryWasmUrl`, `projWasmUrl`, `xmlUrl`, …); the worker starts with the options of the first call.
 
-Workers must come over http(s) from the page's origin or from the library's own folder (on a CDN), and wasm from an http(s) URL; `data:` and `blob:` URLs given as options are refused.
+A worker given by `workerUrl` imports its parts from beside itself (`worker.js` needs `worker-labels.js`, `worker-pmtiles.js` and `worker-query.js`; `data-worker.js` its `data-*.js`; `analysis-worker.js` needs `analysis-viewshed.js`), so copy them together. Workers given as options must come over http(s) from the page's origin or from the library's own folder (on a CDN), and wasm from an http(s) URL; `data:` and `blob:` URLs given as options are refused. Only the library's own default workers may be where a bundler put them, a `data:` URL included.
 
 ### Content Security Policy
 
-Compiling wasm needs `script-src 'wasm-unsafe-eval'`, and the workers need `worker-src 'self'` (or `script-src 'self'`). Loaded from a CDN, the library also needs the CDN in `script-src` and `connect-src`, and `worker-src blob:` for the workers' bootstrap scripts. mbt-map uses no `eval` or `new Function`.
+Compiling wasm needs `script-src 'wasm-unsafe-eval'`, and the workers need `worker-src 'self'` (or `script-src 'self'`). Loaded from a CDN, the library also needs the CDN in `script-src` and `connect-src`, and `worker-src blob:` for the workers' bootstrap scripts; the same holds for a bundler's output served from another origin. A worker that a bundler inlined as a `data:` URL (Vite's build, files under 4 KB) starts from a same-origin `blob:` of the same text and needs `worker-src blob:` too, and a worker part inlined that way is imported from its `data:` URL, which needs `script-src data:`. To keep a strict policy with Vite, set `build.assetsInlineLimit: 0`: nothing is inlined and `'self'` is enough. mbt-map uses no `eval` or `new Function`.
 
 ### Requests and credentials
 

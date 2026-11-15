@@ -22,7 +22,7 @@ if (geojson.length) {
 }
 const canvas = document.getElementById("mbtmap");
 const mb = mbtmap.create_map(canvas, engineStyle, lng, lat, zoom, bearing, pitch, "/worker/js/worker.mjs",
-  "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm", 0, provider, "sans-serif", [0, 22, 0, 85, NaN, 0, 0, 0], false);
+  "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm", 0, provider, "sans-serif", [0, 22, 0, 85, NaN, 0, 0, 0], false, null);
 const ml = new maplibregl.Map({ container: "maplibre", style: JSON.parse(styleText), ...camera, maxPitch: 85, attributionControl: false, pixelRatio: 1, fadeDuration: 0, zoomLevelsToOverscale: undefined });
 // The same images in both, drawn from functions of the pixel: a dot, a framed box, a pin at
 // 2x, an SDF ring (alpha 192 on its edge); scenes also ask for "nope", which neither has.

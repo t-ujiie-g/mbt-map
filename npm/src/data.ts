@@ -5,7 +5,7 @@ import { tableInfo, tableToGeoJSON, withIds } from "../../wasmio/js/table.mjs";
 import { crsArg, type Crs } from "./crs";
 import { bboxArg, csvArgs, csvWriteArgs, formatOf, shapefileParts, type CsvOptions, type CsvWriteOptions, type DataFormat, type ShapefileParts, type WriteFormat } from "./data-format";
 import type { ReprojectedSource } from "./services/common";
-import { httpUrl, wasmUrl, type TransformedRequest } from "./urls";
+import { httpUrl, wasmUrl, workerParts, type TransformedRequest } from "./urls";
 import { WorkerClient } from "./worker-client";
 
 export type { CsvOptions, CsvWriteOptions, DataFormat, ShapefileParts, WriteFormat, Crs };
@@ -98,10 +98,17 @@ export class DataTable {
 const client = new WorkerClient("data");
 
 function start(options: DataOptions): void {
-  client.start(options.workerUrl ?? new URL("./data-worker.js", import.meta.url), (page) => ({
+  client.start(options.workerUrl, new URL("./data-worker.js", import.meta.url), (page) => ({
     wasm: wasmUrl(options.wasmUrl ?? new URL("./data.wasm", import.meta.url), page),
     proj: wasmUrl(options.projWasmUrl ?? new URL("./proj.wasm", import.meta.url), page),
     prj: new URL("./prjwkt.js", import.meta.url).href,
+    parts: workerParts(options.workerUrl, {
+      zip: new URL("./data-zip.js", import.meta.url),
+      crs: new URL("./data-crs.js", import.meta.url),
+      fgb: new URL("./data-fgb.js", import.meta.url),
+      geotiff: new URL("./data-geotiff.js", import.meta.url),
+      reproject: new URL("./data-reproject.js", import.meta.url),
+    }),
     xml: wasmUrl(options.xmlUrl ?? new URL("./xml.wasm", import.meta.url), page),
     geotiff: wasmUrl(options.geotiffUrl ?? new URL("./geotiff.wasm", import.meta.url), page),
   }));

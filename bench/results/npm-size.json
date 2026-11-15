@@ -6,12 +6,12 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 166441,
+      "bytes": 166732,
       "budget": 168000
     },
     {
       "name": "GeoJSON sources (loaded by mbt-map when a style has one)",
-      "bytes": 4651,
+      "bytes": 4850,
       "budget": 5000
     },
     {
@@ -31,7 +31,7 @@
     },
     {
       "name": "sprite sheets (loaded by mbt-map when a style has a sprite)",
-      "bytes": 1832,
+      "bytes": 1863,
       "budget": 2000
     },
     {
@@ -76,7 +76,7 @@
     },
     {
       "name": "mbt-map/services",
-      "bytes": 11493,
+      "bytes": 11656,
       "budget": 12000
     },
     {
@@ -96,7 +96,7 @@
     },
     {
       "name": "display worker",
-      "bytes": 85032,
+      "bytes": 85095,
       "budget": 100000
     },
     {
@@ -126,7 +126,7 @@
     },
     {
       "name": "mbt-map/analysis",
-      "bytes": 8496,
+      "bytes": 8739,
       "budget": 9000
     },
     {
@@ -136,7 +136,7 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 30318,
+      "bytes": 30347,
       "budget": 31000
     },
     {
@@ -176,7 +176,7 @@
     },
     {
       "name": "mbt-map/geodesic",
-      "bytes": 1407,
+      "bytes": 1614,
       "budget": 2000
     },
     {
@@ -186,7 +186,7 @@
     },
     {
       "name": "mbt-map/3d",
-      "bytes": 9257,
+      "bytes": 9463,
       "budget": 10000
     },
     {
@@ -211,12 +211,12 @@
     },
     {
       "name": "mbt-map/data",
-      "bytes": 4872,
+      "bytes": 5140,
       "budget": 6000
     },
     {
       "name": "data worker",
-      "bytes": 40614,
+      "bytes": 40695,
       "budget": 41000
     },
     {

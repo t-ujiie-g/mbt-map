@@ -40,6 +40,7 @@ pub fn create_map(
   font : String,
   limits : FixedArray[Double],
   strict : Bool,
+  worker_parts : @map.WorkerParts,
 ) -> @map.Map {
   @map.Map::new(
     canvas,
@@ -52,6 +53,7 @@ pub fn create_map(
     font~,
     limits=limits_of(limits),
     strict~,
+    worker_parts~,
   ) catch {
     BadStyle(e) => throw_error("mbt-map: style: \{e.message()}")
     NoWebGL2 => throw_error("mbt-map: WebGL2 is not available")

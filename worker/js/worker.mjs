@@ -37,8 +37,8 @@ let images = new Map();
 let imagesReady = Promise.resolve();
 let imagesLoaded = null;
 
-// Labels, PMTiles and queries load on first use (the npm build emits them as files next to
-// this one). A failed load is forgotten, so the next tile or query tries again.
+// Labels, PMTiles and queries load on first use: from the init message's `parts` URLs (where a bundler put
+// them), else next to this file (as the npm build emits them). A failed load is forgotten and tried again.
 function lazy(load) {
   let p = null;
   return () => (p ??= load().catch((err) => {
@@ -46,14 +46,16 @@ function lazy(load) {
     throw err;
   }));
 }
+let parts = {};
+const part = (name) => (typeof parts[name] === "string" ? parts[name] : null);
 let symbols = null;
-const loadSymbols = lazy(() => import("./symbols.mjs").then((m) => {
+const loadSymbols = lazy(() => (part("labels") ? import(part("labels")) : import("./symbols.mjs")).then((m) => {
   glyphs = new m.Glyphs(font);
   symbols = m;
 }));
-const loadPmtiles = lazy(() => import("./pmtiles.mjs"));
+const loadPmtiles = lazy(() => (part("pmtiles") ? import(part("pmtiles")) : import("./pmtiles.mjs")));
 let queries = null;
-const loadQueries = lazy(() => import("./query.mjs").then((m) => (queries = m)));
+const loadQueries = lazy(() => (part("query") ? import(part("query")) : import("./query.mjs")).then((m) => (queries = m)));
 // Starts loading labels early for a style with symbol layers; each tile still checks its own.
 const prefetchSymbols = (symbols) => {
   if (canDrawGlyphs && symbols === true) loadSymbols().catch(() => {});
@@ -178,7 +180,8 @@ function unpack(packed) {
   return { layers, transfer };
 }
 
-async function init({ wasm: url, style, symbols, font: family }) {
+async function init({ wasm: url, style, symbols, font: family, parts: given }) {
+  if (given && typeof given === "object") parts = given;
   if (typeof family === "string" && family) font = family;
   prefetchSymbols(symbols);
   const host = hostText();

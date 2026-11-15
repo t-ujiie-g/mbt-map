@@ -211,7 +211,7 @@ async function loadEsri(url: string, format: "json" | "pbf", options: ArcGISFeat
 
 /** An ArcGIS query result's bytes read by services.wasm, as its GeoJSON would be. */
 async function readEsri(bytes: Uint8Array<ArrayBuffer>, format: "json" | "pbf", options: ServicesWorkerOptions): Promise<FeatureCollection & { exceededTransferLimit: boolean }> {
-  esriClient.start(options.workerUrl ?? new URL("./services-worker.js", import.meta.url), (page) => ({
+  esriClient.start(options.workerUrl, new URL("./services-worker.js", import.meta.url), (page) => ({
     wasm: wasmUrl(options.wasmUrl ?? new URL("./services.wasm", import.meta.url), page),
   }));
   // A server refuses a query with a JSON error whatever the format asked.

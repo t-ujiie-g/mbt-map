@@ -21,6 +21,7 @@ const map = mbtmap.create_map(
   "sans-serif",
   [0, 22, 0, 85, NaN, 0, 0, 0],
   false,
+  null,
 );
 window.__map = map;
 window.__mbtmap = mbtmap;
