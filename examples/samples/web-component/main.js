@@ -27,5 +27,6 @@ for (const button of document.querySelectorAll("[data-center]")) {
     el.zoom = button.dataset.zoom;
   });
 }
-document.getElementById("zoom-in").addEventListener("click", () => (el.zoom += 1));
-document.getElementById("zoom-out").addEventListener("click", () => (el.zoom -= 1));
+// The element refuses zooms outside 0 to 22 (it fires mbt-map-error), so the buttons stop there.
+document.getElementById("zoom-in").addEventListener("click", () => (el.zoom = Math.min(el.zoom + 1, 22)));
+document.getElementById("zoom-out").addEventListener("click", () => (el.zoom = Math.max(el.zoom - 1, 0)));

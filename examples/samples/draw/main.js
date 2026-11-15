@@ -11,6 +11,7 @@ const map = new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院",
       },
@@ -47,5 +48,5 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Enter") draw.finish();
   else if (e.key === "Escape") draw.cancel();
   else if (e.key === "Delete" || e.key === "Backspace") draw.deleteSelected();
-  else if ((e.ctrlKey || e.metaKey) && e.key === "z") e.shiftKey ? draw.redo() : draw.undo();
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") e.shiftKey ? draw.redo() : draw.undo();
 });

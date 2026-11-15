@@ -23,6 +23,7 @@ const map = new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院",
       },
@@ -45,8 +46,14 @@ const points = await load(stations);
 const status = document.getElementById("status");
 const buttons = document.querySelectorAll("[data-op]");
 
+const meters = document.getElementById("meters");
+
 const ops = {
-  buffer: () => points.buffer(Number(document.getElementById("meters").value)),
+  buffer() {
+    const distance = Number(meters.value);
+    if (meters.value === "" || !(distance >= meters.min && distance <= meters.max)) throw new Error(`Enter a distance from ${meters.min} to ${meters.max} m`);
+    return points.buffer(distance);
+  },
   voronoi: () => points.voronoi(BOX),
   hull: () => points.convexHull(),
 };
@@ -54,11 +61,15 @@ const ops = {
 for (const button of buttons) {
   button.onclick = async () => {
     for (const b of buttons) b.setAttribute("aria-pressed", String(b === button));
-    const result = await ops[button.dataset.op]();
-    const areas = await result.areas();
-    map.getSource("result").setData(await result.toGeoJSON());
-    const km2 = areas.reduce((sum, a) => sum + a, 0) / 1e6;
-    status.textContent = `${result.length} feature${result.length === 1 ? "" : "s"}, ${km2.toFixed(1)} km² in all`;
-    result.dispose();
+    try {
+      const result = await ops[button.dataset.op]();
+      const areas = await result.areas();
+      map.getSource("result").setData(await result.toGeoJSON());
+      const km2 = areas.reduce((sum, a) => sum + a, 0) / 1e6;
+      status.textContent = `${result.length} feature${result.length === 1 ? "" : "s"}, ${km2.toFixed(1)} km² in all`;
+      result.dispose();
+    } catch (e) {
+      status.textContent = e.message;
+    }
   };
 }

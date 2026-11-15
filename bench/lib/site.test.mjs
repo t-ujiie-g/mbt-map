@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { anchors, siteLink, slug, REPOSITORY } from "../site/links.mjs";
+import { deadLinks } from "../site/dead-links.mjs";
 import { ROOT } from "./root.mjs";
 
 test("slug follows GitHub's heading anchors", () => {
@@ -55,4 +57,32 @@ test("highlight colors code blocks by their language, MoonBit included, and leav
   assert.match(mbt, /<span class="hljs-comment">\/\/ here<\/span>/);
   const plain = '<pre><code class="language-text">a &lt; b</code></pre>';
   assert.equal(highlight(plain), plain);
+});
+
+test("deadLinks lists a built site's links to missing files, folders without an index and missing ids", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "site-"));
+  try {
+    mkdirSync(path.join(dir, "docs"));
+    mkdirSync(path.join(dir, "examples/html"), { recursive: true });
+    mkdirSync(path.join(dir, "examples/empty"));
+    writeFileSync(path.join(dir, "site.css"), "");
+    writeFileSync(path.join(dir, "examples/html/index.html"), '<html lang="en" data-variants="html,element">');
+    writeFileSync(path.join(dir, "docs/map.html"), '<h2 id="events">Events</h2><a href="#events">ok</a><a href="#none">dead</a>');
+    writeFileSync(
+      path.join(dir, "index.html"),
+      '<link rel="stylesheet" href="./site.css"><a href="./docs/map.html#events">ok</a><a href="./examples/html/?local=1">ok</a>' +
+        '<a href="https://example.com/x">ok</a><a href="./docs/map.html#gone">dead</a><a href="./examples/element/">dead</a>' +
+        '<a href="./examples/empty/">dead</a><script src="./missing.js"></script><pre><code>&lt;a href="./shown.html"&gt;</code><a href="./in-code.html">x</a></pre>',
+    );
+    assert.deepEqual(deadLinks(dir).sort(), [
+      "docs/map.html: #none",
+      "examples/html/index.html: ../element/",
+      "index.html: ./docs/map.html#gone",
+      "index.html: ./examples/element/",
+      "index.html: ./examples/empty/",
+      "index.html: ./missing.js",
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

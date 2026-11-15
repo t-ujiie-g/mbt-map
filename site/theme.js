@@ -1,5 +1,5 @@
-// Applies the remembered color theme before the page paints (default: the device's), and lets the header's
-// button switch between light and dark.
+// Applies the remembered color theme before the page paints (default: the device's), lets the header's
+// button switch between light and dark, and folds the documentation's navigation on phones.
 (() => {
   const KEY = "mbt-map-theme";
   const root = document.documentElement;
@@ -9,6 +9,9 @@
   } catch {}
   const current = () => root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   addEventListener("DOMContentLoaded", () => {
+    // On phones the documentation's navigation starts folded, so that the page's title is on the first screen.
+    const menu = document.querySelector("details.side-menu");
+    if (menu && matchMedia("(max-width: 860px)").matches) menu.open = false;
     const button = document.querySelector("button.theme");
     if (!button) return;
     const show = () => {

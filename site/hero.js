@@ -1,7 +1,7 @@
 // The home page's map: PLATEAU's LOD2 buildings around Tokyo Station over GSI's pale map, lit as Tokyo is at
 // the visitor's clock time (the sun's shadows by day, a dark map by night; `?time=18:30` for another time).
 // It turns slowly until touched; the button swaps in the textured buildings.
-import { Map, sunPosition, timeOfDayLights } from "mbt-map";
+import { Map, sunPosition } from "mbt-map";
 import { tilesLayer } from "mbt-map/3d";
 
 const TOKYO = [139.7671, 35.6812];
@@ -13,10 +13,10 @@ const TEXTURED = `${ASSETS}28/07d0a1-b6be-46ef-bd87-4f0683b5ef6e/${NAME}/tileset
 // PLATEAU's heights are above the ellipsoid; the geoid lies 36.7 m above it at Tokyo Station.
 const GEOID = -36.7;
 
-/** The visitor's wall-clock time (or `?time=HH:MM`) taken as Tokyo's (UTC+9) today. */
+/** The visitor's wall-clock time (or `?time=HH:MM`, 00:00 to 23:59) taken as Tokyo's (UTC+9) today. */
 function tokyoNow() {
   const now = new Date();
-  const asked = /^(\d{1,2}):(\d{2})$/.exec(new URLSearchParams(location.search).get("time") ?? "");
+  const asked = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(new URLSearchParams(location.search).get("time") ?? "");
   const [h, m] = asked ? [Number(asked[1]), Number(asked[2])] : [now.getHours(), now.getMinutes()];
   return { date: new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), h - 9, m)), label: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}` };
 }
@@ -53,6 +53,7 @@ const map = new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院 · 3D都市モデル（Project PLATEAU）千代田区（国土交通省）",
       },
@@ -72,22 +73,41 @@ const map = new Map({
 
 const hint = document.querySelector(".map-card .hint");
 
-/** Lights the scene for now: the sun and its shadows while it is up, the map light by day and dark by night. */
+// The one directional light by the sun's altitude, linear between -6° (night: a moon in the south-west), 0° (the
+// horizon) and 10° (day). Ambient and directional add up to 0.96 at most, so a white wall facing the sun keeps
+// its shape, and never to less than by night; shadows come in as the sun rises.
+const ALTITUDES = [-6, 0, 10];
+const AMBIENT_COLOR = [[132, 142, 165], [200, 196, 205], [255, 255, 255]];
+const AMBIENT = [0.5, 0.58, 0.52];
+const SUN_COLOR = [[205, 214, 234], [255, 184, 132], [255, 244, 230]];
+const SUN = [0.3, 0.36, 0.44];
+const SHADOWS = [0, 0, 0.55];
+const MOON = [215, 50];
+// A lower sun is drawn at this angle from up: grazing light leaves the roofs dark and one long shadow over all.
+const LOWEST = 68;
+
+/** `stops` (numbers or colors at ALTITUDES) at the sun's `altitude`. */
+function at(stops, altitude) {
+  const i = altitude < ALTITUDES[1] ? 0 : 1;
+  const t = Math.min(1, Math.max(0, (altitude - ALTITUDES[i]) / (ALTITUDES[i + 1] - ALTITUDES[i])));
+  const [a, b] = [stops[i], stops[i + 1]];
+  return Array.isArray(a) ? `rgb(${a.map((c, k) => Math.round(mix(c, b[k], t))).join(", ")})` : mix(a, b, t);
+}
+
+/** Lights the scene for now: moonlight by night, the sun and its shadows by day, the map dark or light with them. */
 function light() {
   const { date, label } = tokyoNow();
-  const altitude = sunPosition(date, ...TOKYO).altitude;
+  const { azimuth, altitude } = sunPosition(date, ...TOKYO);
   // Day comes in over civil twilight, from the sun 6° below the horizon to 6° above.
   const day = Math.min(1, Math.max(0, (altitude + 6) / 12));
-  // By day the sun as timeOfDayLights gives it, with shadows; by night a weak moonlight from the south-west
-  // without shadows, so that the buildings' faces still differ.
-  const sun = timeOfDayLights(date, ...TOKYO).find((l) => l.type === "directional");
-  const directional =
-    altitude > 0
-      ? { ...sun, properties: { ...sun.properties, intensity: Math.max(sun.properties.intensity, 0.3), "cast-shadows": true, "shadow-intensity": 0.55 } }
-      : { id: "moon", type: "directional", properties: { color: "#cdd6ea", intensity: mix(0.45, 0.3, day), direction: [215, 50] } };
+  // Below the horizon the light turns from the moon's place to the sun's, the short way round.
+  const risen = Math.min(1, Math.max(0, (altitude + 6) / 6));
+  const turn = ((azimuth - MOON[0] + 540) % 360) - 180;
+  const direction = [(MOON[0] + turn * risen + 360) % 360, mix(MOON[1], Math.min(90 - altitude, LOWEST), risen)];
+  const shadows = at(SHADOWS, altitude);
   map.setLights([
-    { id: "ambient", type: "ambient", properties: { color: shade([132, 142, 165], [255, 255, 255], day), intensity: mix(0.5, 0.55, day) } },
-    directional,
+    { id: "ambient", type: "ambient", properties: { color: at(AMBIENT_COLOR, altitude), intensity: at(AMBIENT, altitude) } },
+    { id: "sun", type: "directional", properties: { color: at(SUN_COLOR, altitude), intensity: at(SUN, altitude), direction, "cast-shadows": shadows > 0, "shadow-intensity": shadows } },
   ]);
   map.setSky(sky(day));
   map.setPaintProperty("background", "background-color", shade([15, 20, 28], [233, 237, 242], day));

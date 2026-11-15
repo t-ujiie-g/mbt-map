@@ -322,6 +322,32 @@ Where things stand, decisions and open issues. The development history before th
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 929、wasm-gc 941、js 988、native 929）、npm のテスト（453）と大きさ、bench のテスト、pack test（Chromium・WebKit 27.2・Firefox 157 とも 24/24。本物のタッチは Chromium だけ）、`camera:golden`・`globe:golden`・`query:golden`（750/750）・`export:golden`・`clipper:golden`（全部一致）・`buffer:check`・`sight:golden`（0 differ）。
 - 残り：実機（iOS Safari、Android Chrome）でのタッチは確かめていない（Playwright の Chromium のタッチ入力まで）。`interactive: false` でもキャンバスは `tabindex="0"` のまま（MapLibre は `-1`）。バッファは日付変更線や極で切らない。
 
+## サイト・サンプル・例の公開前 QA の直し（2026-11-15、Mac）
+
+公開前の QA で見つかった、サイト（`site/`、`bench/site/`）・サンプル（`examples/samples/`）・例のアプリの不具合を直した。ライブラリ（`npm/src`、`element/`、MoonBit）は触っていない。
+
+- **切れたリンク**：サイトに出していない `examples/element/` へのリンクが 3 か所にあった。
+  - トップのカードは Web コンポーネントのサンプル（`examples/web-component.html`）へ。
+  - ショーケースの見出しのリンクは、ページの `<html data-variants="…">` に名前のあるものだけにした（`examples/shared/shell.js` の `variants()`。サイトのビルドが `SITE_EXAMPLES` を書き込む。リポジトリから開けば 3 つとも）。React も同じ関数を使う。
+  - `docs/getting-started.md` の「three styles」は、HTML と React（リポジトリには要素だけの版も）と書き直した。
+  - `bench/site/dead-links.mjs`：ビルドした `_site/` の全ページの `href` / `src`（`<pre>` の中の見せているコードは除く）がサイト内のファイルに届くこと、`#` がその先のページの id にあること、ショーケースの `data-variants` の先があることを確かめる。`bench/site/build.mjs` は 1 つでも切れていれば失敗する。直す前のビルドに当てると `index.html: ./examples/element/` だけを挙げた。`bench/lib/site.test.mjs` にテスト。
+- **ショーケースの Globe**：既定の地図（GSI のベクトルタイルは z4 以上・日本だけ）で地球にするとベージュの球になり、2D に戻してもズーム 2 のまま真っ白だった。
+  - ズーム 4 未満に GSI の標準地図（`std`、世界の z0〜。`?local=1` では `bench/fixtures/gsi-std-world` の z0〜3）をラスタで敷く（`examples/shared/style.js` の `world`。レイヤーの `maxzoom: 4`）。
+  - 地球に入るときの中心とズームを覚え、地球から出るときに戻す（`modeEase(mode, zoom, back)`。その間に元より寄っていれば戻さない）。HTML・要素・React とも。
+- **コピーしても動くサンプル**：サンプルのページは `main.js` と `index.html` のほかのファイルも載せる。テキスト（`style.json` など、拡張子で決める）は 3 つめのコードとして、バイナリ（`tower.glb`）はサイトの絶対 URL のリンクとして載せ、見せるコードの中の `"./tower.glb"` もその URL にする。全 23 サンプルの見せているコードを別オリジンに置いて開き直し、どれも描けてエラーなし（Chromium）。
+- **光**：
+  - `examples/samples/buildings-shadows`：19:00（日没）で建物だけが黒かった。太陽の高さ 10° から地平線にかけて、影を薄くし、環境光を足し、地面のレイヤーの色を暗くする。
+  - `site/hero.js`：日の出・日の入りの前後で建物が夜より暗い平らな塊になり、朝は日の当たる壁が白く飛んでいた。光を太陽の高さ（-6°・0°・10°）の折れ線にした：環境光と平行光の和は 0.96 まで、薄明の環境光は夜より明るく、影は 0°〜10° で濃くなる。平行光の向きは地平線の下で月（南西）から太陽へ回し、太陽は天頂から 68° より低くは描かない（すれすれの光では屋根が暗く、影が全面を覆う）。`?time=` は 00:00〜23:59 だけ読む。
+- **サンプルの細かい直し**：`draw` の Ctrl+Shift+Z（`e.key` が "Z" になる）、`classify` の凡例の数（小数 1 桁まで）、`buffer-voronoi` の距離の確かめとエラーの表示、`web-component` のズームボタン（0〜22 で止める）、`measure` のクリック直後の長さ 0 の区間、`read-data` の「1 rows」とファイル入力の名前、`wmts-wms` はレイヤーを選ぶたびに中心のタイルを 1 枚確かめて、なければそう書く。GSI の淡色地図を使うサンプルとトップの地図は `minzoom: 2`。`terrain` は標高タイルの `bounds` で海の上のタイル（404）を求めない。スライダーの `<label>` は `for` で結んだ。
+- **スマホの幅**：docs のナビゲーションは `<details>` にして `site/theme.js` が 860px 以下で畳む（全 13 ページで見出しが最初の画面に入る）。長いインラインコードは折り返す（`style-support.html` の横スクロールがなくなった）。PLATEAU の例の出典は上に移した（下のパネルに重なっていた）。
+- **ショーケース**：サービスの URL に届かないときの「Failed to fetch」を、URL と CORS を確かめるよう促す文にした（`serviceError`）。
+- **直していないもの（ライブラリ側、または仕様どおり）**：
+  - 平行光が 1 つなので、光に背を向けた面はどれも環境光だけの同じ色になる（`npm/src/model/draw.ts` の `max(dot(n, l), 0)`）。トップの地図を太陽の反対側から見たときの一様な灰色はこれで、サイトの側では直せない。半球光か補助光がライブラリに要る。
+  - スタイルの途中に置いた半透明の `background` レイヤーが、地面ではなく押し出しの建物の上にだけ描かれる（`buildings-shadows` で地面を暗くするのに使おうとして分かった。サンプルは地面のレイヤーの色を変える形にした）。
+  - `?local=1` のショーケースで Globe のあと 3D を押すとページが固まる（直す前のコードでも同じ。DEM が z14 だけのスタイルでズーム 2 から地形つきに入るとき。GSI の実タイルでは起きない）。
+  - ショーケースのコロプレスの区切りの最後が重なる（`… / 24.91 / 24.91`）のは `classBreaks` の jenks が simple-statistics と同じく各クラスの下限と最大値を返すためで、いちばん上のクラスが 1 つの値だけのときに起きる。
+  - OpenFreeMap のスタイルの `symbol-placement` の式の警告、Firefox の WebGL の性能の警告、GSI のデータの質。
+- 確かめ：`npm --prefix bench test`（20 → 21）、`node site/build.mjs`（切れたリンクなし）、pack test の `samples,showcase-html,showcase-element,showcase-react,plateau,rabbita,globe`（Chromium）と `samples,showcase-html`（WebKit）、`node bench/lib/long-comments.mjs`（46 のまま）。
 ## 公開前のライブラリの直し：`updateData`、背景の描く順、地形で固まる件（2026-11-15、Mac）
 
 公開直前に見つかった 3 件。ブランチ `fix/update-data-and-draw-order`。
