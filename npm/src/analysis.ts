@@ -477,9 +477,9 @@ export class Dataset {
   }
 
   /**
-   * Every feature grown by `meters` (shrunk if negative; lines and points only
-   * grow) as polygons with its properties; vanished features keep their row
-   * without geometry.
+   * Every feature grown by `meters` as polygons with its properties. A negative distance shrinks polygons and
+   * empties lines and points; vanished features keep their row without geometry. A geodesic buffer takes at
+   * most 10,000 km, a planar one 1e9 of the CRS's units.
    */
   async buffer(meters: number, { mode = "geodesic", join = "round", cap = "round", arcTolerance = 0, crs = 3857 }: BufferOptions = {}): Promise<Dataset> {
     if (!(mode in { geodesic: 0, planar: 1 }) || !(join in JOIN) || !(cap in CAP) || !Number.isFinite(meters) || !(arcTolerance >= 0)) {

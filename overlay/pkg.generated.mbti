@@ -7,6 +7,8 @@ import {
 }
 
 // Values
+pub const MAX_GEODESIC_BUFFER : Double = 1.0e7
+
 pub fn buffer(@geom.Table, Double, mode? : BufferMode, join? : @clipper.JoinType, cap? : @clipper.EndType, arc_tolerance? : Double) -> @geom.Table
 
 pub fn buffer_refusal(Double, mode~ : BufferMode, arc_tolerance~ : Double) -> String?

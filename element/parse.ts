@@ -48,6 +48,10 @@ export function parsePitch(value: string): number | null {
   return DECIMAL.test(value) ? checkPitch(Number(value)) : null;
 }
 
+export function checkBoolean(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
+}
+
 /** `"true"` or `"false"`, nothing else. */
 export function parseBoolean(value: string): boolean | null {
   return value === "true" ? true : value === "false" ? false : null;

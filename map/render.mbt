@@ -61,9 +61,10 @@ fn Map::render(self : Map) -> Unit {
       f()
     }
   }
-  // Feature states still being placed by the workers.
-  if settled && self.ranges_waiting == 0 {
-    if !self.idle_fired {
+  // As MapLibre: `idle` after each frame that leaves nothing to load (tiles, feature states the
+  // workers still place), move or draw; a frame asked for meanwhile holds back only a repeated one.
+  if settled && self.ranges_waiting == 0 && !self.moving {
+    if !self.idle_fired || self.frame < 0 {
       self.idle_fired = true
       for _, l in self.listeners {
         if l is Idle(f) {

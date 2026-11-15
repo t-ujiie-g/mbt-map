@@ -40,6 +40,8 @@ If you use GSI tiles, credit 国土地理院 (Geospatial Information Authority o
 | `worker-count` | One digit, 0 to 4 (0 picks automatically). |
 | `worker-url`, `wasm-url` | Where `worker.js` and `mbt-map.wasm` are served; see [The map](./map.md#where-the-workers-and-wasm-come-from). |
 | `attribution-control` | `true` (default) or `false`. Use `false` to show attributions yourself, for instance with `createAttribution` of [mbt-map/ui](./ui.md). |
+| `render-world-copies` | `true` (default) or `false`: whether the world repeats east and west of the antimeridian (`setRenderWorldCopies`). It can change while the map is shown. |
+| `aria-label` | The accessible name of the map's canvas (a `role="region"`); `Map` without it. |
 
 Attributes are parsed strictly: numbers must be plain decimals (`14`, `-3.5`; no exponents, units or `NaN`), booleans exactly `true` or `false`. An invalid value is rejected, the previous value stays, and the element dispatches `mbt-map-error`. `worker-count`, `worker-url`, `wasm-url` and `attribution-control` are read when the map is created.
 
@@ -51,6 +53,7 @@ Attributes are parsed strictly: numbers must be plain decimals (`14`, `-3.5`; no
 | `mapStyle` | A style object. It takes precedence over `style-url`. Setting a new one swaps it in with `setStyle`, so sources and layers that stay alike keep their tiles; setting `null` falls back to `style-url` (or removes the map if there is none). |
 | `center` | `{ lng, lat }`, or the attribute's string form. |
 | `zoom`, `bearing`, `pitch` | A number, or the attribute's string form. |
+| `renderWorldCopies` | A boolean, or the attribute's string form (`"true"`, `"false"`). |
 
 The camera properties read the map's current camera, and setting them jumps the camera there (`jumpTo`). They accept the attribute strings too, because React 19 sets props as properties when the element has a property of that name. Invalid values are rejected with `mbt-map-error`, as for attributes.
 
@@ -67,7 +70,7 @@ el.map?.flyTo({ zoom: 15 });
 | Event | When |
 |---|---|
 | `mbt-map-load` | The first view has been drawn. |
-| `mbt-map-idle` | The map has settled. |
+| `mbt-map-idle` | The map has settled: the map's `idle`, after each frame that leaves nothing to load, move or draw. |
 | `mbt-map-movestart`, `mbt-map-move`, `mbt-map-moveend` | The camera moves. |
 | `mbt-map-click` | A click on the map. |
 | `mbt-map-error` | An invalid attribute or property, a failed map creation, or the map's `error`. |

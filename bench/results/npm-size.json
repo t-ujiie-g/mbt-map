@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 166732,
+      "bytes": 166922,
       "budget": 168000
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "name": "mbt-map/element (on top of mbt-map)",
-      "bytes": 1694,
+      "bytes": 1850,
       "budget": 5000
     },
     {
@@ -141,7 +141,7 @@
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 41781,
+      "bytes": 41803,
       "budget": 50000
     },
     {
