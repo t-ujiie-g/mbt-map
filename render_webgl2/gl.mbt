@@ -90,7 +90,7 @@ extern "js" fn gl_release(gl : Gl, mesh : Mesh) -> Unit =
 pub type PaintSlots
 
 ///|
-/// A layer's per-vertex paint on the GPU (docs/FORMATS.md, "Vertex paint").
+/// A layer's per-vertex paint on the GPU (docs/dev/FORMATS.md, "Vertex paint").
 #external
 pub type PaintBuffer
 

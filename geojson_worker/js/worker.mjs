@@ -1,5 +1,5 @@
 // Glue around the wasm-gc builds of `geojson_worker` and, for sources with
-// clusterProperties, `geojson_props_worker`; messages are in docs/FORMATS.md
+// clusterProperties, `geojson_props_worker`; messages are in docs/dev/FORMATS.md
 // ("GeoJSON worker messages").
 
 import { hostNumber, hostText, MAX_INPUT_BYTES, writeInput } from "../../wasmio/js/host.mjs";

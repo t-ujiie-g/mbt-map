@@ -27,7 +27,7 @@ pub(all) struct FeatureDiff {
 }
 
 ///|
-/// A diff in docs/FORMATS.md's "GeoJSON diff" form after its GeoJSON (read into
+/// A diff in docs/dev/FORMATS.md's "GeoJSON diff" form after its GeoJSON (read into
 /// `table`, its features ending at `feature_ends`); None if malformed.
 pub fn Diff::read(
   bytes : BytesView,

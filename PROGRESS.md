@@ -53,3 +53,8 @@ Where things stand, decisions and open issues. The development history before th
 - 要素に `mbt-map-click`（`detail` に `point` と `lngLat`）と、id で要素を返す `mbtMapElement(id)` を足した。MoonBit 側は `#module("mbt-map/element")` でこれを import するので、要素の定義も読まれる。
 - デモ `examples/rabbita/`（モジュール `t-ujiie-g/mbtmap_rabbita_example`）：rabbita の `create_state_with_init` のアプリ。行き先のボタン（`fly_to`）、`mbt-map-moveend` からの中心とズームの表示、クリックした点の座標と駅名（`query_features`）、点の大きさの切り替え（`set_paint`）。スタイルは MoonBit の型付きの関数で書く（地理院の淡色地図のラスタ、`?local=1` でフィクスチャの標準地図、駅の円とラベル）。Vite などは使わず、`bench/npm/prepare.mjs` が `moon build` の出力を esbuild で縮めて `examples/rabbita/app.js`（gitignore）に置き、ページは import map で `mbt-map` を読む。`app.js` は gzip 25.9KB（rabbita 込み、mbt-map 本体は別）。
 - 確かめ：`mbtmap_rabbita` の whitebox テスト 3 件（イベントの `detail` の読み、受け手のある種類だけ答える）。rabbita の `Html` の等しさは物理的な比較なので `view` は単体で比べられず、pack test の `rabbita`（ボタンで富士山へ行って戻る、中心の点のクリックで「（東京駅）」、`circle-radius` の変更）で確かめる。
+
+## 文書 4a：README と docs/ の構成（2026-11-15、Mac）
+
+- 構成（2026-11-15 ユーザー判断）：`docs/` を使う人向けの英語の文書にし、開発者向けの VISION・FORMATS・CLOUD は `docs/dev/` へ移した（参照は機械的に置き換え）。API の説明は手書きの Markdown で、入口ごとのガイドに分ける。PR は 4a（README、npm の README、`docs/README.md` の目次、Getting started、`docs/dev/` への移動）と 4b（入口ごとのガイドと API、MoonBit）の 2 つ。
+- README は英語（`README.md`）と日本語（`README.ja.md`）。何ができるかを分野ごとに書き、ほかのライブラリとは比べず、ベンチの数字は載せない。npm の README は英語の短い版にした（これまでの日本語の詳しい説明は 4b で `docs/` の各ガイドへ移す。コードのコメントが `npm/README.md` を指しているところも 4b で付け替える）。

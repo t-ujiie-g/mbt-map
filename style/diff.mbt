@@ -110,7 +110,7 @@ pub fn StyleLayer::line_distances(self : StyleLayer) -> Bool {
 
 ///|
 /// A line layer's `line-dasharray` when it is data-driven: the worker packs each
-/// feature's patterns (docs/FORMATS.md, "Packed tile").
+/// feature's patterns (docs/dev/FORMATS.md, "Packed tile").
 pub fn StyleLayer::feature_dashes(self : StyleLayer) -> Expr? {
   match self.dasharray {
     Some(e) if self.kind is Line && data_driven(e) => Some(e)

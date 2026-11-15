@@ -1,5 +1,5 @@
 ///|
-/// The tile as bytes for the display worker (docs/FORMATS.md, "Columnar
+/// The tile as bytes for the display worker (docs/dev/FORMATS.md, "Columnar
 /// tile"), with properties and ids from `table`'s rows, and line metrics as
 /// geojson-vt's `CLIP_START` and `CLIP_END` properties.
 pub fn encode_tile(d : TileData, table : @geom.Table) -> Bytes {
@@ -101,7 +101,7 @@ fn cluster_feature_id(f : ClusterFeature, table : @geom.Table) -> @geom.Prop? {
 
 ///|
 /// A tile of `ClusterIndex::tile` as bytes for the display worker
-/// (docs/FORMATS.md, "Columnar tile"): a feature per point or cluster.
+/// (docs/dev/FORMATS.md, "Columnar tile"): a feature per point or cluster.
 pub fn encode_cluster_tile(
   fs : Array[ClusterFeature],
   table : @geom.Table,
@@ -158,7 +158,7 @@ pub fn encode_cluster_tile(
 }
 
 ///|
-/// What `ClusterIndex::children` and `leaves` give, as docs/FORMATS.md's
+/// What `ClusterIndex::children` and `leaves` give, as docs/dev/FORMATS.md's
 /// "Cluster features".
 pub fn encode_cluster_features(
   fs : Array[ClusterFeature],

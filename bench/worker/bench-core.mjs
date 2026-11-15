@@ -8,7 +8,7 @@ const put = (e, bytes) => {
   new Uint8Array(e.memory.buffer, addr, bytes.length).set(bytes);
 };
 
-// The style as the main thread hands it to display workers (docs/FORMATS.md "Compiled style").
+// The style as the main thread hands it to display workers (docs/dev/FORMATS.md "Compiled style").
 async function compiledStyle(fetchBytes) {
   const { instance } = await WebAssembly.instantiate(await fetchBytes("_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/worker/compile_entry/compile_entry.wasm"), {});
   const c = instance.exports;

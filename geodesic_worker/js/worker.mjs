@@ -1,5 +1,5 @@
 // Glue around the wasm-gc build of `geodesic_worker`; messages are in
-// docs/FORMATS.md ("Geodesic worker messages").
+// docs/dev/FORMATS.md ("Geodesic worker messages").
 
 import { writeInput } from "../../wasmio/js/host.mjs";
 

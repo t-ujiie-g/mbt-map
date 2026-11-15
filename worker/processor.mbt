@@ -410,7 +410,7 @@ fn TileProcessor::run(self : TileProcessor, i : Int32, n : Int32) -> Unit {
 }
 
 ///|
-/// Writes the per-vertex paint of style layer `index` (docs/FORMATS.md, "Vertex
+/// Writes the per-vertex paint of style layer `index` (docs/dev/FORMATS.md, "Vertex
 /// paint") for the last entry, whose vertices came from `runs` (feature,
 /// vertex count) of `layer`; true when it has none. False without room.
 fn TileProcessor::write_paint(

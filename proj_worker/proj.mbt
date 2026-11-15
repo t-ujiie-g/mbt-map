@@ -47,7 +47,7 @@ fn crs_name(id : Int32) -> String {
 }
 
 ///|
-/// Makes the CRS encoded in the input (docs/FORMATS.md "CRS definition") and
+/// Makes the CRS encoded in the input (docs/dev/FORMATS.md "CRS definition") and
 /// returns its handle.
 #export_name("define_crs")
 pub fn define_crs() -> Int32 {

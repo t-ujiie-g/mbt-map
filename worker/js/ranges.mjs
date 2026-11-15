@@ -2,7 +2,7 @@
 import { readValue } from "./values.mjs";
 
 /**
- * Feature ranges from the wasm (docs/FORMATS.md, "Feature ranges") by packed entry: each
+ * Feature ranges from the wasm (docs/dev/FORMATS.md, "Feature ranges") by packed entry: each
  * feature id (as `String(id)`, how feature state keys it) to the `[first, count, outline first,
  * outline count, ...]` indices of its features (several features may share an id).
  */

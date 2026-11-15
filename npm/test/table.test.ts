@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { tableInfo, tableToGeoJSON, withIds } from "../../wasmio/js/table.mjs";
 
-// A table in @geom.Table's byte form (docs/FORMATS.md, "Table"), written by hand.
+// A table in @geom.Table's byte form (docs/dev/FORMATS.md, "Table"), written by hand.
 function tableBytes(): Uint8Array {
   const out: number[] = [];
   const u32 = (v: number) => out.push(v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255);
@@ -45,7 +45,7 @@ test("tableInfo reads the feature count and the keys alone", () => {
 });
 
 test("withIds gives features the ids it is given, unless absent or null", () => {
-  // A string, null, a number (docs/FORMATS.md "Property values").
+  // A string, null, a number (docs/dev/FORMATS.md "Property values").
   const ids = Uint8Array.of(4, 1, 0, 0, 0, 0x61, 0, 3, ...new Uint8Array(new Float64Array([7]).buffer));
   const fc = withIds(tableToGeoJSON(tableBytes()), ids);
   assert.deepEqual(fc.features.map((f) => f.id), ["a", undefined, 7]);

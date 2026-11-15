@@ -159,7 +159,7 @@ const RENAMES: [string, string, number?][] = [
 
 /**
  * The CRS a .prj names: `code` its EPSG code (from the root's AUTHORITY, or 3857 for Web Mercator), and
- * `definition` as docs/FORMATS.md "CRS definition" encodes it (absent for a projection proj.wasm lacks).
+ * `definition` as docs/dev/FORMATS.md "CRS definition" encodes it (absent for a projection proj.wasm lacks).
  * Axis order is not read: shapefiles keep x as easting.
  */
 export function parsePrj(text: string): { code?: number; definition?: Float64Array } {

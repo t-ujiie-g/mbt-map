@@ -1,5 +1,5 @@
 ///|
-/// The number of f64 slots of an encoded definition (docs/FORMATS.md "CRS
+/// The number of f64 slots of an encoded definition (docs/dev/FORMATS.md "CRS
 /// definition").
 pub const DEFINITION_SLOTS : Int32 = 34
 
@@ -35,7 +35,7 @@ let methods : FixedArray[Method] = [
 ]
 
 ///|
-/// The definition encoded in `s` as docs/FORMATS.md "CRS definition" lays
+/// The definition encoded in `s` as docs/dev/FORMATS.md "CRS definition" lays
 /// it out; None if the slots are too few or the projection index or
 /// `towgs84` count is not one it allows.
 pub fn Definition::decode(s : ArrayView[Double]) -> Definition? {

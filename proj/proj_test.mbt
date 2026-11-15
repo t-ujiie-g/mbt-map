@@ -150,7 +150,7 @@ test "points out of a projection's reach and bad definitions give None" {
 }
 
 ///|
-test "decode reads the slots docs/FORMATS.md lays out and refuses others" {
+test "decode reads the slots docs/dev/FORMATS.md lays out and refuses others" {
   let s = FixedArray::make(@proj.DEFINITION_SLOTS, @double.not_a_number)
   s[0] = 4.0 // Lcc
   s[1] = 6378137.0

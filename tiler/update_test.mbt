@@ -274,7 +274,7 @@ test "ClusterIndex::update clusters the points again" {
 }
 
 ///|
-test "Diff::read reads docs/FORMATS.md's GeoJSON diff after its features" {
+test "Diff::read reads docs/dev/FORMATS.md's GeoJSON diff after its features" {
   let w = @core.ByteWriter::new()
   w.u8(1)
   w.u32(2)

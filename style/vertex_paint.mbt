@@ -1,5 +1,5 @@
 ///|
-/// A data-driven paint property given per vertex (docs/FORMATS.md, "Vertex paint"):
+/// A data-driven paint property given per vertex (docs/dev/FORMATS.md, "Vertex paint"):
 /// `outputs` at the `stops` of its top-level zoom curve (or the whole expression),
 /// each stored per vertex, a color as packed RGBA, a number as a 32-bit float.
 pub struct VertexPaint {

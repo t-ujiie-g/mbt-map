@@ -11,7 +11,7 @@ pub const KIND_LINE : Int32 = 2
 pub const KIND_CIRCLE : Int32 = 3
 
 ///|
-/// Labels of a symbol layer: the entry's vertex range holds them (docs/FORMATS.md,
+/// Labels of a symbol layer: the entry's vertex range holds them (docs/dev/FORMATS.md,
 /// "Labels"); the worker glue lays them out into glyph quads.
 pub const KIND_SYMBOL : Int32 = 4
 

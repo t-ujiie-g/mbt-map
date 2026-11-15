@@ -1,5 +1,5 @@
 ///|
-/// Property value tags of the binary formats (docs/FORMATS.md, "Property values").
+/// Property value tags of the binary formats (docs/dev/FORMATS.md, "Property values").
 pub const PROP_NULL : Int32 = 0
 
 ///|
@@ -19,7 +19,7 @@ pub const PROP_STRING : Int32 = 4
 pub const PROP_ABSENT : Int32 = 5
 
 ///|
-/// Feature type codes of the columnar tile (docs/FORMATS.md, "Columnar tile"),
+/// Feature type codes of the columnar tile (docs/dev/FORMATS.md, "Columnar tile"),
 /// MVT's `GeomType` numbers: `GEOM_POINTS`, `GEOM_LINES`, `GEOM_POLYGONS`.
 pub const GEOM_POINTS : Int32 = 1
 

@@ -1,6 +1,6 @@
 # bench/
 
-すべての性能値はここのスクリプトで再現できること（docs/VISION.md §2）。結果は `results/*.json` に保存し、
+すべての性能値はここのスクリプトで再現できること（docs/dev/VISION.md §2）。結果は `results/*.json` に保存し、
 PROGRESS.md の表はそこから転記する。
 
 コマンドの一覧（黄金テスト、速度の計測、例の配信、パッケージの確認）は [AGENTS.md](../AGENTS.md) §1 にある。どれも `bench/` で

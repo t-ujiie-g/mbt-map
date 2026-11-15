@@ -1,4 +1,4 @@
-// Cluster features from the wasm (docs/FORMATS.md, "Cluster features") as
+// Cluster features from the wasm (docs/dev/FORMATS.md, "Cluster features") as
 // GeoJSON points, as MapLibre's cluster methods give them.
 import { readString, readValue } from "../../worker/js/values.mjs";
 

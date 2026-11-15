@@ -1,5 +1,5 @@
 ///|
-/// The reader of docs/FORMATS.md "Compiled style": `left` counts the nodes the
+/// The reader of docs/dev/FORMATS.md "Compiled style": `left` counts the nodes the
 /// current expression may still have (`MAX_EXPR_NODES`).
 priv struct StyleReader {
   r : @core.ByteReader

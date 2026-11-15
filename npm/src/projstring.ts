@@ -75,7 +75,7 @@ function number(key: string, v: string | true): number {
   return n;
 }
 
-/** `text` (a PROJ string) as docs/FORMATS.md "CRS definition" encodes it. */
+/** `text` (a PROJ string) as docs/dev/FORMATS.md "CRS definition" encodes it. */
 export function parseProjString(text: string): Float64Array {
   const params = new Map<string, string | true>();
   for (const part of text.split("+")) {

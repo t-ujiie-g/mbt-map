@@ -1,5 +1,5 @@
 // Glue around the wasm-gc build of `analysis_worker`; messages are in
-// docs/FORMATS.md ("Analysis worker messages").
+// docs/dev/FORMATS.md ("Analysis worker messages").
 
 import { hostNumber, hostText, MAX_INPUT_BYTES, writeInput } from "../../wasmio/js/host.mjs";
 import { readCapped } from "../../worker/js/body.mjs";
@@ -66,7 +66,7 @@ const SURFACE_TABLES = ["point_grid", "square_grid", "hex_grid", "triangle_grid"
 const SURFACE_VALUES = ["dbscan", "kmeans"];
 // `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
-// An EPSG code, or a definition as docs/FORMATS.md "CRS definition" encodes it.
+// An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it.
 const isCrs = (c) => (Number.isInteger(c) && c > 0) || (c instanceof Float64Array && c.length === DEFINITION_SLOTS);
 const isLonLat = (c) => c === undefined || c === 4326;
 const isBox = (b) => Array.isArray(b) && b.length === 4 && b.every(Number.isFinite);

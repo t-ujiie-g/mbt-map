@@ -1,4 +1,4 @@
-// Parsed GeoJSON to `Table::to_bytes` (docs/FORMATS.md, "Table"), by
+// Parsed GeoJSON to `Table::to_bytes` (docs/dev/FORMATS.md, "Table"), by
 // formats/geojson.mbt's rules: pipeline B of the GeoJSON bench.
 const KINDS = { Point: 1, MultiPoint: 2, LineString: 3, MultiLineString: 4, Polygon: 5, MultiPolygon: 6 };
 const DEPTH = { Point: 0, MultiPoint: 1, LineString: 1, MultiLineString: 2, Polygon: 2, MultiPolygon: 3 };

@@ -105,7 +105,7 @@ async function reference(bytes) {
   }
 }
 
-/** docs/FORMATS.md "Draco output". */
+/** docs/dev/FORMATS.md "Draco output". */
 function parse(out) {
   if (!out) return null;
   const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
