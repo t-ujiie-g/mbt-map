@@ -294,7 +294,7 @@ export async function open(source, { wasm, input, output, max }) {
 }
 
 /**
- * A window of the GeoTIFF of `source` (read.mjs's `rasterSource`) as npm/README.md's `readRaster`
+ * A window of the GeoTIFF of `source` (read.mjs's `rasterSource`) as docs/data.md's `readRaster`
  * gives it; `ctx` holds geotiff.wasm's exports as `wasm`, with `input`, `output` and `max`.
  */
 export async function readRaster(source, options, ctx) {

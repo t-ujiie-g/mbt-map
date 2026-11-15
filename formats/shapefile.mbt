@@ -2,7 +2,7 @@
 // and other shapefile-js contributors. See NOTICE.
 
 ///|
-/// Reads a shapefile's .shp and .dbf into a row per record not deleted (npm/README.md
+/// Reads a shapefile's .shp and .dbf into a row per record not deleted (docs/data.md
 /// `mbt-map/data`). `text` decodes `dbf[start:end]` where it is not ASCII, in the .dbf's
 /// encoding; `slow_number` parses its numbers past the fast path, as `read_csv`'s.
 pub fn read_shapefile(
