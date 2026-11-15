@@ -677,11 +677,13 @@ async function showcase(page) {
     };
   });
   crumb("showcase: globe to 3D");
-  // At the globe's zoom the fixtures' DEM (zoom 14 alone) is far deeper than the view: no terrain tile, and frames go on.
+  // Terrain far above its DEM's zooms (the fixtures' DEM has zoom 14 alone): no terrain tile, and frames go on.
   await page.click("#modes button >> text=3D", { timeout: 10000 });
   await page.waitForFunction(() => window.__map.getPitch() === 60 && !window.__map.isMoving(), null, { timeout: 30000 });
   const wide = await page.evaluate(async () => {
     const map = window.__map;
+    map.jumpTo({ zoom: 2 });
+    await map.once("render");
     map.triggerRepaint();
     await map.once("render");
     return { zoom: map.getZoom(), terrain: map.getStyle().terrain?.source };
