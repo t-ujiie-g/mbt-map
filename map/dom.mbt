@@ -159,6 +159,10 @@ extern "js" fn post_drop(w : Worker, id : Int32) -> Unit =
   #|(w, id) => w.postMessage({ type: "drop", id })
 
 ///|
+extern "js" fn post_glyphs(w : Worker, epoch : Int32) -> Unit =
+  #|(w, epoch) => w.postMessage({ type: "glyphs", epoch })
+
+///|
 extern "js" fn terminate(w : Worker) -> Unit =
   #|(w) => w.terminate()
 

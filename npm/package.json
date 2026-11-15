@@ -1,8 +1,24 @@
 {
   "name": "mbt-map",
   "version": "0.1.0",
-  "private": true,
-  "description": "A lightweight vector-tile map renderer for the Web, written in MoonBit",
+  "description": "A lightweight WebGIS library for the browser, written in MoonBit: maps, GIS data formats, spatial analysis, web services and 3D city models",
+  "keywords": [
+    "map",
+    "maps",
+    "webgis",
+    "gis",
+    "vector-tiles",
+    "maplibre",
+    "webgl",
+    "3d-tiles",
+    "geojson",
+    "moonbit",
+    "webassembly"
+  ],
+  "homepage": "https://t-ujiie-g.github.io/mbt-map/",
+  "bugs": {
+    "url": "https://github.com/t-ujiie-g/mbt-map/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -10,6 +26,10 @@
     "directory": "npm"
   },
   "type": "module",
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "./dist/element.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -91,14 +111,13 @@
     "./services.wasm": "./dist/services.wasm",
     "./data-geotiff.js": "./dist/data-geotiff.js"
   },
-  "types": "./dist/index.d.ts",
-  "sideEffects": [
-    "./dist/element.js"
-  ],
   "files": [
     "dist",
     "NOTICE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "size": "node scripts/size.mjs",

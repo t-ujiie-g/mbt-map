@@ -42,7 +42,8 @@ export function byteRange(header, size) {
   return start <= end ? [start, end] : "bad";
 }
 
-export function serve(port = 0) {
+/** `cors` serves to any origin (CORS and CORP), as a CDN does: the pack test's `cdn` page reads the package so. */
+export function serve(port = 0, { cors = false } = {}) {
   const server = http.createServer(async (req, res) => {
     let pathname;
     try {
@@ -66,6 +67,7 @@ export function serve(port = 0) {
         "cross-origin-opener-policy": "same-origin",
         "cross-origin-embedder-policy": "require-corp",
         "accept-ranges": "bytes",
+        ...(cors ? { "access-control-allow-origin": "*", "cross-origin-resource-policy": "cross-origin" } : {}),
       };
       // Single ranges, for PMTiles archives.
       const range = byteRange(req.headers.range, body.length);

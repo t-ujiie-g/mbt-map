@@ -122,9 +122,49 @@ Where things stand, decisions and open issues. The development history before th
 - pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
 - 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。
 
+## 公開の流れ（2026-11-15、Mac）
+
+- 判断（ユーザー）：タグを打ったら各所に公開されるように。少なくとも npm は自動で、pptx-svg の流れ（信頼された公開と段階公開、2FA で承認）を参考に。
+- `.github/workflows/release.yml`（`v*` のタグ）：`verify`（タグ・版・CHANGELOG のそろい、MoonBit のテスト、npm のビルド・テスト・大きさ）→ `npm`（`npm stage publish`、OIDC、npm 11.15 以上。その版がもうあれば飛ばす）、`github-release`（`CHANGELOG.md` の節を本文に）。Pages は `pages.yml` が同じタグで。
+- mooncakes は手で公開する（ユーザー判断）：mooncakes のトークンは期限がなくアカウント全体に効き、OIDC のような仕組みもないので、CI の secret に置くと workflow や Actions が乗っ取られたときに任意の版を出されうる。npm は OIDC と 2FA の承認があるので自動のまま。
+- 版：npm と MoonBit の 2 モジュールは同じ版（0.1.0）。`bench/lib/release.mjs` が版と CHANGELOG のそろいを見る（`release.test.mjs` が今の版でも確かめる）。npm の `package.json` は `private` を外し、説明、キーワード、ホームページ（Pages）、`publishConfig.access: public`。`npm pack` は 167 ファイル、0.91MB（展開 2.51MB）。`moon publish --dry-run` は通る。
+- npm の信頼された公開はパッケージが npm にないと設定できないので、0.1.0 は手元から一度出し、その後に信頼された公開（段階公開だけ）を設定する。手順は docs/dev/RELEASING.md。
+- Pages を手動で一度公開した（https://t-ujiie-g.github.io/mbt-map/ ）。
+## 地形で手前の低い土地が描かれない（2026-11-15、Mac）
+
+- 症状：3D 地形（地理院の DEM、`"encoding": "gsi"`）で中心を富士山頂（3776 m、誇張 1.5 倍で 5664 m）に置き、ズーム 12・傾き 70° にすると、画面の下（カメラの近くの低い土地）が待っても空いたまま。富士吉田のように低い所を中心にすると出ない。
+- 原因：`Transform::covering_tiles` は画面の四隅の光線が海面（z = 0）と交わる四角形を地面の範囲としていた。中心が持ち上がる（`Transform.elevation`）と、画面の下の光線が海面に届く点はカメラから遠くなり、その間の高さの土地（手前の低い斜面）が範囲の外に出る。`bench/pages/terrain` のこの眺め（1000 × 800）では z12 の 3625–3627/1618 の列が覆う集まりから落ちていた。
+- 直し（MapLibre の `coveringTiles` が地形のとき各タイルの最低・最高の標高の箱で視錐台を試すのに倣う）：`covering_tiles(min_z, max_z, heights?)` は各タイルの地面を `heights` の最低と最高の標高の間とみなし、その 2 つの高さで四隅の光線が交わる 8 点の凸包（`Transform::footprint`、Jarvis の行進）とタイルの重なりを見る。`heights` がなければ MapLibre の既定と同じく海面と中心の標高の間（地形がなければ高さ 0 だけで、これまでと同じ四角形）。カメラより高い標高はカメラのすぐ下で切る。`map` は `Map::ground_heights` を渡す：そのタイルを含む読み込み済みの DEM タイルの最低・最高（誇張込み）、なければ読み込み済みの DEM タイル全部と中心の標高の範囲（祖先のタイルが子の見える土地を落とさないように）。`terrain_pick` と同じ集計は `dem_range` にまとめた。
+- 確かめ：直す前と後の画面（傾き 70°、方位 0° と -20°）で下の空白が消えた。MoonBit のテスト（`core/covering_test.mbt`）：山頂を中心にした眺めで 0 m から中心の標高までの画面内の点がすべて覆われる（直す前は 13 点などが外れて失敗）、`heights` が中心より 5 km 高い土地を覆う、カメラより高い `heights`、海面の眺めは `heights` があっても同じ。`camera:golden`・`globe:golden`（覆うタイル 0 differ）・`track:golden`・pack test（terrain、showcase-html、samples）は通った。`track:golden` の `flank` は main でも時々 319 px 外れる（読み込みの時機による、この変更の前から）。
+- 大きさ：主バンドルが gzip 162.3KB → 163.0KB（162,989 バイト、予算 163,000 まで 11 バイト）。
+- 予算（2026-11-15 ユーザー判断）：表示（メインの束）の予算を 163KB から 168KB に上げた。この直しで 163.0KB（11 バイト手前）になり、0.1.0 の前に入れる CDN 対応、world copies、グリフのアトラスの直しの分を見込んだ。増えた分は各 PR で測って記録する。
+
+## CDN から HTML 1 枚で（2026-11-15、Mac）
+
+- 判断（ユーザー）：例は npm install 前提でなく、CDN から HTML 1 枚で動く形が適切。0.1.0 の前に入れる。
+- 問題：ブラウザは別のオリジンの Worker のスクリプトを起動しない。CDN から読むと、モジュールの隣から読む Worker だけが弾かれ、地図が読み込まれなかった（pack test の `cdn` で、直す前はタイムアウト）。
+- 直し：`workerScriptUrl`（`npm/src/urls.ts`）が、ライブラリ自身のフォルダ（CDN の `dist/`）にある Worker を、それを import するだけの同じオリジンの `blob:` から起こす（URL ごとに 1 つ作って使い回す）。オリジンでなくフォルダで判定する（CDN は誰のパッケージも同じオリジンから配るので、オリジンで許すと別のパッケージのスクリプトも通る。自動のセキュリティレビューの指摘）。ページのオリジンとライブラリのフォルダ以外は今までどおり拒むので、`<mbt-map worker-url>` などのマークアップから別のコードは起こせない。CSP を使うページが CDN から読むときは `worker-src blob:` が要る（Getting started に書いた）。wasm と動的 import は別のオリジンからでも読める。
+- 確かめ：pack test の `cdn`（`bench/npm/pages/cdn`、パッケージを CORS 付きの別のポートから読む。地図のタイルの Worker、GeoJSON の Worker、解析の Worker がそれぞれ動き、問い合わせと解析の結果が合う）。単体テスト（blob の中身、使い回し、別のオリジンを拒む）。
+- 見せ方：Getting started の最初を「CDN から HTML 1 枚」にし、npm は次の節に。README と npm の README に CDN の書き方。サイトのサンプルのページは、表示するコードの import map を jsDelivr の版つきの URL（今の版、`mbt-map@0.1.0`）に、CSS をサイトの絶対 URL にして、コピーしてそのまま動く形にした（サイトで動かすのは今どおり同じオリジンの `lib/`）。
+## グリフのアトラスがあふれる問題（2026-11-15、Mac）
+
+- 症状：漢字の多い地図（OpenFreeMap の Liberty に中文・日本語のラベル）で都市を何か所も回ると「the glyph atlas is full; some labels miss characters」が出て、以後のラベルの文字が欠けたままになる。
+- 原因：グリフは主スレッドの 1 枚のアトラス（2048 px 四方、R8）に足すだけで、外すことがなかった。TinySDF のグリフは 48 px + 余白 6 px で約 62 px 四方なので、2048 px には 1000 字ほどしか入らない。ワーカーは各グリフを一度しか送らないので、あふれた字は二度と載らない。ワーカー側のキャッシュ（`MAX_GLYPHS` 4096）も満ちると以後の字を空白にしていた。
+- 直し：
+  - アトラスが満ちたら作り直す（`Map::rebuild_atlas`）。読み込み済みのタイル（Ready、Stale、読み込み中の前のもの）とそのタイルの通知が使うグリフだけを `@label.Atlas::repack` で詰め直す（高いものから。使うグリフが面積の半分を超える間は辺を倍にし、`ATLAS_SIZE` 2048 から `MAX_ATLAS_SIZE` 8192（`MAX_TEXTURE_SIZE` がそれより小さければそれ）まで。少なくなれば 2048 に戻る）。
+  - 頂点のアトラス座標は別のバッファ（`uv`）にし、記号のメッシュはグリフの番号と角（4 バイト/頂点）を持つので、作り直しの後は `Renderer::place_glyphs` で書き直すだけ（タイルを読み直さない）。MapLibre のようなタイルごとのアトラスは、グリフの鍵が全体で一つで描画がアトラス 1 枚を前提にしているこの作りでは変更が大きいので採らなかった。
+  - 主スレッドは受けたグリフのビットマップを持つ（`@label.GlyphStore`）。作り直しで外したものは、全ワーカーが新しい `{type: "glyphs", epoch}` に答えるまで残す（それ以前に作られたタイルが使いうるため）。ワーカーはそれを受けると「送った」記録を消し、次に使うときに送り直す。ワーカーのキャッシュは満ちたら空にして描き直す（送り直しはしない）。
+  - 警告は 8192 px でも読み込み済みのタイルの字が入らないときだけ。
+- 再現と確かめ：`npm run labels:atlas`（`bench/labels/atlas.mjs`）。Liberty（ofm-planet のフィクスチャ）に GeoJSON の漢字ラベル（1 段 600 字、段ごとに別の字）を重ね、`setData` で 20 段進めてから、最後の段を新しいページで描いたものと比べる。
+  - 直す前：警告 1 回、新しいページと違う画素 26303（GeoJSON のラベルがほぼ全部消える）。
+  - 直した後：警告 0、違う画素 0〜2000 弱（建物の縁。ラベルは同じ）。40 段で作り直しは 5 回、各 2〜5 ms（M2、Chromium）、アトラスは 2048 と 4096 を行き来。1 段 1800 字でも警告なし（4096 に広がる）。
+- `npm run labels:golden` は全シーン同じのまま。MoonBit のテスト（`label`：repack、`bitmap_at`、`GlyphStore`）とワーカーのテスト（送り直し、キャッシュを空にする）を足した。
+- 大きさ：`mbt-map` 162349 → 164177 バイト（+1.8KB、主に `Map[Int32, Bitmap]` の実体化）、ラベルのワーカー部分 9563 → 9612、表示ワーカー 85000 → 85032。記号のメッシュは頂点あたり CPU に 4 バイト（グリフの番号と角）、GPU に 4 バイト（`uv`）増える。
+
 ## 世界のコピー（renderWorldCopies、2026-11-15、Mac）
 
 - メルカトルで経度 180 度の東西に世界を繰り返す（MapLibre の `renderWorldCopies`、既定 true）。低いズームで左右が空く、180 度付近（フィジー、太平洋、アラスカとロシアの間）で片側しか出ない、を直した。
+- main の取り込み：地形の高さの範囲（`covering_tiles` の `heights`）はコピーごとの歩きの中で正準のタイルについて引き、足跡をそのコピーへずらして使う。
 - 設計：`@core.UnwrappedTile`（MapLibre の `UnwrappedTileID`：正準のタイルと `wrap`）。`Transform::covering_tiles` は見える範囲の各コピー（`Transform::wraps`、左右 3 まで）を同じ四分木で歩き、`wrap` 付きで返す。タイルの読み込み・キャッシュは正準のタイルのまま（コピーごとに取り直さない）。`tile_matrix` / `tile_light_matrix` は `wrap~` で 1 世界ずらす。`Draw` は `wrap` と `copy`（同じメッシュを別のコピーでも描くもの）を持ち、地形のテクスチャやヒートマップのタイル内描画は `copy` を飛ばして二重に描かない。パターンの位置（`pattern_tile`）、影、クリッピング、地面の影、背景のパターン、画像・動画ソース（MapLibre の `getVisibleUnwrappedCoordinates` と同じく見えるコピーと左右 1 つずつ）もコピーごと。地形の高さ（`elevation_at`）は x を主の世界に戻して引く。
 - カメラ：`Limits.world_copies`。false のとき MapLibre の `defaultConstrain` と同じく経度範囲を ±(180 − 1e-10) に限り、中心の折り返しも `normalizeCenter` もしない。true のときは従来どおり（中心の経度は折り返す）。`project` / `unproject` / `getBounds` は MapLibre と同じく経度を折り返さない（もとから）。
 - ラベル：タイルのラベルの状態はメッシュごとに 1 つなので、複数のコピーに出るタイルのラベルは中心に最も近いコピーで配置し、そのコピーでだけ描く（`LabelSet.wrap`）。配置の順は MapLibre と同じ（深いタイル、`wrap`、x、y）。**残り**：世界が画面より狭い（ズーム約 1 未満）ときは、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
@@ -132,4 +172,4 @@ Where things stand, decisions and open issues. The development history before th
 - 塗りの輪郭は、層のすべてのタイルの塗りのあとにまとめて描くようにした（MapLibre の `drawFill`：全タイルの塗り、次に全タイルの輪郭）。コピーの境目（経度 ±180 の輪郭）で隣のコピーの塗りが輪郭を消していた。
 - ファサード：`renderWorldCopies` オプション、`setRenderWorldCopies` / `getRenderWorldCopies`（undefined は true、null は false）。`map_set_limits` の 9 番目の数。
 - 確かめ：`raster:golden` に世界のコピーの場面 5 つ（z0、z1、180 度、回転、`renderWorldCopies: false`）を足し、すべて MapLibre と画素まで同じ。傾けた場面は外した（遠くのタイルのズームの選び方が MapLibre と違うのは以前から）。`style:golden` に `copies-antimeridian`、`copies-wide`（各タイルが 2 つのコピーに出る、ヒートマップ込み）。`labels:golden` に `copies-points`、`copies-line`（69 場面すべて同じ）。`query:golden` に `copies`、`copies-wide`（750 問すべて同じ）。`style:golden` は全場面が限度内。`camera:golden` に `renderWorldCopies: false` の 3 場面（制約、easeTo、flyTo など）。core のテスト（`core/copies_test.mbt`）。
-- 大きさ：mbt-map（index.js）は gzip 162.3KB → 163.8KB（+1.5KB。予算は #22 で 168KB に上がる）。被覆の並べ替えはタイルの型で整列を実体化せず `stable_order` で並べる（UnwrappedTile 用の整列が約 10KB の生コードを足していた）。
+- 大きさ：mbt-map（index.js）は gzip 165.0KB → 166.4KB（+1.4KB、予算 168KB。main を取り込んだあとの数）。被覆の並べ替えはタイルの型で整列を実体化せず `stable_order` で並べる（UnwrappedTile 用の整列が約 10KB の生コードを足していた）。

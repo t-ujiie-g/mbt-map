@@ -552,7 +552,7 @@
     {
       "scene": "line-patterns",
       "ok": true,
-      "mean": 0.144,
+      "mean": 0.143,
       "p99": 1,
       "limits": {
         "mean": 0.2,

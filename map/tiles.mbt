@@ -216,6 +216,7 @@ fn Map::on_message(self : Map, msg : JsValue) -> Unit {
     "tile" => self.on_tile(msg)
     "query" => self.on_query(msg)
     "ranges" => self.on_ranges(msg)
+    "glyphs" => self.glyphs.forgotten(get_int(msg, "epoch"))
     "error" => console_warn("worker: \{get_string(msg, "message")}")
     _ => ()
   }

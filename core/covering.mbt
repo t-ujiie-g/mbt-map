@@ -48,14 +48,7 @@ pub fn Transform::wraps(self : Transform) -> (Int32, Int32) {
   }
   let mut x0 = @double.infinity
   let mut x1 = @double.neg_infinity
-  for
-    p in [
-      (0.0, 0.0),
-      (self.width, 0.0),
-      (self.width, self.height),
-      (0.0, self.height),
-    ] {
-    let m = self.screen_to_mercator(p.0, p.1)
+  for m in self.base_footprint() {
     x0 = @cmp.minimum(x0, m.x)
     x1 = @cmp.maximum(x1, m.x)
   }
@@ -69,23 +62,27 @@ pub fn Transform::wraps(self : Transform) -> (Int32, Int32) {
 }
 
 ///|
+/// The footprint on ground between sea level and the center's height.
+fn Transform::base_footprint(self : Transform) -> Array[MercatorCoord] {
+  self.footprint(
+    @cmp.minimum(0.0, self.elevation),
+    @cmp.maximum(0.0, self.elevation),
+  )
+}
+
+///|
 /// Non-overlapping tiles over the view and the world copies it reaches, nearest the center first:
-/// `max_z` near the camera, lower zooms for distant ground down to `min_z`; ground wanting more
-/// than `MIN_ZOOM_SLACK` below `min_z` gets none (MapLibre drops it).
+/// `max_z` near the camera, lower zooms down to `min_z` (none past `MIN_ZOOM_SLACK` below), on
+/// ground between each tile's `heights` in meters (sea level and the center's).
 pub fn Transform::covering_tiles(
   self : Transform,
   min_z : Int32,
   max_z : Int32,
+  heights? : (TileId) -> (Double, Double),
 ) -> Array[UnwrappedTile] {
   let ws = self.world_size()
   let center = self.camera.center.to_mercator()
-  // The view's footprint on the ground, in mercator units.
-  let footprint = [
-    self.screen_to_mercator(0.0, 0.0),
-    self.screen_to_mercator(self.width, 0.0),
-    self.screen_to_mercator(self.width, self.height),
-    self.screen_to_mercator(0.0, self.height),
-  ]
+  let footprint = self.base_footprint()
   // The camera's ground position and height, in world pixels from the center.
   let d = center_distance(self.height)
   let pitch = radians(self.camera.pitch)
@@ -100,12 +97,22 @@ pub fn Transform::covering_tiles(
   for wrap in first..<=last {
     // Each copy is walked in the main world's units, the view moved by `wrap` worlds.
     let shift = wrap.to_double()
-    let poly = footprint.map(p => ({ x: p.x - shift, y: p.y, } : MercatorCoord))
+    let moved = (poly : Array[MercatorCoord]) => {
+      poly.map(p => ({ x: p.x - shift, y: p.y, } : MercatorCoord))
+    }
+    let base = moved(footprint)
     let c : MercatorCoord = { x: center.x - shift, y: center.y, }
     let stack : Array[TileId] = [{ z: 0, x: 0, y: 0, }]
     while stack.pop() is Some(tile) {
       let b = tile.mercator_bounds()
-      if !overlaps(poly, b) {
+      let ground = match heights {
+        Some(f) => {
+          let (lo, hi) = f(tile)
+          moved(self.footprint(lo, hi))
+        }
+        None => base
+      }
+      if !overlaps(ground, b) {
         continue
       }
       // Distance from the camera to the tile's nearest ground point.
@@ -166,6 +173,9 @@ fn overlaps(poly : Array[MercatorCoord], b : BBox) -> Bool {
   if x1 < b.min_x || x0 > b.max_x || y1 < b.min_y || y0 > b.max_y {
     return false
   }
+  if n < 3 {
+    return true
+  }
   // Edge normals: the box lies wholly outside an edge if even its corner
   // farthest along the inward normal is outside. `poly` turns one way, so
   // the sign of `turn` says which side is inside.
@@ -187,4 +197,91 @@ fn overlaps(poly : Array[MercatorCoord], b : BBox) -> Bool {
     }
   }
   true
+}
+
+///|
+/// The view's footprint (Mercator, convex) on ground between `lo` and `hi`
+/// meters: the screen corners' rays (the top ones at the horizon line) met at
+/// both heights, those above the camera just below it.
+fn Transform::footprint(
+  self : Transform,
+  lo : Double,
+  hi : Double,
+) -> Array[MercatorCoord] {
+  let ws = self.world_size()
+  let c = self.camera.center.to_mercator()
+  let ppm = self.pixels_per_meter()
+  let camera = self.elevation * ppm +
+    center_distance(self.height) * @math.cos(radians(self.camera.pitch)) -
+    1.0
+  let z0 = @cmp.minimum(lo * ppm, camera)
+  let z1 = @cmp.minimum(hi * ppm, camera)
+  let top = @cmp.maximum(0.0, self.height / 2.0 - self.horizon())
+  let points = []
+  for i in 0..<(if z0 == z1 { 4 } else { 8 }) {
+    let k = i % 4
+    let (ax, ay, az, bx, by, bz) = self.screen_ray(
+      if k == 1 || k == 2 {
+        self.width
+      } else {
+        0.0
+      },
+      if k < 2 {
+        top
+      } else {
+        self.height
+      },
+    )
+    let z = if i < 4 { z0 } else { z1 }
+    let t = (az - z) / (az - bz)
+    points.push({
+      x: c.x + (ax + (bx - ax) * t) / ws,
+      y: c.y + (ay + (by - ay) * t) / ws,
+    })
+  }
+  if z0 == z1 {
+    points
+  } else {
+    convex_hull(points)
+  }
+}
+
+///|
+/// The convex hull of `points`, with no three corners in line (Jarvis's march;
+/// a handful of points).
+fn convex_hull(points : Array[MercatorCoord]) -> Array[MercatorCoord] {
+  let n = points.length()
+  let mut start = 0
+  for i, p in points {
+    let s = points[start]
+    if p.x < s.x || (p.x == s.x && p.y < s.y) {
+      start = i
+    }
+  }
+  let hull = []
+  let mut p = start
+  while hull.length() < n {
+    let o = points[p]
+    hull.push(o)
+    let mut q = (p + 1) % n
+    let mut a = points[q]
+    for r, b in points {
+      let turn = (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+      // In line: the farther point, so no corner lies between two others.
+      if turn < 0.0 ||
+        (
+          turn == 0.0 &&
+          (b.x - o.x).abs() + (b.y - o.y).abs() >
+          (a.x - o.x).abs() + (a.y - o.y).abs()
+        ) {
+        q = r
+        a = b
+      }
+    }
+    p = q
+    if p == start {
+      break
+    }
+  }
+  hull
 }

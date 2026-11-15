@@ -1,52 +1,82 @@
 ///|
-/// Creates the glyph atlas texture (one byte per pixel) on first use.
+/// Copies a glyph bitmap (one byte per pixel) into the glyph atlas at (x, y).
 extern "js" fn gl_glyph(
   gl : Gl,
-  width : Int32,
-  height : Int32,
   data : JsBuffer,
   x : Int32,
   y : Int32,
   w : Int32,
   h : Int32,
 ) -> Unit =
-  #|(c, width, height, data, x, y, w, h) => {
+  #|(c, data, x, y, w, h) => {
   #|  const gl = c.gl;
-  #|  if (!c.atlas) {
-  #|    c.atlas = gl.createTexture();
-  #|    gl.bindTexture(gl.TEXTURE_2D, c.atlas);
-  #|    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, width, height, 0, gl.RED, gl.UNSIGNED_BYTE, null);
-  #|    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  #|    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  #|    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  #|    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  #|    c.atlasSize = [width, height];
-  #|  }
   #|  gl.bindTexture(gl.TEXTURE_2D, c.atlas);
   #|  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   #|  gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, w, h, gl.RED, gl.UNSIGNED_BYTE, data);
   #|}
 
 ///|
-/// Uploads glyph quads after turning each vertex's glyph index and corner into atlas pixels from
-/// `rects` (x, y, width, height per glyph index), with the `format` sections' colors if any
-/// (docs/dev/FORMATS.md "Symbol vertices"). Nothing is drawn until `gl_show`.
+/// Replaces the glyph atlas with an empty one `side` pixels square.
+extern "js" fn gl_glyph_atlas(gl : Gl, side : Int32) -> Unit =
+  #|(c, side) => {
+  #|  const gl = c.gl;
+  #|  if (c.atlas) gl.deleteTexture(c.atlas);
+  #|  c.atlas = gl.createTexture();
+  #|  gl.bindTexture(gl.TEXTURE_2D, c.atlas);
+  #|  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, side, side, 0, gl.RED, gl.UNSIGNED_BYTE, null);
+  #|  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  #|  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  #|  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  #|  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  #|  c.atlasSize = [side, side];
+  #|}
+
+///|
+/// The largest texture side the context takes.
+extern "js" fn gl_max_texture_size(gl : Gl) -> Int32 =
+  #|(c) => c.gl.getParameter(c.gl.MAX_TEXTURE_SIZE)
+
+///|
+/// Points a symbol mesh's quads at atlas pixels: each vertex's glyph index and corner
+/// (`m.glyphs`) through `rects` (x, y, width, height per glyph index) into `m.uv`;
+/// `m.glyphs` is kept for the next time only if `keep`.
+extern "js" fn gl_place_glyphs(
+  gl : Gl,
+  mesh : Mesh,
+  rects : FixedArray[Int32],
+  keep : Bool,
+) -> Unit =
+  #|(c, m, rects, keep) => {
+  #|  const g = m.glyphs, uv = new Uint16Array(g.length);
+  #|  for (let i = 0; i < g.length; i += 2) {
+  #|    const r = g[i] * 4, corner = g[i + 1];
+  #|    uv[i] = rects[r] + (corner === 1 || corner === 2 ? rects[r + 2] : 0);
+  #|    uv[i + 1] = rects[r + 1] + (corner >= 2 ? rects[r + 3] : 0);
+  #|  }
+  #|  c.gl.bindBuffer(c.gl.ARRAY_BUFFER, m.uv);
+  #|  c.gl.bufferData(c.gl.ARRAY_BUFFER, uv, c.gl.STATIC_DRAW);
+  #|  if (!keep) m.glyphs = null;
+  #|}
+
+///|
+/// Uploads glyph quads with their atlas pixels in a buffer of their own (`uv`, written by
+/// `gl_place_glyphs` from each vertex's glyph index and corner, `glyphs`), with the `format`
+/// sections' colors if any (docs/dev/FORMATS.md "Symbol vertices"). Nothing is drawn until `gl_show`.
 extern "js" fn gl_upload_symbols(
   gl : Gl,
   vertices : JsBuffer,
   indices : JsBuffer,
   index_bytes : Int32,
-  rects : FixedArray[Int32],
   colors : JsBuffer,
 ) -> Mesh =
-  #|(c, vertices, indices, indexBytes, rects, colors) => {
+  #|(c, vertices, indices, indexBytes, colors) => {
   #|  const gl = c.gl;
-  #|  const v = new DataView(vertices);
-  #|  for (let o = 0; o < vertices.byteLength; o += 16) {
-  #|    const g = v.getUint16(o + 8, true) * 4, corner = v.getUint16(o + 10, true);
-  #|    v.setUint16(o + 8, rects[g] + (corner === 1 || corner === 2 ? rects[g + 2] : 0), true);
-  #|    v.setUint16(o + 10, rects[g + 1] + (corner >= 2 ? rects[g + 3] : 0), true);
+  #|  const v = new DataView(vertices), glyphs = new Uint16Array(vertices.byteLength / 8);
+  #|  for (let i = 0, o = 8; o < vertices.byteLength; i += 2, o += 16) {
+  #|    glyphs[i] = v.getUint16(o, true);
+  #|    glyphs[i + 1] = v.getUint16(o + 2, true);
   #|  }
+  #|  const uv = gl.createBuffer();
   #|  const vao = gl.createVertexArray();
   #|  gl.bindVertexArray(vao);
   #|  const vbo = gl.createBuffer();
@@ -56,10 +86,11 @@ extern "js" fn gl_upload_symbols(
   #|  gl.vertexAttribPointer(0, 2, gl.SHORT, false, 16, 0);
   #|  gl.enableVertexAttribArray(1);
   #|  gl.vertexAttribPointer(1, 2, gl.SHORT, false, 16, 4);
-  #|  gl.enableVertexAttribArray(2);
-  #|  gl.vertexAttribPointer(2, 2, gl.UNSIGNED_SHORT, false, 16, 8);
   #|  gl.enableVertexAttribArray(3);
   #|  gl.vertexAttribPointer(3, 1, gl.UNSIGNED_SHORT, false, 16, 12);
+  #|  gl.bindBuffer(gl.ARRAY_BUFFER, uv);
+  #|  gl.enableVertexAttribArray(2);
+  #|  gl.vertexAttribPointer(2, 2, gl.UNSIGNED_SHORT, false, 4, 0);
   #|  // Each vertex's anchor elevation in meters, set by gl_set_heights.
   #|  const ele = gl.createBuffer();
   #|  gl.bindBuffer(gl.ARRAY_BUFFER, ele);
@@ -80,8 +111,8 @@ extern "js" fn gl_upload_symbols(
   #|  gl.bindVertexArray(null);
   #|  const all = indexBytes === 2 ? new Uint16Array(indices) : new Uint32Array(indices);
   #|  const type = indexBytes === 2 ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT;
-  #|  return { vao, vbo, ibo, ele, vertices: vertices.byteLength / 16, all, count: 0, type, colored,
-  #|    bytes: vertices.byteLength + indices.byteLength + (colors?.byteLength ?? 0) };
+  #|  return { vao, vbo, ibo, ele, uv, glyphs, vertices: vertices.byteLength / 16, all, count: 0, type, colored,
+  #|    bytes: vertices.byteLength * 1.25 + indices.byteLength + (colors?.byteLength ?? 0) };
   #|}
 
 ///|
