@@ -1,0 +1,141 @@
+{
+  "env": {
+    "maplibre": "6.16.0",
+    "browser": "chromium",
+    "viewport": "800x600"
+  },
+  "limits": {
+    "split": {
+      "mean": 0.01,
+      "p99": 0
+    },
+    "globeSplit": {
+      "mean": 0.05,
+      "p99": 1
+    },
+    "maplibre": {
+      "mean": 0.05,
+      "p99": 1
+    }
+  },
+  "results": [
+    {
+      "view": "labels",
+      "ok": true,
+      "size": [
+        1600,
+        1200
+      ],
+      "maxSize": 300,
+      "split": {
+        "differ": 1365,
+        "mean": 0.001,
+        "p99": 0,
+        "max": 25
+      },
+      "screen": {
+        "differ": 0,
+        "mean": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    {
+      "view": "terrain",
+      "ok": true,
+      "size": [
+        1600,
+        1200
+      ],
+      "maxSize": 256,
+      "split": {
+        "differ": 278,
+        "mean": 0,
+        "p99": 0,
+        "max": 40
+      },
+      "screen": {
+        "differ": 0,
+        "mean": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    {
+      "view": "globe",
+      "ok": true,
+      "size": [
+        1600,
+        1200
+      ],
+      "maxSize": 300,
+      "split": {
+        "differ": 220,
+        "mean": 0,
+        "p99": 0,
+        "max": 249
+      },
+      "screen": {
+        "differ": 0,
+        "mean": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    {
+      "view": "globe-terrain",
+      "ok": true,
+      "size": [
+        1600,
+        1200
+      ],
+      "maxSize": 256,
+      "split": {
+        "differ": 81722,
+        "mean": 0.031,
+        "p99": 1,
+        "max": 242
+      },
+      "screen": {
+        "differ": 0,
+        "mean": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    {
+      "view": "odd",
+      "ok": true,
+      "size": [
+        1200,
+        900
+      ],
+      "maxSize": 333,
+      "split": {
+        "differ": 818,
+        "mean": 0.001,
+        "p99": 0,
+        "max": 17
+      },
+      "screen": {
+        "differ": 0,
+        "mean": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    {
+      "view": "raster-2x-vs-maplibre",
+      "ok": true,
+      "size": [
+        1600,
+        1200
+      ],
+      "maxSize": 700,
+      "differ": 38,
+      "mean": 0.001,
+      "p99": 0,
+      "max": 253
+    }
+  ]
+}

@@ -1,0 +1,510 @@
+///|
+/// Why a map could not start: its style failed to parse, or the canvas has no WebGL2.
+#derive(Debug)
+pub(all) suberror MapError {
+  BadStyle(@style.StyleError)
+  NoWebGL2
+}
+
+///|
+/// `entry`: index in the worker's packed tile; `owned`: false when an earlier layer's; `paint`: the group's
+/// at the zoom it was evaluated for; `vertex_paint`: the layer's own, also over shared geometry; `states`:
+/// stated features' ranges in index order; `clips`, `gradient`: a gradient line's rows, ramp length and ramp.
+priv struct LayerMesh {
+  entry : Int32
+  mut states : Array[StateRange]
+  layer : Int32
+  kind : Int32
+  mesh : @render_webgl2.Mesh
+  mut owned : Bool
+  props : JsProps?
+  mut paint : (Double, Paint)?
+  vertex_paint : @render_webgl2.PaintBuffer?
+  labels : LabelSet?
+  ground : ExtrusionGround?
+  dem : DemTile?
+  clips : FixedArray[Double]?
+  key_runs : FixedArray[Double]?
+  mut gradient : (@style.Expr, @render_webgl2.Gradient)?
+}
+
+///|
+/// A stated feature's indices in a mesh: `first`, `count` of its triangles and
+/// `outline_first`, `outline_count` of its fill outline.
+priv struct StateRange {
+  first : Int32
+  count : Int32
+  outline_first : Int32
+  outline_count : Int32
+  state : JsValue
+}
+
+///|
+/// An extrusion mesh's features (`@render_webgl2.extrusion_runs`) and the DEM
+/// version its ground heights were last looked up at.
+priv struct ExtrusionGround {
+  runs : FixedArray[Int32]
+  mut at : Int32
+}
+
+///|
+/// A tile's meshes or how far it is: `Stale` meshes were made under an
+/// earlier style and are drawn until the tile is loaded again (`Loading`
+/// keeps them as `previous` meanwhile).
+priv enum TileState {
+  Loading(request~ : Int32, worker~ : Int32, previous~ : Array[LayerMesh]?)
+  Ready(Array[LayerMesh])
+  Stale(Array[LayerMesh])
+  Failed
+}
+
+///|
+/// `kept`: the worker keeping the tile's bytes for queries and the request
+/// they came with, or (-1, -1).
+priv struct TileEntry {
+  id : @core.TileId
+  mut state : TileState
+  mut last_used : Int32
+  mut kept : (Int32, Int32)
+}
+
+///|
+/// Tiles kept beyond the ones on screen, for panning back and as fallbacks.
+const MAX_CACHED_TILES : Int32 = 96
+
+///|
+/// How many zoom levels up to look for a loaded tile to show meanwhile.
+const MAX_FALLBACK_LEVELS : Int32 = 4
+
+///|
+/// Most tile workers started by default (VISION §4-7).
+const MAX_WORKERS : Int32 = 4
+
+///|
+/// Wheel zoom per CSS pixel of scrolling.
+const WHEEL_ZOOM_RATE : Double = 1.0 / 450.0
+
+///|
+/// Bearing and pitch change per CSS pixel of a rotating drag (right button
+/// or Ctrl), as in MapLibre.
+const ROTATE_RATE : Double = 0.8
+
+///|
+const PITCH_RATE : Double = 0.5
+
+///|
+/// A map drawn into a canvas, its camera read and replaced as a value (`camera`, `set_camera`). `vertex_paint`: per
+/// style layer; `failed_workers`: per worker; `changed_images`: size changed since the workers were told; `images_held`:
+/// they hold tiles for a sprite; `ramps`, `relief_ramps`: by expression (and the DEM's encoding).
+pub struct Map {
+  priv canvas : @render_webgl2.Canvas
+  priv renderer : @render_webgl2.Renderer
+  priv mut style : @style.Style
+  priv mut vertex_paint : Array[Array[@style.VertexPaint]]
+  priv sources : Array[SourceTiles]
+  priv geojson : Provider
+  priv mut transform : @core.Transform
+  priv mut globe : @globe.Globe?
+  priv workers : Array[Worker]
+  priv failed_workers : Array[Bool]
+  priv mut next_worker : Int32
+  priv requests : @hashmap.HashMap[Int32, (Int32, Int64)]
+  priv mut next_request : Int32
+  priv mut frame : Int32
+  priv mut frame_count : Int32
+  priv mut idle_fired : Bool
+  priv listeners : @hashmap.HashMap[Int32, Listener]
+  priv mut moving : Bool
+  priv mut animation : Animation?
+  priv mut input_event : Event
+  priv mut handlers : Int32
+  priv mut wheel_timer : Int32
+  priv inertia : Array[Sample]
+  priv mut next_listener : Int32
+  priv pointers : Array[(Int32, Double, Double)]
+  priv mut rotating : Bool
+  priv mut dragging : Bool
+  priv mut press : (Double, Double)
+  priv mut box_start : (Double, Double, ZoomBox)?
+  priv cleanups : Array[() -> Unit]
+  priv mut destroyed : Bool
+  priv mut has_labels : Bool
+  priv targets : @hashmap.HashMap[Int64, TerrainTarget]
+  priv mut content_version : Int32
+  priv atlas : @label.Atlas
+  priv mut atlas_full : Bool
+  priv fonts : @hashmap.HashMap[String, Int32]
+  priv tile_fonts : Array[Int32]
+  priv mut labels_dirty : Bool
+  priv mut dem_version : Int32
+  priv mut placed_camera : @core.Camera?
+  priv mut placed_at : Double
+  priv mut placement_round : Int32
+  priv grid : @label.Grid
+  priv mut drawn : @hashmap.HashMap[String, Array[Draw]]
+  priv waiting : @hashmap.HashMap[Int32, Waiting]
+  priv mut ranges_waiting : Int32
+  priv mut transform_request : RequestTransform
+  priv mut next_query : Int32
+  priv mut window : Window?
+  priv feature_states : @hashmap.HashMap[
+    String,
+    @hashmap.HashMap[String, JsValue],
+  ]
+  priv images : @hashmap.HashMap[String, @render_webgl2.StyleImage]
+  priv missing_images : @hashset.HashSet[String]
+  priv mut on_missing_image : (String) -> Unit
+  priv changed_images : @hashset.HashSet[String]
+  priv mut images_loading : Bool
+  priv mut images_held : Bool
+  priv ramps : Array[(@style.Expr, @render_webgl2.Gradient)]
+  priv relief_ramps : Array[
+    (@style.Expr, @style.DemEncoding, @render_webgl2.Gradient),
+  ]
+  priv media : Array[Media]
+  priv mut custom : CustomRenderer
+  priv mut shadows : Shadows?
+  priv mut viewshed : FixedArray[Double]?
+  priv mut clipping : FixedArray[Double]
+  priv mut cut_frame : @core.Mat4?
+}
+
+///|
+/// What a listener (`on_move`, `on_idle`, `on_move_start`, `on_move_end`)
+/// listens for; one map holds them all, so the bundle has one map type.
+priv enum Listener {
+  Move((@core.Camera) -> Unit)
+  Idle(() -> Unit)
+  Render(() -> Unit)
+  Start((Event) -> Unit)
+  End((Event) -> Unit)
+}
+
+///|
+fn Map::fire_move(self : Map, c : @core.Camera) -> Unit {
+  for _, l in self.listeners {
+    if l is Move(f) {
+      f(c)
+    }
+  }
+}
+
+///|
+/// Creates a map drawing `style_json` into `canvas` with `workers` tile workers
+/// (0 picks half the hardware threads, up to `MAX_WORKERS`); `geojson` gives
+/// GeoJSON sources' tiles and `font` is the CSS font family labels are drawn in.
+pub fn Map::new(
+  canvas : @render_webgl2.Canvas,
+  style_json : String,
+  camera : @core.Camera,
+  worker_url~ : String,
+  wasm_url~ : String,
+  workers~ : Int32 = 2,
+  geojson~ : Provider = no_provider(),
+  font~ : String = "sans-serif",
+  limits~ : @core.Limits = @core.Limits::default(),
+  strict~ : Bool = false,
+) -> Map raise MapError {
+  let json = parse_json(style_json)
+  let style = @style.Style::from_json(json, strict~) catch {
+    e => raise BadStyle(e)
+  }
+  style.report_ignored(json, strict~) catch {
+    e => raise BadStyle(e)
+  }
+  // The sources the drawable layers use, in style order.
+  let sources : Array[SourceTiles] = []
+  for i, s in style.sources {
+    if draws_from(style, s.id) {
+      sources.push({ index: i, source: s, tiles: @hashmap.HashMap([]), })
+    }
+  }
+  guard @render_webgl2.Renderer::new(canvas) is Some(renderer) else {
+    raise NoWebGL2
+  }
+  let map : Map = {
+    canvas,
+    renderer,
+    style,
+    vertex_paint: style.layers.map(l => l.vertex_paint()),
+    sources,
+    geojson,
+    transform: @core.Transform::new(
+      camera,
+      css_width(canvas),
+      css_height(canvas),
+      limits~,
+    ),
+    globe: None,
+    workers: [],
+    failed_workers: [],
+    next_worker: 0,
+    requests: @hashmap.HashMap([]),
+    next_request: 0,
+    frame: -1,
+    frame_count: 0,
+    idle_fired: false,
+    listeners: @hashmap.HashMap([]),
+    moving: false,
+    animation: None,
+    input_event: no_event(),
+    handlers: ALL_HANDLERS,
+    wheel_timer: -1,
+    inertia: [],
+    next_listener: 0,
+    pointers: [],
+    rotating: false,
+    dragging: false,
+    press: (0.0, 0.0),
+    box_start: None,
+    cleanups: [],
+    destroyed: false,
+    has_labels: style.layers.iter().any(l => l.kind is Symbol),
+    targets: @hashmap.HashMap([]),
+    content_version: 0,
+    atlas: @label.Atlas::new(
+      @render_webgl2.ATLAS_SIZE,
+      @render_webgl2.ATLAS_SIZE,
+    ),
+    atlas_full: false,
+    fonts: @hashmap.HashMap([]),
+    tile_fonts: [],
+    labels_dirty: false,
+    dem_version: 0,
+    placed_camera: None,
+    placed_at: 0.0,
+    placement_round: 0,
+    grid: @label.Grid::new(0.0, 0.0),
+    drawn: @hashmap.HashMap([]),
+    waiting: @hashmap.HashMap([]),
+    ranges_waiting: 0,
+    transform_request: no_transform(),
+    next_query: 0,
+    window: None,
+    feature_states: @hashmap.HashMap([]),
+    images: @hashmap.HashMap([]),
+    missing_images: @hashset.HashSet([]),
+    on_missing_image: _ => (),
+    changed_images: @hashset.HashSet([]),
+    images_loading: false,
+    images_held: false,
+    ramps: [],
+    relief_ramps: [],
+    media: [],
+    custom: no_custom(),
+    shadows: None,
+    viewshed: None,
+    clipping: [],
+    cut_frame: None,
+  }
+  map.follow_projection(camera~)
+  let wasm = absolute_url(wasm_url)
+  let count = if workers > 0 {
+    workers
+  } else {
+    @cmp.maximum(1, @cmp.minimum(MAX_WORKERS, hardware_concurrency() / 2))
+  }
+  let compiled = map.style.to_compiled()
+  for i in 0..<count {
+    let w = spawn_worker(absolute_url(worker_url), msg => map.on_message(msg), message => {
+      map.worker_failed(i, message)
+    })
+    post_init(w, wasm, compiled, map.has_labels, font)
+    map.workers.push(w)
+    map.failed_workers.push(false)
+  }
+  map.attach_input()
+  map.cleanups.push(observe_resize(canvas, () => map.request_render()))
+  map.request_render()
+  map
+}
+
+///|
+/// The current camera, as a value.
+pub fn Map::camera(self : Map) -> @core.Camera {
+  self.transform.camera
+}
+
+///|
+/// Moves the camera at once, stopping an animation. Like any camera change it
+/// fires `move` (between `move_start` and `move_end`), unless the value is
+/// unchanged, so an outside state store can echo cameras back safely.
+pub fn Map::set_camera(self : Map, camera : @core.Camera) -> Unit {
+  self.stop()
+  let camera = match self.globe {
+    Some(g) => {
+      let h = g.copy()
+      h.jump_to(
+        center=camera.center,
+        zoom=camera.zoom,
+        bearing=camera.bearing,
+        pitch=camera.pitch,
+      )
+      h.camera()
+    }
+    None => camera
+  }
+  if self.constrained(camera) == self.transform.camera {
+    return
+  }
+  self.begin_move(no_event())
+  self.apply_camera(camera)
+  self.end_move(no_event())
+}
+
+///|
+/// Calls `f` with the new camera whenever it changes; returns an id for `off`.
+pub fn Map::on_move(self : Map, f : (@core.Camera) -> Unit) -> Int32 {
+  self.next_listener += 1
+  self.listeners.set(self.next_listener, Move(f))
+  self.next_listener
+}
+
+///|
+/// Calls `f` once the visible tiles are loaded and drawn, each time the map
+/// settles after a change; returns an id for `off`.
+pub fn Map::on_idle(self : Map, f : () -> Unit) -> Int32 {
+  self.next_listener += 1
+  self.listeners.set(self.next_listener, Idle(f))
+  self.next_listener
+}
+
+///|
+/// Calls `f` after each frame is drawn.
+pub fn Map::on_render(self : Map, f : () -> Unit) -> Int32 {
+  self.next_listener += 1
+  self.listeners.set(self.next_listener, Render(f))
+  self.next_listener
+}
+
+///|
+/// Removes the listener `id` from an `on_*` call.
+pub fn Map::off(self : Map, id : Int32) -> Unit {
+  self.listeners.remove(id)
+}
+
+///|
+/// Frames rendered so far.
+pub fn Map::frame_count(self : Map) -> Int32 {
+  self.frame_count
+}
+
+///|
+/// Stops workers, removes listeners and frees GPU buffers.
+pub fn Map::destroy(self : Map) -> Unit {
+  if self.destroyed {
+    return
+  }
+  self.destroyed = true
+  if self.frame >= 0 {
+    cancel_frame(self.frame)
+  }
+  if self.wheel_timer >= 0 {
+    clear_timeout(self.wheel_timer)
+  }
+  self.animation = None
+  self.end_queries()
+  for f in self.cleanups {
+    f()
+  }
+  for w in self.workers {
+    terminate(w)
+  }
+  for src in self.sources {
+    for _, e in src.tiles {
+      self.release(e)
+    }
+    src.tiles.clear()
+  }
+  self.sources.clear()
+  self.prune_media([])
+}
+
+///|
+fn Map::apply_camera(self : Map, camera : @core.Camera) -> Unit {
+  let next = match self.globe {
+    // Globe moves come constrained by the globe's own camera.
+    Some(g) => {
+      if camera == self.transform.camera {
+        return
+      }
+      g.set_camera(camera)
+      g.mercator()
+    }
+    None => self.transform.with_camera(camera)
+  }
+  if next.camera == self.transform.camera {
+    return
+  }
+  self.transform = next
+  self.idle_fired = false
+  self.fire_move(next.camera)
+  self.request_render()
+}
+
+///|
+/// `camera` as the map would keep it: as it is on the globe, else kept to
+/// the limits.
+fn Map::constrained(self : Map, camera : @core.Camera) -> @core.Camera {
+  match self.globe {
+    Some(_) => camera
+    None => self.transform.with_camera(camera).camera
+  }
+}
+
+///|
+fn Map::request_render(self : Map) -> Unit {
+  if self.frame < 0 && !self.destroyed {
+    self.frame = request_frame(() => self.render())
+  }
+}
+
+///|
+fn Map::release(self : Map, e : TileEntry) -> Unit {
+  self.content_version += 1
+  self.drop_kept(e)
+  match e.state {
+    Ready(meshes) | Stale(meshes) => self.release_meshes(meshes)
+    Loading(request~, worker~, previous~) => {
+      post_cancel(self.workers[worker], request)
+      self.requests.remove(request)
+      if previous is Some(meshes) {
+        self.release_meshes(meshes)
+      }
+    }
+    Failed => ()
+  }
+}
+
+///|
+/// Lets the worker keeping `e`'s bytes free them.
+fn Map::drop_kept(self : Map, e : TileEntry) -> Unit {
+  let (worker, request) = e.kept
+  if worker >= 0 && !self.destroyed {
+    post_drop(self.workers[worker], request)
+  }
+  e.kept = (-1, -1)
+}
+
+///|
+fn Map::release_meshes(self : Map, meshes : Array[LayerMesh]) -> Unit {
+  for m in meshes {
+    if m.owned {
+      self.renderer.release(m.mesh)
+    }
+    release_icons(self.renderer, m)
+    if m.vertex_paint is Some(b) {
+      self.renderer.release_paint(b)
+    }
+    if m.gradient is Some((_, g)) {
+      self.renderer.release_gradient(g)
+    }
+  }
+}
+
+///|
+/// Sets the function tile requests pass through (`RequestTransform`), or
+/// none with JS null.
+pub fn Map::set_transform_request(self : Map, f : RequestTransform) -> Unit {
+  self.transform_request = f
+}

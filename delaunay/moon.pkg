@@ -1,0 +1,15 @@
+// Delaunay triangulation and Voronoi cells over `@geom.Table` points: ports of
+// delaunator 5.1.0 and d3-delaunay 6.0.6. Pure MoonBit, tested on every backend.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/robust",
+  "moonbitlang/core/double",
+}
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/geom",
+  "moonbitlang/core/double",
+} for "test"

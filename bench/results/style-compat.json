@@ -1,0 +1,216 @@
+{
+  "styles": [
+    "osm-bright",
+    "positron",
+    "dark-matter",
+    "maptiler-basic",
+    "ofm-liberty",
+    "ofm-bright",
+    "ofm-positron",
+    "demotiles",
+    "protomaps-light"
+  ],
+  "rows": [
+    {
+      "kind": "layout.symbol-placement: expressions",
+      "total": 12,
+      "styles": "osm-bright 3, ofm-liberty 3, ofm-bright 3, ofm-positron 3"
+    },
+    {
+      "kind": "layout.text-anchor: expressions",
+      "total": 7,
+      "styles": "positron 4, dark-matter 3"
+    },
+    {
+      "kind": "layout.text-pitch-alignment: along lines",
+      "total": 4,
+      "styles": "positron 2, dark-matter 2"
+    },
+    {
+      "kind": "layout.text-rotation-alignment: along lines",
+      "total": 3,
+      "styles": "positron 1, dark-matter 1, protomaps-light 1"
+    },
+    {
+      "kind": "paint.fill-antialias: expressions",
+      "total": 2,
+      "styles": "osm-bright 1, ofm-bright 1"
+    }
+  ],
+  "results": {
+    "osm-bright": {
+      "warnings": [
+        {
+          "path": "layers[9].paint.fill-antialias",
+          "layer": "landcover-wood",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[114].layout.symbol-placement",
+          "layer": "highway-shield",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[115].layout.symbol-placement",
+          "layer": "highway-shield-us-interstate",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[116].layout.symbol-placement",
+          "layer": "highway-shield-us-other",
+          "message": "expressions"
+        }
+      ]
+    },
+    "positron": {
+      "warnings": [
+        {
+          "path": "layers[34].layout.text-pitch-alignment",
+          "layer": "highway_name_other",
+          "message": "along lines"
+        },
+        {
+          "path": "layers[35].layout.text-rotation-alignment",
+          "layer": "highway_name_motorway",
+          "message": "along lines"
+        },
+        {
+          "path": "layers[35].layout.text-pitch-alignment",
+          "layer": "highway_name_motorway",
+          "message": "along lines"
+        },
+        {
+          "path": "layers[42].layout.text-anchor",
+          "layer": "place_town",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[43].layout.text-anchor",
+          "layer": "place_city",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[44].layout.text-anchor",
+          "layer": "place_capital",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[45].layout.text-anchor",
+          "layer": "place_city_large",
+          "message": "expressions"
+        }
+      ]
+    },
+    "dark-matter": {
+      "warnings": [
+        {
+          "path": "layers[32].layout.text-pitch-alignment",
+          "layer": "highway_name_other",
+          "message": "along lines"
+        },
+        {
+          "path": "layers[33].layout.text-rotation-alignment",
+          "layer": "highway_name_motorway",
+          "message": "along lines"
+        },
+        {
+          "path": "layers[33].layout.text-pitch-alignment",
+          "layer": "highway_name_motorway",
+          "message": "along lines"
+        },
+        {
+          "path": "layers[40].layout.text-anchor",
+          "layer": "place_town",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[41].layout.text-anchor",
+          "layer": "place_city",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[42].layout.text-anchor",
+          "layer": "place_city_large",
+          "message": "expressions"
+        }
+      ]
+    },
+    "maptiler-basic": {
+      "warnings": []
+    },
+    "ofm-liberty": {
+      "warnings": [
+        {
+          "path": "layers[98].layout.symbol-placement",
+          "layer": "highway-shield-non-us",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[99].layout.symbol-placement",
+          "layer": "highway-shield-us-interstate",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[100].layout.symbol-placement",
+          "layer": "road_shield_us",
+          "message": "expressions"
+        }
+      ]
+    },
+    "ofm-bright": {
+      "warnings": [
+        {
+          "path": "layers[11].paint.fill-antialias",
+          "layer": "landcover-wood",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[106].layout.symbol-placement",
+          "layer": "highway-shield-non-us",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[107].layout.symbol-placement",
+          "layer": "highway-shield-us-interstate",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[108].layout.symbol-placement",
+          "layer": "road_shield_us",
+          "message": "expressions"
+        }
+      ]
+    },
+    "ofm-positron": {
+      "warnings": [
+        {
+          "path": "layers[42].layout.symbol-placement",
+          "layer": "highway-shield-non-us",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[43].layout.symbol-placement",
+          "layer": "highway-shield-us-interstate",
+          "message": "expressions"
+        },
+        {
+          "path": "layers[44].layout.symbol-placement",
+          "layer": "road_shield_us",
+          "message": "expressions"
+        }
+      ]
+    },
+    "demotiles": {
+      "warnings": []
+    },
+    "protomaps-light": {
+      "warnings": [
+        {
+          "path": "layers[64].layout.text-rotation-alignment",
+          "layer": "roads_shields",
+          "message": "along lines"
+        }
+      ]
+    }
+  }
+}

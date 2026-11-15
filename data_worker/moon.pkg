@@ -1,0 +1,20 @@
+// The data module: CSV, WKT, WKB, shapefiles and TopoJSON read into `@geom.Table`
+// bytes, numbers past the fast path parsed and DBF text decoded by the host.
+// js/worker.mjs is its glue.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/formats",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/wasmio",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/cmp",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

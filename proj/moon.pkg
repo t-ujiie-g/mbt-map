@@ -1,0 +1,10 @@
+import {
+  "t-ujiie-g/moonmap/core",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/double",
+  "moonbitlang/core/math",
+}
+
+import {
+  "moonbitlang/core/double",
+} for "test"

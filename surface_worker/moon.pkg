@@ -1,0 +1,23 @@
+// The module the analysis worker loads on its first surface operation: Turf's
+// grids, interpolate, clusters, isolines and isobands and d3-contour's density
+// over a dataset's table, computing with the host's Math and number printing.
+
+import {
+  "t-ujiie-g/moonmap/clusters",
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/density",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/grids",
+  "t-ujiie-g/moonmap/isolines",
+  "t-ujiie-g/moonmap/wasmio",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/double",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

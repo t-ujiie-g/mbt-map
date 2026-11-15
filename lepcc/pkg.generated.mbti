@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/moonmap/lepcc"
+
+// Values
+pub const MAX_POINTS : Int32 = 0x400000
+
+pub fn decode(BlobType, FixedArray[Byte], Int32, Int32) -> FixedArray[Byte]?
+
+// Errors
+
+// Types and methods
+#derive(Eq)
+pub(all) enum BlobType {
+  Xyz
+  Rgb
+  Intensity
+  FlagBytes
+}
+pub fn BlobType::equal(Self, Self) -> Bool
+pub fn BlobType::not_equal(Self, Self) -> Bool
+
+// Type aliases
+
+// Traits

@@ -1,0 +1,16 @@
+// The GeoTIFF module the data worker loads on the first raster read: a TIFF's
+// image directories, and windows of its blocks decoded into bands.
+
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/tiff",
+  "t-ujiie-g/moonmap/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

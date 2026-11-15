@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+# The jobs run side by side; the showcase checks are the longest (about 40 s each on SwiftShader).
+jobs:
+  moon:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            npm/package-lock.json
+            bench/package-lock.json
+            examples/react/package-lock.json
+
+      - name: Toolchain and dependencies (scripts/setup.sh, as on Claude Code on the web)
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: moon check
+        run: moon check --target all --deny-warn
+      # The shipped backends; wasm and native are tested locally (AGENTS §2).
+      - name: moon test (wasm-gc)
+        run: moon test --target wasm-gc
+      - name: moon test (js)
+        run: moon test --target js
+      - name: moon fmt
+        run: moon fmt --check
+      - name: Public interfaces (.mbti) are up to date
+        run: moon info && git diff --exit-code -- '*.mbti'
+
+      - name: Build and unit-test the npm package
+        working-directory: npm
+        run: npm run build && npm test
+      - name: Bundle sizes
+        working-directory: npm
+        run: npm run size
+      - name: Bench tooling
+        working-directory: bench
+        run: npm test
+
+  pack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        checks:
+          - --except=showcase-html,showcase-element,showcase-react
+          - --only=showcase-html
+          - --only=showcase-element
+          - --only=showcase-react
+    name: pack ${{ matrix.checks }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            npm/package-lock.json
+            bench/package-lock.json
+            examples/react/package-lock.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('bench/package-lock.json') }}
+
+      - name: Toolchain and dependencies (scripts/setup.sh, as on Claude Code on the web)
+        run: |
+          scripts/setup.sh --no-fixtures --no-browser
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Build the npm package
+        working-directory: npm
+        run: npm run build
+      - name: Packed package runs the examples
+        working-directory: bench
+        run: npx playwright install --with-deps chromium && node npm/pack-test.mjs ${{ matrix.checks }}

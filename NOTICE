@@ -1,0 +1,1278 @@
+moonmap
+Copyright 2026 t-ujiie-g
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party code ported into this repository is listed below with its original
+license and source.
+
+- tess/earcut.mbt: port of earcut 3.2.4 (src/earcut.js, without `refine`)
+  https://github.com/mapbox/earcut — ISC License:
+
+    ISC License
+
+    Copyright (c) 2026, Mapbox
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- tess/fill.mbt (ring classification): port of `classifyRings` from
+  @maplibre/maplibre-gl-style-spec 26.5.0 (src/util/classify_rings.ts); style/color_space.mbt
+  (Lab and HCL interpolation, src/expression/types/color_spaces.ts and color.ts) and
+  npm/src/legacy.ts (src/feature_filter/convert.ts, src/function/convert.ts) of the same
+  version; style/within.mbt, style/distance.mbt and style/geojson_arg.mbt
+  (src/expression/definitions/within.ts, distance.ts, src/util/geometry_util.ts,
+  cheap_ruler.ts, taken there from Mapbox's cheap-ruler, ISC License, and
+  classify_rings.ts); style/color.mbt (`parseCssColor` and `hslToRgb` of
+  src/expression/types/parse_css_color.ts and color_spaces.ts); style/expr.mbt, style/global_state.mbt, style/cluster_properties.mbt, style/eval.mbt and style/ops.mbt
+  (the type annotations of src/expression/parsing_context.ts, `typeOf`, `checkSubtype`,
+  `valueToString` and `typeToString` of src/expression/values.ts and types.ts, the
+  interpolation factor of definitions/interpolate.ts); style/icon.mbt (`Padding` of
+  src/expression/types/padding.ts)
+  https://github.com/maplibre/maplibre-style-spec — BSD 3-Clause License:
+
+    Copyright (c) 2020, MapLibre contributors
+
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+        * Redistributions of source code must retain the above copyright notice,
+          this list of conditions and the following disclaimer.
+        * Redistributions in binary form must reproduce the above copyright notice,
+          this list of conditions and the following disclaimer in the documentation
+          and/or other materials provided with the distribution.
+        * Neither the name of MapLibre GL JS nor the names of its contributors
+          may be used to endorse or promote products derived from this software
+          without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+    CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+- Code following MapLibre GL JS 6.16.0 (https://github.com/maplibre/maplibre-gl-js),
+  BSD 3-Clause License, Copyright (c) 2020, MapLibre contributors (the license
+  text above):
+  - raster/dem.mbt: hillshade_prepare.fragment.glsl (slopes) and the border
+    backfill of src/data/dem_data.ts
+  - render_webgl2/gl.mbt, gl_shaders.mbt, gl_line.mbt, gl_pattern.mbt, gl_symbol.mbt, gl_raster.mbt,
+    renderer.mbt, renderer_line.mbt, renderer_pattern.mbt, renderer_icon.mbt,
+    renderer_3d.mbt and map/render_raster.mbt: the shaders of src/shaders/glsl/
+    (hillshade.fragment.glsl, every method, with `getIlluminationProperties` of
+    src/style/style_layer/hillshade_style_layer.ts; sky; terrain fog; `calculate_visibility`
+    of _prelude.vertex.glsl; fill_outline, line, line_sdf, line_gradient,
+    line_pattern, fill_pattern, fill_outline_pattern, background_pattern, circle,
+    heatmap, heatmap_texture, symbol_icon, symbol_sdf, fill_extrusion,
+    fill_extrusion_pattern and color_relief) with their uniforms of
+    src/webgl/program/ (`patternUniformValues` among them, also in map/draws.mbt),
+    `packDEMData` and `getUnpackVector` of src/data/dem_data.ts, the subdivided
+    raster quad and `premultiplyAlpha` of src/util/image.ts
+  - render_webgl2/line_atlas.mbt: `LineAtlas` of src/render/line_atlas.ts
+  - render_webgl2/pattern_atlas.mbt and renderer_icon.mbt: the padding and
+    positions of `ImageAtlas` and `ImagePosition` of src/render/image_atlas.ts
+  - render_webgl2/color_ramp.mbt and map/line.mbt: `renderColorRamp` of
+    src/util/color_ramp.ts and the line-floorwidth and dash smoothing of
+    src/webgl/draw/draw_line.ts
+  - render_webgl2/heatmap.mbt and map/heatmap.mbt: the two passes of
+    src/webgl/draw/draw_heatmap.ts (density texture, per-tile framebuffers on terrain)
+  - map/extrusion.mbt: `sphericalToCartesian` of src/util/util.ts (the light)
+  - globe/*.mbt: the globe projection's camera, src/geo/projection/globe_transform.ts,
+    vertical_perspective_transform.ts, globe_utils.ts, globe_camera_helper.ts,
+    vertical_perspective_camera_helper.ts, mercator_camera_helper.ts and the parts of
+    src/geo/transform_helper.ts, src/ui/camera.ts and src/ui/handler_manager.ts that drive them;
+    globe/covering.mbt: src/geo/projection/covering_tiles.ts, globe_covering_tiles_details_provider.ts,
+    the cameraMercatorCoordinate of mercator_utils.ts and src/util/primitives/frustum.ts and
+    convex_volume.ts
+  - tess/subdivision.mbt: src/render/subdivision.ts (`subdividePolygon`,
+    `subdivideVertexLine`) and the granularity of subdivision_granularity_settings.ts
+    and vertical_perspective_projection.ts
+  - tess/line.mbt, tess/line_emit.mbt, worker/lines.mbt and tess/circle.mbt: the
+    line bucket of src/data/bucket/line_bucket.ts (joins, offset normals, sharp
+    corners and `linesofar`, `dashDependencies`, `lineClipsArray`) and the points
+    the circle bucket keeps
+  - npm/src/geojson-diff.ts and npm/src/geojson.ts: src/source/geojson_source_diff.ts
+    (`toUpdateable`, `applySourceDiff`, `mergeSourceDiffs`), `getGeoJSONBounds` of
+    src/util/geojson_bounds.ts, `tileIdToLngLatBounds` of src/tile/, `LngLatBounds.intersects`
+    and `GeoJSONSource.updateData` / `shouldReloadTile` of src/source/geojson_source.ts
+  - npm/src/media.ts and map/media.mbt: `ImageSource.setCoordinates` and
+    `calculateImageWarp` of src/source/image_source.ts, the video and canvas
+    sources of video_source.ts and canvas_source.ts
+  - npm/src/custom.ts, map/custom.mbt and npm/src/style.ts: `getProjectionData`
+    and the Mercator projection data of src/geo/projection/mercator_transform.ts,
+    the Mercator shader prelude of src/shaders/glsl/_projection_mercator.vertex.glsl,
+    `setCustomLayerDefaults` of src/webgl/draw/draw_custom.ts and
+    `validateCustomStyleLayer` of src/style/style_layer/custom_style_layer.ts
+  - worker/js/symbols.mjs: `shapeIcon` and `fitIconToText` of src/symbol/shaping.ts,
+    `getIconQuads` of quads.ts, the boxes of collision_feature.ts,
+    `getAnchorJustification` and `getShapedLabelLength` of symbol_layout.ts and
+    the size packing of symbol_size.ts
+  - npm/src/images.ts, sprite.ts and style-images.ts: `loadSprite` and
+    `normalizeSpriteURL` of src/style/load_sprite.ts
+  - style/text.mbt: the font weights of `GlyphManager._fontWeight` and the local
+    font of `_createTinySDF` (src/render/glyph_manager.ts)
+  - tess/extrusion.mbt: `_generateSideFaces` and `addVertex` of
+    src/data/bucket/fill_extrusion_bucket.ts, `isBoundaryEdge` of
+    src/data/extent_bounds.ts
+  - core/transform.mbt and map/sky.mbt: `getMercatorHorizon`, the fog matrix's
+    range and `calculateFogBlendOpacity`
+  - worker/js/text.mjs: the vertical punctuation forms of
+    src/util/verticalize_punctuation.ts, the line breaking of
+    src/symbol/tagged_string.ts and `codePointAllowsIdeographicBreaking` of
+    src/util/unicode_properties.g.ts
+  - style/anchor.mbt, map/labels.mbt and map/label_place.mbt: `evaluateVariableOffset` and
+    `getTextVariableAnchorOffset` of src/style/style_layer/variable_text_anchor.ts,
+    the placement of src/symbol/placement.ts (variable anchors, passes) and
+    collision_index.ts, `GridIndex.hitTest` of grid_index.ts and the tile order
+    of `Style._updatePlacement`
+  - worker/js/line-labels.mjs, map/line_labels.mbt and label/grid.mbt: labels
+    along lines, from src/symbol/merge_lines.ts, get_anchors.ts,
+    check_max_angle.ts, clip_line.ts, `anchorIsTooClose` of symbol_layout.ts,
+    `placeGlyphAlongLine` and `updateLineLabels` of projection.ts,
+    `placeCollisionCircles` of collision_index.ts, path_interpolator.ts and the
+    circles of grid_index.ts; the along-line branch of symbol_sdf.vertex.glsl
+  - core/camera.mbt, core/animation.mbt and core/constrain.mbt: easeTo, flyTo, cameraForBounds,
+    setLocationAtPoint, getBounds and the default constrain of src/ui/camera.ts
+    and src/geo/projection/ (mercator_camera_helper.ts, camera_helper.ts,
+    mercator_transform.ts)
+  - core/intersect.mbt, worker/query.mbt, worker/query_geometry.mbt, map/query.mbt
+    and npm/src/query.ts:
+    src/util/intersection_tests.ts, `FeatureIndex.query` of
+    src/data/feature_index.ts, the `queryIntersectsFeature` of the fill, line,
+    circle and fill-extrusion style layers, `getCameraQueryGeometry`,
+    `maxPitchScaleFactor` and the result ordering of src/source/query_features.ts
+    and src/style/style.ts
+  - render_webgl2/gl_shaders.mbt and render_webgl2/renderer.mbt: raster.fragment.glsl
+    and the raster uniforms of src/webgl/program/raster_program.ts;
+    core/transform.mbt: the pixel-aligned projection (`alignedProjMatrix`) of
+    mercator_transform.ts; style/source.mbt: `TileBounds.contains` of
+    src/source/tile_bounds.ts; npm/src/tilejson.ts: the keys `loadTileJson`
+    of src/source/load_tilejson.ts takes
+  - map/input.mbt: the keyboard, double click and box zoom handlers of
+    src/ui/handler/ and the inertia of src/ui/handler_inertia.ts
+  - core/occlusion.mbt: `isLocationOccluded`, `_raycastTerrain` and the
+    terrain pick of `pointLocation` of mercator_transform.ts, `sampleAt` and
+    `bisect` of src/render/terrain_coverage.ts; core/transform.mbt: the far
+    plane of `_calculateNearFarZ` and the `earthCircumference` heights are
+    measured in; map/dem.mbt: heights at tile borders as `DEMData.sampleBilinear`
+    reads the backfilled border
+  - npm/src/attribution.ts and npm/src/ui/: `_updateAttributions` of
+    src/ui/control/attribution_control.ts, `updateScale` and `getRoundNum` of
+    scale_control.ts, the watch states, `_updateCamera` and the accuracy circle
+    of geolocate_control.ts, `_updateZoomButtons` of navigation_control.ts,
+    `LngLat.distanceTo` and `LngLatBounds.fromLngLat` of src/geo/
+
+- core/animation.mbt `Bezier`: follows @mapbox/unitbezier 1.0.0 (ported from WebKit)
+  https://github.com/mapbox/unitbezier — BSD 2-Clause License:
+
+    Copyright (C) 2008 Apple Inc. All Rights Reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+    1. Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+    OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+    NO EVENT SHALL APPLE INC. OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+    INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+
+- clipper/*.mbt: port of Clipper2 2.0.1 (CPP/Clipper2Lib, commit 642390d:
+  clipper.core.h, clipper.engine.h/.cpp, clipper.offset.h/.cpp and the boolean
+  and offset helpers of clipper.h; without rectangle clipping, triangulation,
+  Minkowski and Z values)
+  https://github.com/AngusJohnson/Clipper2 — Boost Software License 1.0:
+
+    Copyright (c) Angus Johnson 2010-2026
+
+    Boost Software License - Version 1.0 - August 17th, 2003
+
+    Permission is hereby granted, free of charge, to any person or organization
+    obtaining a copy of the software and accompanying documentation covered by
+    this license (the "Software") to use, reproduce, display, distribute,
+    execute, and transmit the Software, and to prepare derivative works of the
+    Software, and to permit third-parties to whom the Software is furnished to
+    do so, all subject to the following:
+
+    The copyright notices in the Software and this entire statement, including
+    the above license grant, this restriction and the following disclaimer,
+    must be included in all copies of the Software, in whole or in part, and
+    all derivative works of the Software, unless such copies or derivative
+    works are solely in the form of machine-executable object code generated by
+    a source language processor.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+    SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+    FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+- clipper/libcxx_sort.mbt: follows libc++'s std::sort (LLVM 21,
+  libcxx/include/__algorithm/sort.h), so that Clipper2's intersection order
+  matches the C++ library's
+  https://github.com/llvm/llvm-project — Apache License v2.0 with LLVM
+  Exceptions, Copyright (c) LLVM Project contributors
+  (https://llvm.org/LICENSE.txt).
+
+- proj/*.mbt and npm/src/projstring.ts: port of proj4js 2.22.0 (the
+  projections of lib/projections/ named in proj/crs.mbt, lib/common/, the
+  datum shifts of lib/datum*.js, lib/Proj.js, lib/transform.js,
+  lib/projString.js and the tables of lib/constants/)
+  https://github.com/proj4js/proj4js — MIT License:
+
+    Copyright (c) 2014, Mike Adair, Richard Greenwood, Didier Richard, Stephen
+    Irons, Olivier Terral and Calvin Metcalf
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+- proj/pseudocylindrical.mbt: Equal Earth follows proj4js's
+  lib/projections/eqearth.js, Copyright 2018 Bernie Jenny, Monash University, Melbourne, Australia,
+  Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+
+- formats/csv.mbt, formats/csv_table.mbt, formats/decimal.mbt and formats/write.mbt: papaparse 5.7.0's delimiter
+  guessing (`guessDelimiter`), header renaming and `dynamicTyping` rules, and its
+  `unparse` (`JsonToCsv`: rows, quoting) (papaparse.js)
+  https://github.com/mholt/PapaParse — MIT License:
+
+    Copyright (c) 2015 Matthew Holt
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- npm/src/prjwkt.ts: port of wkt-parser 1.6.0 (parser.js, process.js, index.js and
+  util.js: WKT1 read into proj4js's definition object) and of proj4js 2.22.0's
+  lib/Proj.js and lib/parseCode.js where they read it
+  https://github.com/proj4js/wkt-parser — MIT License, under the proj4js copyright
+  and notice above.
+
+- formats/topojson.mbt: topojson-client 3.1.0's features (src/feature.js,
+  transform.js, reverse.js: arcs decoded, reversed and stitched, lines and rings
+  padded) https://github.com/topojson/topojson-client — ISC License:
+
+    Copyright 2012-2019 Michael Bostock
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF NEGLIGENCE OR OTHER TORTIOUS
+    ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+    SOFTWARE.
+
+- formats/shapefile.mbt, formats/dbf.mbt and data_worker/js/read.mjs: shpjs 6.2.0's
+  reading of polygon rings the other way round when holes are left over
+  (lib/parseShp.js `handleRings`) and the kinds it gives (one-point multipoints,
+  one-part lines), and parsedbf 2.0.0's trimming of DBF text and code pages from
+  `.cpg` names (decoder.js) https://github.com/calvinmetcalf/shapefile-js,
+  https://github.com/calvinmetcalf/parsedbf — MIT License:
+
+    Copyright (c) 2013 Calvin Metcalf
+    Copyright (c) 2024 Calvin Metcalf and other shapefile-js contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- tiff/ and data_worker/js/geotiff.mjs: geotiff 3.0.5's reading of TIFF images
+  (geotiffimage.js `readRasters`, `getTileOrStrip`, `getOrigin`, `getResolution`,
+  `getBoundingBox`; geotiff.js `readRasters`' choice of an image; predictor.js,
+  compression/lzw.js, resample.js, normalizeArray) https://github.com/geotiffjs/geotiff.js
+  — MIT License:
+
+    Copyright (c) 2015 EOX IT Services GmbH
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- kml/write.mbt: @placemarkio/tokml 0.4.0's `toKML` (src/index.ts) and the escaping of
+  xast-util-to-xml 4.0.0 and stringify-entities 4.0.4 that its build bundles
+  https://github.com/placemark/tokml — MIT License:
+
+    Copyright (c) 2022 Placemark
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  xast-util-to-xml (https://github.com/syntax-tree/xast-util-to-xml) and
+  stringify-entities (https://github.com/wooorm/stringify-entities): MIT License,
+  Copyright (c) Titus Wormer, under the notice above.
+
+- kml/: @tmcw/togeojson 7.1.3's `kml()` and `gpx()` (features, styles, extended data,
+  tracks, ground overlays; src/kml.ts, src/gpx.ts and their helpers)
+  https://github.com/placemark/togeojson — BSD 2-Clause License:
+
+    Copyright (c) 2019 Tom MacWright, Mapbox All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+- xml/: @xmldom/xmldom 0.9.12's sax reader (lib/sax.js: the tag state machine,
+  entity replacement and recovery) and the DOM checks it relies on (lib/dom.js)
+  https://github.com/xmldom/xmldom — MIT License:
+
+    Copyright 2019 - present Christopher J. Brody and other contributors
+    Copyright 2012 - 2017 @jindw <jindw@xidea.org> and other contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- formats/flatgeobuf.mbt and data_worker/js/fgb.mjs: flatgeobuf 4.6.1's reading of
+  features (generic/feature.js `parseProperties`, geojson/geometry.js `fromGeometry`),
+  its packed R-tree search (packedrtree.js `calcTreeSize`, `generateLevelBounds`,
+  `streamSearch`) and range requests (http-reader.js)
+  https://github.com/flatgeobuf/flatgeobuf — BSD License (its LICENSE file; package.json
+  says BSD-3-Clause):
+
+    Copyright (c) 2018, Björn Harrtell
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+- formats/esri.mbt and formats/esri_pbf.mbt: @terraformer/arcgis 2.2.2's
+  `arcgisToGeoJSON` (`convertRingsToGeoJSON`, `ringIsClockwise`, `edgeIntersectsEdge`,
+  `arrayIntersectsArray`, `coordinatesContainPoint`, `getId`)
+  https://github.com/terraformer-js/terraformer — MIT License:
+
+    Copyright (c) 2012-2026 Environmental Systems Research Institute, Inc.
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+  formats/esri_pbf.mbt reads FeatureCollection.proto's messages and restores their
+  coordinates as arcgis-pbf-parser 0.0.4 (https://github.com/rowanwins/arcgis-pbf-parser,
+  Copyright Rowan Winsemius) does: Apache License 2.0
+  (https://www.apache.org/licenses/LICENSE-2.0).
+
+- meshopt/: meshoptimizer 1.3.0's decoders (src/vertexcodec.cpp
+  `meshopt_decodeVertexBuffer`, src/indexcodec.cpp `meshopt_decodeIndexBuffer` and
+  `meshopt_decodeIndexSequence`, src/vertexfilter.cpp's Wasm SIMD filters) and
+  js/meshopt_decoder.mjs `decodeGltfBuffer`
+  https://github.com/zeux/meshoptimizer — MIT License:
+
+    Copyright (c) 2016-2026 Arseny Kapoulkine
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+- draco/: Draco 1.5.7's mesh and point cloud decoder (src/draco/compression/decode.cc,
+  point_cloud/ (sequential and kd-tree decoders, algorithms/ with the dynamic integer and float
+  kd-trees), mesh/ (edgebreaker with its standard, predictive and valence traversals, sequential),
+  attributes/ (sequential and kd-tree attribute decoders, prediction schemes and their transforms),
+  entropy/ (rANS), bit_coders/, core/ (DecoderBuffer, varints), attributes/ (quantization and
+  octahedron transforms), mesh/ (corner tables and traversers), metadata/metadata_decoder.cc
+  and javascript/emscripten/decoder_webidl_wrapper.cc) https://github.com/google/draco —
+  Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0), Copyright 2016 The Draco
+  Authors.
+
+- lepcc/: Esri's LEPCC decoders (src/LEPCC.cpp, src/ClusterRGB.cpp, src/Intensity.cpp,
+  src/BitStuffer2.cpp, src/Common.cpp and src/lepcc_c_api_impl.cpp's lepcc_getBlobInfo, at commit
+  63a30e2a07cabadbad09e205e7189fb034e3431a) https://github.com/Esri/lepcc — Apache License 2.0
+  (https://www.apache.org/licenses/LICENSE-2.0), Copyright 2016 Esri.
+
+Test / benchmark data:
+- bench/fixtures/draco/ (downloaded by bench/draco/golden.mjs, not committed): files of Draco
+  1.5.7's testdata/ (https://github.com/google/draco), Apache License 2.0, Copyright 2016 The
+  Draco Authors. draco/decode_test.mbt and point_cloud_test.mbt embed small meshes and point
+  clouds encoded by draco3d 1.5.7.
+- bench/dist/lepcc/ (downloaded and built by bench/lepcc/upstream.mjs, not committed): Esri's LEPCC
+  sources (https://github.com/Esri/lepcc), Apache License 2.0, Copyright 2016 Esri.
+  lepcc/decode_test.mbt embeds small blobs, and bench/npm/pages/i3s/pcsl/ synthetic point clouds,
+  encoded by its encoder.
+- bench/fixtures/pdal-las/ (downloaded by bench/las/golden.mjs, not committed): LAS files of PDAL
+  2.8.0's test/data/las/ (https://github.com/PDAL/PDAL), BSD license, Copyright (c) Hobu, Inc.
+- bench/fixtures/gsi-bvmap/ (downloaded, not committed):
+  国土地理院ベクトルタイル提供実験 (GSI Japan, experimental_bvmap)
+  https://maps.gsi.go.jp/development/vt.html
+  Used under the GSI content terms of use (国土地理院コンテンツ利用規約).
+
+- tiler/*.mbt: port of @maplibre/geojson-vt 6.3.0 (src/convert.ts, simplify.ts,
+  clip.ts, wrap.ts, tile.ts, transform.ts, tile-index.ts, cluster-tile-index.ts,
+  difference.ts and geojsonvt.ts's updateable index; line metrics and cluster
+  map/reduce included)
+  https://github.com/maplibre/geojson-vt — MIT License and ISC License:
+
+    The MIT License (MIT)
+
+    Copyright (c) 2025 MapLibre contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    --------------------------------------------------------------------------------
+
+    ISC License
+
+    Copyright (c) 2024, Mapbox
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- tiler/kdbush.mbt: port of kdbush 4.1.0 (index.js)
+  https://github.com/mourner/kdbush — ISC License:
+
+    ISC License
+
+    Copyright (c) 2026, Vladimir Agafonkin
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- analysis/index.mbt: port of flatbush 4.6.2 (index.js) and flatqueue 3.1.0
+  https://github.com/mourner/flatbush, https://github.com/mourner/flatqueue — ISC License:
+
+    ISC License
+
+    Copyright (c) 2022, Vladimir Agafonkin
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+    ISC License
+
+    Copyright (c) 2025, Volodymyr Agafonkin
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- style/distance.mbt and hull/concaveman.mbt (`Queue`): port of tinyqueue 3.0.0 (index.js)
+  https://github.com/mourner/tinyqueue — ISC License:
+
+    ISC License
+
+    Copyright (c) 2017, Vladimir Agafonkin
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- analysis/measure.mbt: follows @turf/area, @turf/length, @turf/distance,
+  @turf/centroid and @turf/bbox 7.4.0; lineops/ ports @turf/nearest-point-on-line
+  and @turf/line-slice 7.4.0 (with the parts of @turf/distance and @turf/helpers
+  they use); simplify/ ports @turf/simplify, @turf/clean-coords and
+  @turf/boolean-point-on-line 7.4.0, hull/ @turf/convex 7.4.0, and clusters/
+  @turf/clusters-dbscan and @turf/clusters-kmeans 7.4.0, and grids/ @turf/point-grid,
+  square-grid, rectangle-grid, hex-grid, triangle-grid, interpolate, bbox and
+  centroid 7.4.0 (without `mask`), and isolines/ @turf/isolines and
+  @turf/isobands 7.4.0 (with @turf/area, bbox, boolean-point-in-polygon and explode;
+  point in polygon as point-in-polygon-hao 1.2.4, below); core/jsmath.mbt holds the
+  parts of @turf/helpers, @turf/distance and @turf/area they share
+  https://github.com/Turfjs/turf — MIT License:
+
+    The MIT License (MIT)
+
+    Copyright (c) 2017 TurfJS
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- analysis/predicate.mbt: follows point-in-polygon-hao 1.2.4
+  https://github.com/rowanwins/point-in-polygon-hao — MIT License:
+
+    The MIT License (MIT)
+
+    Copyright (c) 2021 Rowan Winsemius
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  and robust-predicates 3.0.3 (orient2d; also robust/orient2d.mbt, with util.js)
+  https://github.com/mourner/robust-predicates — the Unlicense:
+
+    This is free and unencumbered software released into the public domain.
+
+    Anyone is free to copy, modify, publish, use, compile, sell, or
+    distribute this software, either in source code form or as a compiled
+    binary, for any purpose, commercial or non-commercial, and by any
+    means.
+
+    In jurisdictions that recognize copyright laws, the author or authors
+    of this software dedicate any and all copyright interest in the
+    software to the public domain. We make this dedication for the benefit
+    of the public at large and to the detriment of our heirs and
+    successors. We intend this dedication to be an overt act of
+    relinquishment in perpetuity of all present and future rights to this
+    software under copyright law.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+    OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+
+    For more information, please refer to <http://unlicense.org>
+
+- worker/js/tiny-sdf.mjs: TinySDF 2.3.0 (index.js), unchanged
+  https://github.com/mapbox/tiny-sdf — BSD 2-Clause License:
+
+    BSD-2-Clause
+    Copyright (c) 2016-2024 Mapbox, Inc.
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+- analysis/terrain.mbt: follows gdaldem 3.13.3 (apps/gdaldem_lib.cpp: Horn's slope,
+  aspect and hillshade); viewshed/ follows GDAL 3.13.3's viewshed
+  (alg/viewshed/viewshed.cpp, viewshed_executor.cpp, util.cpp, apps/gdal_viewshed.cpp,
+  apps/gdalalg_raster_viewshed.cpp)
+  https://github.com/OSGeo/gdal — MIT License:
+
+    Copyright (c) 2006, 2009 Matthew Perry
+    Copyright (c) 2009-2013, Even Rouault <even dot rouault at spatialys.com>
+    (c) 2024 info@hobu.co
+    Copyright (c) 2025, Even Rouault <even dot rouault at spatialys.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- worker/js/query.mjs: `toGeoJSON`, `classifyRings` and `signedArea` of
+  @mapbox/vector-tile 3.0.0 (index.js)
+  https://github.com/mapbox/vector-tile-js — BSD 3-Clause License:
+
+    Copyright (c) 2024, Mapbox
+
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+        * Redistributions of source code must retain the above copyright notice,
+          this list of conditions and the following disclaimer.
+        * Redistributions in binary form must reproduce the above copyright notice,
+          this list of conditions and the following disclaimer in the documentation
+          and/or other materials provided with the distribution.
+        * Neither the name of Mapbox nor the names of its contributors
+          may be used to endorse or promote products derived from this software
+          without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+    CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+- worker/js/pmtiles.mjs and npm/src/pmtiles.ts: the PMTiles v3 reader of pmtiles
+  4.5.0 (src/index.ts: header, directories, Hilbert tile ids, `findTile`)
+  https://github.com/protomaps/PMTiles — BSD 3-Clause License:
+
+    Copyright 2021 Protomaps LLC
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+    contributors may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+- geodesic/*.mbt: port of geographiclib-geodesic 2.2.0 (src/Math.js,
+  src/Geodesic.js, src/GeodesicLine.js, src/PolygonArea.js), after
+  C. F. F. Karney, "Algorithms for geodesics", J. Geodesy 87, 43-55 (2013)
+  https://github.com/geographiclib/geographiclib-js — MIT License:
+
+    Copyright (c) 2011-2022, Charles Karney
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+- relate/*.mbt: port of JTS's DE-9IM relate operation as JSTS 2.12.1 ships it
+  (org/locationtech/jts: operation/relate/, the geomgraph/ and geomgraph/index/
+  classes RelateOp reaches, algorithm/RobustLineIntersector, LineIntersector,
+  Orientation, CGAlgorithmsDD and the part of math/DD it uses, Intersection,
+  Distance.pointToSegment, PointLocator, RayCrossingCounter,
+  locate/SimplePointInAreaLocator, RectangleLineIntersector,
+  operation/predicate/RectangleContains and RectangleIntersects,
+  geom/IntersectionMatrix, the RelateOp predicates of monkey.js, and
+  java/util/TreeMap.js's red-black tree)
+  https://github.com/locationtech/jts and https://github.com/bjornharrtell/jsts
+  — Eclipse Distribution License 1.0 (chosen of EDL-1.0 OR EPL-1.0):
+
+    Copyright (c) Vivid Solutions, and LocationTech JTS and JSTS contributors
+
+    Eclipse Distribution License - v 1.0
+
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    - Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    - Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    - Neither the name of the Eclipse Foundation, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+    PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+    CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Test / benchmark data (continued):
+- bench/fixtures/gsi-dem/, bench/fixtures/gsi-dem-fuji/ (downloaded, not committed):
+  国土地理院 標高タイル (GSI Japan, dem_png)
+  https://maps.gsi.go.jp/development/ichiran.html#dem
+  Used under the GSI content terms of use (国土地理院コンテンツ利用規約).
+- bench/fixtures/gsi-std/ (downloaded, not committed):
+  国土地理院 標準地図 (GSI Japan, std)
+  https://maps.gsi.go.jp/development/ichiran.html
+  Used under the GSI content terms of use (国土地理院コンテンツ利用規約).
+- bench/fixtures/styles/ (downloaded, not committed): public MapLibre styles read by
+  bench/style/compat.mjs and bench/style/public.mjs, pinned by sha256 in
+  bench/style/public-styles.mjs. OpenMapTiles styles (OSM Bright, Positron, Dark Matter,
+  MapTiler Basic): design CC-BY 4.0 © OpenMapTiles, code BSD-3-Clause. OpenFreeMap styles
+  (liberty, bright, positron): MIT. MapLibre demotiles: BSD-3-Clause.
+- bench/fixtures/sprites/ (downloaded, not committed): those styles' sprites, from the
+  OpenMapTiles style repositories' gh-pages branches (CC-BY 4.0 © OpenMapTiles) and
+  OpenFreeMap (ofm_f384, MIT).
+- bench/fixtures/ofm-planet/ (downloaded, not committed): OpenFreeMap vector tiles
+  (OpenMapTiles schema, build 20261101_080013_pt) of the GSI fixtures' area.
+  © OpenMapTiles, Data © OpenStreetMap contributors (ODbL 1.0,
+  https://www.openstreetmap.org/copyright). Served by https://openfreemap.org.
+- bench/fixtures/protomaps/ (downloaded, not committed): Protomaps vector tiles
+  (Protomaps basemap schema, daily build 20261103) of the GSI fixtures' area.
+  Data © OpenStreetMap contributors (ODbL 1.0, https://www.openstreetmap.org/copyright).
+  Served by https://build.protomaps.com.
+- bench/fixtures/plateau-chiyoda/ (downloaded, not committed): PLATEAU 3D Tiles
+  (3D都市モデル 建築物モデル 千代田区 2025年度, LOD2 without texture) around Tokyo Station.
+  出典：「3D都市モデル（Project PLATEAU）千代田区（2025年度）」（国土交通省）（https://www.mlit.go.jp/plateau/）を加工して作成（東京駅周辺のタイルを抜き出したもの）.
+  Used under PLATEAU's site policy (Public Data License 1.0, compatible with CC BY 4.0;
+  the 3D city models' copyright belongs to the local governments). Catalog: https://api.plateauview.mlit.go.jp/datacatalog/plateau-datasets
+  (id 13101_bldg_lod2_no_texture).
+- bench/fixtures/i3s-sf/, bench/fixtures/i3s-frankfurt/ (downloaded, not committed): layer
+  JSON, node pages and the geometry and attribute resources of a few nodes of Esri's public
+  sample I3S scene services on ArcGIS Online, SanFrancisco_Bldgs (3DObject) and
+  Frankfurt2017_vi3s_18 (IntegratedMesh), https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/
+  arcgis/rest/services/. © Esri and its data providers; used for testing under Esri's terms
+  of use, not redistributed.
+- npm/src/i3s/content.ts reads I3S node resources as @loaders.gl/i3s 4.5.4 does
+  (src/lib/parsers/parse-i3s-tile-content.ts, parse-i3s-attribute.ts) and computes ECEF as
+  math.gl 4.1's Ellipsoid.cartographicToCartesian: MIT License, Copyright (c) vis.gl
+  contributors (https://github.com/visgl/loaders.gl, https://github.com/visgl/math.gl).
+- npm/src/tiles/geo.ts, tileset.ts, implicit.ts, frame.ts and npm/src/i3s/scene.ts port what
+  @loaders.gl/tiles 4.5.4 and @loaders.gl/3d-tiles 4.5.4 select tiles with (TilesetTraverser,
+  Tileset3DTraverser, createBoundingVolume, createObbFromRegion, parseImplicitTiles,
+  getLodStatus, getProjectedRadius) through math.gl 4.1 (Ellipsoid, OrientedBoundingBox,
+  BoundingSphere, CullingVolume), and deck.gl's viewport.project for I3S's pixels: MIT License,
+  Copyright (c) vis.gl contributors (https://github.com/visgl/loaders.gl,
+  https://github.com/visgl/math.gl, https://github.com/visgl/deck.gl).
+- npm/src/tiles/content.ts decodes pnts' RGB565 colors and oct-encoded normals and i3dm's
+  oct-encoded instance normals as CesiumJS 1.146.0 does (AttributeCompression.octDecode,
+  PntsParser, Instanced3DModel3DTileContent): Apache-2.0,
+  © 2011-2026 CesiumJS Contributors (https://github.com/CesiumGS/cesium).
+- @protomaps/basemaps 5.7.2 (bench devDependency, not shipped): builds the Protomaps
+  styles compared by bench/style/public.mjs and compat.mjs. BSD-3-Clause,
+  © The Protomaps Authors.
+- CesiumJS 1.146.0 (bench devDependency `cesium`, not shipped): draws PLATEAU's
+  buildings beside moon-map/3d in bench/cesium/run.mjs. Apache-2.0,
+  © 2011-2026 CesiumJS Contributors (https://github.com/CesiumGS/cesium).
+
+- delaunay/delaunator.mbt: ported from delaunator 5.1.0
+  https://github.com/mapbox/delaunator — ISC License, Copyright (c) 2021, Mapbox.
+  delaunay/delaunay.mbt and delaunay/voronoi.mbt: ported from d3-delaunay 6.0.6
+  https://github.com/d3/d3-delaunay — ISC License, Copyright 2018-2021 Observable,
+  Inc., Copyright 2021 Mapbox:
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- hull/concaveman.mbt: port of concaveman 2.0.0 (index.js)
+  https://github.com/mapbox/concaveman — ISC License:
+
+    ISC License
+
+    Copyright (c) 2025, Mapbox
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- hull/rbush.mbt: port of rbush 4.0.1 (index.js)
+  https://github.com/mourner/rbush — MIT License:
+
+    The MIT License (MIT)
+
+    Copyright (c) 2024 Volodymyr Agafonkin
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  and quickselect 3.0.0 (index.js)
+  https://github.com/mourner/quickselect — ISC License:
+
+    ISC License
+
+    Copyright (c) 2024, Vladimir Agafonkin
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+- hull/concaveman.mbt (`point_in_polygon`): port of point-in-polygon 1.1.0 (nested.js)
+  https://github.com/substack/point-in-polygon — MIT License:
+
+    The MIT License (MIT)
+
+    Copyright (c) 2016 James Halliday
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- simplify/simplify.mbt: @turf/simplify's lib/simplify is simplify-js
+  https://github.com/mourner/simplify-js — BSD 2-Clause License:
+
+    BSD 2-Clause License
+
+    Copyright (c) 2017, Vladimir Agafonkin
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+- npm/src/classify.ts: ports simple-statistics 8.0.0 (jenks, jenksMatrices,
+  jenksBreaks, ckmeans, quantileSorted, equalIntervalBreaks, sum, variance)
+  https://github.com/simple-statistics/simple-statistics — ISC License:
+
+    ISC License
+
+    Copyright (c) 2014, Tom MacWright
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+  and geostats 2.1.0's getClassStdDeviation
+  https://github.com/simogeo/geostats — MIT License:
+
+    Copyright (c) 2011 Simon Georget
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- clusters/kmeans.mbt: port of skmeans 0.9.7 (main.js, distance.js)
+  https://github.com/solzimer/skmeans — MIT License (its package.json; the package
+  ships no LICENSE file), Copyright (c) David Gómez Matarrodona.
+
+- density/contours.mbt and density/density.mbt: ports of d3-contour 4.0.3
+  (contours, contourDensity) https://github.com/d3/d3-contour — ISC License:
+
+    Copyright 2012-2026 Mike Bostock
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+  and density/ticks.mbt of d3-array 3.2.5 (ticks, tickSpec, max, blur2)
+  https://github.com/d3/d3-array — ISC License:
+
+    Copyright 2010-2023 Mike Bostock
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+  Its log10 follows fdlibm's e_log10.c, as V8 computes Math.log10:
+
+    Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+
+    Developed at SunSoft, a Sun Microsystems, Inc. business.
+    Permission to use, copy, modify, and distribute this
+    software is freely granted, provided that this notice
+    is preserved.
+
+- route/: ports geojson-path-finder 2.1.0 (preprocessor, topology, compactor,
+  round-coord, dijkstra) https://github.com/perliedman/geojson-path-finder — ISC License:
+
+    Copyright (c) 2016, Per Liedman (per@liedman.net)
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose
+    with or without fee is hereby granted, provided that the above copyright notice
+    and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+    OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+
+  with its tinyqueue 2.0.3 (see the tinyqueue entry above) and the parts of
+  @turf/distance, @turf/explode and @turf/helpers 7.4.0 it uses (see the Turf entry).
+
+- npm/src/sun.ts: port of suncalc 2.1.1's getPosition (index.js: toDays, deltaT,
+  sunCoords, siderealTime, azimuth, altitude, astroRefraction)
+  https://github.com/mourner/suncalc — BSD 2-Clause License:
+
+    Copyright (c) 2026, Volodymyr Agafonkin
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification, are
+    permitted provided that the following conditions are met:
+
+       1. Redistributions of source code must retain the above copyright notice, this list of
+          conditions and the following disclaimer.
+
+       2. Redistributions in binary form must reproduce the above copyright notice, this list
+          of conditions and the following disclaimer in the documentation and/or other materials
+          provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+    EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+    TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

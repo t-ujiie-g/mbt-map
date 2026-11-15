@@ -1,0 +1,8 @@
+import {
+  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap/globe",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/math",
+}
+
+supported_targets = "js"

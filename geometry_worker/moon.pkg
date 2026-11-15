@@ -1,0 +1,17 @@
+// The geometry module the analysis worker loads on first use: Clipper2's
+// boolean operations and offsetting over tables (`@overlay`).
+
+import {
+  "t-ujiie-g/moonmap/clipper",
+  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap/overlay",
+  "t-ujiie-g/moonmap/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

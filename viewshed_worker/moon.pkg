@@ -1,0 +1,15 @@
+// The module the analysis worker loads on its first viewshed: GDAL's viewshed
+// over a grid's elevations, computing with the host's Math.
+
+import {
+  "t-ujiie-g/moonmap/viewshed",
+  "t-ujiie-g/moonmap/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

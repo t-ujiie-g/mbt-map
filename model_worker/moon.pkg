@@ -1,0 +1,14 @@
+import {
+  "t-ujiie-g/moonmap/draco",
+  "t-ujiie-g/moonmap/lepcc",
+  "t-ujiie-g/moonmap/meshopt",
+  "t-ujiie-g/moonmap/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

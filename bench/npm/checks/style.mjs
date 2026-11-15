@@ -1,0 +1,102 @@
+// The style API on the npm example's map: paint changes, hiding, moving and
+// removing layers keep the tiles, showing a layer again loads them, setStyle swaps everything,
+// GeoJSON sources come and go, and refused changes fire `error` and keep the style.
+import { commonestShare, near, pixel } from "./pixels.mjs";
+import { step } from "./step.mjs";
+
+// Terrain over DEM tiles loaded for a hillshade, with a renamed layer so the vector tiles reload too: the DEM
+// tiles are kept and must stand as terrain, or only the background shows. CI has no fixtures, so nothing to see there.
+async function terrainOverHillshade(page, requests, original) {
+  const present = await page.evaluate(async () => (await fetch("/bench/fixtures/gsi-dem/14/14552/6451.png")).ok);
+  if (!present) return { ok: true, skipped: "no fixtures" };
+  const origin = new URL(page.url()).origin;
+  const dem = { type: "raster-dem", tiles: [`${origin}/bench/fixtures/gsi-dem/{z}/{x}/{y}.png`], tileSize: 256, minzoom: 14, maxzoom: 14, encoding: "gsi" };
+  const [background, ...layers] = original.layers;
+  const flat = { ...original, sources: { ...original.sources, dem }, layers: [background, { id: "hillshade", type: "hillshade", source: "dem" }, ...layers] };
+  const raised = { ...flat, terrain: { source: "dem" }, layers: flat.layers.map((l) => (l.id === "road" ? { ...l, id: "road-3d" } : l)) };
+  const demTiles = () => requests.filter((u) => u.includes("/gsi-dem/")).length;
+  await step(page, "style: hillshade", `map.jumpTo({ center: [139.7671, 35.6812], zoom: 14.5 }); map.setStyle(${JSON.stringify(flat)});`);
+  const before = { share: await commonestShare(page), dem: demTiles() };
+  await step(page, "style: terrain over hillshade", `map.setStyle(${JSON.stringify(raised)});`);
+  const after = { share: await commonestShare(page), dem: demTiles() };
+  await step(page, "style: terrain left", `map.setStyle(${JSON.stringify(original)});`);
+  return { ok: before.dem > 0 && after.dem === before.dem && after.share < 0.5, before, after };
+}
+
+export async function styleChecks(page, requests) {
+  const tiles = () => requests.filter((u) => u.endsWith(".pbf")).length;
+  await step(page, "style: jumpTo", "map.jumpTo({ center: [139.7671, 35.6812], zoom: 14.5, bearing: 0, pitch: 0 });");
+  const before = tiles();
+  const original = await step(page, "style: setPaintProperty", 'const s = map.getStyle(); map.setPaintProperty("waterarea", "fill-color", "#00ff00"); map.setPaintProperty("background", "background-color", "#ff0000"); return s;');
+  const painted = tiles();
+  await step(page, "style: hide, move, remove", 'map.setLayoutProperty("waterarea", "visibility", "none"); map.moveLayer("road", "waterarea"); map.removeLayer("railway");');
+  const kept = tiles();
+  await step(page, "style: show again", 'map.setLayoutProperty("waterarea", "visibility", "visible");');
+  const relaid = tiles();
+  const errors = await page.evaluate(async () => {
+    const map = window.__map;
+    const out = [];
+    const warned = [];
+    const f = (e) => out.push(e.error.message);
+    const w = (e) => warned.push(...e.warnings);
+    map.on("error", f);
+    map.on("warning", w);
+    // The width changes below may reload the road's tiles; they are counted once the map settles.
+    const idle = map.once("idle");
+    map.setPaintProperty("nope", "fill-color", "#000");
+    map.removeSource("gsi");
+    // Unsupported, so drawn at its default width with a warning; then put back.
+    const before = map.getPaintProperty("road", "line-width");
+    map.setPaintProperty("road", "line-width", ["properties"]);
+    const width = map.getPaintProperty("road", "line-width");
+    map.setPaintProperty("road", "line-width", before);
+    await new Promise((r) => setTimeout(r, 0));
+    await idle;
+    map.off("error", f);
+    map.off("warning", w);
+    return { out, warned, width, order: map.getLayersOrder().slice(0, 4) };
+  });
+  const settled = tiles();
+  await step(page, "style: setStyle", 'map.setStyle({ version: 8, sources: {}, state: { bg: { default: "#ff0000" } }, layers: [{ id: "bg", type: "background", paint: { "background-color": ["global-state", "bg"] } }] });');
+  const red = await pixel(page, 400, 300);
+  // Global state: set and read back, then null takes the style's default again.
+  const read = await step(page, "style: setGlobalStateProperty", 'map.setGlobalStateProperty("bg", "#00ff00"); return map.getGlobalState();');
+  const green = await pixel(page, 400, 300);
+  const state = await step(page, "style: global state default", 'map.setGlobalStateProperty("bg", null); return [map.getGlobalState(), map.getStyle().state];');
+  const red2 = await pixel(page, 400, 300);
+  const swapped = tiles();
+  const point = (lng, lat) => ({ type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [lng, lat] } }] });
+  await step(page, "style: addSource", `map.addSource("pts", { type: "geojson", data: ${JSON.stringify(point(139.7671, 35.6812))} }); map.addLayer({ id: "pts", type: "circle", source: "pts", paint: { "circle-radius": 30, "circle-color": "#0000ff" } });`);
+  const blue = await pixel(page, 400, 300);
+  await step(page, "style: setData", `map.getSource("pts").setData(${JSON.stringify(point(139.8, 35.7))});`);
+  const moved = await pixel(page, 400, 300);
+  const order = await step(page, "style: removeSource", 'map.removeLayer("pts"); map.removeSource("pts"); return [map.getLayersOrder(), Object.keys(map.getStyle().sources)];');
+  await step(page, "style: setStyle back", `map.setStyle(${JSON.stringify(original)});`);
+  const restored = { tiles: tiles(), center: await pixel(page, 400, 300), layers: await page.evaluate(() => window.__map.getLayersOrder().length) };
+  const terrain = await terrainOverHillshade(page, requests, original);
+  const ok =
+    terrain.ok &&
+    painted === before &&
+    kept === painted &&
+    relaid > kept &&
+    errors.out.length === 2 &&
+    /no layer "nope"/.test(errors.out[0]) &&
+    /used by layer "road"/.test(errors.out[1]) &&
+    errors.warned.some((w) => w.layer === "road" && /paint\.line-width$/.test(w.path) && w.message === "expression properties") &&
+    errors.width?.[0] === "properties" &&
+    JSON.stringify(errors.order) === JSON.stringify(["background", "road", "waterarea", "structurea"]) &&
+    near(red, [255, 0, 0]) &&
+    read?.bg === "#00ff00" &&
+    near(green, [0, 255, 0]) &&
+    state?.[0].bg === "#ff0000" &&
+    state?.[1].bg.default === "#ff0000" &&
+    near(red2, [255, 0, 0]) &&
+    swapped === settled &&
+    near(blue, [0, 0, 255]) &&
+    near(moved, [255, 0, 0]) &&
+    JSON.stringify(order) === JSON.stringify([["bg"], []]) &&
+    restored.tiles > swapped &&
+    !near(restored.center, [255, 0, 0]) &&
+    restored.layers === original.layers.length;
+  return { ok, before, painted, kept, relaid, settled, errors, red, read, green, state, red2, swapped, blue, moved, order, restored, terrain };
+}

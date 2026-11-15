@@ -1,0 +1,181 @@
+// Measuring a line or an area by clicks: lengths and area on the ellipsoid, the
+// path drawn along the geodesics. The measuring is moon-map/geodesic's `measure`,
+// passed by the page, so `moon-map/ui` loads no geodesic code itself.
+import type { Map } from "../index";
+import { Store, type Controller } from "./controller";
+import { addOverlay } from "./overlays";
+
+/** `[longitude, latitude]` in degrees, and meters up when measured in 3D. */
+export type Position = [number, number] | [number, number, number];
+
+/** What `moon-map/geodesic`'s `measure` is. */
+export type Measure = (
+  positions: Position[],
+  options: { closed: boolean; step?: number },
+) => Promise<{ length: number; area: number; distances: ArrayLike<number>; path?: Position[] }>;
+
+/**
+ * `mode` while measuring (null when not); `positions` placed; `pointer` the vertex that follows the pointer until
+ * `finish`; `length` in meters (an area's perimeter) and `area` in square meters (null for a line), both counting
+ * the pointer; `segments` each edge's length; `finished` once done. In 3D, also `horizontal` and `vertical`.
+ */
+export interface MeasurementState {
+  mode: "distance" | "area" | null;
+  positions: Position[];
+  pointer: Position | null;
+  length: number;
+  area: number | null;
+  segments: number[];
+  finished: boolean;
+  horizontal?: number;
+  vertical?: number;
+}
+
+/**
+ * `measure`: moon-map/geodesic's, or `measure3d`: moon-map/3d's, which measures in 3D between the points drawn under
+ * the clicks (`Map.pickPosition`); `step`: meters between the points that draw each geodesic (default 1000);
+ * `id`: of the GeoJSON source and the layers' prefix (default `"moon-map-measure"`); `color`: of the line, the
+ * vertices and the area's fill (default `"#e4572e"`).
+ */
+export interface MeasurementOptions {
+  measure?: Measure;
+  measure3d?: (positions: [number, number, number][], options: { closed: boolean }) => { length: number; horizontal: number; vertical: number; area: number; distances: number[] };
+  step?: number;
+  id?: string;
+  color?: string;
+}
+
+export interface Measurement extends Controller<MeasurementState> {
+  start(mode: "distance" | "area"): void;
+  add(position: Position): void;
+  undo(): void;
+  finish(): void;
+  clear(): void;
+}
+
+const EMPTY = { type: "FeatureCollection", features: [] };
+
+class MeasurementStore extends Store<MeasurementState> implements Measurement {
+  #map: Map;
+  #options: MeasurementOptions;
+  #id: string;
+  #dblclick: boolean | null = null;
+  #unlayer: (() => void) | null = null;
+  #dirty = false;
+  #running = false;
+
+  constructor(map: Map, options: MeasurementOptions) {
+    super({ mode: null, positions: [], pointer: null, length: 0, area: null, segments: [], finished: false });
+    this.#map = map;
+    this.#options = options;
+    this.#id = options.id ?? "moon-map-measure";
+    this.listen(map, "click", (e) => {
+      // The clicks of a double click land on the vertex already placed.
+      const last = this.state.positions.at(-1);
+      const p = last && map.project({ lng: last[0], lat: last[1] });
+      if (!p || Math.hypot(p.x - e.point.x, p.y - e.point.y) > 3) this.add(this.#at(e));
+    });
+    this.listen(map, "mousemove", (e) => {
+      if (this.#active()) this.#update({ pointer: this.#at(e) });
+    });
+    this.listen(map, "mouseout", () => {
+      if (this.#active()) this.#update({ pointer: null });
+    });
+    this.listen(map, "dblclick", () => this.#active() && this.finish());
+    this.onDestroy(() => this.#remove());
+  }
+
+  /** The position under a pointer event: in 3D what is drawn there. */
+  #at(e: { point: { x: number; y: number }; lngLat: { lng: number; lat: number } }): Position {
+    return (this.#options.measure3d && this.#map.pickPosition(e.point)) || [e.lngLat.lng, e.lngLat.lat];
+  }
+
+  #active(): boolean {
+    return this.state.mode !== null && !this.state.finished;
+  }
+
+  start(mode: "distance" | "area"): void {
+    const map = this.#map;
+    const id = this.#id;
+    const color = this.#options.color ?? "#e4572e";
+    this.#unlayer ??= addOverlay(map, [id], [
+      { id: `${id}-fill`, type: "fill", source: id, filter: ["==", ["geometry-type"], "Polygon"], paint: { "fill-color": color, "fill-opacity": 0.15 } },
+      { id: `${id}-line`, type: "line", source: id, filter: ["!=", ["geometry-type"], "Point"], paint: { "line-color": color, "line-width": 2.5 } },
+      { id: `${id}-vertex`, type: "circle", source: id, filter: ["==", ["geometry-type"], "Point"], paint: { "circle-color": "#fff", "circle-radius": 4, "circle-stroke-color": color, "circle-stroke-width": 2 } },
+    ]);
+    this.#dblclick ??= map.doubleClickZoom.isEnabled();
+    map.doubleClickZoom.disable();
+    this.#update({ mode, positions: [], pointer: null, finished: false });
+  }
+
+  add(position: Position): void {
+    if (this.#active()) this.#update({ positions: [...this.state.positions, position] });
+  }
+
+  undo(): void {
+    if (this.state.mode) this.#update({ positions: this.state.positions.slice(0, -1), finished: false });
+  }
+
+  finish(): void {
+    if (this.#active()) this.#update({ pointer: null, finished: true });
+  }
+
+  clear(): void {
+    this.#restore();
+    this.#update({ mode: null, positions: [], pointer: null, finished: false });
+  }
+
+  #restore(): void {
+    if (this.#dblclick) this.#map.doubleClickZoom.enable();
+    this.#dblclick = null;
+  }
+
+  #remove(): void {
+    this.#restore();
+    this.#unlayer?.();
+    this.#unlayer = null;
+  }
+
+  /** Applies `patch` and measures again: one measure at a time, then once more for what came meanwhile. */
+  async #update(patch: Partial<MeasurementState>): Promise<void> {
+    this.set(patch);
+    this.#dirty = true;
+    if (this.#running) return;
+    this.#running = true;
+    while (this.#dirty) {
+      this.#dirty = false;
+      const { mode, positions, pointer } = this.state;
+      const all = pointer ? [...positions, pointer] : positions;
+      const closed = mode === "area";
+      const { measure, measure3d } = this.#options;
+      let m: Awaited<ReturnType<Measure>> & { horizontal?: number; vertical?: number } = { length: 0, area: 0, distances: [], path: all };
+      try {
+        if (all.length > 1 && measure3d) m = measure3d(all.map(([x, y, z]) => [x, y, z ?? 0]), { closed });
+        else if (all.length > 1 && measure) m = await measure(all, { closed, step: this.#options.step ?? 1000 });
+      } catch {
+        continue;
+      }
+      if (this.#dirty) continue;
+      const d = Array.from(m.distances);
+      const segments = d.slice(1).map((x, i) => x - d[i]);
+      if (closed && all.length > 2) segments.push(m.length - d[d.length - 1]);
+      this.set({ length: m.length, area: closed ? Math.abs(m.area) : null, segments, horizontal: m.horizontal, vertical: m.vertical });
+      this.#draw(all, m.path ?? all, closed);
+    }
+    this.#running = false;
+  }
+
+  #draw(vertices: Position[], path: Position[], closed: boolean): void {
+    path = path.map((p) => [p[0], p[1]]);
+    const features: object[] = vertices.map((coordinates) => ({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates } }));
+    if (path.length > 1) {
+      const geometry = closed && vertices.length > 2 ? { type: "Polygon", coordinates: [path] } : { type: "LineString", coordinates: path };
+      features.push({ type: "Feature", properties: {}, geometry });
+    }
+    this.#map.getSource(this.#id)?.setData?.(this.state.mode ? { type: "FeatureCollection", features } : EMPTY);
+  }
+}
+
+export function createMeasurement(map: Map, options: MeasurementOptions): Measurement {
+  return new MeasurementStore(map, options);
+}

@@ -1,0 +1,98 @@
+{
+  "env": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:157.0) Gecko/20100101 Firefox/157.0",
+    "browser": "firefox",
+    "version": "157.0"
+  },
+  "params": {
+    "runs": 5,
+    "statistic": "median of runs after one warm-up",
+    "options": {
+      "maxZoom": 18,
+      "indexMaxZoom": 5,
+      "indexMaxPoints": 100000,
+      "tolerance": 3,
+      "extent": 4096,
+      "buffer": 1024,
+      "wrap": true
+    }
+  },
+  "datasets": {
+    "points": {
+      "bytes": 1532376,
+      "features": 8018,
+      "tiles": 948,
+      "js": {
+        "parseMs": 6.539999999999992,
+        "indexMs": 2.8200000000000074,
+        "tilesMs": 29,
+        "totalMs": 38.36
+      },
+      "moon-map": {
+        "readMs": 16.45999999999998,
+        "readIndexMs": 17.340000000000032,
+        "columnarizeMs": 12.5,
+        "bReadIndexMs": 16.720000000000027,
+        "tilesMs": 13.720000000000027,
+        "totalMs": 31.06000000000006
+      }
+    },
+    "roads": {
+      "bytes": 30080119,
+      "features": 105617,
+      "tiles": 948,
+      "js": {
+        "parseMs": 144.12000000000012,
+        "indexMs": 101.41999999999962,
+        "tilesMs": 569.4800000000005,
+        "totalMs": 815.0200000000002
+      },
+      "moon-map": {
+        "readMs": 378.60000000000036,
+        "readIndexMs": 451.10000000000036,
+        "columnarizeMs": 272.3600000000006,
+        "bReadIndexMs": 546.4599999999991,
+        "tilesMs": 198.8199999999997,
+        "totalMs": 649.9200000000001
+      }
+    },
+    "roads6": {
+      "bytes": 25820444,
+      "features": 105617,
+      "tiles": 948,
+      "js": {
+        "parseMs": 109.54000000000087,
+        "indexMs": 144.04000000000087,
+        "tilesMs": 661.619999999999,
+        "totalMs": 915.2000000000007
+      },
+      "moon-map": {
+        "readMs": 220.11999999999534,
+        "readIndexMs": 435.8600000000006,
+        "columnarizeMs": 263.8799999999974,
+        "bReadIndexMs": 361.1000000000058,
+        "tilesMs": 249.04000000000087,
+        "totalMs": 684.9000000000015
+      }
+    },
+    "buildings": {
+      "bytes": 32903929,
+      "features": 88375,
+      "tiles": 305,
+      "js": {
+        "parseMs": 173.26000000000204,
+        "indexMs": 193.72000000000116,
+        "tilesMs": 867.7200000000012,
+        "totalMs": 1234.7000000000044
+      },
+      "moon-map": {
+        "readMs": 464.9599999999991,
+        "readIndexMs": 710.4400000000023,
+        "columnarizeMs": 231.6800000000003,
+        "bReadIndexMs": 562.2599999999948,
+        "tilesMs": 436.5599999999977,
+        "totalMs": 1147
+      }
+    }
+  }
+}

@@ -1,0 +1,162 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { headerCrs, headerLength, levelBounds, readHeader, search, selectBytes, selectUrl, treeBytes } from "./fgb.mjs";
+import { rangeReader } from "./read.mjs";
+
+// flatgeobuf 4.6.1's `geojson.serialize` of a point and a triangle, without an index.
+const TWO = Uint8Array.from(Buffer.from("6667620366676200940000001c00000018001c000400000000000000000000000000080010000e0018000000180000001c00000000000000020000000000000000000000020000004c310000030000003c0000001c00000004000000d8ffffff00000002040000000100000062000000ecffffff0000000b04000000010000007300000008000c0008000700080000000000000a04000000010000006e0000006c0000000c00000008000e0008000400080000004000000018000000000012000c0000000800000000000000000007001200000000000001040000000200000000000000007061400000000000a0414000000000160000000000000000000000f83f010003000000e381820200010000940000000c00000008000e0008000400080000006c00000018000000000012000c000000080000000000000000000700120000000000000304000000080000000000000000000000000000000000000000000000000000400000000000000000000000000000004000000000000000400000000000000000000000000000000013000000000000000000000000c001000000000002000000", "hex"));
+
+// A packed R-tree of `nodes` ([minX, minY, maxX, maxY, ref] each, root first).
+function tree(nodes) {
+  const b = new Uint8Array(nodes.length * 40);
+  const v = new DataView(b.buffer);
+  nodes.forEach((n, i) => {
+    for (let k = 0; k < 4; k++) v.setFloat64(i * 40 + k * 8, n[k], true);
+    v.setBigUint64(i * 40 + 32, BigInt(n[4]), true);
+  });
+  return async (offset, length) => b.subarray(offset, offset + length);
+}
+
+// Three items under two nodes of two children.
+const THREE = [[0, 0, 11, 11, 1], [0, 0, 6, 6, 3], [10, 10, 11, 11, 5], [0, 0, 1, 1, 0], [5, 5, 6, 6, 100], [10, 10, 11, 11, 250]];
+
+test("levelBounds and treeBytes lay the tree out as flatgeobuf does", () => {
+  assert.deepEqual(levelBounds(3, 2), [[3, 6], [1, 3], [0, 1]]);
+  assert.deepEqual(levelBounds(1, 16), [[1, 2], [0, 1]]);
+  assert.equal(treeBytes(17, 16), 20 * 40);
+  assert.equal(treeBytes(10, 1), (10 + 5 + 3 + 2 + 1) * 40);
+});
+
+test("a node size under 2 is read as 2, as flatgeobuf's calcTreeSize clamps it", async () => {
+  assert.deepEqual(levelBounds(2, 1), levelBounds(2, 2));
+  assert.deepEqual(levelBounds(3, 0), levelBounds(3, 2));
+  assert.equal(treeBytes(3, 1), treeBytes(3, 2));
+  assert.deepEqual(await search(3, 1, [0, 0, 5.5, 5.5], tree(THREE)), await search(3, 2, [0, 0, 5.5, 5.5], tree(THREE)));
+});
+
+test("levelBounds of no items ends", () => {
+  assert.deepEqual(levelBounds(0, 16), [[0, 0], [0, 0]]);
+});
+
+test("search finds the features whose boxes meet the rectangle, with their lengths", async () => {
+  assert.deepEqual(await search(3, 2, [0, 0, 5.5, 5.5], tree(THREE)), [[0, 0, 100], [100, 1, 150]]);
+  assert.deepEqual(await search(3, 2, [10, 10, 12, 12], tree(THREE)), [[250, 2, null]]);
+  assert.deepEqual(await search(3, 2, [20, 20, 30, 30], tree(THREE)), []);
+});
+
+test("search refuses an index that does not form a tree", async () => {
+  const loop = THREE.map((n, i) => (i === 0 ? [0, 0, 11, 11, 0] : n));
+  await assert.rejects(search(3, 2, [0, 0, 1, 1], tree(loop)), /a node at the wrong level/);
+  const far = THREE.map((n, i) => (i === 0 ? [0, 0, 11, 11, 99] : n));
+  await assert.rejects(search(3, 2, [0, 0, 1, 1], tree(far)), /past the end of the index/);
+  await assert.rejects(search(3, 2, [0, 0, 1, 1], async () => new Uint8Array(8)), /index past the end/);
+});
+
+test("readHeader reads the count, node size and CRS", () => {
+  assert.equal(headerLength(TWO), 0x94);
+  assert.deepEqual(readHeader(TWO), { length: 0x94, count: 2, nodeSize: 0, crs: null });
+  assert.throws(() => readHeader(TWO.subarray(0, 40)), /header past the end/);
+  assert.throws(() => headerLength(new Uint8Array(12)), /not a FlatGeobuf file/);
+  const big = TWO.slice();
+  new DataView(big.buffer).setUint32(8, 11 * 1024 * 1024, true);
+  assert.throws(() => headerLength(big), /invalid header size/);
+});
+
+test("headerCrs takes an EPSG code, else the WKT", () => {
+  assert.equal(headerCrs(null), undefined);
+  assert.equal(headerCrs({ org: "EPSG", code: 6677, wkt: null }), 6677);
+  assert.equal(headerCrs({ org: null, code: 4326, wkt: null }), 4326);
+  assert.deepEqual(headerCrs({ org: "ESRI", code: 102100, wkt: "PROJCS[]" }), { wkt: "PROJCS[]" });
+  assert.equal(headerCrs({ org: "ESRI", code: 102100, wkt: " " }), undefined);
+});
+
+test("a bbox needs an index and a valid rectangle", async () => {
+  await assert.rejects(selectBytes(TWO, [0, 0, 1, 1]), /has no index/);
+  for (const bbox of [[0, 0, 1], [1, 0, 0, 1], [0, 0, NaN, 1], "0,0,1,1"]) {
+    await assert.rejects(selectUrl("http://127.0.0.1:1/x.fgb", bbox, 1000, null), /invalid bbox/);
+  }
+});
+
+// A file with an index of `nodeSize` whose two leaves both name one feature of `size` bytes.
+function shared(nodeSize, size) {
+  const b = new Uint8Array(60 + 3 * 40 + 4 + size);
+  const v = new DataView(b.buffer);
+  b.set([0x66, 0x67, 0x62, 3]);
+  v.setUint32(8, 48, true);
+  v.setUint32(12, 28, true);
+  v.setUint16(16, 24, true);
+  v.setUint16(36, 8, true);
+  v.setUint16(38, 16, true);
+  v.setInt32(40, 24, true);
+  v.setBigUint64(48, 2n, true);
+  v.setUint16(56, nodeSize, true);
+  [[0, 0, 1, 1, 1], [0, 0, 1, 1, 0], [0, 0, 1, 1, 0]].forEach((n, i) => {
+    for (let k = 0; k < 4; k++) v.setFloat64(60 + i * 40 + k * 8, n[k], true);
+    v.setBigUint64(60 + i * 40 + 32, BigInt(n[4]), true);
+  });
+  v.setUint32(180, size, true);
+  return b;
+}
+
+test("selectBytes takes a clamped node size and stops at max before allocating", async () => {
+  const file = shared(1, 100);
+  assert.deepEqual(readHeader(file), { length: 48, count: 2, nodeSize: 1, crs: null });
+  const { bytes, ids } = await selectBytes(file, [0, 0, 1, 1], 1000);
+  assert.equal(ids, 2);
+  assert.equal(bytes.length, 60 + 2 * 104 + 8);
+  await assert.rejects(selectBytes(shared(2, 100), [0, 0, 1, 1], 200), /data larger than 200 bytes/);
+});
+
+const select = (bbox, max) => selectUrl("https://x.org/a.fgb", bbox, max, rangeReader("https://x.org/a.fgb", undefined, max));
+
+// Answers ranges of `file` by the mock's fetch; `answer(n)` may give the n-th request's Response instead.
+function serve(t, file, answer = () => undefined) {
+  let n = 0;
+  t.mock.method(globalThis, "fetch", async (_, { headers }) => {
+    const [, from, to] = /^bytes=(\d+)-(\d+)$/.exec(headers.Range).map(Number);
+    const end = Math.min(to + 1, file.length);
+    return answer(++n) ?? new Response(file.subarray(from, end), { status: 206, headers: { "content-range": `bytes ${from}-${end - 1}/${file.length}` } });
+  });
+}
+
+// Its feature lies past the first request's bytes.
+const FILE = shared(16, 20000);
+
+test("selectUrl reads a file by ranges as selectBytes reads its bytes", async (t) => {
+  serve(t, FILE);
+  const { bytes, ids } = await select([0, 0, 1, 1], 1 << 20);
+  const whole = await selectBytes(FILE, [0, 0, 1, 1], 1 << 20);
+  assert.equal(ids, whole.ids);
+  assert.deepEqual(bytes, whole.bytes);
+  assert.ok(globalThis.fetch.mock.callCount() > 1);
+});
+
+test("selectUrl reads from a whole file answered by a 200", async (t) => {
+  serve(t, FILE, () => new Response(FILE));
+  const { bytes, ids } = await select([0, 0, 1, 1], 1 << 20);
+  assert.equal(ids, 2);
+  assert.deepEqual(bytes, (await selectBytes(FILE, [0, 0, 1, 1], 1 << 20)).bytes);
+  assert.equal(globalThis.fetch.mock.callCount(), 1);
+});
+
+test("selectUrl refuses another range and any other status", async (t) => {
+  serve(t, FILE, () => new Response(FILE, { status: 206, headers: { "content-range": "bytes 1-20/64" } }));
+  await assert.rejects(select([0, 0, 1, 1], 1 << 20), /^Error: https:\/\/x\.org\/a\.fgb answered another range$/);
+  t.mock.restoreAll();
+  serve(t, FILE, () => new Response(null, { status: 500 }));
+  await assert.rejects(select([0, 0, 1, 1], 1 << 20), /^Error: HTTP 500 for https:\/\/x\.org\/a\.fgb$/);
+});
+
+test("selectUrl stops at max", async (t) => {
+  serve(t, FILE);
+  await assert.rejects(select([0, 0, 1, 1], 1000), /^Error: data larger than 1000 bytes$/);
+  await assert.rejects(select([0, 0, 1, 1], 14000), /^Error: data larger than 14000 bytes$/);
+});
+
+test("selectUrl refuses a server that stops answering ranges", async (t) => {
+  serve(t, FILE, (n) => (n > 1 ? new Response(FILE) : undefined));
+  await assert.rejects(select([0, 0, 1, 1], 1 << 20), /^Error: https:\/\/x\.org\/a\.fgb stopped answering range requests$/);
+  t.mock.restoreAll();
+  serve(t, FILE, (n) => (n > 2 ? new Response(FILE) : undefined));
+  await assert.rejects(select([0, 0, 1, 1], 1 << 20), /^Error: malformed FlatGeobuf: feature past the end of the data$/);
+});

@@ -1,0 +1,15 @@
+// The GeoJSON worker's wasm-gc module: `@geojson_tiles` exported. js/worker.mjs is
+// its glue (and that of `geojson_props_worker`, the module with expressions).
+
+import {
+  "t-ujiie-g/moonmap/geojson_tiles",
+  "t-ujiie-g/moonmap/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

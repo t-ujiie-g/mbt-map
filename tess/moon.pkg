@@ -1,0 +1,7 @@
+import {
+  "t-ujiie-g/moonmap/core",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/double",
+  "moonbitlang/core/math",
+}
