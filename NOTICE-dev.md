@@ -60,6 +60,15 @@ an entry says otherwise.
   Frankfurt2017_vi3s_18 (IntegratedMesh), https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/
   arcgis/rest/services/. © Esri and its data providers; used for testing under Esri's terms
   of use, not redistributed.
+- examples/samples/attribute-table/countries.json (committed; the attribute table sample's data):
+  made from Natural Earth's 1:110m Admin 0 – Countries
+  (https://www.naturalearthdata.com/, public domain; ne_110m_admin_0_countries.geojson of
+  https://github.com/nvkelso/natural-earth-vector, version 5.2.0-pre, the file's commit 9380cca of
+  2022-05-13, fetched 2026-11-15, sha256
+  6866c877d39cba9c357620878839b336d569f8c662d3cfab4cb1dbe2d39c977f): coordinates rounded to 2 decimals,
+  Antarctica left out, the properties kept as `code` (ADM0_A3), `name` (NAME), `continent`
+  (CONTINENT), `population` (POP_EST), `gdp` (GDP_MD, million USD) and `income` (INCOME_GRP
+  without its number). Made with Natural Earth.
 
 ## Development dependencies
 

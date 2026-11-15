@@ -12,6 +12,7 @@
   {"id": "buffer-voronoi", "group": "Analysis"},
   {"id": "classify", "group": "Analysis"},
   {"id": "route", "group": "Analysis"},
+  {"id": "attribute-table", "group": "Tools"},
   {"id": "draw", "group": "Tools"},
   {"id": "measure", "group": "Tools"},
   {"id": "ui-controls", "group": "Tools"},

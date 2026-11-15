@@ -287,3 +287,11 @@ Where things stand, decisions and open issues. The development history before th
 
 - ユーザーの依頼で、GitHub Pages に Google タグ マネージャー（`GTM-MWGLDWNP`）を入れた。`site/analytics.js` を、サイトの各ページ（トップ、文書、例の目次、サンプルの解説ページ、4 つのアプリ）が読む。解説ページに埋め込んで動かすサンプル本体には入れない（閲覧の二重計上と、見せるコードへの混入を避ける）。
 - 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに「Google Analytics で訪問を数えている」と書いた。
+
+## サンプル：属性テーブルとフィールド演算（2026-11-15）
+
+- ユーザーの要望（属性テーブルの例がない、フィールド演算を見せたい）で `examples/samples/attribute-table/` を足した（一覧では Tools の先頭）。世界の国（Natural Earth 1:110m、176 件）を地図と表で見せる。表は `createAttributeTable`（見出しで並べ替え、絞り込み、行の選択を feature state で地図に、`zoomTo`）、地図のクリックで行を選んで表をそこまで送る。`createFieldEditor` で式（JSON のスタイル式）から列を足し、見出しから改名・削除できる。プリセットは 4 つ（1 人あたり GDP、人口の割合、1 億人以上、経済規模）。数値の列は `classBreaks`（分位・jenks・等間隔）と `classStep` で塗り分け、凡例を出す。地球儀の切り替えつき。
+- データ `countries.json`（177KB、gzip 約 56KB）はサンプルのフォルダに置いた。座標は小数 2 桁、南極は外した（人口と GDP が仮の値で、1 人あたり GDP の階級を 1 つ占めてしまう）。出典は NOTICE-dev.md。
+- **ライブラリの不具合（直していない）**：`updateData` の 1 つの更新に `removeAllProperties: true` と `addOrUpdateProperties` の両方があると、ワーカー側（`tiler/source.mbt` の `Source::updated_row`）は足す分も捨てるので、描かれるフィーチャーの属性が空になり、`promoteId` の id も失われる（`getData()` は正しい値を返す：`npm/src/geojson-diff.ts` は消してから足す）。`createFieldEditor` の `propertiesDiff` は常にこの形を送るので、フィールド演算のあと、属性で塗る式は既定値になり、feature state も `queryRenderedFeatures` の属性も消える。サンプルは編集のたびに `setData` で全体を渡し直して避けている（直ったらその 2 行を消す）。
+- 足りないもの：表の行がどのページにあるかを id から知る方法がない（地図で選んだ行へ送るため、サンプルは 1 ページに全行を入れて自分でスクロールする）。`zoomTo` は経度 180° をまたぐ国（ロシア、フィジー）で世界全体に合わせる。
+- 確かめ：Chromium と WebKit で、人口の降順（中国、インド、米国）、「land」の絞り込み（12 件）、行と地図の相互選択、プリセットの値（日本 40,247 = gdp×1e6/population）、塗り分けと凡例、不正な式（何も変わらずエラー表示）、改名と削除、390×844。pack test の `samples`（Chromium、WebKit）、サイトのビルド、`npm --prefix bench test`。
