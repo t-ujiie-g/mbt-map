@@ -743,7 +743,7 @@ test "fills, lines and circles read their sort keys; symbols their z-order" {
   )
   assert_eq(s.layers[0].sort_key, Some(Assert(NumberType, [Get("k")])))
   assert_eq(s.layers[1].sort_key, Some(Lit(Num(2.0))))
-  assert_true(s.layers[2].sort_key is Some(_))
+  assert_eq(s.layers[2].sort_key, s.layers[0].sort_key)
   assert_eq(s.layers[3].sort_key, None)
   let text = (i : Int32) => s.layers[i].text.unwrap()
   assert_eq((text(4).z_order, text(4).sort_key), (Source, Some(Lit(Num(1.0)))))

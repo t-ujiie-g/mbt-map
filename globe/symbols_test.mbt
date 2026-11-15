@@ -51,10 +51,7 @@ test "pitched text correction and radius correction follow MapLibre" {
   let h = tilted_globe(11.5)
   assert_true(near(h.pitched_text_correction(7000.0, id), 0.908792499604794))
   assert_true(near(h.radius_correction(), 0.812274955822932))
-}
-
-///|
-test "radius correction is 1 once drawn flat" {
+  // Drawn flat, the radius needs no correction.
   assert_eq(tilted_globe(13.0).radius_correction(), 1.0)
 }
 

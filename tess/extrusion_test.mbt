@@ -90,3 +90,25 @@ test "wall distances are rounded in 8192 units whatever the source extent" {
     (16, 64, 115),
   )
 }
+
+///|
+test "cleared buffers take the next polygon as new ones do" {
+  let t = @tess.ExtrusionTessellator::new()
+  let heights : FixedArray[Double] = [0.0, 0.0, 30.0, 31.0]
+  let reused = @tess.ExtrusionBuffers::new()
+  t.add_polygons([0, 0, 50, 0, 50, 50, 0, 50][:], [4][:], heights, reused)
+  reused.clear()
+  assert_eq((reused.num_vertices(), reused.indices.length()), (0, 0))
+  let coords = [100, 100, 200, 100, 200, 200, 100, 200]
+  t.add_polygons(coords[:], [4][:], heights, reused)
+  let fresh = @tess.ExtrusionBuffers::new()
+  @tess.ExtrusionTessellator::new().add_polygons(
+    coords[:],
+    [4][:],
+    heights,
+    fresh,
+  )
+  assert_eq(reused.vertices, fresh.vertices)
+  assert_eq(reused.heights, fresh.heights)
+  assert_eq(reused.indices, fresh.indices)
+}

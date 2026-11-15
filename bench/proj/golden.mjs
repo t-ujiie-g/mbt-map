@@ -64,16 +64,16 @@ const strings = [
   ["Stereographic on a sphere", "+proj=stere +lat_0=35 +lon_0=135 +R=6371000", [115, 15, 155, 55]],
   ["Amersfoort / RD New (28992)", "+proj=sterea +lat_0=52.1561605555556 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.4171,50.3319,465.5524,1.9342,-1.6677,9.1019,4.0725 +units=m +no_defs", [3, 50.5, 7.5, 54]],
   ["Soldner Berlin (3068)", "+proj=cass +lat_0=52.4186482777778 +lon_0=13.6272036666667 +x_0=40000 +y_0=10000 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs", [13, 52.2, 13.8, 52.7]],
-  ["Cassini on a sphere", "+proj=cass +lat_0=35 +lon_0=135 +R=6371000", [130, 30, 140, 40]],
+  ["Cassini on a sphere", "+proj=cass +lat_0=35 +lon_0=135 +x_0=0 +y_0=0 +R=6371000", [130, 30, 140, 40]],
   ["ETRS89 LAEA Europe (3035)", "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs", [-30, 30, 40, 75]],
-  ["LAEA north pole", "+proj=laea +lat_0=90 +lon_0=0 +datum=WGS84", [-180, 45, 180, 89]],
-  ["LAEA on the equator", "+proj=laea +lat_0=0 +lon_0=0 +datum=WGS84", [-60, -60, 60, 60]],
-  ["LAEA on a sphere", "+proj=laea +lat_0=45 +lon_0=-100 +R=6370997", [-140, 20, -60, 70]],
+  ["LAEA north pole", "+proj=laea +lat_0=90 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84", [-180, 45, 180, 89]],
+  ["LAEA on the equator", "+proj=laea +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84", [-60, -60, 60, 60]],
+  ["LAEA on a sphere", "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +R=6370997", [-140, 20, -60, 70]],
   ["Plate carrée (4087)", "+proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs", [-180, -89, 180, 89]],
   ["Equidistant conic", "+proj=eqdc +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83", [-140, 15, -60, 70]],
   ["Sinusoidal", "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84", [-180, -85, 180, 85]],
   ["MODIS sinusoidal", "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m", [-180, -85, 180, 85]],
-  ["Eckert VI", "+proj=eck6 +lon_0=0 +R=6371000", [-180, -85, 180, 85]],
+  ["Eckert VI", "+proj=eck6 +lon_0=0 +x_0=0 +y_0=0 +R=6371000", [-180, -85, 180, 85]],
   ["Mollweide (54009)", "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs", [-180, -85, 180, 85]],
   ["Robinson (54030)", "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs", [-180, -85, 180, 85]],
   ["EASE-Grid 2.0 global (6933)", "+proj=cea +lat_ts=30 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs", [-180, -85, 180, 85]],
@@ -81,11 +81,11 @@ const strings = [
   ["SAD69 Brazil polyconic (29101)", "+proj=poly +lat_0=0 +lon_0=-54 +x_0=5000000 +y_0=10000000 +ellps=aust_SA +towgs84=-67.35,3.88,-38.22,0,0,0,0 +units=m +no_defs", [-74, -33, -35, 5]],
   ["Alaska zone 1, oblique Mercator (26931)", "+proj=omerc +lat_0=57 +lonc=-133.666666666667 +alpha=323.130102361111 +k=0.9999 +x_0=5000000 +y_0=-5000000 +no_uoff +gamma=323.130102361111 +datum=NAD83 +units=m +no_defs", [-141, 54, -129, 60]],
   ["Peninsular RSO (3375)", "+proj=omerc +lat_0=4 +lonc=102.25 +alpha=323.0257905 +k=0.99984 +x_0=804671 +y_0=0 +no_uoff +gamma=323.1301023611111 +ellps=GRS80 +units=m +no_defs", [99, 1, 105, 7]],
-  ["Oblique Mercator by two points", "+proj=omerc +lat_0=40 +lat_1=35 +lon_1=-110 +lat_2=45 +lon_2=-100 +k=1 +datum=WGS84", [-115, 35, -95, 45]],
+  ["Oblique Mercator by two points", "+proj=omerc +lat_0=40 +lat_1=35 +lon_1=-110 +lat_2=45 +lon_2=-100 +k=1 +x_0=0 +y_0=0 +datum=WGS84", [-115, 35, -95, 45]],
   ["Swiss LV95 (2056)", "+proj=somerc +lat_0=46.9524055555556 +lon_0=7.43958333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs", [5.9, 45.8, 10.5, 47.8]],
   ["S-JTSK Krovak East North (5514)", "+proj=krovak +lat_0=49.5 +lon_0=24.8333333333333 +alpha=30.2881397527778 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +towgs84=589,76,480,0,0,0,0 +units=m +no_defs", [12, 47.7, 22.6, 51.1]],
   ["Orthographic", "+proj=ortho +lat_0=35 +lon_0=135 +R=6371000", [105, 10, 165, 60]],
-  ["Gnomonic", "+proj=gnom +lat_0=35 +lon_0=135 +R=6371000", [115, 20, 155, 50]],
+  ["Gnomonic", "+proj=gnom +lat_0=35 +lon_0=135 +x_0=0 +y_0=0 +R=6371000", [115, 20, 155, 50]],
   ["Equal Earth (8857)", "+proj=eqearth +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs", [-180, -85, 180, 85]],
   ["Equal Earth on a sphere", "+proj=eqearth +lon_0=150 +R=6371000", [-30, -85, 330, 85]],
   ["Bonne", "+proj=bonne +lat_1=45 +lon_0=0 +datum=WGS84", [-60, 0, 60, 80]],
@@ -169,6 +169,6 @@ for (const [from, to, area] of [
 
 console.log(`proj golden: ${crss.length} CRSs, ${compared} points (${skipped} beyond proj4js's reach left out); largest difference js ${worst.meters.js.toExponential(2)} m / ${worst.degrees.js.toExponential(2)}°, wasm-gc ${worst.meters.wasm.toExponential(2)} m / ${worst.degrees.wasm.toExponential(2)}°`);
 await writeFile(path.join(ROOT, "bench/results/proj-golden.json"), JSON.stringify({ reference: "proj4js 2.22.0", points: POINTS, compared, skipped, worst, rows }, null, 2) + "\n");
-const bad = rows.filter((r) => (r.unit === "meters" ? 1e-3 : 1e-8) < Math.max(r.maxJs, r.maxWasm));
+const bad = rows.filter((r) => r.points === 0 || (r.unit === "meters" ? 1e-3 : 1e-8) < Math.max(r.maxJs, r.maxWasm));
 for (const r of bad.slice(0, 20)) console.log("beyond tolerance:", JSON.stringify(r));
 if (bad.length) process.exitCode = 1;

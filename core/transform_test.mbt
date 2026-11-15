@@ -491,7 +491,9 @@ test "fit_box centers the box and refuses padding wider than the view" {
     is Some((c, z)) else {
     fail("no fit")
   }
-  assert_true((c.lng - 139.75).abs() < 0.0000001 && z > 9.0 && z < 11.0)
+  assert_true((c.lng - 139.75).abs() < 0.0000001)
+  // 0.5° of longitude across 800 px: 512 * 2^z * 0.5 / 360 = 800.
+  assert_true(close(z, @math.log2(1125.0)))
   assert_true(
     @core.fit_box(
       b,
