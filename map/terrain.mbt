@@ -88,6 +88,47 @@ fn elevation_at(src : SourceTiles, m : @core.MercatorCoord) -> Double? {
 }
 
 ///|
+/// Each tile's lowest and highest terrain heights (meters, exaggerated) for
+/// covering (MapLibre's `getMinMaxElevation`): its DEM tile's, else those of
+/// all loaded DEM tiles and the center's. None without terrain.
+fn Map::ground_heights(self : Map) -> ((@core.TileId) -> (Double, Double))? {
+  guard self.terrain_source() is Some(src) else { return None }
+  let k = self.exaggeration()
+  let e = self.transform.elevation
+  let (lowest, highest, _) = dem_range(src, k)
+  let all = (@cmp.minimum(lowest, e), @cmp.maximum(highest, e))
+  Some(id => {
+    let z = @cmp.minimum(id.z, src.source.max_zoom)
+    let dz = id.z - z
+    match
+      @core.TileId::new(z, id.x >> dz, id.y >> dz)
+      .bind(dem => src.ready(dem))
+      .bind(dem_of) {
+      Some((_, d)) => (d.lowest * k, d.highest * k)
+      None => all
+    }
+  })
+}
+
+///|
+/// The lowest and highest heights of `src`'s loaded DEM tiles times `k`, with
+/// sea level, and whether any has loaded.
+fn dem_range(src : SourceTiles, k : Double) -> (Double, Double, Bool) {
+  let mut lowest = 0.0
+  let mut highest = 0.0
+  let mut any = false
+  for _, e in src.tiles {
+    if e.state is (Ready(meshes) | Stale(meshes)) &&
+      dem_of(meshes) is Some((_, d)) {
+      any = true
+      lowest = @cmp.minimum(lowest, d.lowest * k)
+      highest = @cmp.maximum(highest, d.highest * k)
+    }
+  }
+  (lowest, highest, any)
+}
+
+///|
 /// Where `d`'s meshes go in the `size`-pixel texture of terrain tile `into`: its
 /// tile units scaled into the texture's clip space, a texture pixel's worth of
 /// tile units, clipped as on screen (`d.at.clip`).
@@ -190,7 +231,11 @@ fn Map::render_terrain(
         self.globe_cover(g, 512, src.source.min_zoom, z, false),
         { ..self.fog(), opacity: 0.0, },
       )
-    _ => (t.covering_tiles(src.source.min_zoom, z), self.fog())
+    _ =>
+      (
+        t.covering_tiles(src.source.min_zoom, z, heights?=self.ground_heights()),
+        self.fog(),
+      )
   }
   for id in tiles {
     guard dem_under(src, id) is Some((mesh, part)) else { continue }
@@ -380,17 +425,7 @@ fn Map::is_terrain_source(self : Map, request : Int32) -> Bool {
 fn Map::terrain_pick(self : Map) -> @core.Terrain? {
   guard self.terrain_source() is Some(src) else { return None }
   let k = self.exaggeration()
-  let mut lowest = 0.0
-  let mut highest = 0.0
-  let mut any = false
-  for _, e in src.tiles {
-    if e.state is (Ready(meshes) | Stale(meshes)) &&
-      dem_of(meshes) is Some((_, d)) {
-      any = true
-      lowest = @cmp.minimum(lowest, d.lowest * k)
-      highest = @cmp.maximum(highest, d.highest * k)
-    }
-  }
+  let (lowest, highest, any) = dem_range(src, k)
   guard any else { return None }
   Some({
     // Ground without DEM data is flat at 0 m, as MapLibre draws and picks it.

@@ -236,7 +236,7 @@ fn Map::draw_background_pattern(self : Map, layer : @style.StyleLayer) -> Unit {
   let tiles = match self.globe {
     Some(g) if g.is_globe() =>
       self.globe_cover(g, 512, 0, @core.MAX_TILE_ZOOM, false)
-    _ => t.covering_tiles(0, z)
+    _ => t.covering_tiles(0, z, heights?=self.ground_heights())
   }
   for id in tiles {
     let matrix = t.tile_matrix(id, @core.TILE_EXTENT)

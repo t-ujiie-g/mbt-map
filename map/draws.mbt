@@ -98,7 +98,9 @@ fn Map::cover(self : Map, src : SourceTiles) -> Array[@core.TileId] {
     []
   } else {
     // Tiles outside the source's bounds are never asked for.
-    t.covering_tiles(s.min_zoom, z).filter(id => s.covers(id.z, id.x, id.y))
+    t
+    .covering_tiles(s.min_zoom, z, heights?=self.ground_heights())
+    .filter(id => s.covers(id.z, id.x, id.y))
   }
 }
 

@@ -121,3 +121,11 @@ Where things stand, decisions and open issues. The development history before th
 - `?local=1`：Liberty の文書は `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が `style/public-styles.mjs` の固定した版を sha256 で確かめて取る。取れなければ警告して地理院で始まる）、タイルは `bench/fixtures/ofm-planet`（東京駅の周りの z14 だけ）と `gsi-std`、スプライトは `bench/fixtures/sprites/ofm`。そこで東京で始まる。CI はタイルのフィクスチャを持たないが、確かめはスタイルと都市の層だけで足りる（タイルのフィクスチャを外しても通ることを確かめた）。
 - pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
 - 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。
+
+## 地形で手前の低い土地が描かれない（2026-11-15、Mac）
+
+- 症状：3D 地形（地理院の DEM、`"encoding": "gsi"`）で中心を富士山頂（3776 m、誇張 1.5 倍で 5664 m）に置き、ズーム 12・傾き 70° にすると、画面の下（カメラの近くの低い土地）が待っても空いたまま。富士吉田のように低い所を中心にすると出ない。
+- 原因：`Transform::covering_tiles` は画面の四隅の光線が海面（z = 0）と交わる四角形を地面の範囲としていた。中心が持ち上がる（`Transform.elevation`）と、画面の下の光線が海面に届く点はカメラから遠くなり、その間の高さの土地（手前の低い斜面）が範囲の外に出る。`bench/pages/terrain` のこの眺め（1000 × 800）では z12 の 3625–3627/1618 の列が覆う集まりから落ちていた。
+- 直し（MapLibre の `coveringTiles` が地形のとき各タイルの最低・最高の標高の箱で視錐台を試すのに倣う）：`covering_tiles(min_z, max_z, heights?)` は各タイルの地面を `heights` の最低と最高の標高の間とみなし、その 2 つの高さで四隅の光線が交わる 8 点の凸包（`Transform::footprint`、Jarvis の行進）とタイルの重なりを見る。`heights` がなければ MapLibre の既定と同じく海面と中心の標高の間（地形がなければ高さ 0 だけで、これまでと同じ四角形）。カメラより高い標高はカメラのすぐ下で切る。`map` は `Map::ground_heights` を渡す：そのタイルを含む読み込み済みの DEM タイルの最低・最高（誇張込み）、なければ読み込み済みの DEM タイル全部と中心の標高の範囲（祖先のタイルが子の見える土地を落とさないように）。`terrain_pick` と同じ集計は `dem_range` にまとめた。
+- 確かめ：直す前と後の画面（傾き 70°、方位 0° と -20°）で下の空白が消えた。MoonBit のテスト（`core/covering_test.mbt`）：山頂を中心にした眺めで 0 m から中心の標高までの画面内の点がすべて覆われる（直す前は 13 点などが外れて失敗）、`heights` が中心より 5 km 高い土地を覆う、カメラより高い `heights`、海面の眺めは `heights` があっても同じ。`camera:golden`・`globe:golden`（覆うタイル 0 differ）・`track:golden`・pack test（terrain、showcase-html、samples）は通った。`track:golden` の `flank` は main でも時々 319 px 外れる（読み込みの時機による、この変更の前から）。
+- 大きさ：主バンドルが gzip 162.3KB → 163.0KB（162,989 バイト、予算 163,000 まで 11 バイト）。
