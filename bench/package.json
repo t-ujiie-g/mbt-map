@@ -139,7 +139,6 @@
     "@turf/line-slice": "7.4.0",
     "@turf/nearest-point-on-line": "7.4.0",
     "@turf/point-grid": "7.4.0",
-    "@turf/points-within-polygon": "7.4.0",
     "@turf/simplify": "7.4.0",
     "@turf/square-grid": "7.4.0",
     "@turf/triangle-grid": "7.4.0",
@@ -171,7 +170,6 @@
     "pbf": "5.1.2",
     "playwright": "1.64.1",
     "pmtiles": "4.5.0",
-    "robust-predicates": "3.0.3",
     "shpjs": "6.2.0",
     "simple-statistics": "8.0.0",
     "suncalc": "2.1.1",
@@ -183,7 +181,6 @@
   },
   "dependencies": {
     "@turf/buffer": "7.4.0",
-    "@turf/difference": "7.4.0",
     "@turf/intersect": "7.4.0",
     "@turf/union": "7.4.0",
     "clipper2-wasm": "0.4.0",
