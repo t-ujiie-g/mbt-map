@@ -765,7 +765,11 @@ extern "js" fn DataTable::ids(self : DataTable) -> FixedArray[String] =
 
 ///|
 /// A copy of the table with `id` set to `data`.
-extern "js" fn DataTable::put(self : DataTable, id : String, data : JsValue) -> DataTable =
+extern "js" fn DataTable::put(
+  self : DataTable,
+  id : String,
+  data : JsValue,
+) -> DataTable =
   #|(t, id, d) => {
   #|  const out = Object.assign(Object.create(null), t);
   #|  out[id] = d;
@@ -782,5 +786,9 @@ extern "js" fn DataTable::drop(self : DataTable, id : String) -> DataTable =
   #|}
 
 ///|
-extern "js" fn DataTable::set(self : DataTable, id : String, data : JsValue) -> Unit =
+extern "js" fn DataTable::set(
+  self : DataTable,
+  id : String,
+  data : JsValue,
+) -> Unit =
   #|(t, id, d) => { t[id] = d; }
