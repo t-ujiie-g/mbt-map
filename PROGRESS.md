@@ -77,6 +77,12 @@ Where things stand, decisions and open issues. The development history before th
 - R6：MoonBit の API の 2 つのモジュールに `preferred_target = "js"` を置き、`moon info` が `pkg.generated.mbti` を書くようにした。公開 API の差分は CI の `moon info` の差分の確かめが見る。
 - セキュリティ：`npm audit`（npm、bench、examples/react）0 件、Dependabot と秘密情報の警告 0 件。リポジトリの設定（`main` のルールセット、秘密情報の検出と押し込みの防止、Dependabot のセキュリティ更新）は改名の後も有効。新しいコードに `innerHTML`・`eval` はなく、外部コマンドはシェルを通さない。
 
+## 3D Tiles の読み直しの繰り返しを直す（2026-11-15、Mac）
+
+- 症状（ユーザーの録画）：PLATEAU の例を引いて見ると、カメラを止めていても建物が出たり消えたりを繰り返し、タイルを読み続けた。
+- 原因：`maximumLoadedTiles`（既定 256）を超えると、描いているタイル以外を古い順に解放していた。REPLACE のタイルの子は兄弟が全部そろうまで描かれないので、読み終えた子が解放され、また読まれ、を続けていた（引いた視点で要るタイルが 256 を超えると止まらない）。
+- 直し：解放するのは、そのフレームが使わなかったタイル（`lastUsed` がそのフレームでないもの）だけ（`evictable`、`npm/src/tiles/tileset.ts`。loaders.gl のキャッシュも同じ考え）。そのフレームが上限より多く要るときは、上限を超えて持つ。
+- 確かめ：PLATEAU の例をズーム 14.6、傾き 55° にして 40 秒見た。直す前は要求が 789 まで増え続け、描くタイルは 23〜170 を行き来した。直した後は 22 秒で 527 要求、354 タイルで止まった。`tiles:golden`、`i3s:golden`、pack test の 3D の 5 項目、単体テスト（`evictable`）。
 ## GitHub Pages（2026-11-15、Mac）
 
 - 判断（ユーザー）：公開はリリースのタグ（`v*`）を打ったときだけ（手動でも流せる）。トップページは英語と日本語の 2 枚で作ったが、日本語が機械翻訳のようなので、日本語のトップと `README.ja.md` は外した（同日）。トップの地図は 3D に（PLATEAU の東京駅まわり）。

@@ -10,7 +10,7 @@ import { Y_UP, mercatorFrame, sphereFrame } from "./model/place";
 import { eastNorthUp, IDENTITY, multiply, toCartographic } from "./tiles/geo";
 import { frameState } from "./tiles/frame";
 import { expandTileset } from "./tiles/implicit";
-import { buildTree, lineageHas, MAX_TILESET_DEPTH, Traversal, type Tile } from "./tiles/tileset";
+import { buildTree, evictable, lineageHas, MAX_TILESET_DEPTH, Traversal, type Tile } from "./tiles/tileset";
 import { fetchCapped } from "./model/fetch";
 
 /** What the layer lends the engine: the 3D worker's `tile` call, the model upload, a repaint. */
@@ -340,11 +340,8 @@ export class TilesEngine {
     this.#loaded.delete(tile);
   }
 
-  /** Frees the contents used longest ago beyond `maximumLoadedTiles`, never one drawn now. */
+  /** Frees the contents used longest ago beyond `maximumLoadedTiles`, never one this frame used. */
   #evict(gl: WebGL2RenderingContext): void {
-    const max = this.#options.maximumLoadedTiles ?? 256;
-    if (this.#loaded.size <= max) return;
-    const idle = [...this.#loaded].filter((t) => !this.#traversal.selected.has(t.path)).sort((a, b) => a.lastUsed - b.lastUsed);
-    for (const tile of idle.slice(0, this.#loaded.size - max)) this.#unload(tile, gl);
+    for (const tile of evictable(this.#loaded, this.#traversal.frame, this.#options.maximumLoadedTiles ?? 256)) this.#unload(tile, gl);
   }
 }

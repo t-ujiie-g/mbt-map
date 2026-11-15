@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boundingVolume, distanceSquaredTo, eastNorthUp, intersectPlane, INSIDE, INTERSECTING, MASK_INSIDE, MASK_OUTSIDE, OUTSIDE, planeFromPointNormal, toCartesian, toCartographic, visibilityWithPlaneMask } from "../src/tiles/geo.ts";
-import { buildTree, lineageHas, Traversal, type FrameState } from "../src/tiles/tileset.ts";
+import { buildTree, evictable, lineageHas, Traversal, type FrameState } from "../src/tiles/tileset.ts";
 import { expandImplicit, readSubtree } from "../src/tiles/implicit.ts";
 import { frameState, invert } from "../src/tiles/frame.ts";
 import { readTileContent, splitB3dm } from "../src/tiles/content.ts";
@@ -87,6 +87,23 @@ test("Traversal selects the root from afar and its loaded children up close (REP
   for (const c of root.children) c.state = "ready";
   t.traverse(root, frame(50));
   assert.deepEqual([...t.selected.keys()].sort(), ["r/0", "r/1"]);
+});
+
+test("evictable frees the tiles used longest ago, never one the last frame used (a child waiting for its sibling)", () => {
+  const root = buildTree(tileset, "http://x/t/tileset.json");
+  const t = new Traversal(8);
+  root.state = "ready";
+  t.traverse(root, frame(50));
+  const [waiting] = [...t.requested.values()];
+  waiting.state = "ready";
+  t.traverse(root, frame(50));
+  // Over budget, yet the root (drawn) and the loaded child (waiting for its sibling) stay.
+  assert.deepEqual(evictable([root, waiting], t.frame, 1), []);
+  assert.deepEqual(evictable([root, waiting], t.frame, 2), []);
+  // From afar the children go unused: the child is freed first, the root (drawn) never.
+  t.traverse(root, frame(1e6));
+  assert.deepEqual(evictable([root, waiting], t.frame, 1), [waiting]);
+  assert.deepEqual(evictable([root, waiting], t.frame, 0), [waiting]);
 });
 
 test("buildTree refuses what is not a 3D Tiles tileset and hangs external tilesets under their tile", () => {
