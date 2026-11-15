@@ -1,3 +1,12 @@
 [
-  { "id": "basic-map", "group": "Maps" }
+  { "id": "basic-map", "group": "Maps" },
+  { "id": "read-data", "group": "Data" },
+  { "id": "write-data", "group": "Data" },
+  { "id": "buffer-voronoi", "group": "Analysis" },
+  { "id": "classify", "group": "Analysis" },
+  { "id": "route", "group": "Analysis" },
+  { "id": "draw", "group": "Tools" },
+  { "id": "measure", "group": "Tools" },
+  { "id": "ui-controls", "group": "Tools" },
+  { "id": "search", "group": "Tools" }
 ]
