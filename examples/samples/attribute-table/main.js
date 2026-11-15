@@ -254,8 +254,6 @@ async function edit(change, done) {
     return false;
   }
   await readFeatures();
-  // The whole data again: the tiles of an `updateData` that replaces properties come out without them.
-  map.getSource(SOURCE).setData({ type: "FeatureCollection", features });
   colorMap();
   say(done, false);
   return true;
