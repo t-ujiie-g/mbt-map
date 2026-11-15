@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>mbt-map examples</title>
@@ -23,33 +23,33 @@
   footer { margin-top: 48px; padding-top: 16px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
 <h1>mbt-map</h1>
-<p class="lead">MoonBit で書いた、Web のためのベクトルタイル地図エンジン。同じ地図アプリを 3 通りの書き方で作っています。</p>
+<p class="lead">A vector-tile map engine for the Web, written in MoonBit. The same map app is written three ways.</p>
 
-<h2>書き方を選ぶ</h2>
+<h2>Choose a way to write it</h2>
 <div class="cards">
-  <a class="card" href="./html/"><b>HTML</b><span>素の DOM から使う</span><code>import { Map } from "mbt-map"</code></a>
-  <a class="card" href="./element/"><b>Web Component</b><span>属性とイベントで使う</span><code>&lt;mbt-map center="139.77,35.68"&gt;</code></a>
-  <a class="card" href="./react/"><b>React</b><span>React 19 の JSX から使う</span><code>&lt;mbt-map onmbt-map-load={onLoad} /&gt;</code></a>
+  <a class="card" href="./html/"><b>HTML</b><span>From plain DOM</span><code>import { Map } from "mbt-map"</code></a>
+  <a class="card" href="./element/"><b>Web Component</b><span>With attributes and events</span><code>&lt;mbt-map center="139.77,35.68"&gt;</code></a>
+  <a class="card" href="./react/"><b>React</b><span>From React 19's JSX</span><code>&lt;mbt-map onmbt-map-load={onLoad} /&gt;</code></a>
 </div>
 
 <h2>MoonBit</h2>
 <div class="cards">
-  <a class="card" href="./rabbita/"><b>rabbita</b><span>MoonBit の Web フレームワークのアプリに地図を置く</span><code>@mbtmap_rabbita.view("map")</code></a>
+  <a class="card" href="./rabbita/"><b>rabbita</b><span>A map in an app of MoonBit's web framework</span><code>@mbtmap_rabbita.view("map")</code></a>
 </div>
 
 <h2>3D</h2>
 <div class="cards">
-  <a class="card" href="./plateau/"><b>PLATEAU の建物</b><span>千代田区の 3D 都市モデルを 3D Tiles のまま重ね、クリックで属性を見る</span><code>import { tilesLayer } from "mbt-map/3d"</code></a>
+  <a class="card" href="./plateau/"><b>PLATEAU buildings</b><span>Chiyoda's 3D city model laid over the map as 3D Tiles; click for attributes</span><code>import { tilesLayer } from "mbt-map/3d"</code></a>
 </div>
 
-<h2>アプリでできること</h2>
+<h2>What the app does</h2>
 <dl class="features">
-  <div><dt>探す</dt><dd>地名と座標の検索、地点への移動、クリックした地物、周辺の地点</dd></div>
-  <div><dt>レイヤー</dt><dd>2D と 3D（地形・建物・空）、地図と空中写真、レイヤーの切り替え、凡例</dd></div>
-  <div><dt>作図</dt><dd>点・線・多角形・円、編集、スナップ、分割と結合</dd></div>
-  <div><dt>計測</dt><dd>楕円体の上の距離と面積、標高の断面図</dd></div>
-  <div><dt>解析</dt><dd>ボロノイ領域の階級区分図と凡例、道路での経路探索、見通しと可視域</dd></div>
-  <div><dt>データ</dt><dd>CSV、Shapefile、KML、GPX などの読み込みと書き出し、属性テーブルと列の計算</dd></div>
+  <div><dt>Explore</dt><dd>Search by place name and coordinates, fly to places, clicked features, places nearby</dd></div>
+  <div><dt>Layers</dt><dd>2D and 3D (terrain, buildings, sky), map and aerial photos, layer toggles, legend</dd></div>
+  <div><dt>Draw</dt><dd>Points, lines, polygons and circles, editing, snapping, split and merge</dd></div>
+  <div><dt>Measure</dt><dd>Distances and areas on the ellipsoid, elevation profiles</dd></div>
+  <div><dt>Analyze</dt><dd>A choropleth of Voronoi cells with its legend, routing on roads, line of sight and viewsheds</dd></div>
+  <div><dt>Data</dt><dd>Reading and writing CSV, Shapefile, KML, GPX and more, an attribute table and computed columns</dd></div>
 </dl>
 
-<footer>地図は国土地理院の配信タイルを直接読みます（出典：国土地理院ベクトルタイル提供実験、国土地理院 標高タイル）。<code>?local=1</code> を付けると、ベンチ用に取得した東京駅周辺の z14 のタイル（<code>bench/fixtures</code>）を読みます。</footer>
+<footer>The maps read GSI's tiles directly (source: 国土地理院ベクトルタイル提供実験, 国土地理院 標高タイル). With <code>?local=1</code> they read the z14 tiles around Tokyo Station fetched for the benchmarks (<code>bench/fixtures</code>).</footer>

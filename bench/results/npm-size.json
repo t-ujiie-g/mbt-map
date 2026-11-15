@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 161842,
+      "bytes": 162349,
       "budget": 163000
     },
     {
@@ -66,7 +66,7 @@
     },
     {
       "name": "mbt-map/ui (every controller)",
-      "bytes": 9346,
+      "bytes": 9811,
       "budget": 10000
     },
     {
@@ -191,12 +191,12 @@
     },
     {
       "name": "3D Tiles (loaded by mbt-map/3d with the first tilesLayer)",
-      "bytes": 10480,
+      "bytes": 10487,
       "budget": 12000
     },
     {
       "name": "I3S (loaded by mbt-map/3d with the first i3sLayer)",
-      "bytes": 8314,
+      "bytes": 8323,
       "budget": 10000
     },
     {
@@ -256,7 +256,7 @@
     },
     {
       "name": "mbt-map/ui createAttribution alone",
-      "bytes": 482,
+      "bytes": 976,
       "budget": 2000
     },
     {
@@ -281,17 +281,17 @@
     },
     {
       "name": "mbt-map/ui createBasemaps alone",
-      "bytes": 714,
+      "bytes": 713,
       "budget": 2000
     },
     {
       "name": "mbt-map/ui createLayerList alone",
-      "bytes": 848,
+      "bytes": 851,
       "budget": 2000
     },
     {
       "name": "mbt-map/ui createLegend alone",
-      "bytes": 1565,
+      "bytes": 1566,
       "budget": 2000
     },
     {
@@ -306,7 +306,7 @@
     },
     {
       "name": "mbt-map/ui createMeasurement alone",
-      "bytes": 1583,
+      "bytes": 1584,
       "budget": 2000
     },
     {

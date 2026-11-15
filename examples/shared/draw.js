@@ -5,10 +5,10 @@ import { mergeFeatures, splitFeatures } from "mbt-map/analysis";
 import { createDraw } from "mbt-map/draw";
 import * as geodesic from "mbt-map/geodesic";
 
-export const DRAW_MODES = [["select", "選択"], ["split", "分割"], ["point", "点"], ["linestring", "線"], ["polygon", "多角形"], ["rectangle", "矩形"], ["circle", "円"], ["freehand", "フリーハンド"]];
+export const DRAW_MODES = [["select", "Select"], ["split", "Split"], ["point", "Point"], ["linestring", "Line"], ["polygon", "Polygon"], ["rectangle", "Rectangle"], ["circle", "Circle"], ["freehand", "Freehand"]];
 
 /** The properties the panel edits on the selected shape, as [key, label]. */
-export const FIELDS = [["name", "名前"], ["note", "メモ"]];
+export const FIELDS = [["name", "Name"], ["note", "Note"]];
 
 /** The drawing over `map`; choosing a mode clears `measurement`'s. */
 export function createShowcaseDraw(map, measurement) {
@@ -39,14 +39,14 @@ export function onDrawKey(draw, e) {
 /** The operations as [label, action, enabled]. */
 export function drawActions(draw, s) {
   return [
-    ["一つ戻す", () => draw.undo(), s.canUndo],
-    ["やり直す", () => draw.redo(), s.canRedo],
-    ["確定", () => draw.finish(), s.vertices.length > 0],
-    ["やめる", () => draw.setMode(null), Boolean(s.mode)],
-    ["結合", () => void draw.merge(), s.selection.length > 1],
-    ["選んだ形を消す", () => draw.deleteSelected(), s.selection.length > 0],
-    ["全部消す", () => draw.clear(), s.features.length > 0],
-    ["GeoJSON で保存", () => saveGeoJSON(s.features), s.features.length > 0],
+    ["Undo", () => draw.undo(), s.canUndo],
+    ["Redo", () => draw.redo(), s.canRedo],
+    ["Finish", () => draw.finish(), s.vertices.length > 0],
+    ["Cancel", () => draw.setMode(null), Boolean(s.mode)],
+    ["Merge", () => void draw.merge(), s.selection.length > 1],
+    ["Delete selected", () => draw.deleteSelected(), s.selection.length > 0],
+    ["Clear all", () => draw.clear(), s.features.length > 0],
+    ["Save as GeoJSON", () => saveGeoJSON(s.features), s.features.length > 0],
   ];
 }
 
@@ -54,16 +54,16 @@ export function drawActions(draw, s) {
 export function drawnText(s) {
   const counts = DRAW_MODES.map(([m, label]) => [label, s.features.filter((f) => f.properties.mode === m).length]).filter(([, n]) => n > 0);
   const hint = {
-    select: s.selection.length > 1 ? "Shift+クリックで選ぶ形を増やし、「結合」で 1 つにする" : s.selected ? "頂点や中点をドラッグ、形の中をドラッグで移動、頂点を右クリックで削除。Shift+クリックで選ぶ形を増やす" : "形をクリックで選ぶ",
-    split: `切る線を引き、最後の頂点をもう一度クリックで切る（${s.selection.length ? "選んだ形" : "線が横切る形"}を分ける）`,
-    point: "クリックで点を置く",
-    linestring: "クリックで頂点、最後の頂点をもう一度クリックで終わる",
-    polygon: "クリックで頂点、最初の頂点をクリックで閉じる",
-    rectangle: "2 つの角をクリック",
-    circle: "中心と半径の位置をクリック",
-    freehand: "クリックで始め、動かして、クリックで閉じる",
-  }[s.mode] ?? "形を選ぶ";
-  return { counts: counts.map(([l, n]) => `${l} ${n}`).join("、") || "まだありません", hint };
+    select: s.selection.length > 1 ? "Shift+click to add shapes, Merge to join them" : s.selected ? "Drag vertices or midpoints, drag inside to move, right-click a vertex to delete it. Shift+click to add shapes" : "Click a shape to select it",
+    split: `Draw a cutting line and click its last vertex again to cut (splits ${s.selection.length ? "the selected shapes" : "the shapes it crosses"})`,
+    point: "Click to place a point",
+    linestring: "Click to add vertices, click the last one again to finish",
+    polygon: "Click to add vertices, click the first one to close",
+    rectangle: "Click two corners",
+    circle: "Click the center, then the radius",
+    freehand: "Click to start, move, click to close",
+  }[s.mode] ?? "Choose a shape";
+  return { counts: counts.map(([l, n]) => `${l} ${n}`).join(", ") || "No shapes yet", hint };
 }
 
 function saveGeoJSON(features) {
@@ -113,7 +113,7 @@ export function mountDraw(map, measurement) {
     );
     actions.replaceChildren(...drawActions(draw, s).map(([label, f, enabled]) => button(label, f, enabled)));
     const t = drawnText(s);
-    readout.textContent = `${t.counts}。${t.hint}`;
+    readout.textContent = `${t.counts}. ${t.hint}`;
     fields.hidden = s.selection.length !== 1;
     for (const [key, input] of inputs) if (document.activeElement !== input) input.value = fieldValue(s, key);
   };

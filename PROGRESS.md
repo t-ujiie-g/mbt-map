@@ -83,6 +83,31 @@ Where things stand, decisions and open issues. The development history before th
 - 原因：`maximumLoadedTiles`（既定 256）を超えると、描いているタイル以外を古い順に解放していた。REPLACE のタイルの子は兄弟が全部そろうまで描かれないので、読み終えた子が解放され、また読まれ、を続けていた（引いた視点で要るタイルが 256 を超えると止まらない）。
 - 直し：解放するのは、そのフレームが使わなかったタイル（`lastUsed` がそのフレームでないもの）だけ（`evictable`、`npm/src/tiles/tileset.ts`。loaders.gl のキャッシュも同じ考え）。そのフレームが上限より多く要るときは、上限を超えて持つ。
 - 確かめ：PLATEAU の例をズーム 14.6、傾き 55° にして 40 秒見た。直す前は要求が 789 まで増え続け、描くタイルは 23〜170 を行き来した。直した後は 22 秒で 527 要求、354 タイルで止まった。`tiles:golden`、`i3s:golden`、pack test の 3D の 5 項目、単体テスト（`evictable`）。
+## GitHub Pages（2026-11-15、Mac）
+
+- 判断（ユーザー）：公開はリリースのタグ（`v*`）を打ったときだけ（手動でも流せる）。トップページは英語と日本語の 2 枚で作ったが、日本語が機械翻訳のようなので、日本語のトップと `README.ja.md` は外した（同日）。トップの地図は 3D に（PLATEAU の東京駅まわり）。
+- `site/`：手書きのトップページ（ヒーローに PLATEAU の 3D Tiles の建物：地理院の淡色地図を暗く、低い日の光と影、ゆっくり回り、触ると止まる。動きを減らす設定では回らない）、`site.css`（明暗のテーマ、スマホ幅）、アイコン。`bench/site/build.mjs`（`npm run site`）が `_site/` に組み立てる：`docs/*.md` を marked 18.1.2（依存なし、MIT、既知の脆弱性なし、公開から 2 週間以上の版。bench の開発依存）で HTML にし、コードは組み立てのときに highlight.js 11.12.0（依存なし、BSD-3、既知の脆弱性なし）で色分けし（MoonBit は自前の文法 `bench/site/moonbit-highlight.mjs`、ページは色分けのスクリプトを読まない）（見出しのアンカーは GitHub と同じ、目次は `docs/README.md` から題名だけ、リンクは `bench/site/links.mjs` が文書と公開する例はサイトの中へ、それ以外は GitHub へ）、`npm/dist` の js と wasm を 1 度だけ `lib/` に置き、例（html、element、React、PLATEAU、rabbita）はソースを除いて写し import map を `lib/` に向ける。5.8MB。
+- 確かめ：`bench/lib/site.test.mjs`（アンカー、リンクの付け替え、文書の相対リンクとアンカーが切れていないこと）。CI は pack のジョブでサイトを組み立てる。ローカルで全ページを Chromium で開き、コンソールのエラーと 4xx がないこと、見た目（トップ、スマホ幅、暗いテーマ、文書、例）を見た。
+- 公開の設定：Pages は GitHub Actions から、`github-pages` 環境は `main` と `v*` のタグから配備できる。
+
+## 例の画面を英語に（2026-11-15、Mac）
+
+- ショーケース（`examples/html`、`element`、`react`、共有の `examples/shared/`）、PLATEAU の例、例の一覧（`examples/index.html`）の画面の文言を英語にした：タブ、見出し、ボタン、入力欄の説明、ツールチップ、状態と誤りの文、凡例の名前と道路の種別、表の見出し、件数、計測と解析の読み出し、`<title>`、`lang="en"`。
+- 日本語のまま残したもの（データだから）：地名・駅名、地点の `kind`（駅・名所・山）、国土地理院のベクトルタイルと PLATEAU の属性の値と鍵、サンプルの CSV、同梱した WMTS の文書の名前（地理院タイル、淡色地図）、平面直角座標系の系の名前（`第IX系`。`mbt-map/search` が読む書き方で、検索のプロバイダの出力とも同じ）、出典の文言（国土地理院と PLATEAU の求める書き方）。PLATEAU の属性の表示名は英語（Name、Usage、Measured height など）。例が作る列は英語の名前にした（`area`、`area_km2`、印は `Marker N`）。
+- rabbita の例（MoonBit）は対象の外で、日本語のまま。
+- pack test の画面の文字を見る確かめ（`pack-test.mjs`、`checks/` の analyze、geo-tools、plateau、search、table、showcase-data、showcase-services）を英語の文言に合わせた。
+
+## 出典の HTML（2026-11-15、Mac）
+
+- サンプルを書くエージェントが見つけた：OpenFreeMap のように出典を HTML（`<a href>`）で書くスタイルでは、出典の欄にタグがそのまま文字で出た（安全のため `textContent` で入れていた）。
+- 直し：`attributionParts`（`npm/src/attribution.ts`、DOM を使わない小さな読み取り）が文字と http(s) のリンクだけを取り出し、ほかのタグは落とし、文字参照を戻す。地図の出典の欄はそれを文字とリンク（`target="_blank"`、`rel="noopener noreferrer"`）で組み立てる。HTML としては一切解釈しない。`mbt-map/ui` の `createAttribution` の `items` はタグを落とした文字にした。
+
+## サンプル集とテーマの切り替え（2026-11-15、Mac）
+
+- 判断（ユーザー）：例は「小さな例をたくさん」。ほぼ同じショーケースが 3 つあっても嬉しくないので、サイトに載せるショーケースは 1 つ（element 版はリポジトリと pack test に残す）。
+- `examples/samples/`：23 個（地図 8：基本、ベクトルのスタイル、GeoJSON とクリック、クラスタ、ヒートマップ、富士山の地形、建物と影、地球儀／データ 2：読み込み、書き出し／解析 3：バッファ・ボロノイ・凸包、階級区分図、経路／道具 4：作図、計測、UI のコントローラ、検索／Web サービス 2：GIBS の WMTS と WMS、ArcGIS の地物／3D 3：PLATEAU、glTF、見通し／Web Component 1）。3 つのエージェントが worktree で並行して書き、API はソースと照らし、画面写真で見た目を確かめた。
+- サイト：例の目次をサンプルのカード（グループごと）とアプリ（ショーケース、PLATEAU、React、rabbita）から組み立て、サンプルごとのページに動くサンプル（iframe）と `main.js`・`index.html` の全文（色分け）を並べる。全ページにライト・ダークの切り替え（既定は端末の設定、選んだものを覚える）。
+- 書きながら見つかったエンジンの課題：中心を高い山頂（富士山頂）に置いて傾けると、手前の低い土地のタイルが描かれない（地形のある時の覆うタイルの計算が中心の高さで見ているらしい）。経度 180 度を越えて地図が繰り返さない。地面に沿わない 3D の線がない。漢字の多い地図で都市を何か所も回るとグリフのアトラスがあふれ、文字が欠ける（rabbita の例で）。
 
 ## rabbita の例を中国の都市でも見せるショーケースに（2026-11-15、Mac）
 

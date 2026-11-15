@@ -59,11 +59,11 @@ export function distanceAt(s, element, clientX) {
 
 /** The figures under the chart. */
 export function profileRows(s) {
-  if (s.loading) return [["", "標高を読んでいます…"]];
+  if (s.loading) return [["", "Reading elevations…"]];
   if (s.error) return [["", s.error]];
-  if (s.distances.length === 0) return [["—", "距離を測ると断面図が出ます"]];
-  const rows = [["長さ", formatLength(s.length)], ["最高", `${s.max.toFixed(1)} m`], ["最低", `${s.min.toFixed(1)} m`], ["登り", `${s.gain.toFixed(1)} m`], ["下り", `${s.loss.toFixed(1)} m`]];
-  if (s.active >= 0) rows.push(["ここ", `${formatLength(s.distances[s.active])}、${s.elevations[s.active].toFixed(1)} m`]);
+  if (s.distances.length === 0) return [["—", "Measure a distance to see its profile"]];
+  const rows = [["Length", formatLength(s.length)], ["Highest", `${s.max.toFixed(1)} m`], ["Lowest", `${s.min.toFixed(1)} m`], ["Ascent", `${s.gain.toFixed(1)} m`], ["Descent", `${s.loss.toFixed(1)} m`]];
+  if (s.active >= 0) rows.push(["Here", `${formatLength(s.distances[s.active])}, ${s.elevations[s.active].toFixed(1)} m`]);
   return rows;
 }
 
@@ -102,7 +102,7 @@ export function mountProfile(map, measurement) {
   const { profile } = createShowcaseProfile(measurement);
   trackProfile(map, profile, document.body);
   const figure = document.getElementById("profile");
-  const chart = svg("svg", { viewBox: `0 0 ${CHART.width} ${CHART.height}`, class: "profile-chart", role: "img", "aria-label": "断面図" });
+  const chart = svg("svg", { viewBox: `0 0 ${CHART.width} ${CHART.height}`, class: "profile-chart", role: "img", "aria-label": "Elevation profile" });
   const dl = Object.assign(document.createElement("dl"), { className: "rows" });
   figure.replaceChildren(chart, dl);
   chart.addEventListener("pointermove", (e) => profile.highlight(distanceAt(profile.state, chart, e.clientX)));

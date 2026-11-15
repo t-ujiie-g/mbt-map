@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Measure distance and area</title>
+<meta name="description" content="mbt-map/ui's measurement controller with mbt-map/geodesic's measure: lengths and areas on the WGS 84 ellipsoid, drawn along geodesics.">
+<link rel="stylesheet" href="../sample.css">
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="map"></div>
+<div class="panel">
+  <h1>Measure</h1>
+  <div class="row">
+    <button data-mode="distance">Distance</button>
+    <button data-mode="area">Area</button>
+    <button id="undo">Undo</button>
+    <button id="clear">Clear</button>
+  </div>
+  <p>Click to add points, double-click to finish.</p>
+  <output id="result"></output>
+</div>
+<script type="module" src="./main.js"></script>
+</html>

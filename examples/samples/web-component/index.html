@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The mbt-map element</title>
+<meta name="description" content="A map as an HTML element: attributes set its style and camera, properties move it, and its events report moves and clicks.">
+<link rel="stylesheet" href="../sample.css">
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<mbt-map id="map" style-url="./style.json" center="139.7671,35.6812" zoom="14" pitch="30"></mbt-map>
+<div class="panel">
+  <h1>&lt;mbt-map&gt;</h1>
+  <div class="row">
+    <button data-center="139.7671,35.6812" data-zoom="14">Tokyo</button>
+    <button data-center="135.4959,34.7025" data-zoom="14">Osaka</button>
+    <button data-center="141.3545,43.0687" data-zoom="13">Sapporo</button>
+  </div>
+  <div class="row">
+    <button id="zoom-in">Zoom in</button>
+    <button id="zoom-out">Zoom out</button>
+  </div>
+  <p id="event">Move or click the map.</p>
+  <pre id="detail"></pre>
+</div>
+<script type="module" src="./main.js"></script>
+</html>

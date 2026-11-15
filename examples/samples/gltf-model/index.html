@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>glTF models with sunlight</title>
+<meta name="description" content="Place a glTF model at GeoJSON points, turned and scaled by their properties, lit by the sun at the hour you choose, with shadows.">
+<link rel="stylesheet" href="../sample.css">
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="map"></div>
+<div class="panel">
+  <h1>Clock towers</h1>
+  <label>Time <b id="time"></b><br><input id="hour" type="range" min="5" max="19" step="0.25" value="9"></label>
+</div>
+<script type="module" src="./main.js"></script>
+</html>

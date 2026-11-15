@@ -24,7 +24,7 @@ function Table({ table, fields }) {
   return (
     <div id="table">
       {/* The native event carries `isComposing`, which React's does not. */}
-      <input type="search" placeholder="名前や種別で絞り込む" value={s.query} onChange={(e) => table.setQuery(e.target.value)} onKeyDown={(e) => onTableKey(table, e.nativeEvent)} />
+      <input type="search" placeholder="Filter by name or kind" value={s.query} onChange={(e) => table.setQuery(e.target.value)} onKeyDown={(e) => onTableKey(table, e.nativeEvent)} />
       <table className="attributes">
         <thead>
           <tr>

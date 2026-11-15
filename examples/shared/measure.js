@@ -1,6 +1,6 @@
 // Measuring on the map with `mbt-map/ui`'s controller and mbt-map/geodesic's
 // `measure` (GeographicLib on WGS 84): click to place vertices, double click or
-// 「終える」 to finish. While it measures or draws, clicks do not identify features.
+// the Finish button to finish. While it measures or draws, clicks do not identify features.
 import { measure } from "mbt-map/geodesic";
 import { createMeasurement, formatArea, formatLength } from "mbt-map/ui";
 import { showRows } from "./readout.js";
@@ -22,11 +22,11 @@ export function identifyWhenIdle(map, identify, busy) {
 
 /** The readout's rows: the length (or perimeter), the area, and the edges. */
 export function measuredRows(s) {
-  if (!s.mode) return [["—", "「距離」か「面積」を押して地図をクリック"]];
-  const rows = [[s.mode === "area" ? "周囲" : "距離", formatLength(s.length)]];
-  if (s.area !== null) rows.push(["面積", formatArea(s.area)]);
-  rows.push(["区間", `${s.segments.length}`]);
-  if (!s.finished) rows.push(["", "ダブルクリックで終える"]);
+  if (!s.mode) return [["—", "Choose Distance or Area and click the map"]];
+  const rows = [[s.mode === "area" ? "Perimeter" : "Distance", formatLength(s.length)]];
+  if (s.area !== null) rows.push(["Area", formatArea(s.area)]);
+  rows.push(["Segments", `${s.segments.length}`]);
+  if (!s.finished) rows.push(["", "Double-click to finish"]);
   return rows;
 }
 
@@ -37,11 +37,11 @@ export function measureActions(m, s, beforeStart = () => {}) {
     m.start(mode);
   };
   return [
-    ["距離", () => start("distance"), true],
-    ["面積", () => start("area"), true],
-    ["一つ戻す", () => m.undo(), s.positions.length > 0],
-    ["終える", () => m.finish(), Boolean(s.mode) && !s.finished],
-    ["消す", () => m.clear(), Boolean(s.mode)],
+    ["Distance", () => start("distance"), true],
+    ["Area", () => start("area"), true],
+    ["Undo", () => m.undo(), s.positions.length > 0],
+    ["Finish", () => m.finish(), Boolean(s.mode) && !s.finished],
+    ["Clear", () => m.clear(), Boolean(s.mode)],
   ];
 }
 

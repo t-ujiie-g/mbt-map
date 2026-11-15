@@ -29,6 +29,7 @@ export async function prepareExamples() {
   await install("examples/html");
   await install("examples/element");
   await install("examples/plateau");
+  await install("examples/samples");
   // The rabbita example: its MoonBit app built and minified next to its page.
   await install("examples/rabbita");
   run("moon", ["build", "--target", "js", "--release", "examples/rabbita/main"], ROOT);

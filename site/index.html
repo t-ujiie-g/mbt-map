@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mbt-map</title>
+<meta name="description" content="A lightweight WebGIS library for the browser, written in MoonBit: maps, GIS data, spatial analysis, web services and 3D.">
+<link rel="icon" href="./icon.svg">
+<link rel="stylesheet" href="./site.css">
+<script src="./theme.js"></script>
+<script type="importmap">{ "imports": { "mbt-map": "./lib/index.js", "mbt-map/3d": "./lib/3d.js" } }</script>
+<header class="top">
+  <a class="brand" href="./">mbt-map</a>
+  <nav>
+    <a href="./docs/">Docs</a>
+    <a href="./examples/">Examples</a>
+    <a href="https://github.com/t-ujiie-g/mbt-map">GitHub</a>
+    <button class="theme" type="button" aria-label="Switch the color theme">☾</button>
+  </nav>
+</header>
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>WebGIS in the browser, written in MoonBit</h1>
+      <p class="lead">Maps, GIS data, spatial analysis, web services and 3D city models in one lightweight toolkit. Each part loads only when a page first uses it.</p>
+      <div class="actions">
+        <a class="button primary" href="./docs/getting-started.html">Get started</a>
+        <a class="button" href="./examples/">Examples</a>
+        <a class="button" href="./docs/">Documentation</a>
+      </div>
+      <p class="install"><code>npm install mbt-map</code> · <code>moon add t-ujiie-g/mbtmap</code></p>
+    </div>
+    <div class="map-card">
+      <div id="map"></div>
+      <span class="hint">PLATEAU's 3D Tokyo · drag to look around</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>One toolkit</h2>
+    <p class="sub">The map is one entry point; the rest are separate modules with their own WebAssembly, loaded in workers when first called.</p>
+    <div class="grid">
+      <a class="card" href="./docs/map.html"><h3>Maps</h3><p>Vector, raster and terrain tiles, GeoJSON, PMTiles, labels, 3D terrain, globe, extrusions, lights and shadows, in the MapLibre style specification.</p><code>mbt-map</code></a>
+      <a class="card" href="./docs/data.html"><h3>Data</h3><p>CSV, WKT/WKB, Shapefile, TopoJSON, KML/KMZ, GPX, FlatGeobuf, GeoTIFF/COG in; GeoJSON, CSV, KML out; coordinate systems.</p><code>mbt-map/data</code></a>
+      <a class="card" href="./docs/analysis.html"><h3>Analysis</h3><p>Measures, spatial relations, buffers and overlays, Voronoi, interpolation, contours, clustering, routing, classification, viewsheds.</p><code>mbt-map/analysis</code></a>
+      <a class="card" href="./docs/services.html"><h3>Web services</h3><p>WMS, WMTS, WFS, OGC API and ArcGIS REST layers as sources and features.</p><code>mbt-map/services</code></a>
+      <a class="card" href="./docs/3d.html"><h3>3D</h3><p>glTF models, 3D Tiles, I3S and LAS point clouds, with picking, lines of sight and clipping.</p><code>mbt-map/3d</code></a>
+      <a class="card" href="./docs/ui.html"><h3>Tools</h3><p>Headless UI controllers, search, drawing and editing, geodesic measurement.</p><code>mbt-map/ui · /search · /draw · /geodesic</code></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Write it your way</h2>
+    <p class="sub">A JavaScript API shaped like MapLibre GL JS's, a web component for any framework, and a typed MoonBit API.</p>
+    <div class="ways">
+      <div><h3>JavaScript</h3><pre><code class="language-js">import { Map } from "mbt-map";
+
+const map = new Map({
+  container: "map",
+  style: "./style.json",
+  center: [139.7671, 35.6812],
+  zoom: 14,
+});</code></pre></div>
+      <div><h3>Web component</h3><pre><code class="language-html">&lt;script type="module"&gt;
+  import "mbt-map/element";
+&lt;/script&gt;
+&lt;mbt-map style-url="./style.json"
+  center="139.7671,35.6812" zoom="14"&gt;
+&lt;/mbt-map&gt;</code></pre></div>
+      <div><h3>MoonBit</h3><pre><code class="language-moonbit">let map = @mbtmap.Map::new(
+  "map",
+  style=@style.Style::url("./style.json"),
+  center=@mbtmap.lnglat(139.7671, 35.6812),
+  zoom=14.0,
+)
+map.on(Load, _ =&gt; println("loaded")) |&gt; ignore</code></pre></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Examples</h2>
+    <p class="sub">Running on GSI's live tiles and PLATEAU's 3D city models.</p>
+    <div class="grid">
+      <a class="card" href="./examples/html/"><h3>Showcase</h3><p>Search, layers, drawing, measurement, analysis, data and web services in one app.</p><code>import { Map } from "mbt-map"</code></a>
+      <a class="card" href="./examples/element/"><h3>Showcase: web component</h3><p>The same app with the <code>&lt;mbt-map&gt;</code> element.</p><code>&lt;mbt-map&gt;</code></a>
+      <a class="card" href="./examples/react/"><h3>Showcase: React</h3><p>The same app in React 19.</p><code>&lt;mbt-map onmbt-map-load={…}&gt;</code></a>
+      <a class="card" href="./examples/plateau/"><h3>PLATEAU 3D city</h3><p>Tokyo's Chiyoda ward as 3D Tiles, with attributes on click.</p><code>mbt-map/3d</code></a>
+      <a class="card" href="./examples/rabbita/"><h3>rabbita</h3><p>A MoonBit web app with a map, its events as messages.</p><code>@mbtmap_rabbita.view("map")</code></a>
+    </div>
+  </section>
+</main>
+<footer class="foot">
+  mbt-map is open source under the Apache License 2.0 · <a href="https://github.com/t-ujiie-g/mbt-map">GitHub</a><br>
+  Map tiles: 国土地理院 (Geospatial Information Authority of Japan). 3D city models: PLATEAU (国土交通省).
+</footer>
+<script type="module" src="./hero.js"></script>
+</html>

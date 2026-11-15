@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Write data files</title>
+<meta name="description" content="A few features written as GeoJSON, CSV and KML by mbt-map/data's write, previewed and downloaded.">
+<link rel="stylesheet" href="../sample.css">
+<style>
+  #preview { max-height: 40vh; overflow: auto; }
+</style>
+<script type="importmap">
+  {
+    "imports": {
+      "mbt-map": "../node_modules/mbt-map/dist/index.js",
+      "mbt-map/3d": "../node_modules/mbt-map/dist/3d.js",
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/data": "../node_modules/mbt-map/dist/data.js",
+      "mbt-map/draw": "../node_modules/mbt-map/dist/draw.js",
+      "mbt-map/element": "../node_modules/mbt-map/dist/element.js",
+      "mbt-map/geodesic": "../node_modules/mbt-map/dist/geodesic.js",
+      "mbt-map/search": "../node_modules/mbt-map/dist/search.js",
+      "mbt-map/services": "../node_modules/mbt-map/dist/services.js",
+      "mbt-map/ui": "../node_modules/mbt-map/dist/ui.js"
+    }
+  }
+</script>
+<div id="map"></div>
+<div class="panel">
+  <h1>Write data</h1>
+  <p>Save the features on the map as a file.</p>
+  <div class="row">
+    <button data-format="geojson">GeoJSON</button>
+    <button data-format="csv">CSV</button>
+    <button data-format="kml">KML</button>
+  </div>
+  <pre id="preview"></pre>
+</div>
+<script type="module" src="./main.js"></script>
+</html>

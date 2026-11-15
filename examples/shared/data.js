@@ -41,10 +41,10 @@ export function createDataLoader(map) {
         if (box) map.fitBounds([[box[0], box[1]], [box[2], box[3]]], { padding: 80, maxZoom: 15 });
         set({ loading: false, items: [...loader.state.items, { id, name, table, count: table.length, format: table.format }] });
       } catch (e) {
-        set({ loading: false, error: `${name}：${e.message}` });
+        set({ loading: false, error: `${name}: ${e.message}` });
       }
     },
-    addSample: () => loader.add(SAMPLE, "東京の公園（CSV）"),
+    addSample: () => loader.add(SAMPLE, "Tokyo parks (CSV)"),
     addFiles(files) {
       const list = [...files];
       if (list.length) return loader.add(list.length === 1 ? list[0] : list, list[0].name);
@@ -79,7 +79,7 @@ const el = (tag, props = {}) => Object.assign(document.createElement(tag), props
 export function mountData(map) {
   const loader = createDataLoader(map);
   const box = document.getElementById("data");
-  const drop = el("label", { className: "drop", textContent: "ファイルを選ぶか、ここへドロップ" });
+  const drop = el("label", { className: "drop", textContent: "Choose a file or drop it here" });
   const input = el("input", { type: "file", multiple: true });
   input.addEventListener("change", () => void loader.addFiles(input.files));
   drop.append(input);
@@ -90,12 +90,12 @@ export function mountData(map) {
     drop.classList.remove("over");
     void loader.addFiles(e.dataTransfer.files);
   });
-  const sample = el("button", { textContent: "サンプルを読む" });
+  const sample = el("button", { textContent: "Open the sample" });
   sample.addEventListener("click", () => void loader.addSample());
   const actions = el("div", { className: "chips" });
   actions.style.marginTop = "6px";
   actions.append(sample);
-  const hint = el("p", { className: "hint", textContent: "CSV、Shapefile（zip）、KML/KMZ、GPX、TopoJSON、FlatGeobuf、GeoJSON" });
+  const hint = el("p", { className: "hint", textContent: "CSV, Shapefile (zip), KML/KMZ, GPX, TopoJSON, FlatGeobuf, GeoJSON" });
   const error = el("p", { className: "data-error" });
   const list = el("ul", { className: "datasets" });
   box.append(drop, actions, hint, error, list);
@@ -112,10 +112,10 @@ export function mountData(map) {
           b.addEventListener("click", () => void loader.save(item, format));
           buttons.append(b);
         }
-        const remove = el("button", { textContent: "消す" });
+        const remove = el("button", { textContent: "Remove" });
         remove.addEventListener("click", () => loader.remove(item.id));
         buttons.append(remove);
-        li.append(el("b", { textContent: item.name }), el("small", { textContent: `  ${item.count} 件` }), buttons);
+        li.append(el("b", { textContent: item.name }), el("small", { textContent: `  ${item.count} features` }), buttons);
         return li;
       }),
     );
