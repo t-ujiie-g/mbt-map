@@ -1,0 +1,16 @@
+import {
+  "moonbit-community/rabbita",
+  "moonbit-community/rabbita/html",
+  "t-ujiie-g/moonmap",
+  "t-ujiie-g/moonmap/expr",
+  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/moonmap_rabbita",
+}
+
+supported_targets = "js"
+
+pkgtype(kind: "executable")
+
+options(
+  link: { "js": { "format": "esm" } },
+)

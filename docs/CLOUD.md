@@ -12,6 +12,8 @@ claude.ai/code で、このリポジトリ（t-ujiie-g/moon-map）の環境を�
 
 ```
 cli.moonbitlang.com
+mooncakes.io
+download.mooncakes.io
 cyberjapandata.gsi.go.jp
 tiles.openfreemap.org
 raw.githubusercontent.com
@@ -29,7 +31,7 @@ assets.cms.plateau.reearth.io
 api.plateauview.mlit.go.jp
 ```
 
-- `cli.moonbitlang.com`：MoonBit のツールチェーン（`scripts/toolchain.env` で版と sha256 を固定）
+- `cli.moonbitlang.com`：MoonBit のツールチェーン（`scripts/toolchain.env` で版と sha256 を固定）。`mooncakes.io`、`download.mooncakes.io`：MoonBit の依存（rabbita など。`moon.mod` で版を固定）
 - `cyberjapandata.gsi.go.jp`：ベンチと黄金テストのフィクスチャ（国土地理院のタイル。manifest の sha256 と照合する）
 - `tiles.openfreemap.org`、`raw.githubusercontent.com`、`build.protomaps.com`：公開スタイルの比較（`npm run style:public`）に使うタイルとスプライト（manifest の sha256 と照合する）。Node の `fetch` はプロキシを読まないので `NODE_USE_ENV_PROXY=1` を付ける（`scripts/setup.sh` は付けている）
 - `assets.cms.plateau.reearth.io`：PLATEAU の 3D Tiles のフィクスチャ（`plateau-chiyoda`、東京駅まわりの建物。manifest の sha256 と照合する）。`api.plateauview.mlit.go.jp`：PLATEAU のデータカタログ（フィクスチャを選び直すとき）

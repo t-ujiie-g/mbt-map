@@ -10,6 +10,8 @@
 | [element/](element/) | `<moon-map>` の属性・プロパティ・イベント |
 | [react/](react/) | React 19 から `<moon-map>` を JSX で（esbuild でバンドル） |
 
+ほかに、MoonBit の例として [rabbita/](rabbita/) があります。MoonBit の Web フレームワーク rabbita のアプリに、`t-ujiie-g/moonmap_rabbita` で地図を置いています。スタイルは MoonBit の型付きの関数（`t-ujiie-g/moonmap/style`）で書き、ボタンでの移動、カメラの表示、クリックした駅の名前、点の大きさの切り替えをします。`npm --prefix bench run examples` が `moon build` して `app.js` を作ります。
+
 ## 入っている機能
 
 地図とスタイル：

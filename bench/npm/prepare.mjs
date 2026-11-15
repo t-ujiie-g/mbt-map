@@ -1,6 +1,7 @@
 // Builds and packs npm/, installs the tarball into the examples and the test
 // pages that use it and builds the React example. Usage: node npm/prepare.mjs
 import { execFileSync } from "node:child_process";
+import { build } from "esbuild";
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,6 +28,16 @@ export async function prepareExamples() {
   await install("examples/html");
   await install("examples/element");
   await install("examples/plateau");
+  // The rabbita example: its MoonBit app built and minified next to its page.
+  await install("examples/rabbita");
+  run("moon", ["build", "--target", "js", "--release", "examples/rabbita/main"], ROOT);
+  await build({
+    entryPoints: [path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_rabbita_example/main/main.js")],
+    outfile: path.join(ROOT, "examples/rabbita/app.js"),
+    format: "esm",
+    minify: true,
+    logLevel: "warning",
+  });
   // npm ci empties node_modules, so the tarball goes in afterwards.
   run("npm", ["ci", "--no-audit", "--no-fund"], path.join(ROOT, "examples/react"));
   await install("examples/react");
