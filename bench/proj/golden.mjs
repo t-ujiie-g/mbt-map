@@ -168,7 +168,7 @@ for (const [from, to, area] of [
 }
 
 console.log(`proj golden: ${crss.length} CRSs, ${compared} points (${skipped} beyond proj4js's reach left out); largest difference js ${worst.meters.js.toExponential(2)} m / ${worst.degrees.js.toExponential(2)}°, wasm-gc ${worst.meters.wasm.toExponential(2)} m / ${worst.degrees.wasm.toExponential(2)}°`);
-await writeFile(path.join(ROOT, "bench/results/proj-golden.json"), JSON.stringify({ reference: "proj4js 2.22.0", points: POINTS, compared, skipped, worst, rows }, null, 2) + "\n");
 const bad = rows.filter((r) => r.points === 0 || (r.unit === "meters" ? 1e-3 : 1e-8) < Math.max(r.maxJs, r.maxWasm));
+await writeFile(path.join(ROOT, "bench/results/proj-golden.json"), JSON.stringify({ reference: "proj4js 2.22.0", points: POINTS, compared, skipped, comparisons: rows.length, worst, beyond: bad }, null, 2) + "\n");
 for (const r of bad.slice(0, 20)) console.log("beyond tolerance:", JSON.stringify(r));
 if (bad.length) process.exitCode = 1;

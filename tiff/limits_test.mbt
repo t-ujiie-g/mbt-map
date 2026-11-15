@@ -281,12 +281,6 @@ test "unpredict refuses rows past a block, however wide" {
 }
 
 ///|
-test "band_bytes has no size for bits below one" {
-  assert_eq(@tiff.band_bytes(1, 0), 0)
-  assert_eq(@tiff.band_bytes(1, -1), 0)
-}
-
-///|
 test "Window refuses windows, formats and compressions it cannot read" {
   let (images, little) = @tiff.read_tiff(strip_tiff([])[:])
   let image = images[0]

@@ -406,20 +406,6 @@ test "invalid bounds give rows without geometry" {
 }
 
 ///|
-test "triangles and voronoi refuse more than MAX_DELAUNAY_POINTS points" {
-  let b = @geom.TableBuilder::new()
-  for i in 0..<=@delaunay.MAX_DELAUNAY_POINTS {
-    b.point(i.to_double(), 0.0)
-  }
-  b.end_ring()
-  b.end_part()
-  b.end_feature(MultiPoint)
-  let big = b.finish()
-  assert_true(@delaunay.triangles(big) is None)
-  assert_true(@delaunay.voronoi(big, 0.0, 0.0, 1.0, 1.0) is None)
-}
-
-///|
 test "triangles jitter collinear points through trig" {
   let flat = @core.Trig::{
     ..@core.Trig::moonbit(),

@@ -102,3 +102,13 @@ test "atmosphere inputs: the globe in front of the camera" {
   )
   assert_true(blend > 0.0 && blend <= 1.0)
 }
+
+///|
+test "light_direction takes up at the center to the center's surface normal" {
+  let g = tokyo_globe()
+  let up = g.light_direction({ x: 0.0, y: 0.0, z: 1.0, })
+  let n = surface_vector(g.camera().center)
+  assert_true(near(up.x, n.x) && near(up.y, n.y) && near(up.z, n.z))
+  let east = g.light_direction({ x: 1.0, y: 0.0, z: 0.0, })
+  assert_true(near(east.y, 0.0))
+}

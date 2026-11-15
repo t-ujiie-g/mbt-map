@@ -38,18 +38,6 @@ fn build_tiler(
 }
 
 ///|
-/// Only `@formats.read_geojson`, to separate its cost in the bench; returns
-/// the feature count or -1.
-fn read_only(
-  bytes : BytesView,
-  slow_number~ : (Int32, Int32) -> Double = (s, e) => {
-    @core.strconv_number(bytes[s:e])
-  },
-) -> Int32 {
-  (@formats.read_geojson(bytes, slow_number~) catch { _ => return -1 }).length()
-}
-
-///|
 /// Tile (z, x, y) of the current tiler, flattened: the feature count, then
 /// per feature its type, row and ring count, per ring its point count, and
 /// the coordinates; an empty array for no tile.
@@ -134,19 +122,6 @@ pub fn geojson_tile_hash(z : Int32, x : Int32, y : Int32) -> Int32 {
   } else {
     h
   }
-}
-
-///|
-/// `Tiler::new` on a table in `@geom.Table::to_bytes` form; returns the row
-/// count or -1 if the bytes are malformed.
-fn table_tiler(
-  bytes : BytesView,
-  options : @tiler.TilerOptions,
-  trig : @tiler.Trig,
-) -> Int32 {
-  guard @geom.Table::from_bytes(bytes) is Some(table) else { return -1 }
-  current_tiler.val = Some(@tiler.Tiler::new(table, options~, trig~))
-  table.length()
 }
 
 ///|

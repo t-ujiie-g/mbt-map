@@ -1,6 +1,6 @@
 ///|
 /// Most points `triangles` and `voronoi` take (AGENTS.md §8.2).
-pub const MAX_DELAUNAY_POINTS : Int32 = 1_000_000
+const MAX_DELAUNAY_POINTS : Int32 = 1_000_000
 
 ///|
 /// The points of every Point and MultiPoint row in table order, with the row

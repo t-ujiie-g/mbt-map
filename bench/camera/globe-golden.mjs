@@ -279,7 +279,7 @@ function runView(v) {
 restoreNow();
 
 console.log(`globe golden: ${views.length} views, ${rows.length} comparisons; largest difference ${worst.px.toExponential(2)} px, ${worst.deg.toExponential(2)}°, ${worst.zoom.toExponential(2)} zoom, ${worst.ms.toExponential(2)} ms, ${worst.rel.toExponential(2)} relative, ${worst.tiles} covering tiles differ`);
-await writeFile(path.join(ROOT, "bench/results/globe-golden.json"), JSON.stringify({ reference: "maplibre-gl 6.16.0", worst, rows }, null, 2) + "\n");
 const bad = rows.filter((r) => !((r.px ?? 0) <= 1e-6 && (r.deg ?? 0) <= 1e-7 && (r.zoom ?? 0) <= 1e-8 && (r.ms ?? 0) <= 1e-5 && (r.rel ?? 0) <= 1e-6 && (r.tiles ?? 0) === 0));
+await writeFile(path.join(ROOT, "bench/results/globe-golden.json"), JSON.stringify({ reference: "maplibre-gl 6.16.0", views: views.length, comparisons: rows.length, worst, beyond: bad }, null, 2) + "\n");
 for (const r of bad.slice(0, 40)) console.log("beyond tolerance:", JSON.stringify(r));
 if (bad.length) process.exitCode = 1;

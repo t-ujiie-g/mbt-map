@@ -23,7 +23,7 @@ pub const MAX_SEGMENTS : Int32 = 4_000_000
 ///|
 /// Largest magnitude of a grid value or a finite break: beyond it Turf's
 /// interpolation can overflow into NaN coordinates.
-pub const MAX_ABS_VALUE : Double = 1.0e300
+const MAX_ABS_VALUE : Double = 1.0e300
 
 ///|
 /// Turf's matrix of a point grid: `rows` rows of `cols` values from the lowest

@@ -26,5 +26,8 @@ bench/fixtures/*/
 # The rabbita example built from MoonBit (bench/npm/prepare.mjs)
 examples/rabbita/app.js
 
+# The pack test's point cloud (bench/las/synthetic.mjs, written by bench/npm/prepare.mjs)
+bench/npm/pages/pointcloud/cloud.las
+
 # The GitHub Pages site (bench/site/build.mjs)
 _site/

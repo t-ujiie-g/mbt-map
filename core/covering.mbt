@@ -37,7 +37,7 @@ const MIN_ZOOM_SLACK : Int32 = 2
 ///|
 /// Most world copies drawn either side of the main one, as MapLibre's
 /// `coveringTiles` (three).
-pub const MAX_WORLD_COPIES : Int32 = 3
+const MAX_WORLD_COPIES : Int32 = 3
 
 ///|
 /// The world copies the view's ground reaches (`wrap` -1 is the copy west of

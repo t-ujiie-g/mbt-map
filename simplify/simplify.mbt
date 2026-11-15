@@ -4,7 +4,7 @@
 
 ///|
 /// Most vertices `simplify` takes (AGENTS.md §8.2).
-pub const MAX_SIMPLIFY_POINTS : Int32 = 1_000_000
+const MAX_SIMPLIFY_POINTS : Int32 = 1_000_000
 
 ///|
 /// JavaScript's `Number.EPSILON`, where Turf stops lowering a ring's tolerance.

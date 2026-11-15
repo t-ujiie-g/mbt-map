@@ -1,7 +1,7 @@
 ///|
 /// Most points `concave` and `convex` take: past it they give None (AGENTS.md
 /// §8.2).
-pub const MAX_HULL_POINTS : Int32 = 1_000_000
+const MAX_HULL_POINTS : Int32 = 1_000_000
 
 ///|
 /// concaveman's hull of `t`'s finite vertices as a one-row Polygon table (rbush's

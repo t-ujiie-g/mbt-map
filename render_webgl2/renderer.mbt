@@ -354,7 +354,7 @@ pub fn Renderer::draw_relief(
 pub const ATLAS_SIZE : Int32 = 2048
 
 ///|
-pub const MAX_ATLAS_SIZE : Int32 = 8192
+const MAX_ATLAS_SIZE : Int32 = 8192
 
 ///|
 /// The largest glyph atlas side this context takes.

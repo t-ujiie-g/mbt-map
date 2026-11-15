@@ -2,13 +2,26 @@
 // pages that use it and builds the React example. Usage: node npm/prepare.mjs
 import { execFileSync } from "node:child_process";
 import { build } from "esbuild";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeCloud } from "../las/synthetic.mjs";
 import { ROOT } from "../lib/root.mjs";
 import { loadPublicStyle } from "../style/public-styles.mjs";
 
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: ["ignore", "pipe", "inherit"] }).toString();
+
+// Whether `dir`/node_modules holds what its lockfile lists, by the hidden lockfile npm writes there.
+async function installed(dir) {
+  try {
+    const packages = async (file) => JSON.parse(await readFile(path.join(dir, file), "utf8")).packages;
+    const [want, have] = [await packages("package-lock.json"), await packages("node_modules/.package-lock.json")];
+    const there = ([name, p]) => name === "" || (have[name] ? have[name].version === p.version : p.optional === true);
+    return Object.entries(want).every(there) && Object.keys(have).every((name) => name in want);
+  } catch {
+    return false;
+  }
+}
 
 export async function prepareExamples() {
   const out = path.join(ROOT, "bench/dist/pack");
@@ -24,6 +37,7 @@ export async function prepareExamples() {
     run("tar", ["xzf", path.join(out, filename), "--strip-components=1", "-C", modules], ROOT);
   };
   for (const page of ["npm", "element", "geojson", "analysis", "data", "media", "custom", "model", "tiles", "pointcloud", "i3s", "globe", "services", "moonbit"]) await install(`bench/npm/pages/${page}`);
+  await writeCloud();
   // The MoonBit app the moonbit page runs, on the MoonBit API (moonbit/mbtmap).
   run("moon", ["build", "--target", "js", "--release", "bench/moonbit/app"], ROOT);
   await install("examples/html");
@@ -43,7 +57,7 @@ export async function prepareExamples() {
   // Its OpenFreeMap style with ?local=1 (pinned by sha256; the tiles stay optional fixtures).
   await loadPublicStyle("ofm-liberty").catch((e) => console.warn(`rabbita: ofm-liberty style not fetched: ${e.message}`));
   // npm ci empties node_modules, so the tarball goes in afterwards.
-  run("npm", ["ci", "--no-audit", "--no-fund"], path.join(ROOT, "examples/react"));
+  if (!(await installed(path.join(ROOT, "examples/react")))) run("npm", ["ci", "--no-audit", "--no-fund"], path.join(ROOT, "examples/react"));
   await install("examples/react");
   run("npm", ["run", "-s", "build"], path.join(ROOT, "examples/react"));
 }

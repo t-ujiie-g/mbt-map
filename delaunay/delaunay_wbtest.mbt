@@ -147,3 +147,17 @@ test "hostile inputs match: collinear, overflowing, underflowing, duplicates" {
     24, -1684482390, 107521960, 8, 1550962650, 8, 186988485, 291, -1522515905,
   ])
 }
+
+///|
+test "triangles and voronoi refuse more than MAX_DELAUNAY_POINTS points" {
+  let b = @geom.TableBuilder::new()
+  for i in 0..<=MAX_DELAUNAY_POINTS {
+    b.point(i.to_double(), 0.0)
+  }
+  b.end_ring()
+  b.end_part()
+  b.end_feature(MultiPoint)
+  let big = b.finish()
+  assert_true(triangles(big) is None)
+  assert_true(voronoi(big, 0.0, 0.0, 1.0, 1.0) is None)
+}

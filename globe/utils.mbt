@@ -117,7 +117,7 @@ fn sphere_vector(lng : Double, lat : Double) -> Vec3 {
 
 ///|
 /// The point of the unit sphere at `p`.
-pub fn surface_vector(p : @core.LngLat) -> Vec3 {
+fn surface_vector(p : @core.LngLat) -> Vec3 {
   sphere_vector(p.lng * @math.PI / 180.0, p.lat * @math.PI / 180.0)
 }
 
@@ -271,7 +271,7 @@ fn ray_sphere(
 ///|
 /// The share of the atmosphere drawn for a camera `altitude` pixels above a
 /// globe of `radius` pixels (MapLibre's `getAtmosphereAltitudeBlend`).
-pub fn atmosphere_blend(altitude : Double, radius : Double) -> Double {
+fn atmosphere_blend(altitude : Double, radius : Double) -> Double {
   let height = radius * (100000.0 / 6371000.0)
   let x = clamp((altitude - height) / (9.0 * height), 0.0, 1.0)
   x * x * (3.0 - 2.0 * x)

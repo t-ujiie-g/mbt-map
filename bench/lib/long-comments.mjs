@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 
 const files = execFileSync("git", ["ls-files", "*.mbt", "*.ts", "*.mjs", "*.js", "*.jsx"], { encoding: "utf8" })
   .split("\n")
-  .filter((f) => f && !f.startsWith("bench/backend/"));
+  .filter(Boolean);
 let count = 0;
 for (const f of files) {
   const lines = readFileSync(f, "utf8").split("\n");

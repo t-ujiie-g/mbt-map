@@ -114,7 +114,7 @@ pub struct ViewshedResult {
 
 ///|
 /// GDAL's default `-cc`, standard atmospheric refraction.
-pub const DEFAULT_CURVATURE_COEFF : Double = 0.85714
+const DEFAULT_CURVATURE_COEFF : Double = 0.85714
 
 ///|
 const WGS84_SEMI_MAJOR : Double = 6378137.0

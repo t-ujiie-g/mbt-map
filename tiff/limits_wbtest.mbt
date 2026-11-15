@@ -54,3 +54,9 @@ test "geo_keys reads only the keys its directory holds" {
   assert_eq(geo_keys([1, 1, 0, 9, 2048, 0, 1, 4612, 1025, 0, 1]), (4612, 0))
   assert_eq(geo_keys([1, 1, 0, -1, 2048, 0, 1, 4612]), (0, 0))
 }
+
+///|
+test "band_bytes has no size for bits below one" {
+  assert_eq(band_bytes(1, 0), 0)
+  assert_eq(band_bytes(1, -1), 0)
+}

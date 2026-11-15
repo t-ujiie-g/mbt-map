@@ -56,8 +56,6 @@ pub fn geojson_tile_clips_hash(Int32, Int32, Int32) -> Int32
 
 pub fn geojson_tile_hash(Int32, Int32, Int32) -> Int32
 
-pub fn geojson_tile_mem(Int32, Int32, Int32, Int32) -> Int32
-
 pub fn geojson_tile_size(Int32, Int32, Int32) -> Int32
 
 pub fn geojson_tiler_diffs_mem(Int32, Int32, Int32, Int32, Int32, Double, Int32, Int32, Int32, Int32) -> Int32
@@ -95,8 +93,6 @@ pub fn globe_unproject(FixedArray[Double], FixedArray[Double]) -> String
 pub fn grow_memory(Int32) -> Int32
 
 pub fn last_coord_sum_value() -> Double
-
-pub fn last_counts(Int32) -> Int32
 
 pub fn last_properties_count() -> Int32
 

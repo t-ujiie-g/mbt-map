@@ -8,7 +8,7 @@ const MAX_ITERATIONS : Int32 = 10000
 ///|
 /// Most point-to-centroid distances `kmeans` computes over all its iterations
 /// (AGENTS.md §8.2); past them it gives None.
-pub const MAX_KMEANS_DISTANCES : Int64 = 10_000_000_000
+const MAX_KMEANS_DISTANCES : Int64 = 10_000_000_000
 
 ///|
 /// skmeans' `v || 0`: NaN and zero are 0.
