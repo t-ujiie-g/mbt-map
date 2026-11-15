@@ -14,6 +14,9 @@ export function httpUrl(url: string | URL, base: string | URL, what: string): st
   return u.href;
 }
 
+/** The prefix of a GeoTIFF source's key among the documents: its "document" comes from the file's header (`GEOTIFF` in web/engine_style.mbt). */
+export const GEOTIFF = "geotiff:";
+
 /** The scheme prefix of PMTiles archives in source URLs and tile templates. */
 export const PMTILES = "pmtiles://";
 

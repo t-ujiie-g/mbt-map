@@ -27,13 +27,11 @@ import type { ClusterQuery, GeoJSONSource, GeoJSONSourceDiff, GeoJSONTiles } fro
 import type { Media, UpdateImageOptions } from "./media";
 import type { CustomLayerInterface, CustomLayers } from "./custom";
 import { type GeoJSONFeature, orderRendered, queryArgs, queryLayers, queryPoints } from "./query";
-import { filterText as engineFilter, resolveTiles, splitGeoJSON } from "./engine-style";
+import { filterText as engineFilter } from "./engine-style";
 import { removeStateError, stateIdError, stateLayer } from "./feature-state";
 import * as edit from "./style";
 import type { LayerSpecification, StyleSpecification } from "./style";
-import { attributionsOf } from "./attribution";
 import { Events } from "./events";
-import { GEOTIFF, tileJSONUrls, withoutSources } from "./tilejson";
 import type {
   MapGeoJSONFeature,
   FeatureIdentifier,
@@ -54,7 +52,7 @@ import type {
   Tracker,
   Handler,
 } from "./types";
-import { httpUrl, pmtilesArchive, resolveTemplate, wasmUrl, workerScriptUrl } from "./urls";
+import { GEOTIFF, httpUrl, pmtilesArchive, wasmUrl, workerScriptUrl } from "./urls";
 import { MAX_DATA_BYTES, MAX_DOCUMENT_BYTES, readJsonCapped } from "../../worker/js/body.mjs";
 import type { ImageInput, StyleImageOptions } from "./images";
 import { StyleImages } from "./style-images";
@@ -141,12 +139,15 @@ function loadLegacy(): Promise<unknown> {
   return legacyLoading;
 }
 
-/** `tilejson-merge.js` once loaded, with the first TileJSON document or PMTiles header fetched. */
-let tilejson: typeof import("./tilejson-merge") | null = null;
-
 /** A query's filter as the engine takes it, legacy filters converted once `legacy.js` has loaded. */
 function filterText(filter: unknown): string {
-  return engineFilter(filter, legacy && legacy.convertFilter);
+  return engineFilter(filter, legacy && legacy.convertFilter, engine.is_legacy_filter);
+}
+
+/** The document an edit gave, or the Error it refused with, thrown. */
+function edited(r: engine.StyleDoc | Error): engine.StyleDoc {
+  if (r instanceof Error) throw r;
+  return r;
 }
 
 /** A feature an expression is evaluated for (a GeoJSON Feature will do): `["id"]` reads `id`, `["geometry-type"]` its geometry's type. */
@@ -180,7 +181,7 @@ export class Map {
   #attribution: HTMLElement | null = null;
   #attributions: string[] = [];
   /** The style as the engine draws it (TileJSON merged), whose sources the attributions come from. */
-  #drawn: StyleSpecification | null = null;
+  #drawn: engine.EngineStyle | null = null;
   #warned = "";
   #engine: engine.EngineMap | null = null;
   #clipping: Clipping | null = null;
@@ -194,7 +195,7 @@ export class Map {
   #customLoading: Promise<unknown> | null = null;
   /** Canvas sources given an element, which the style's JSON copies cannot hold. */
   #canvases = new globalThis.Map<string, unknown>();
-  #style: StyleSpecification | null = null;
+  #doc: engine.StyleDoc | null = null;
   #globalState: Record<string, unknown> = {};
   #base = new URL(document.baseURI);
   #styleRequest = 0;
@@ -287,17 +288,16 @@ export class Map {
     const request = ++this.#styleRequest;
     const use = (s: StyleSpecification, base: URL) => {
       if (request !== this.#styleRequest || this.#removed) return;
-      let swapped = s;
-      if (options.transformStyle) {
-        try {
-          swapped = options.transformStyle(edit.copy(this.#style && edit.withoutCustom(this.#style)) ?? undefined, edit.copy(s)!);
-        } catch (err) {
-          this.#fail(err);
-          return;
-        }
+      let next: engine.StyleDoc;
+      try {
+        const current = this.#doc && (engine.doc_to_js(this.#doc, false) as StyleSpecification);
+        const swapped = options.transformStyle ? options.transformStyle(current ?? undefined, edit.copy(s)!) : s;
+        next = engine.doc_keep_data(edited(engine.doc_from_js(swapped)), this.#doc);
+      } catch (err) {
+        this.#fail(err);
+        return;
       }
-      const next = edit.keepGeoJSONData(this.#style, edit.copy(swapped));
-      if (!legacy && edit.hasLegacy(next)) {
+      if (!legacy && engine.doc_has_legacy(next)) {
         loadLegacy()
           .then(() => use(s, base))
           .catch((err: unknown) => this.#fail(err));
@@ -305,14 +305,20 @@ export class Map {
       }
       this.#base = base;
       const state = this.#globalState;
-      this.#globalState = edit.loadedState(state, next, this.#options.globalState ?? {});
+      this.#globalState = edit.loadedState(state, engine.doc_root(next, "state"), this.#options.globalState ?? {});
       if (this.#engine) this.#apply(next);
       else this.#create(next);
-      if (this.#style !== next) this.#globalState = state;
+      if (this.#doc !== next) this.#globalState = state;
     };
     // Sources given by TileJSON wait for their documents.
     const ready = (s: StyleSpecification, base: URL) => {
-      const missing = this.#missingTileJSON(s, base);
+      let missing: string[];
+      try {
+        missing = this.#missingTileJSON(edited(engine.doc_from_js(s)), base);
+      } catch (err) {
+        this.#fail(err);
+        return;
+      }
       if (missing.length === 0) return use(s, base);
       this.#fetchTileJSON(missing, () => use(s, base)).catch((err: unknown) => this.#fail(err));
     };
@@ -340,10 +346,8 @@ export class Map {
   }
 
   /** Hands the style's image, video and canvas sources to `media.js`, loaded with the first one. */
-  #syncMedia(style: StyleSpecification): void {
-    const sources = Object.entries(style.sources ?? {})
-      .filter(([, s]) => ["image", "video", "canvas"].includes((s as { type?: string })?.type ?? ""))
-      .map(([id, spec]) => ({ id, spec: spec as Record<string, unknown>, canvas: this.#canvases.get(id) }));
+  #syncMedia(doc: engine.StyleDoc): void {
+    const sources = engine.doc_sources_of(doc, ["image", "video", "canvas"]).map(({ id, spec }) => ({ id, spec, canvas: this.#canvases.get(id) }));
     if (sources.length > 0 || this.#media) this.#withMedia((m) => m.set(sources, this.#base));
   }
 
@@ -379,9 +383,11 @@ export class Map {
     return this.#withEngine((m) => engine.map_set_transform_request(m, transform));
   }
 
-  /** The TileJSON URLs of `style` not fetched yet. */
-  #missingTileJSON(style: StyleSpecification, base: URL): string[] {
-    return [...tileJSONUrls(style, base).values()].filter((u) => !this.#tilejson.has(u));
+  /** The TileJSON URLs of `doc`'s sources (`only` those of one source) not fetched yet. */
+  #missingTileJSON(doc: engine.StyleDoc, base: URL, only?: string): string[] {
+    const urls = engine.doc_tilejson_urls(doc, base.href);
+    if (urls instanceof Error) throw urls;
+    return urls.filter(([id, u]) => (only === undefined || id === only) && !this.#tilejson.has(u)).map(([, u]) => u);
   }
 
   /** Fetches TileJSON documents (without credentials), or PMTiles headers, into the cache, then runs `use`: `idle` waits for both. */
@@ -398,7 +404,6 @@ export class Map {
   }
 
   async #fetchDocuments(urls: string[]): Promise<void> {
-    tilejson ??= await import("./tilejson-merge.js");
     await Promise.all(urls.map(async (url) => {
       if (url.startsWith(GEOTIFF)) {
         const { geotiffDocument } = await import("./geotiff-source.js");
@@ -432,11 +437,11 @@ export class Map {
    * default back), as MapLibre's: layers reading it are drawn again, their tiles loaded again.
    */
   setGlobalStateProperty(name: string, value: unknown): this {
-    const defaults = (this.#style?.state ?? {}) as Record<string, { default?: unknown } | undefined>;
+    const defaults = ((this.#doc && engine.doc_root(this.#doc, "state")) ?? {}) as Record<string, { default?: unknown } | undefined>;
     const next = value === null ? (defaults[name]?.default ?? null) : value;
     if (JSON.stringify(next) === JSON.stringify(this.#globalState[name])) return this;
     this.#globalState = { ...this.#globalState, [name]: next };
-    if (this.#style) this.#apply(this.#style);
+    if (this.#doc) this.#apply(this.#doc);
     return this;
   }
 
@@ -445,75 +450,72 @@ export class Map {
     return edit.copy(this.#globalState);
   }
 
-  /** The style with its TileJSON sources completed and tile URLs made absolute, as the engine takes it. */
-  #engineStyle(style: StyleSpecification): StyleSpecification {
-    const s = edit.withState(legacy && edit.hasLegacy(style) ? legacy.convertStyle(style) : style, this.#globalState);
-    const urls = tileJSONUrls(s, this.#base);
-    // Without the merger no document has come yet: every `url` source is still loading.
-    const merged = urls.size === 0 ? s : tilejson ? tilejson.withTileJSON(s, urls, this.#tilejson, resolveTemplate) : withoutSources(s, new Set(urls.keys()));
-    return resolveTiles(merged, this.#base);
+  /** The style as the engine takes it: TileJSON sources completed, tile URLs absolute, GeoJSON data apart. */
+  #engineStyle(doc: engine.StyleDoc): engine.EngineStyle {
+    const convert = legacy && ((s: unknown) => legacy!.convertStyle(s as StyleSpecification));
+    const e = engine.doc_engine(doc, this.#globalState, (url) => this.#tilejson.get(url), this.#base.href, convert);
+    if (e instanceof Error) throw e;
+    return e;
   }
 
   /** A copy of the style drawn, GeoJSON data included (null until it has loaded). */
   getStyle(): StyleSpecification | null {
-    return edit.copy(this.#style && edit.withoutCustom(this.#style));
+    return this.#doc && (engine.doc_to_js(this.#doc, false) as StyleSpecification);
   }
 
   /** Fires `warning` (and logs it) when what the engine leaves out of `drawn` changed. */
-  #warn(drawn: StyleSpecification): void {
+  #warn(drawn: engine.EngineStyle): void {
     const flat = engine.map_warnings(this.#engine!);
     const key = flat.join("\n");
     if (key === this.#warned) return;
     this.#warned = key;
     if (flat.length === 0) return;
-    const warnings = edit.styleWarnings(flat, drawn);
+    const warnings = engine.engine_warnings(drawn, flat);
     console.warn(`moon-map: the style uses what is not drawn yet:\n${warnings.map((w) => `${w.path}: ${w.message}`).join("\n")}`);
     // After the constructor, which draws an object style at once, has returned.
     queueMicrotask(() => this.#events.warn(warnings));
   }
 
   /** Swaps in `next`, an edit of the current style; a style the engine refuses fires `error`. */
-  #apply(next: StyleSpecification): void {
+  #apply(next: engine.StyleDoc): void {
     if (!this.#engine) return;
-    const [geojson, rest] = splitGeoJSON(this.#engineStyle(next));
-    const refused = engine.map_set_style(this.#engine, JSON.stringify(rest), this.#options.strict ?? false);
+    const drawn = this.#engineStyle(next);
+    const refused = engine.map_set_style(this.#engine, engine.engine_text(drawn), this.#options.strict ?? false);
     if (refused) {
       this.#fail(new Error(refused));
       return;
     }
-    this.#warn(rest);
-    const previous = this.#style;
-    this.#style = next;
+    this.#warn(drawn);
+    const previous = this.#doc;
+    this.#doc = next;
     this.#syncMedia(next);
-    this.#images.loadSprite(next.sprite, this.#base);
+    this.#images.loadSprite(engine.doc_root(next, "sprite"), this.#base);
     // Custom layers the new style lacks are gone, as MapLibre's `setStyle` removes them.
-    for (const id of this.#custom?.ids() ?? []) if (!edit.getLayer(next, id)) this.#custom!.remove(id);
-    for (const id of this.#loadGeoJSON(geojson)) engine.map_reload_source(this.#engine, id);
-    this.#drawn = rest;
+    for (const id of this.#custom?.ids() ?? []) if (!engine.doc_layer(next, id)) this.#custom!.remove(id);
+    for (const id of this.#loadGeoJSON(engine.engine_geojson(drawn))) engine.map_reload_source(this.#engine, id);
+    this.#drawn = drawn;
     this.#showAttribution();
     this.#events.emit("styledata");
     this.#sourceData(previous, next);
   }
 
   /** `sourcedata` for each source of `next` that `previous` lacks or had otherwise. */
-  #sourceData(previous: StyleSpecification | null, next: StyleSpecification): void {
-    for (const id of Object.keys(next.sources ?? {})) {
-      if (previous?.sources?.[id] !== next.sources[id]) this.#events.sourceData(id);
-    }
+  #sourceData(previous: engine.StyleDoc | null, next: engine.StyleDoc): void {
+    for (const id of engine.doc_changed_sources(next, previous)) this.#events.sourceData(id);
   }
 
   /** Runs `f` on the current style and draws what it gives; its errors fire `error`. */
-  #edit(f: (style: StyleSpecification) => StyleSpecification): this {
-    if (!this.#style) throw new Error("moon-map: the style has not loaded yet");
-    let next: StyleSpecification;
+  #edit(f: (doc: engine.StyleDoc) => engine.StyleDoc | Error): this {
+    if (!this.#doc) throw new Error("moon-map: the style has not loaded yet");
+    let next: engine.StyleDoc;
     try {
-      next = f(this.#style);
+      next = edited(f(this.#doc));
     } catch (err) {
       this.#fail(err);
       return this;
     }
     // Run again once the converter has loaded, on the style as it will be then.
-    if (!legacy && edit.hasLegacy(next)) {
+    if (!legacy && engine.doc_has_legacy(next)) {
       loadLegacy().then(() => this.#edit(f), (err: unknown) => this.#fail(err));
       return this;
     }
@@ -523,15 +525,15 @@ export class Map {
 
   /** Adds a style layer, or a custom layer (MapLibre's `CustomLayerInterface`; its `onAdd` runs once `custom.js` has loaded). */
   addLayer(layer: LayerSpecification | CustomLayerInterface, beforeId?: string): this {
-    if (layer?.type !== "custom") return this.#edit((s) => edit.addLayer(s, layer as LayerSpecification, beforeId));
+    if (layer?.type !== "custom") return this.#edit((d) => engine.doc_add_layer(d, layer, beforeId));
     const custom = layer as CustomLayerInterface;
-    this.#edit((s) => {
+    this.#edit((d) => {
       const why = edit.invalidCustomLayer(custom);
       if (why) throw new Error(`moon-map: layers.${String(custom.id)}: ${why}`);
-      return edit.addLayer(s, { id: custom.id, type: "custom" }, beforeId);
+      return engine.doc_add_layer(d, { id: custom.id, type: "custom" }, beforeId);
     });
     // Only while the style still has it: an error or a later removeLayer leaves it out.
-    this.#withCustom((c) => this.#style && edit.getLayer(this.#style, custom.id)?.type === "custom" && !c.get(custom.id) && c.add(custom));
+    this.#withCustom((c) => this.#doc && engine.doc_layer(this.#doc, custom.id)?.type === "custom" && !c.get(custom.id) && c.add(custom));
     return this;
   }
 
@@ -556,77 +558,82 @@ export class Map {
   }
 
   removeLayer(id: string): this {
-    return this.#edit((s) => edit.removeLayer(s, id));
+    return this.#edit((d) => engine.doc_remove_layer(d, id));
   }
 
   /** Moves layer `id` before `beforeId`, or on top. */
   moveLayer(id: string, beforeId?: string): this {
-    return this.#edit((s) => edit.moveLayer(s, id, beforeId));
+    return this.#edit((d) => engine.doc_move_layer(d, id, beforeId));
   }
 
   /** Layer `id` as the style gives it, or a custom layer itself. */
   getLayer(id: string): LayerSpecification | CustomLayerInterface | undefined {
     const custom = this.#custom?.get(id);
     if (custom) return custom;
-    return this.#style ? edit.copy(edit.getLayer(this.#style, id)) : undefined;
+    return this.#doc ? (engine.doc_layer(this.#doc, id) as LayerSpecification | undefined) : undefined;
   }
 
   /** The layer ids, bottom first. */
   getLayersOrder(): string[] {
-    return this.#style ? (this.#style.layers as LayerSpecification[]).map((l) => l.id) : [];
+    return this.#doc ? engine.doc_layer_ids(this.#doc) : [];
   }
 
   setPaintProperty(id: string, name: string, value: unknown): this {
-    return this.#edit((s) => edit.setPaintProperty(s, id, name, value));
+    return this.#edit((d) => engine.doc_set_property(d, id, false, name, value));
   }
 
   getPaintProperty(id: string, name: string): unknown {
-    return this.#style ? edit.getPaintProperty(this.#style, id, name) : undefined;
+    return this.#doc ? engine.doc_property(this.#doc, id, false, name) : undefined;
   }
 
   setLayoutProperty(id: string, name: string, value: unknown): this {
-    return this.#edit((s) => edit.setLayoutProperty(s, id, name, value));
+    return this.#edit((d) => engine.doc_set_property(d, id, true, name, value));
   }
 
   getLayoutProperty(id: string, name: string): unknown {
-    return this.#style ? edit.getLayoutProperty(this.#style, id, name) : undefined;
+    return this.#doc ? engine.doc_property(this.#doc, id, true, name) : undefined;
   }
 
   /** Sets layer `id`'s filter; null or undefined removes it. */
   setFilter(id: string, filter?: unknown): this {
-    return this.#edit((s) => edit.setFilter(s, id, filter));
+    return this.#edit((d) => engine.doc_set_filter(d, id, filter));
   }
 
   getFilter(id: string): unknown {
-    return this.#style ? edit.getFilter(this.#style, id) : undefined;
+    return this.#doc ? engine.doc_filter(this.#doc, id) : undefined;
   }
 
   setLayerZoomRange(id: string, minzoom: number, maxzoom: number): this {
-    return this.#edit((s) => edit.setLayerZoomRange(s, id, minzoom, maxzoom));
+    return this.#edit((d) => engine.doc_set_zoom_range(d, id, minzoom, maxzoom));
   }
 
   /** Adds a source; one given by `url` (TileJSON) draws once its document has come. */
   addSource(id: string, source: unknown): this {
     this.#keepCanvases({ [id]: source });
-    this.#edit((s) => edit.addSource(s, id, source));
-    const missing = this.#missingTileJSON({ version: 8, sources: { [id]: source }, layers: [] }, this.#base);
+    this.#edit((d) => engine.doc_add_source(d, id, source));
+    let missing: string[] = [];
+    try {
+      if (this.#doc && engine.doc_has_source(this.#doc, id)) missing = this.#missingTileJSON(this.#doc, this.#base, id);
+    } catch (err) {
+      this.#fail(err);
+    }
     if (missing.length > 0) {
-      this.#fetchTileJSON(missing, () => this.#style && this.#apply(this.#style)).catch((err: unknown) => this.#fail(err));
+      this.#fetchTileJSON(missing, () => this.#doc && this.#apply(this.#doc)).catch((err: unknown) => this.#fail(err));
     }
     return this;
   }
 
   /** Removes source `id`; fires `error` while a layer or the terrain uses it. */
   removeSource(id: string): this {
-    return this.#edit((s) => edit.removeSource(s, id));
+    return this.#edit((d) => engine.doc_remove_source(d, id));
   }
 
   /** Source `id`; a GeoJSON one has `setData` to replace its data (an object or a URL) and the cluster queries. */
   getSource(id: string): Source | undefined {
-    const s = (this.#style && edit.sourceOf(this.#style, id)) as { type?: unknown; promoteId?: unknown } | undefined;
+    const s = (this.#doc && engine.doc_source(this.#doc, id)) as { type?: unknown; promoteId?: unknown } | undefined;
     if (!s || typeof s.type !== "string") return undefined;
     const source: Source = { id, type: s.type };
-    if ("promoteId" in s) source.promoteId = edit.copy(s.promoteId);
+    if ("promoteId" in s) source.promoteId = s.promoteId;
     if (s.type === "geojson") {
       const geojson = <T,>(f: (t: GeoJSONTiles) => Promise<T>): Promise<T> =>
         (this.#geojsonLoading ?? Promise.resolve(null)).then((t) => {
@@ -638,11 +645,11 @@ export class Map {
         (cluster: number, limit?: number, offset?: number): Promise<never> =>
           geojson((t) => t.cluster(id, { op, cluster, limit, offset } as ClusterQuery) as Promise<never>);
       Object.assign(source, {
-        setData: (data: unknown) => void this.#edit((st) => edit.setSourceData(st, id, data)),
+        setData: (data: unknown) => void this.#edit((d) => engine.doc_set_source_data(d, id, data)),
         updateData: (diff: GeoJSONSourceDiff) => geojson((t) => t.update(id, diff)),
         getData: (): Promise<unknown> => {
-          const data = (this.#style && (edit.sourceOf(this.#style, id) as { data?: unknown } | undefined))?.data;
-          if (typeof data !== "string") return Promise.resolve(edit.copy(data));
+          const data = this.#doc ? engine.doc_source_data(this.#doc, id) : undefined;
+          if (typeof data !== "string") return Promise.resolve(data);
           return this.#fetch(httpUrl(data, this.#base, `GeoJSON source ${id}: data`), "Source").then((res) => {
             if (!res.ok) throw new Error(`moon-map: GeoJSON source ${id}: HTTP ${res.status}`);
             return readJsonCapped(res, MAX_DATA_BYTES, () => new Error(`moon-map: GeoJSON source ${id}: larger than ${MAX_DATA_BYTES} bytes`));
@@ -660,8 +667,7 @@ export class Map {
       };
       // The style keeps what MapLibre's `serialize` gives.
       const keep = (key: string, value: unknown) => {
-        const now = this.#style && edit.sourceOf(this.#style, id);
-        if (now) edit.setOwn(this.#style!.sources, id, { ...now, [key]: value });
+        if (this.#doc) engine.doc_keep_source_key(this.#doc, id, key, value);
       };
       Object.assign(source, {
         setCoordinates: (c: number[][]) => {
@@ -684,36 +690,36 @@ export class Map {
 
   /** `{source, exaggeration}` draws the ground raised by a `raster-dem` source; null flattens it. */
   setTerrain(terrain: { source: string; exaggeration?: number } | null): this {
-    return this.#edit((s) => edit.setRoot(s, "terrain", terrain));
+    return this.#edit((d) => engine.doc_set_root(d, "terrain", terrain));
   }
 
   getTerrain(): unknown {
-    return edit.copy(this.#style?.terrain ?? null);
+    return (this.#doc && engine.doc_root(this.#doc, "terrain")) ?? null;
   }
 
   setSky(sky: Record<string, unknown> | null): this {
-    return this.#edit((s) => edit.setRoot(s, "sky", sky));
+    return this.#edit((d) => engine.doc_set_root(d, "sky", sky));
   }
 
   getSky(): unknown {
-    return edit.copy(this.#style?.sky ?? null);
+    return (this.#doc && engine.doc_root(this.#doc, "sky")) ?? null;
   }
 
   /** `{type: "globe"}` draws the world as a globe up to zoom 11, mercator from 12 (MapLibre's); `"vertical-perspective"` keeps the globe; null or `"mercator"` flattens it. */
   setProjection(projection: { type: "mercator" | "globe" | "vertical-perspective" } | null): this {
-    return this.#edit((s) => edit.setRoot(s, "projection", projection));
+    return this.#edit((d) => engine.doc_set_root(d, "projection", projection));
   }
 
   getProjection(): unknown {
-    return edit.copy(this.#style?.projection ?? null);
+    return (this.#doc && engine.doc_root(this.#doc, "projection")) ?? null;
   }
 
   setLight(light: Record<string, unknown> | null): this {
-    return this.#edit((s) => edit.setRoot(s, "light", light));
+    return this.#edit((d) => engine.doc_set_root(d, "light", light));
   }
 
   getLight(): unknown {
-    return edit.copy(this.#style?.light ?? null);
+    return (this.#doc && engine.doc_root(this.#doc, "light")) ?? null;
   }
 
   /**
@@ -722,11 +728,11 @@ export class Map {
    * and moon-map/3d's layers in place of `light`; null removes them. `timeOfDayLights` gives them for a moment and place.
    */
   setLights(lights: unknown[] | null): this {
-    return this.#edit((s) => edit.setRoot(s, "lights", lights));
+    return this.#edit((d) => engine.doc_set_root(d, "lights", lights));
   }
 
   getLights(): unknown {
-    return edit.copy((this.#style as { lights?: unknown } | null)?.lights ?? null);
+    return (this.#doc && engine.doc_root(this.#doc, "lights")) ?? null;
   }
 
   /**
@@ -749,8 +755,7 @@ export class Map {
             (json) => engine.compile_cluster_properties(json),
             (url) => this.#transform?.(url, "Source"),
             (id, data, reload) => {
-              const now = this.#style && edit.sourceOf(this.#style, id);
-              if (now) edit.setOwn(this.#style!.sources, id, { ...now, data });
+              if (this.#doc) engine.doc_keep_source_data(this.#doc, id, data);
               if (!this.#engine) return;
               if (reload) engine.map_reload_tiles(this.#engine, id, reload);
               else engine.map_reload_source(this.#engine, id);
@@ -770,7 +775,7 @@ export class Map {
 
   /** A GeoJSON tile for the engine, once the GeoJSON worker has started, or a GeoTIFF or reprojected source's tile. */
   #providedTile(source: string, z: number, x: number, y: number): Promise<ArrayBuffer | null> {
-    const spec = this.#style && (edit.sourceOf(this.#style, source) as Record<string, unknown> | undefined);
+    const spec = this.#doc ? engine.doc_source(this.#doc, source) : undefined;
     if (spec?.type === "geotiff" && typeof spec.url === "string") {
       const url = httpUrl(spec.url, this.#base, `source "${source}": url`);
       const info = this.#tilejson.get(GEOTIFF + url) as Parameters<typeof import("./geotiff-source.js").geotiffTile>[2] | undefined;
@@ -782,14 +787,14 @@ export class Map {
     return this.#geojsonLoading?.then((t) => t?.tile(source, z, x, y) ?? null) ?? Promise.resolve(null);
   }
 
-  #create(style: StyleSpecification): void {
-    const [geojson, resolved] = splitGeoJSON(this.#engineStyle(style));
+  #create(doc: engine.StyleDoc): void {
+    const drawn = this.#engineStyle(doc);
     const o = this.#options;
     const c = this.#camera;
     const page = new URL(document.baseURI);
     const map = engine.create_map(
       this.#canvas,
-      JSON.stringify(resolved),
+      engine.engine_text(drawn),
       c.lng,
       c.lat,
       c.zoom,
@@ -804,8 +809,8 @@ export class Map {
       o.strict ?? false,
     );
     this.#engine = map;
-    this.#warn(resolved);
-    this.#style = style;
+    this.#warn(drawn);
+    this.#doc = doc;
     if (this.#transform) engine.map_set_transform_request(map, this.#transform);
     if (this.#clipping) engine.map_set_clipping(map, packClipping(this.#clipping));
     if (this.#viewshed.length) engine.map_set_viewshed(map, this.#viewshed);
@@ -820,8 +825,8 @@ export class Map {
         { signal: this.#dom.signal },
       );
     }
-    this.#loadGeoJSON(geojson);
-    this.#syncMedia(style);
+    this.#loadGeoJSON(engine.engine_geojson(drawn));
+    this.#syncMedia(doc);
     HANDLERS.forEach((h, i) => engine.map_set_handler(map, i, this.#enabled[h]));
     engine.map_on_move_start(map, (e) => this.#moveStart(e));
     engine.map_on_move(map, () => this.#move(engine.map_input_event(map)));
@@ -832,11 +837,11 @@ export class Map {
     });
     engine.map_on_idle(map, () => this.#idle());
     engine.map_on_missing_image(map, (id) => this.#events.emit("styleimagemissing", undefined, null, id));
-    this.#images.loadSprite(style.sprite, this.#base);
-    this.#drawn = resolved;
+    this.#images.loadSprite(engine.doc_root(doc, "sprite"), this.#base);
+    this.#drawn = drawn;
     this.#showAttribution();
     this.#events.emit("styledata");
-    this.#sourceData(null, style);
+    this.#sourceData(null, doc);
     if (o.bounds) this.fitBounds(o.bounds, { ...o.fitBoundsOptions, duration: 0 });
     for (const f of this.#callsBeforeStart.splice(0)) f();
   }
@@ -900,7 +905,7 @@ export class Map {
 
   /** Shows the attributions if they changed (the style, or a layer's zoom range at this zoom). */
   #showAttribution(): void {
-    const texts = this.#drawn ? attributionsOf(this.#drawn, this.getZoom()) : [];
+    const texts = this.#drawn ? engine.engine_attributions(this.#drawn, this.getZoom()) : [];
     if (texts.join("\n") === this.#attributions.join("\n") && this.#attribution) return;
     this.#attributions = texts;
     this.#attribution?.remove();
@@ -966,15 +971,15 @@ export class Map {
   /** Features drawn under `points` (CSS pixels: a point, or a box's closed ring), in MapLibre's order. */
   #query(points: number[], layers: string[] | null, filter: unknown): Promise<MapGeoJSONFeature[]> {
     const map = this.#engine;
-    const style = this.#style;
-    if (!map || !style) return Promise.resolve([]);
-    if (!legacy && edit.isLegacyFilter(filter)) return loadLegacy().then(() => this.#query(points, layers, filter));
+    const doc = this.#doc;
+    if (!map || !doc) return Promise.resolve([]);
+    if (!legacy && engine.is_legacy_filter(filter)) return loadLegacy().then(() => this.#query(points, layers, filter));
     return new Promise((resolve, reject) => {
       const refused = engine.map_query_rendered(map, points, layers === null, layers ?? [], filterText(filter), (tiles) => {
         const specs = new globalThis.Map<string, LayerSpecification | undefined>();
         const out: MapGeoJSONFeature[] = [];
-        for (const { layer, feature } of orderRendered(tiles, style.layers as LayerSpecification[])) {
-          if (!specs.has(layer)) specs.set(layer, edit.copy(edit.getLayer(style, layer)));
+        for (const { layer, feature } of orderRendered(tiles, engine.doc_layer_kinds(doc))) {
+          if (!specs.has(layer)) specs.set(layer, engine.doc_layer(doc, layer) as LayerSpecification | undefined);
           const spec = specs.get(layer);
           if (!spec) continue;
           const f = feature as MapGeoJSONFeature;
@@ -1016,7 +1021,7 @@ export class Map {
 
   /** The feature's source layer, checked as MapLibre does: required for vector sources. */
   #stateLayer(feature: FeatureIdentifier): string | null {
-    const source = (this.#style && edit.sourceOf(this.#style, feature.source)) as { type?: unknown } | undefined;
+    const source = (this.#doc ? engine.doc_source(this.#doc, feature.source) : undefined) as { type?: unknown } | undefined;
     const layer = stateLayer(source, feature);
     if (layer instanceof Error) {
       this.#fail(layer);
@@ -1090,7 +1095,7 @@ export class Map {
   querySourceFeatures(sourceId: string, options: QuerySourceFeatureOptions = {}): Promise<GeoJSONFeature[]> {
     const map = this.#engine;
     if (!map) return Promise.resolve([]);
-    if (!legacy && edit.isLegacyFilter(options.filter)) return loadLegacy().then(() => this.querySourceFeatures(sourceId, options));
+    if (!legacy && engine.is_legacy_filter(options.filter)) return loadLegacy().then(() => this.querySourceFeatures(sourceId, options));
     return new Promise((resolve, reject) => {
       const refused = engine.map_query_source(map, sourceId, options.sourceLayer ?? "", filterText(options.filter), (tiles) =>
         resolve(tiles.flatMap(({ z, x, y, hits }) => hits.map(({ feature }) => ((feature.tile = { z, x, y }), feature)))),
