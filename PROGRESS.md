@@ -58,3 +58,9 @@ Where things stand, decisions and open issues. The development history before th
 
 - 構成（2026-11-15 ユーザー判断）：`docs/` を使う人向けの英語の文書にし、開発者向けの VISION・FORMATS・CLOUD は `docs/dev/` へ移した（参照は機械的に置き換え）。API の説明は手書きの Markdown で、入口ごとのガイドに分ける。PR は 4a（README、npm の README、`docs/README.md` の目次、Getting started、`docs/dev/` への移動）と 4b（入口ごとのガイドと API、MoonBit）の 2 つ。
 - README は英語（`README.md`）と日本語（`README.ja.md`）。何ができるかを分野ごとに書き、ほかのライブラリとは比べず、ベンチの数字は載せない。npm の README は英語の短い版にした（これまでの日本語の詳しい説明は 4b で `docs/` の各ガイドへ移す。コードのコメントが `npm/README.md` を指しているところも 4b で付け替える）。
+
+## 文書 4b：入口ごとのガイド（2026-11-15、Mac）
+
+- `docs/` に英語のガイド 11 本：`map`（`Map` の作成、カメラ、イベント、実行中のスタイルの変更、GeoJSON とクラスタ、画像、問い合わせ、地物の状態、地形・空・投影、光と影、3D の選択・見通し・可視域・断面、`track`、`toBlob`、カスタムレイヤー、要求の変更、Worker と wasm の場所）、`style-support`（描くスタイル仕様の範囲と拡張）、`web-component`（HTML と React）、`moonbit`（型付きの API と rabbita）、`ui`、`search`、`draw`（`geodesic` も）、`services`、`data`、`analysis`、`3d`。3 つのエージェントが worktree で並行して書き、名前と引数はソースと照らした。`moonbit.md` のコード例はコンパイルして確かめた。相対リンクと見出しのアンカーは切れていない（その場のスクリプトで確かめた）。
+- 書きながら分かった `npm/README.md`（旧）とソースの食い違いは、ソースに合わせた：属性の欄の編集は変わった地物だけ `updateData`、`createMeasurement` の `measure` は省略でき `measure3d` もある、`createGeolocation` の `outOfMaxBounds`、検索の `reverse(lngLat, request)`、MapServer のタイルのキャッシュは `singleFusedMapCache` も要る、空の `atmosphere-blend` は地球儀の大気で読む、`mbt-map/data` の `geotiffUrl`、FlatGeobuf は `bbox` がなくても `data-fgb.js` を読む、など。点のラベルの `text-pitch-alignment` と `text-rotation-alignment` は警告なしに読まない（`style-support` の違いに書いた）。
+- コードのコメントが `npm/README.md` を指していたところを、該当するガイドに付け替えた。`timeOfDayLights` の返す `Light` の型をメインの入口から出した。
