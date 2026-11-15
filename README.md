@@ -66,7 +66,7 @@ moon add t-ujiie-g/mbtmap_rabbita    # rabbita binding
 
 ## Browsers
 
-mbt-map needs WebAssembly GC: Chrome and Edge 119+, Firefox 120+, Safari 18.2+. Pages using a Content Security Policy need `script-src 'wasm-unsafe-eval'` and `worker-src 'self'`; mbt-map uses no `eval`.
+mbt-map needs WebAssembly GC: Chrome and Edge 119+, Firefox 120+, Safari 18.2+. Every release is tested in Chromium, Firefox and WebKit (Safari's engine) by the same browser checks. Pages using a Content Security Policy need `script-src 'wasm-unsafe-eval'` and `worker-src 'self'`; mbt-map uses no `eval`.
 
 ## Development
 

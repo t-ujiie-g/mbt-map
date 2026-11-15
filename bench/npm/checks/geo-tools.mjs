@@ -2,6 +2,7 @@
 // controllers over them), checked alike in all three examples by npm/pack-test.mjs.
 import path from "node:path";
 import { ROOT } from "../../lib/root.mjs";
+import { translatedTo } from "./pixels.mjs";
 import { awaitAfter, openTab } from "./step.mjs";
 
 // The showcase's measurement: a line ended by a double click (no zoom, no identify) and an area
@@ -61,13 +62,13 @@ async function profileChecks(page, length) {
     const p = window.__profile.state;
     const at = window.__map.project({ lng: p.path[p.active][0], lat: p.path[p.active][1] });
     const dot = document.querySelector(".profile-dot");
-    return { active: p.active, hidden: dot.hidden, transform: dot.style.transform, want: `translate(${at.x}px, ${at.y}px)`, caption: document.getElementById("profile").textContent };
+    return { active: p.active, hidden: dot.hidden, transform: dot.style.transform, want: [at.x, at.y], caption: document.getElementById("profile").textContent };
   });
   const ascending = s.distances.every((d, i) => i === 0 || d > s.distances[i - 1]);
   const ok =
     s.distances[0] === 0 && ascending && Math.abs(s.distances.at(-1) - length) < 1e-6 && Math.abs(s.length - length) < 1e-6 &&
     s.elevations.length === s.path.length && s.elevations.every(Number.isFinite) && s.min <= s.max && s.error === null &&
-    !pointed.hidden && pointed.transform === pointed.want && pointed.caption.includes("Ascent");
+    !pointed.hidden && translatedTo(pointed.transform, ...pointed.want) && pointed.caption.includes("Ascent");
   return { ok, samples: s.distances.length, min: s.min, max: s.max, gain: s.gain, pointed };
 }
 

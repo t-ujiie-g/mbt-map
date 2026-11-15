@@ -1,8 +1,8 @@
-// Checks the examples built on the packed package in Chromium; without the
-// fixtures tiles 404 and maps load empty, so CI runs it too.
-// Usage: node npm/pack-test.mjs [--screenshots=dir] [--only=check,...] [--except=check,...]
+// Checks the examples built on the packed package in Chromium, Firefox or WebKit; without the fixtures tiles 404 and
+// maps load empty, so CI runs it too. --no-prepare reuses the last packing.
+// Usage: node npm/pack-test.mjs [--browser=chromium|firefox|webkit] [--screenshots=dir] [--only=check,...] [--except=check,...] [--no-prepare]
 import path from "node:path";
-import { chromium } from "playwright";
+import * as playwright from "playwright";
 import { serve } from "../lib/serve.mjs";
 import { prepareExamples } from "./prepare.mjs";
 import { fakeGeolocation } from "../lib/fake-geolocation.mjs";
@@ -36,13 +36,15 @@ import { trackExportChecks } from "./checks/track-export.mjs";
 import { updateDataChecks } from "./checks/update-data.mjs";
 import { showcaseDataChecks } from "./checks/showcase-data.mjs";
 import { showcaseServicesChecks } from "./checks/showcase-services.mjs";
-import { crumb, mapState, openTab, trail } from "./checks/step.mjs";
+import { crumb, mapState, openTab, trail, watchErrors } from "./checks/step.mjs";
 import { arg } from "../lib/args.mjs";
 
 const shots = arg("screenshots");
+const browserName = arg("browser", "chromium");
+if (!["chromium", "firefox", "webkit"].includes(browserName)) throw new Error(`pack test: no browser named ${browserName}`);
 const only = arg("only")?.split(",");
 const except = arg("except")?.split(",") ?? [];
-await prepareExamples();
+if (!process.argv.includes("--no-prepare")) await prepareExamples();
 
 const ATTRIBUTION = "国土地理院ベクトルタイル提供実験";
 
@@ -685,20 +687,34 @@ const { server, origin } = await serve();
 // Metal only exists on macOS; elsewhere (CI) Chromium falls back to SwiftShader.
 // Each example's checks take well under a minute; one that runs longer has hung.
 const CHECK_TIMEOUT = 180_000;
-const gpu = process.platform === "darwin" ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] : [];
-const browser = await chromium.launch({ args: gpu });
+const gpu = browserName === "chromium" && process.platform === "darwin" ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] : [];
+const browser = await playwright[browserName].launch({ args: gpu });
+console.log(`pack test in ${browserName} ${browser.version()}`);
+// mbt-map needs WebGL2 and WebAssembly GC; a browser build without them is skipped, saying so, rather than failing every check.
+const missing = await browser.newPage().then(async (page) => {
+  const m = await page.evaluate(() => {
+    // (module (type (struct)) (func (result anyref) struct.new_default 0))
+    const gc = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 7, 2, 95, 0, 96, 0, 1, 110, 3, 2, 1, 1, 10, 7, 1, 5, 0, 251, 1, 0, 11]));
+    const gl = document.createElement("canvas").getContext("webgl2");
+    return [!gl && "WebGL2", !gc && "WebAssembly GC"].filter(Boolean);
+  });
+  await page.close();
+  return m;
+});
+if (missing.length) {
+  const reason = `skip ${browserName} ${browser.version()}: no ${missing.join(" or ")} in this browser build on ${process.platform}`;
+  console.log(process.env.GITHUB_ACTIONS ? `::warning::pack test ${reason}` : reason);
+  await browser.close();
+  server.close();
+  process.exit(0);
+}
 let failed = false;
 try {
   for (const [example, check] of Object.entries(checks).filter(([name]) => (!only || only.includes(name)) && !except.includes(name))) {
     const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
-    const errors = [];
     const requests = [];
     page.on("request", (r) => requests.push(r.url()));
-    page.on("pageerror", (e) => errors.push(e.message));
-    // 404s are expected (missing style, missing fixtures); so are the
-    // rejections the element and style checks provoke.
-    const expected = /404|mbt-map: invalid|no layer "nope"|"gsi" is used by layer|expression properties|'nope' does not exist|sourceLayer parameter must be provided|image named "swatch" already exists|width \* height \* 4 bytes|media must be http|Invalid layer|no layer named nope|missing required method|not compatible with updateData/;
-    page.on("console", (m) => m.type() === "error" && !expected.test(m.text()) && errors.push(m.text()));
+    const { errors, settled } = watchErrors(page);
     await page.addInitScript(fakeGeolocation);
     await page.goto(`${origin}/${PAGES[example]}`);
     await page.waitForFunction(() => window.__loaded, null, { timeout: 30000 });
@@ -716,6 +732,7 @@ try {
     const run = check(page, requests).catch(async (e) => [false, { failed: e.message, steps: trail.slice(), map: await mapState(page) }]);
     const [ok, details] = await Promise.race([run, late]);
     clearTimeout(timer);
+    await settled();
     const pass = ok && errors.length === 0;
     failed ||= !pass;
     console.log(`${pass ? "ok  " : "FAIL"} ${example} ${JSON.stringify({ ...details, errors })}`);

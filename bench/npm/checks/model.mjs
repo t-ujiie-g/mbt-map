@@ -1,7 +1,7 @@
 // mbt-map/3d on bench/npm/pages/model: the model (meshopt-compressed, so through 3d.wasm) loads, stands at its points
 // turned as `rotation` says, is lit by the style's `lights` as an extrusion is, casts shadows with them, and goes
 // onto the globe (shadows too).
-import { near, pixel } from "./pixels.mjs";
+import { near, pixel, screenshot } from "./pixels.mjs";
 
 const white = [255, 255, 255];
 const red = (c) => c[0] > 150 && c[1] < 90 && c[2] < 90;
@@ -77,7 +77,7 @@ export async function modelChecks(page) {
   });
   const [kept, cutAway, boxGone] = await Promise.all(clipped.map((p) => pixel(page, p.x, p.y)));
   const { decodePng } = await import("../../lib/png.mjs");
-  const { rgba } = decodePng(await page.screenshot());
+  const { rgba } = decodePng(await screenshot(page));
   let edges = 0;
   for (let i = 0; i < rgba.length; i += 4) if (rgba[i] > 240 && Math.abs(rgba[i + 1] - 128) < 8 && rgba[i + 2] < 10) edges++;
   await page.evaluate(() => window.__map.setClipping(null));

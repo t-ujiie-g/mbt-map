@@ -59,3 +59,24 @@ export async function mapState(page) {
 
 /** Opens the showcase panel's tab `id`. */
 export const openTab = (page, id) => page.click(`.tabs button[data-tab=${id}]`);
+
+// 404s are expected (missing style, missing fixtures); so are the rejections the element and style checks provoke,
+// and Firefox's report of the malformed XML the services check parses.
+const EXPECTED = /404|mbt-map: invalid|no layer "nope"|"gsi" is used by layer|expression properties|'nope' does not exist|sourceLayer parameter must be provided|image named "swatch" already exists|width \* height \* 4 bytes|media must be http|Invalid layer|no layer named nope|missing required method|not compatible with updateData|XML Parsing Error/;
+
+// Firefox and WebKit give `console.error(error)` as the bare "Error" (Chromium as its message and stack), so the
+// text is taken from the error object.
+const consoleText = (m) =>
+  Promise.all(m.args().map((a) => a.evaluate((v) => (v instanceof Error ? `${v.message}\n${v.stack}` : String(v))).catch(() => m.text())))
+    .then((t) => t.join(" ") || m.text());
+
+/** Collects `page`'s uncaught errors and unexpected console errors; `settled` waits for the console texts read. */
+export function watchErrors(page) {
+  const errors = [];
+  const logged = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (m) => {
+    if (m.type() === "error") logged.push(consoleText(m).then((t) => !EXPECTED.test(t) && errors.push(t)));
+  });
+  return { errors, settled: () => Promise.all(logged) };
+}

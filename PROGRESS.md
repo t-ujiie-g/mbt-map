@@ -121,3 +121,17 @@ Where things stand, decisions and open issues. The development history before th
 - `?local=1`：Liberty の文書は `bench/fixtures/styles/ofm-liberty.json`（`bench/npm/prepare.mjs` が `style/public-styles.mjs` の固定した版を sha256 で確かめて取る。取れなければ警告して地理院で始まる）、タイルは `bench/fixtures/ofm-planet`（東京駅の周りの z14 だけ）と `gsi-std`、スプライトは `bench/fixtures/sprites/ofm`。そこで東京で始まる。CI はタイルのフィクスチャを持たないが、確かめはスタイルと都市の層だけで足りる（タイルのフィクスチャを外しても通ることを確かめた）。
 - pack test の `rabbita`：最初の Liberty と中文の `text-field`、日本語への切り替え（`label_city` と `city-names`、盾は変わらない）、大阪へ飛んで東京へ戻る、中心の都市のクリックで「東京」と層 `cities`、3D（`fill-extrusion-height` が `["get", "render_height"]`、傾き 60°）、地理院へ切り替えて（3D は押せない）Liberty へ戻る（言語と 3D は保つ）。例の whitebox テスト 10 件（名前の層の見分け、言語ごとの式、Liberty の直し、フィクスチャへの付け替え、地理院のスタイル）。
 - 実際のタイルで北京（中文、3D）、上海（English、3D）、東京（日本語、地理院）の画面を見た。都市を何度も回ると「glyph atlas is full」の警告が出る（漢字の多い地図では字の表が足りなくなる。エンジン側の課題）。
+
+## Firefox と WebKit での pack test（2026-11-15、Mac）
+
+- `bench/npm/pack-test.mjs` に `--browser=chromium|firefox|webkit`（既定 chromium。Metal の GPU フラグは macOS の Chromium だけ）と `--no-prepare`（前の pack を使い回す）を足した。WebGL2 か WebAssembly GC のないブラウザのビルドでは全項目を落とさず、理由を書いて飛ばす（CI では `::warning::`）。
+- 版：Playwright 1.64.1、Firefox 157.0、WebKit 27.2（どちらも wasm-gc と WebGL2 あり）。
+- Mac（fixtures あり）：直す前は Firefox 14/22、WebKit 18/22。直した後は Chromium・Firefox・WebKit とも 22/22。
+  - Firefox：npm・element・geojson・media・custom・moonbit・services は、ライブラリが `console.error(error)` で出す想定どおりの誤りを、Firefox が中身なしの "Error" として Playwright に渡すため、許す誤りの一覧に合わなかった（テスト側。誤りの文はオブジェクトの `message` から取るようにした、`checks/step.mjs` の `watchErrors`）。services はほかに、壊れた XML を DOMParser に読ませたときの Firefox 自身の "XML Parsing Error" の報告。plateau は時間切れ：`setViewshed` と `setClipping` は 1 フレーム描くだけで `idle` は来ない（`idle` は中身が変わったあとに 1 回だけ）。チェックはそのあとの `idle` を待っていて、Chromium では道具を切り替えたときの `idle` がたまたまクリックのあとに届いていた（テストの競合。待ちを先に入れる `awaitAfter` にし、この 2 つは `render` を待つ）。
+  - WebKit：ショーケース 3 つの断面図の点の位置（WebKit は `style.transform` の値を丸めて返す。0.01 px 以内で比べる `translatedTo`）。samples は ArcGIS のサンプルが読み込み中のワーカーを、次のサンプルへ移るときに WebKit が失敗として報告していた（サンプルごとに新しいページを開いて閉じる）。media は時々 idle が来ない：ループの頭で動画の `seeked` が idle をやり直させるのを当てにしていたが、WebKit は最初のループでしか seek しない（再生中に一度スタイルを変えて idle を待つ形に）。
+- Linux（Docker の `mcr.microsoft.com/playwright:v1.64.1-noble`、arm64、fixtures なしで CI に近づけた）：
+  - WebKit：直す前は npm・media・custom・model・services の 5 項目が落ち（17/22）、直した後 22/22。`antialias: false` の WebGL のキャンバスが 1 フレーム遅れて画面に出る（地図を描き直すまで最後のフレームが出ない。素の canvas を 1 回 clear するだけでも同じ、`antialias: true` なら出る）。テストでは画面を読む前に一度描き直す（`checks/pixels.mjs` の `screenshot`）。動画は 2D にも WebGL にもフレームが渡らない（`drawImage` も 0）ので、その環境では動画の画素を求めない。
+  - Firefox：headless で WebGL2 が作れない（"AllowWebgl2:false"、`webgl.force-enabled` でも "Exhausted GL driver options"）。pack test は飛ばす。x86 の GitHub のランナーで同じかは確かめていない（Docker の空きが足りず amd64 の像を取れなかった）。
+- ライブラリの直しはなし（失敗はすべてテストの前提か、ブラウザのビルドの制約だった）。
+- CI：`pack-browsers`（`pack firefox …` / `pack webkit …`、小さいページとショーケース 3 つの 2 つずつ）を足した。必須の `moon` と `pack …` 4 つの名前は変えていない。
+- 未解決：`setViewshed`・`setClipping`・`triggerRepaint` のあとに `idle` が来ないのは MapLibre（描き終えるたびに `idle`）と違う。合わせるかは別に決める。Linux の WebKit で最後のフレームが出ない件が headless だけのことか（実際の WebKitGTK の利用者にも出るなら、`antialias: true` か最後にもう 1 フレーム描くかを測って決める。MapLibre も `antialias: false` が既定）。Linux の Firefox の WebGL2。
