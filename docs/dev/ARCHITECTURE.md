@@ -42,7 +42,6 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 - `core`, `pbf`, `mvt`, `tess`, `style` are pure MoonBit and must pass tests on every backend.
 - `render_webgl2` and `map` are js-target only (`supported_targets = "js"`).
 - On the js backend `FixedArray[Byte]`/`Bytes` are `Uint8Array`, but `FixedArray[Float]` is a plain JS `Array`, so GPU buffers need `extern "js"` typed-array wrappers; `Array[T]` is not a JS array, so exports hand JS a `FixedArray`.
-- `bench/backend/{kernel,entry}` are MoonBit packages inside this module used only for the Phase 0 backend comparison.
 - The decode loop is intentionally duplicated there (safe arrays vs raw addresses vs JS typed array); do not "deduplicate" it.
 
 ## Entry points and modules

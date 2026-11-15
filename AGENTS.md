@@ -92,7 +92,7 @@ Invariants that prevent expensive mistakes:
 - Hot paths (pbf/mvt decode, tessellation, worker packing, per-frame rendering) stay allocation-free and write into preallocated `FixedArray`/`Bytes`. Data crosses the JS boundary as buffers in linear memory, never element by element through exports (5–50× slower).
 - wasm-gc entries never link core `@json`/`strconv` (24–27KB gzip each: numbers go to the host's `Number()`), `Repr`/`Debug` output (errors are `message()` strings) or core `@math` (the host's `Math` comes in through `@core.Trig`; the clipper port alone keeps `@math`).
 - Never run `wasm-opt` on wasm-gc builds (12–45% slower in every browser).
-- Ports must keep matching their reference exactly: a golden's "must stay identical / 0 differ" is a hard condition. Do not swap in "equivalent" algorithms (sorts, priority queues, rounding) or deduplicate the intentional copies in `bench/backend`.
+- Ports must keep matching their reference exactly: a golden's "must stay identical / 0 differ" is a hard condition. Do not swap in "equivalent" algorithms (sorts, priority queues, rounding).
 - Everything fetched at runtime is untrusted (§8.2); raw-address load/store validates every offset and length.
 - Key handlers that pages wire to controllers leave IME composition keys alone (`isComposing`, `keyCode` 229).
 
@@ -120,7 +120,6 @@ Promote magic numbers and repeated literals that name a concept to a `pub let` i
 ### 7.2 Duplicate / dead code
 - Consolidate identical helpers in the lowest package that may own them, respecting the dependency direction (§4).
 - Delete comment-only stub `.mbt` files once a package holds real API; drop unused imports (`unused_package`); make `pub` items with no external caller private, or delete them.
-- Exception: the intentional duplicates in `bench/backend`.
 
 ### 7.3 File splitting
 A `.mbt` file over ~500 lines is a smell, not a rule. Split only at a logical boundary (varint reader vs message walker; earcut vs line extrusion), never to hit a line count. Keep blackbox (`*_test.mbt`) and whitebox (`*_wbtest.mbt`) tests separate.
@@ -165,7 +164,7 @@ Run this when the user says **「セキュリティチェック」 / "security c
 
 ### 8.1 Dependencies and supply chain
 - `npm audit` in every directory with a `package.json` (`bench/`, `npm/`). Also check Dependabot and security advisories for the repo: `gh api repos/{owner}/{repo}/dependabot/alerts`.
-- Advisories move faster than `npm audit` sometimes reflects: for each direct dependency, check its GitHub Security Advisories and release notes for the pinned version, especially MapLibre, Playwright, esbuild, binaryen and anything in the shipped bundle.
+- Advisories move faster than `npm audit` sometimes reflects: for each direct dependency, check its GitHub Security Advisories and release notes for the pinned version, especially MapLibre, Playwright, esbuild and anything in the shipped bundle.
 - Pin exact versions (`--save-exact`) and commit the lockfile. CI uses `npm ci`, never `npm install`.
 - Before adding a package, check its maintainer, download history, install scripts (`preinstall`/`postinstall`) and whether it is a typosquat. Prefer no new dependency when a few lines will do (bundle budget, VISION §2).
 - MoonBit deps (`moon.mod` `import`): pin versions, and review the source of new mooncakes packages (`moon fetch`) before depending on them. Keep the toolchain current with `moon upgrade` (then `MOONBIT_VERSION` and both hashes in `scripts/toolchain.env`) and record the version in PROGRESS.md.

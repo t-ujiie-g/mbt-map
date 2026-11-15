@@ -9,7 +9,7 @@ Run from the repository root:
 ```sh
 moon check --target all          # type-check every backend (wasm, wasm-gc, js, native)
 moon test --target all           # all tests on all backends
-moon test <pkg-dir> --target all # one package, e.g. moon test bench/backend/kernel
+moon test <pkg-dir> --target all # one package, e.g. moon test core
 moon test <pkg-dir> -F "glob"    # filter tests by name
 moon test <pkg-dir> -u           # update snapshots (single target only; -u fails with --target all)
 moon fmt && moon info            # before committing; regenerates pkg.generated.mbti
@@ -43,10 +43,8 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run site`: the GitHub Pages site into _site/ (site/ home pages, docs/*.md through marked, npm/dist once as lib/, the examples on it); serve it with `npm run example` at /_site/. Published by .github/workflows/pages.yml on a v* tag or by hand.
 - `npm run npm:pack`: build + npm pack npm/, install it there, check examples and test pages in Chromium (CI runs this; `-- --browser=firefox|webkit` runs them in Firefox or WebKit, as CI's `pack firefox …` / `pack webkit …` jobs; `--only=a,b` / `--except=a,b` pick checks by name; `--no-prepare` reuses the last packing).
 
-### Engine: backends, decode, tessellation, rendering speed
+### Engine: decode, tessellation, rendering speed
 
-- `npm run backend:node`: backend comparison in Node (builds MoonBit + wasm-opt first).
-- `npm run backend:browser`: same, inside a module Worker in Chromium/Firefox/WebKit.
 - `npm run maplibre:parse`: MapLibre WorkerTile.parse baseline.
 - `npm run maplibre`: MapLibre first-render / frame-time / bundle-size baseline.
 - `npm run mvt:golden`: mvt vs @mapbox/vector-tile on all fixtures (must stay 35/35).
@@ -58,7 +56,6 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run subdivision:golden`: tess's globe subdivision vs MapLibre 6.16's subdividePolygon / subdivideVertexLine on GSI polygons and lines and seeded random ones, poles and zoom 0 included (must stay 0 differ).
 - `npm run worker:browser`: worker process_tile per fixture, cold and warm, in three browsers.
 - `npm run render`: mbt-map vs MapLibre: first render, frame CPU, bundle sizes (same style); node render/run.mjs --labels adds the label layers, --line-labels contour labels along lines.
-- `npm run split`: the module-split measurement behind "one wasm per entry" (bench/split; rerun when revisiting that granularity).
 
 ### Styles, sources and the map
 

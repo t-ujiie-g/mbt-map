@@ -27,11 +27,9 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 
 | パッケージ | 役割 |
 |---|---|
-| `backend/kernel`, `backend/entry` | Wasm バックエンドの比較（下の backend/）。デコードの繰り返しは比較のためにわざと重複させている |
 | `entry` | mvt / tess / GeoJSON / 座標系などのベンチと黄金テストが呼ぶ公開面（`#export_name`）。js と wasm-gc でビルドする |
 | `expr` | `expression:golden` と `color:golden` が呼ぶ、式のコンパイルと評価（js） |
 | `worker/compile_entry` | メインスレッドのスタイルのコンパイルを wasm-gc にしたもの（`worker:browser` が Worker に渡すコンパイル済みのスタイルを作る） |
-| `split/*` | 2 つ目の wasm-gc モジュールのコスト（下の split/） |
 
 ## entry/ と lib/
 
@@ -41,29 +39,6 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
   `maplibre-src` で MapLibre の TS ソースを参照）と `run-bundled.mjs`、試験用の PNG（`png.mjs`）と PMTiles（`pmtiles-writer.mjs`）の
   読み書き、富士山の DEM を Terrarium にしたもの（`fuji-terrain.mjs`）、偽の Geolocation（`fake-geolocation.mjs`）、長いコメントの一覧
   （`long-comments.mjs`、AGENTS.md §7.7）。
-
-## backend/ — Wasm バックエンド比較
-
-`kernel/`（純 MoonBit）と `entry/`（`#export_name` で公開する export 面）を `wasm` / `wasm-gc` / `js` で
-`--release` ビルドし、さらに `wasm-opt -O3` 版を作って比較する。
-
-- **decode**：zigzag varint 対（MVT ジオメトリのデルタ相当）100 万値・約 1.35MB をデコードし、
-  累積座標を Float で書き出す。各反復を `in`（タイルバイト列を読める場所へ）/ `decode` / `out`
-  （**transfer 可能な** `Float32Array` を得るまで）に分けて計測。全バリアントの出力は JS 参照実装と
-  チェックサム照合する。
-- **alloc**：特徴量ごとに boxed な点の `Array` を作る（10 万 × 32 点）。アロケータ／GC のスループット。
-
-| バリアント | 中身 |
-|---|---|
-| `js-baseline` | 手書き JS（pbf 風）。参照実装 |
-| `mbt-js` | js バックエンド。`FixedArray[Byte]` = `Uint8Array`、`FixedArray[Float]` = JS `Array` → `new Float32Array(arr)` |
-| `mbt-js-ffi` | js バックエンド。`extern "js"` で `Float32Array` に直接書く |
-| `mbt-wasm` | wasm（線形メモリ）。MoonBit の `FixedArray` のポインタ = データ先頭なので JS から view で読み書き |
-| `mbt-wasm-raw` | wasm。インライン wasm の `i32.load8_u` / `f32.store` で生アドレスを読む |
-| `mbt-wasm-gc` | wasm-gc。GC 配列を要素ごとの export 関数で読み書き（素朴な方法） |
-| `mbt-wasm-gc-mem` | wasm-gc のコードから、インライン wasm で線形メモリを直接読み書き |
-| `mbt-wasm-gc-copy` | wasm-gc。線形メモリ⇔GC 配列のコピーを wasm 内で行い、デコードは安全な純 MoonBit |
-| `+opt` | 上記を `wasm-opt -O3` で後処理 |
 
 ## maplibre/ — MapLibre 基準値
 
@@ -135,15 +110,6 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 - `bench/npm/pages/media`（image・video・canvas のソース、`media.mjs`）、`bench/npm/pages/custom`（カスタムレイヤー、`custom.mjs`）。
 
 fixture がなくてもタイルが 404 になるだけで地図は読み込まれるので、CI でも動く（`--screenshots=dir` で画面を保存する）。
-
-## split/ — 2 つ目の wasm-gc モジュールのコスト
-
-2つ目の wasm-gc モジュールで何が増えるかを測る（`npm run split`、`bench/results/split.json`）。入口を分ける粒度（入口ごとに 1 つの wasm を、
-それぞれの Worker で遅延して読む。AGENTS.md §4）を決めたときの計測で、粒度を見直すときに走らせ直す。CI では走らせない。
-
-- `split/analysis`：解析の代わりに置くパッケージ（列指向のポリゴンの球面面積、bbox、グリッド集計、面積順の上位）。本物の解析と同じく `Map`、ソート、`@math` を使う。
-- `split/analysis_entry`：それを単独の wasm-gc モジュールにしたもの。`split/combined_entry`：表示用 Worker に同じコードを入れた一体型。`split/empty_entry`：空のモジュール（ランタイムの下限）。
-- サイズ（gzip）に加えて、3ブラウザで、モジュール Worker の起動時間と、各モジュールの読み込み（fetch・コンパイル・インスタンス化）、解析の初回と温まった後の時間を測る。1万ポリゴン、15回の中央値。ローカルの配信なので、ネットワークの時間は含まない（サイズから見積もる）。
 
 ## analysis/ — 解析（`mbt-map/analysis`）
 
