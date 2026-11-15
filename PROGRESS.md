@@ -209,3 +209,18 @@ Where things stand, decisions and open issues. The development history before th
 - ライブラリの直しはなし（失敗はすべてテストの前提か、ブラウザのビルドの制約だった）。
 - CI：`pack-browsers`（`pack firefox …` / `pack webkit …`、小さいページとショーケース 3 つの 2 つずつ）を足した。必須の `moon` と `pack …` 4 つの名前は変えていない。
 - 未解決：`setViewshed`・`setClipping`・`triggerRepaint` のあとに `idle` が来ないのは MapLibre（描き終えるたびに `idle`）と違う。合わせるかは別に決める。Linux の WebKit で最後のフレームが出ない件が headless だけのことか（実際の WebKitGTK の利用者にも出るなら、`antialias: true` か最後にもう 1 フレーム描くかを測って決める。MapLibre も `antialias: false` が既定）。Linux の Firefox の WebGL2。
+
+## 公開前の整理：使っていないものを外す（2026-11-15）
+
+監査で見つかったもののうち、ユーザーが認めた分を外した。追跡しているファイルは 1530 個・11.5MB から 1492 個・9.2MB になった。外した実験（バックエンドの比較、モジュール分割の計測）のスクリプトと結果は、前のリポジトリ `t-ujiie-g/mbmap` に残っている。
+
+- **点群のフィクスチャ**：`bench/npm/pages/pointcloud/cloud.las`（1.2MB）を追跡から外した。`bench/las/synthetic.mjs` が毎回同じものを作れるので、パックテストの準備（`bench/npm/prepare.mjs`）が書き、`las:golden` は同じバイト列を関数から受け取る。
+- **bench の依存**：どこからも import していない `@turf/difference`、`@turf/points-within-polygon`、`robust-predicates` と、下の実験だけが使っていた `binaryen` を外した。
+- **結果のファイル**：一度きりの `draw-many-{before,after}-*.json`（6 個）を消した。`render-chromium*.json` と `maplibre-render-chromium*.json` は中央値などの要約だけにし、各回の値は `*.raw.json`（コミットしない）に書く。`query`・`globe`・`proj`・`las` の黄金テストは、要約と合わなかった行だけを書く（読むスクリプトも文書もなかった）。`bench/results/` は 1.5MB から 0.6MB。描画の数字は古いので、本線で測り直す。
+- **bench/entry**：呼ぶスクリプトのない export（`geojson_read`、`geojson_tiler_table`、`geojson_tile_mem`、`last_counts`）を消した。
+- **adapters/**：README だけの予約場所だった。役目は `moonbit/mbtmap_rabbita/` が果たしている。
+- **bench/backend と bench/split**：Wasm バックエンドの比較（Phase 0）とモジュール分割の計測（Phase 6.5）。結論（wasm-gc で出す、wasm-gc に `wasm-opt` をかけない、入口ごとに 1 つの wasm）は docs/dev/TOOLCHAIN.md と AGENTS.md §4 に事実として残し、MoonBit のパッケージ、スクリプト、npm の `backend:*`・`split`・`opt`、結果の `backend-*.json`・`split.json` を消した。`build:moon` は wasm（線形メモリ）のビルドと `wasm-opt` をしなくなった。
+- **CI**：`pack` と `pack-browsers` は npm パッケージを 2 回ビルドしていた（ジョブの手順と `prepareExamples()`）。手順の方を外した。`prepare.mjs` は、`examples/react/node_modules` がロックファイルどおりなら `npm ci` をやり直さない（npm が書く `node_modules/.package-lock.json` と比べる）。
+- **型定義**：tsc は内部のモジュールごとに `.d.ts` を書くので、tarball に 104 個入っていた。ビルドの最後に、`package.json` の `exports` の `types` から相対 import をたどって届くものだけを残す（`npm/scripts/declarations.mjs`、64 個）。たどった先がなければビルドが失敗する。11 の入口すべてを `moduleResolution` が `NodeNext` と `Bundler` の tsc（`skipLibCheck: false`）で読めることを確かめた。
+- **MoonBit の `pub`**：パッケージの外から使われていない上限の定数や補助の関数を非公開にした（`clusters`、`core`、`delaunay`、`density`、`draco`、`globe`、`hull`、`isolines`、`relate_worker`、`render_webgl2`、`route`、`simplify`、`tiff`、`viewshed`、`xml` の計 38 個）。それを名前で使っていたブラックボックステストは、中身を変えずにホワイトボックスのファイルへ移した。単独で出すかもしれない移植（`clipper`、`relate`、`proj`、`geodesic`、`mvt`、`pbf`、`tiler`、`tess`）、JS のテストが写しを確かめる定数（`worker` の `ENTRY_*`、`core` の `MAX_ZOOM`・`MAX_PITCH`）、トレイトの実装はそのまま。**残したもの**：ブラックボックステストがファイル内の補助関数と一緒に使っている上限など（`formats`、`style`、`tiff`、`isolines`、`kml`、`analysis` など約 35 個）は、テストのファイルごとホワイトボックスにするか補助関数を写すことになるので公開のままにした。
+- **文書**：`examples/README.md` にサンプル集（`examples/samples/`）、docs/dev/COMMANDS.md に `las:synthetic`・`tiles:synthetic`・`i3s:synthetic`・`i3s:pcsl-synthetic`、`bench/README.md` に結果の置き方。
