@@ -1,4 +1,4 @@
-// Tiles of a `reprojected` source (npm/README.md): a WMTS tile matrix set or a GetMap of another CRS drawn on
+// Tiles of a `reprojected` source (docs/data.md): a WMTS tile matrix set or a GetMap of another CRS drawn on
 // EPSG:3857 tiles, each pixel's center taken to the service's CRS by proj.wasm. Import-free.
 
 const R = 6378137;

@@ -31,7 +31,7 @@
 - カメラの状態（経度・緯度・ズーム・方位・傾き）と、最寄りの原点の平面直角座標系での座標（`mbt-map/analysis` の `transform`）。マウスの位置の座標を、度・度分秒・平面直角座標系・UTM で表示する（`createCoordinates`）。
 - クリックした地物の表示（`createIdentify`。`queryRenderedFeatures` で、いちばん上の地物のレイヤーと名前など。選んだ地点は `selected` の状態で強調する）。
 - 地点の属性テーブル（`createAttributeTable`）：見出しのクリックで並べ替え（名前・種別）、入力で絞り込み（全角半角・カタカナとひらがなを区別しない）、ページ送り。行のクリックで、その地点を `selected` の状態で強調して地図を合わせる（Shift で選択に足す）。印を置くと行が増える（`sourcedata`）。下の欄で列を足す・式で計算する・名前を変える・消す（`createFieldEditor`。式はスタイルの式を JSON で書き、`map.evaluateExpression` で地物ごとに計算する）。
-- 検索（`mbt-map/search`）：座標（度、度分秒、平面直角座標系、UTM）と地点の名前。`?gsi-search=1` で国土地理院の地名検索を外部のプロバイダとして足す（利用条件は [npm/README.md](../npm/README.md) の検索の節）。
+- 検索（`mbt-map/search`）：座標（度、度分秒、平面直角座標系、UTM）と地点の名前。`?gsi-search=1` で国土地理院の地名検索を外部のプロバイダとして足す（利用条件は [docs/search.md](../docs/search.md)）。
 - 作図（`mbt-map/draw`）：点、線、多角形、矩形、円（`mbt-map/geodesic` で楕円体の上の円）、フリーハンド、選択と編集、スナップ、分割と結合（`mbt-map/analysis` の `splitFeatures`・`mergeFeatures`）、名前とメモの属性、取り消しとやり直し。
 - データの読み込み（`mbt-map/data`）：ファイルの選択かドロップ、または「サンプルを読む」（東京の公園の CSV）。CSV、Shapefile（zip）、KML/KMZ、GPX、TopoJSON、FlatGeobuf、GeoJSON を GeoJSON ソースとして重ね、範囲に移動する。読んだデータは GeoJSON、CSV、KML に書き出せる。スタイルを切り替えても残る。
 - Web サービス（`mbt-map/services`、「データ」のタブ）：WMS・WMTS の GetCapabilities の URL か ArcGIS の MapServer・ImageServer・FeatureServer のレイヤーの URL を読み、レイヤーを選んで地図に重ねる（WMS・WMTS・ArcGIS はラスタのソース、Web メルカトル以外の座標系は `reprojected`、FeatureServer のレイヤーは地物）。「地理院タイル（WMTS）を読む」は、同梱した地理院の淡色地図の WMTS の GetCapabilities を読む。重ねたラスタは地点などのベクトルの重ねの下に入り、スタイルを切り替えても残る。

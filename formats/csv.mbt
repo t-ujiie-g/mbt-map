@@ -57,7 +57,7 @@ let guessed_delimiters : FixedArray[Byte] = [
 
 ///|
 /// Reads CSV (RFC 4180, CRLF, LF or CR row ends) into a row per CSV row and member of its
-/// geometry (npm/README.md `mbt-map/data`); `slow_number` parses numbers past the fast path
+/// geometry (docs/data.md `mbt-map/data`); `slow_number` parses numbers past the fast path
 /// from offsets into `bytes`; `srids` gets each row's SRID as `read_wkt`'s.
 pub fn read_csv(
   bytes : BytesView,

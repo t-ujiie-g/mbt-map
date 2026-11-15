@@ -60,7 +60,7 @@ import type { ImageInput, StyleImageOptions } from "./images";
 import { StyleImages } from "./style-images";
 
 export { LngLatBounds } from "./camera";
-export { sunDirection, sunPosition, timeOfDayLights, type SunPosition } from "./sun";
+export { sunDirection, sunPosition, timeOfDayLights, type Light, type SunPosition } from "./sun";
 export type { Clipping } from "./clipping";
 import { packClipping, type Clipping } from "./clipping";
 export type {

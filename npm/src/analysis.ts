@@ -669,7 +669,7 @@ export interface GridRaster {
 }
 
 /** Band `band` (default 0) of `raster` as an elevation grid, `noData` cells empty, cells the resolution divided by
- * `scale` (gdaldem's `-s`), PixelIsPoint as GDAL reads it; `sample` takes longitude and latitude (npm/README.md). */
+ * `scale` (gdaldem's `-s`), PixelIsPoint as GDAL reads it; `sample` takes longitude and latitude (docs/analysis.md). */
 export async function loadGrid(raster: GridRaster, options: AnalysisOptions & { band?: number; scale?: number } = {}): Promise<DemGrid> {
   const { band = 0, scale = 1 } = options;
   const { width, height, bands, bbox, resolution, crs, noData } = raster ?? ({} as GridRaster);

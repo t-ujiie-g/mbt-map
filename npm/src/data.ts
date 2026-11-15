@@ -152,7 +152,7 @@ async function call(format: DataFormat, source: object, options: ReadOptions, tr
 
 /**
  * Reads `input`: an http(s) URL (fetched without credentials), a Blob or File, bytes (copied), a
- * shapefile's files picked together or its `{ shp, dbf, prj, cpg }` (npm/README.md has the rules).
+ * shapefile's files picked together or its `{ shp, dbf, prj, cpg }` (docs/data.md has the rules).
  */
 export async function read(input: Input | ArrayLike<File> | ShapefileParts<Input>, options: ReadOptions = {}): Promise<DataTable> {
   const transfer: Transferable[] = [];
@@ -187,7 +187,7 @@ export interface WriteOptions extends DataOptions, CsvWriteOptions {
 /**
  * `input` (a DataTable, or a GeoJSON Feature or FeatureCollection) as `options.format`: GeoJSON as
  * `JSON.stringify` of `toGeoJSON()`, CSV as papaparse's `unparse`, KML as @placemarkio/tokml's
- * `toKML` write them (npm/README.md has the rules).
+ * `toKML` write them (docs/data.md has the rules).
  */
 export async function write(input: DataTable | object, options: WriteOptions): Promise<string> {
   const { format } = options ?? {};
@@ -210,7 +210,7 @@ export async function write(input: DataTable | object, options: WriteOptions): P
 export type RasterBand = Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array;
 
 /** Which pixels `readRaster` reads, as geotiff's `readRasters` takes them (`window`, `bbox`, `width`, `height`, `resX`,
- * `resY`, `resampleMethod`, `samples`, `fillValue`), `image` by index, `transformRequest` as `read`'s; npm/README.md has the rules. */
+ * `resY`, `resampleMethod`, `samples`, `fillValue`), `image` by index, `transformRequest` as `read`'s; docs/data.md has the rules. */
 export interface RasterOptions extends DataOptions {
   window?: [number, number, number, number];
   bbox?: [number, number, number, number];
@@ -226,7 +226,7 @@ export interface RasterOptions extends DataOptions {
 }
 
 /** Pixels `readRaster` read: `bands` per sample, the window's `bbox` and `resolution` (y negative north up; null
- * without geo tags) in `crs` (GeoKeys' EPSG code or null), `noData` (GDAL_NODATA or null); npm/README.md has the rest. */
+ * without geo tags) in `crs` (GeoKeys' EPSG code or null), `noData` (GDAL_NODATA or null); docs/data.md has the rest. */
 export interface Raster {
   width: number;
   height: number;
@@ -249,7 +249,7 @@ const isFour = (v: unknown): boolean => Array.isArray(v) && v.length === 4 && v.
 
 /**
  * Reads pixels of the GeoTIFF or COG `input` (an http(s) URL, read by range requests; a Blob, read
- * in slices; or bytes) as geotiff 3.0.5's `readRasters` does (npm/README.md has the rules).
+ * in slices; or bytes) as geotiff 3.0.5's `readRasters` does (docs/data.md has the rules).
  */
 export async function readRaster(input: Input, options: RasterOptions = {}): Promise<Raster> {
   const { window: wnd, bbox, width, height, resX, resY, resampleMethod, image, samples, fillValue } = options;
@@ -277,7 +277,7 @@ export interface RasterInfo {
   range: [number, number] | null;
 }
 
-/** How `rasterTile` draws (npm/README.md): `tileSize`, `bands`, `range`, `colors` (`[value, color]` stops), `dem`, `resampling`. */
+/** How `rasterTile` draws (docs/data.md): `tileSize`, `bands`, `range`, `colors` (`[value, color]` stops), `dem`, `resampling`. */
 export interface RasterTileOptions extends DataOptions {
   tileSize?: 256 | 512;
   bands?: number[];
@@ -311,7 +311,7 @@ export async function rasterTile(input: Input, z: number, x: number, y: number, 
 }
 
 /**
- * XYZ tile `z`/`x`/`y` of a `reprojected` source (npm/README.md; mbt-map/services' `wmsSource` and `wmtsSource` make them) as a PNG,
+ * XYZ tile `z`/`x`/`y` of a `reprojected` source (docs/data.md; mbt-map/services' `wmsSource` and `wmtsSource` make them) as a PNG,
  * or null where it shows nothing. `transformRequest` is asked once with the source's template: its headers and credentials go
  * with each request.
  */

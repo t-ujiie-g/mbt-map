@@ -98,7 +98,7 @@ function rgbaOf(color, ctx) {
 
 /** XYZ tile `z`/`x`/`y` of the GeoTIFF of `source` as a PNG, or null where it has no pixel: each pixel's center
  * (taken to the file's CRS by proj.wasm unless it is EPSG:3857 or 4326) read from the coarsest image still finer
- * than the tile, colored as npm/README.md's `geotiff` sources. */
+ * than the tile, colored as docs/data.md's `geotiff` sources. */
 export async function renderTile(source, { z, x, y, tileSize: size = 256, bands, range, colors, dem = false, resampling }, ctx) {
   const { images } = await open(source, ctx);
   const first = images[0];
