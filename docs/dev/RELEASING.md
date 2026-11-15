@@ -30,12 +30,6 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 - `npm`：信頼された公開（OIDC、トークンなし）で `npm stage publish`。npm の Staged Packages で 2FA で承認すると公開される（`npm stage approve <id>` でも）。その版が npm にもうあれば飛ばす。
 - `github-release`：CHANGELOG の節を本文にリリースを作る。
 
-## 初めての公開（0.1.0、一度だけ）
+## 信頼された公開の設定
 
-npm の信頼された公開は、パッケージが npm にないと設定できない。最初の版は手元から出す。
-
-1. `npm --prefix npm run build`（MoonBit のツールチェーンが要る）。
-2. `cd npm && npm publish`（`publishConfig.access` は public。2FA を聞かれる）。
-3. npmjs.com → mbt-map → Settings → Trusted publishing：GitHub Actions、owner `t-ujiie-g`、repository `mbt-map`、workflow `release.yml`、environment なし、権限は段階公開だけ（`npm stage publish`）。設定から 2 日以内に最初の公開が要るので、次の版のタグはそれまでに打つか、期限が切れたら作り直す。
-4. mooncakes に出す（上の「mooncakes に出す」）。
-5. タグ `v0.1.0` を打つ：npm はもうあるので飛ばされ、GitHub のリリースと Pages が出る。
+0.1.0 は手元から出した（npm の信頼された公開は、パッケージが npm にないと設定できない）。設定は npmjs.com → mbt-map → Settings → Trusted publishing：GitHub Actions、owner `t-ujiie-g`、repository `mbt-map`、workflow `release.yml`、environment なし、権限は段階公開だけ（`npm stage publish`）。設定から 2 日以内に最初の公開がないと期限が切れるので、`npm` のジョブが認証で落ちたら作り直してタグのジョブを再実行する。

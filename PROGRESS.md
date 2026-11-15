@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：最初の公開（0.1.0）の準備中。npm の `mbt-map` と mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita` を同じ版で出す。残りは、ユーザーが行う公開（docs/dev/RELEASING.md「初めての公開」：npm、mooncakes、タグ `v0.1.0`）。
+- **いま**：0.1.0 を公開した（2026-11-15）。npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita`、タグ `v0.1.0`（GitHub のリリースとサイト）。次の版からはタグで npm に段階公開される（docs/dev/RELEASING.md）。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -12,8 +12,9 @@ Where things stand, decisions and open issues. The development history before th
   - GitHub Pages：手書きのトップ、docs の HTML、動く例。サンプル集とテーマの切り替え、例の画面の英語化。
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
-- **次**：公開のあと、単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
+- **次**：単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
 - **未解決**：
+  - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。
   - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
@@ -409,3 +410,13 @@ Where things stand, decisions and open issues. The development history before th
 - **作図**：`draw:setdata` は頂点 10〜1000 で中央値 16.6 ms（1 フレーム）、`draw:many` は 2000 図形で中央値 32.8 ms（2 フレーム）。
 - **CHANGELOG**：0.1.0 の節に、読み込み方（CDN、バンドラ）、対応ブラウザ、世界のコピー、タッチ操作を足した。
 - **残り**：ユーザーが行う公開（docs/dev/RELEASING.md「初めての公開」）。実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
+
+## 0.1.0 の公開（2026-11-15）
+
+`main` の #40（`631b6f9`）を 0.1.0 として出した。
+
+- **npm**：`mbt-map@0.1.0` を手元から公開（127 ファイル、展開して 2.5 MB）。信頼された公開（GitHub Actions、`release.yml`、段階公開だけ）を設定済み。
+- **mooncakes**：`t-ujiie-g/mbtmap@0.1.0`、`t-ujiie-g/mbtmap_rabbita@0.1.0` を手元から公開。
+- **タグ `v0.1.0`**：`release.yml` の `verify`・`npm`（もうあるので飛ばす）・`github-release` と `pages.yml` が成功。
+- **公開後の確かめ**：jsDelivr の `mbt-map@0.1.0` だけを指す HTML 1 枚を Chromium で開き、ラスタと GeoJSON の点が描かれ `queryRenderedFeatures` が答えること（別オリジンからのワーカーと wasm）。サイトのトップとサンプルが開き、コード欄の import map が jsDelivr の 0.1.0 を指すこと。
+- **気をつけること**：信頼された公開は設定から 2 日以内に最初の公開がないと期限が切れる。次の版のタグの前に npm の設定を見る。
