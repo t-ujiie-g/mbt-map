@@ -1,3 +1,9 @@
 [
-  { "id": "basic-map", "group": "Maps" }
+  { "id": "basic-map", "group": "Maps" },
+  { "id": "wmts-wms", "group": "Web services" },
+  { "id": "arcgis-features", "group": "Web services" },
+  { "id": "plateau", "group": "3D" },
+  { "id": "gltf-model", "group": "3D" },
+  { "id": "line-of-sight", "group": "3D" },
+  { "id": "web-component", "group": "Frameworks" }
 ]
