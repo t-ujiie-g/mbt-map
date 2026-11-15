@@ -1,0 +1,140 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/mbtmap"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "t-ujiie-g/mbtmap/expr",
+  "t-ujiie-g/mbtmap/style",
+}
+
+// Values
+pub fn json_to_js(@json.Json) -> JsValue
+
+pub fn lnglat(Double, Double) -> LngLat
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct Bounds {
+  west : Double
+  south : Double
+  east : Double
+  north : Double
+}
+pub fn Bounds::equal(Self, Self) -> Bool
+pub fn Bounds::not_equal(Self, Self) -> Bool
+pub fn Bounds::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Event {
+  kind : EventType
+  point : Point?
+  lnglat : LngLat?
+  features : Array[Feature]
+  error : String?
+  source : String?
+}
+
+pub(all) enum EventType {
+  MouseDown
+  MouseUp
+  MouseOver
+  MouseOut
+  MouseMove
+  Click
+  DblClick
+  ContextMenu
+  MouseEnter
+  MouseLeave
+  Load
+  StyleData
+  SourceData
+  Render
+  Idle
+  Error
+  MoveStart
+  Move
+  MoveEnd
+  ZoomStart
+  Zoom
+  ZoomEnd
+  RotateStart
+  Rotate
+  RotateEnd
+  PitchStart
+  Pitch
+  PitchEnd
+}
+pub fn EventType::name(Self) -> String
+
+pub(all) struct Feature {
+  id : @json.Json?
+  layer : String
+  source : String
+  source_layer : String?
+  properties : @json.Json
+  geometry : @json.Json
+}
+
+#external
+pub type JsValue
+pub fn JsValue::to_json(Self) -> @json.Json
+
+pub struct Listener {
+  // private fields
+}
+pub fn Listener::off(Self) -> Unit
+
+#derive(Eq, @debug.Debug)
+pub(all) struct LngLat {
+  lng : Double
+  lat : Double
+}
+pub fn LngLat::equal(Self, Self) -> Bool
+pub fn LngLat::not_equal(Self, Self) -> Bool
+pub fn LngLat::to_repr(Self) -> @debug.Repr
+
+#external
+pub type Map
+pub fn Map::add_layer(Self, @style.Layer, before? : String) -> Unit
+pub fn Map::add_source(Self, String, @style.Source) -> Unit
+pub fn Map::bearing(Self) -> Double
+pub fn Map::center(Self) -> LngLat
+pub fn Map::ease_to(Self, center? : LngLat, zoom? : Double, bearing? : Double, pitch? : Double, duration? : Double) -> Unit
+pub fn Map::fit_bounds(Self, Bounds, padding? : Double, max_zoom? : Double, duration? : Double) -> Unit
+pub fn Map::fly_to(Self, center? : LngLat, zoom? : Double, bearing? : Double, pitch? : Double, duration? : Double, speed? : Double, curve? : Double) -> Unit
+pub fn Map::jump_to(Self, center? : LngLat, zoom? : Double, bearing? : Double, pitch? : Double) -> Unit
+pub fn Map::layer_ids(Self) -> Array[String]
+pub fn Map::move_layer(Self, String, before? : String) -> Unit
+pub fn Map::new(String, style~ : @style.Style, center? : LngLat, zoom? : Double, bearing? : Double, pitch? : Double, min_zoom? : Double, max_zoom? : Double, min_pitch? : Double, max_pitch? : Double, interactive? : Bool, attribution? : Bool) -> Self
+pub fn Map::on(Self, EventType, (Event) -> Unit) -> Listener
+pub fn Map::on_layer(Self, EventType, Array[String], (Event) -> Unit) -> Listener
+pub fn Map::pitch(Self) -> Double
+pub fn Map::project(Self, LngLat) -> Point
+pub fn Map::query_rendered_features(Self, point? : Point, layers? : Array[String], (Array[Feature]) -> Unit) -> Unit
+pub fn Map::remove(Self) -> Unit
+pub fn Map::remove_layer(Self, String) -> Unit
+pub fn Map::remove_source(Self, String) -> Unit
+pub fn Map::set_data(Self, String, @json.Json) -> Unit
+pub fn Map::set_feature_state(Self, String, @json.Json, @json.Json, source_layer? : String) -> Unit
+pub fn Map::set_filter(Self, String, @expr.Expr?) -> Unit
+pub fn Map::set_layout(Self, String, String, @expr.Expr?) -> Unit
+pub fn Map::set_paint(Self, String, String, @expr.Expr?) -> Unit
+pub fn Map::set_style(Self, @style.Style) -> Unit
+pub fn Map::style(Self) -> @json.Json?
+pub fn Map::unproject(Self, Point) -> LngLat
+pub fn Map::zoom(Self) -> Double
+
+#derive(Eq, @debug.Debug)
+pub(all) struct Point {
+  x : Double
+  y : Double
+}
+pub fn Point::equal(Self, Self) -> Bool
+pub fn Point::not_equal(Self, Self) -> Bool
+pub fn Point::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

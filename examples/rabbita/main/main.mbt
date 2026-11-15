@@ -40,7 +40,7 @@ fn style() -> @style.Style {
       tiles=["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
       tile_size=256.0,
       maxzoom=18.0,
-      attribution="<a href=\"https://maps.gsi.go.jp/development/ichiran.html\">国土地理院</a>",
+      attribution="国土地理院",
     )
   } else {
     @style.raster_source(

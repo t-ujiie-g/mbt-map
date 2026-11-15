@@ -4,7 +4,7 @@
 
 import { MAX_ZOOM_LIMIT, MIN_ZOOM } from "./camera.ts";
 
-/** A MapLibre style document; anything mbtmap cannot draw faithfully is an error. */
+/** A MapLibre style document; anything mbt-map cannot draw faithfully is an error. */
 export interface StyleSpecification {
   version: 8;
   sources: Record<string, unknown>;

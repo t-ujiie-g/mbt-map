@@ -1,0 +1,99 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/mbtmap/expr"
+
+import {
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn add(Expr, Expr) -> Expr
+
+pub fn all(Array[Expr]) -> Expr
+
+pub fn any(Array[Expr]) -> Expr
+
+pub fn bool(Bool) -> Expr
+
+pub fn case_(Array[(Expr, Expr)], default~ : Expr) -> Expr
+
+pub fn coalesce(Array[Expr]) -> Expr
+
+pub fn color(String) -> Expr
+
+pub fn concat(Array[Expr]) -> Expr
+
+pub fn div(Expr, Expr) -> Expr
+
+pub fn eq(Expr, Expr) -> Expr
+
+pub fn feature_state(String) -> Expr
+
+pub fn ge(Expr, Expr) -> Expr
+
+pub fn geometry_type() -> Expr
+
+pub fn get(String) -> Expr
+
+pub fn global_state(String) -> Expr
+
+pub fn gt(Expr, Expr) -> Expr
+
+pub fn has(String) -> Expr
+
+pub fn id() -> Expr
+
+pub fn image(String) -> Expr
+
+pub fn in_(Expr, Array[@json.Json]) -> Expr
+
+pub fn interpolate(Expr, Array[(Double, Expr)], curve? : Curve) -> Expr
+
+pub fn le(Expr, Expr) -> Expr
+
+pub fn literal(@json.Json) -> Expr
+
+pub fn lt(Expr, Expr) -> Expr
+
+pub fn match_(Expr, Array[(@json.Json, Expr)], default~ : Expr) -> Expr
+
+pub fn mul(Expr, Expr) -> Expr
+
+pub fn ne(Expr, Expr) -> Expr
+
+pub fn not_(Expr) -> Expr
+
+pub fn num(Double) -> Expr
+
+pub fn nums(Array[Double]) -> Expr
+
+pub fn raw(@json.Json) -> Expr
+
+pub fn step(Expr, Expr, Array[(Double, Expr)]) -> Expr
+
+pub fn str(String) -> Expr
+
+pub fn sub(Expr, Expr) -> Expr
+
+pub fn to_number(Expr) -> Expr
+
+pub fn to_string(Expr) -> Expr
+
+pub fn zoom() -> Expr
+
+// Errors
+
+// Types and methods
+pub(all) enum Curve {
+  Linear
+  Exponential(Double)
+  CubicBezier(Double, Double, Double, Double)
+}
+
+pub struct Expr {
+  // private fields
+}
+pub fn Expr::to_json(Self) -> @json.Json
+
+// Type aliases
+
+// Traits

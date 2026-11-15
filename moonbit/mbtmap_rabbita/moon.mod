@@ -20,3 +20,5 @@ import {
 }
 
 supported_targets = "js"
+
+preferred_target = "js"

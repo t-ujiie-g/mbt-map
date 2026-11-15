@@ -16,7 +16,7 @@ export interface TileSource {
 }
 
 /**
- * mbtmap's own source of a raster in another CRS (`crs`, an EPSG code), drawn on Web Mercator tiles by mbt-map/data's worker:
+ * mbt-map's own source of a raster in another CRS (`crs`, an EPSG code), drawn on Web Mercator tiles by mbt-map/data's worker:
  * a WMTS set (`grid`) or one GetMap per tile (`image`, its box northing first when `northFirst`); docs/services.md has the fields.
  */
 export interface ReprojectedSource {

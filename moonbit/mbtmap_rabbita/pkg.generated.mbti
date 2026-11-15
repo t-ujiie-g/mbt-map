@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/mbtmap_rabbita"
+
+import {
+  "moonbit-community/rabbita/cmd",
+  "moonbit-community/rabbita/html",
+  "moonbit-community/rabbita/sub",
+  "moonbitlang/core/debug",
+  "t-ujiie-g/mbtmap",
+  "t-ujiie-g/mbtmap/style",
+}
+
+// Values
+pub fn events(String, on_load? : @cmd.Cmd, on_idle? : @cmd.Cmd, on_move? : @cmd.Emit[Camera], on_moveend? : @cmd.Emit[Camera], on_click? : @cmd.Emit[Click], on_error? : @cmd.Emit[String]) -> @sub.Sub
+
+pub fn query_features(String, @mbtmap.Point, layers? : Array[String], @cmd.Emit[Array[@mbtmap.Feature]]) -> @cmd.Cmd
+
+pub fn setup(String, @style.Style, center? : @mbtmap.LngLat, zoom? : Double, bearing? : Double, pitch? : Double) -> @cmd.Cmd
+
+pub fn view(String, css? : String, class? : String) -> @html.Html
+
+pub fn with_map(String, (@mbtmap.Map) -> @cmd.Cmd) -> @cmd.Cmd
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct Camera {
+  center : @mbtmap.LngLat
+  zoom : Double
+  bearing : Double
+  pitch : Double
+}
+pub fn Camera::equal(Self, Self) -> Bool
+pub fn Camera::not_equal(Self, Self) -> Bool
+pub fn Camera::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct Click {
+  point : @mbtmap.Point
+  lnglat : @mbtmap.LngLat
+  camera : Camera
+}
+pub fn Click::equal(Self, Self) -> Bool
+pub fn Click::not_equal(Self, Self) -> Bool
+pub fn Click::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

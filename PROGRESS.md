@@ -33,7 +33,7 @@ Where things stand, decisions and open issues. The development history before th
 - npm に `mbt-map/moonbit`（`createMap`、0.1KB。MoonBit の `#module` の import は関数として呼ぶので、コンストラクタを関数で渡す）。
 - `t-ujiie-g/mbtmap`（`moonbit/mbtmap/`、js 専用）：`Map::new(container, style=Url(..) | Spec(json), center?, zoom?, bearing?, pitch?, 範囲, interactive?, attribution?)`、カメラ（`center`・`zoom`・`bearing`・`pitch`、`jump_to`・`ease_to`・`fly_to`・`fit_bounds`、`project`・`unproject`）、スタイル（`set_style`・`style`、ソースと層の追加・削除・移動、`layer_ids`、`set_paint`・`set_layout`・`set_filter`、`set_data`、`set_feature_state`）、イベント（`EventType` の enum、型付きの `Event` と `Feature`、`on`・`on_layer` が返す `Listener::off`）、`query_rendered_features`（Promise をコールバックに）。JS のメソッドは汎用の `js_call` 1 つを通す。パッケージの中では使う人向けの `Map` が標準の `Map` を隠すので、標準のは `@builtin.Map` と書く。
 - 確かめ：`bench/moonbit/app`（モジュール `t-ujiie-g/mbtmap_check`）が MoonBit だけで地図を作り、読み込みでソースと層を足し、落ち着いたら中心の地物を問い合わせ、`paint` とカメラを変え、イベントの受け取りを外す。pack test の `moonbit` が結果を確かめる（20 項目）。`Idle` は `Load` の直後にも来る（MapLibre と同じ）ので、足した層を問い合わせるのはその次の `Idle`（`EventType` の説明に書いた）。
-- `moon info` は js 専用のパッケージに `.mbti` を書かない（mooncakes に出すときに扱う）。
+- `moon info` は js 専用のパッケージに `.mbti` を書かない（文書の後の点検で、MoonBit の API のモジュールには `preferred_target = "js"` を置いて書くようにした）。
 
 ## M3：型付きのスタイルと式（2026-11-15、Mac）
 
@@ -64,3 +64,15 @@ Where things stand, decisions and open issues. The development history before th
 - `docs/` に英語のガイド 11 本：`map`（`Map` の作成、カメラ、イベント、実行中のスタイルの変更、GeoJSON とクラスタ、画像、問い合わせ、地物の状態、地形・空・投影、光と影、3D の選択・見通し・可視域・断面、`track`、`toBlob`、カスタムレイヤー、要求の変更、Worker と wasm の場所）、`style-support`（描くスタイル仕様の範囲と拡張）、`web-component`（HTML と React）、`moonbit`（型付きの API と rabbita）、`ui`、`search`、`draw`（`geodesic` も）、`services`、`data`、`analysis`、`3d`。3 つのエージェントが worktree で並行して書き、名前と引数はソースと照らした。`moonbit.md` のコード例はコンパイルして確かめた。相対リンクと見出しのアンカーは切れていない（その場のスクリプトで確かめた）。
 - 書きながら分かった `npm/README.md`（旧）とソースの食い違いは、ソースに合わせた：属性の欄の編集は変わった地物だけ `updateData`、`createMeasurement` の `measure` は省略でき `measure3d` もある、`createGeolocation` の `outOfMaxBounds`、検索の `reverse(lngLat, request)`、MapServer のタイルのキャッシュは `singleFusedMapCache` も要る、空の `atmosphere-blend` は地球儀の大気で読む、`mbt-map/data` の `geotiffUrl`、FlatGeobuf は `bbox` がなくても `data-fgb.js` を読む、など。点のラベルの `text-pitch-alignment` と `text-rotation-alignment` は警告なしに読まない（`style-support` の違いに書いた）。
 - コードのコメントが `npm/README.md` を指していたところを、該当するガイドに付け替えた。`timeOfDayLights` の返す `Light` の型をメインの入口から出した。
+
+## 文書の後の点検：リファクタリングとセキュリティ（2026-11-15、Mac）
+
+このリポジトリで足したもの（MoonBit の API、rabbita の部品と例、要素の追加、生成と準備のスクリプト、CI の準備、文書）を AGENTS §7・§8 で点検し、見つけたもの（R1〜R6）を 1 PR で直した（ユーザー判断）。
+
+- R1：`Map::query_rendered_features` は問い合わせの Promise の失敗（ない層など）を受けていなかった。失敗はコンソールに出して `done([])` を呼ぶ。
+- R2：`mbtmap_rabbita` のイベント名と受け手を 1 つの表（`handlers`）にした（`handle` と購読の両方がそれを読む。購読のキーは受け手のある種類を並べたもの）。
+- R3：確かめのアプリ（`bench/moonbit/app`）が `Map` の全メソッドを呼ぶようにした（層の layout・filter・並べ替え・削除、ソースの追加・削除、`set_data`、地物の状態、`pitch`・`ease_to`・`fit_bounds`・`unproject`、`on_layer` のクリック、`set_style`、`remove`、ない層の問い合わせ）。pack test の `moonbit` が結果を見る。
+- R4：出典は文字で表示する（HTML は解釈しない）ので、Getting started と rabbita の例の出典を文字にし、`docs/map.md` に書いた。
+- R5：改名の名残の「mbtmap's」などを、型定義に出る説明コメントと大きさの表で「mbt-map」にした（`mbtmap:overlay` などのキーはそのまま）。
+- R6：MoonBit の API の 2 つのモジュールに `preferred_target = "js"` を置き、`moon info` が `pkg.generated.mbti` を書くようにした。公開 API の差分は CI の `moon info` の差分の確かめが見る。
+- セキュリティ：`npm audit`（npm、bench、examples/react）0 件、Dependabot と秘密情報の警告 0 件。リポジトリの設定（`main` のルールセット、秘密情報の検出と押し込みの防止、Dependabot のセキュリティ更新）は改名の後も有効。新しいコードに `innerHTML`・`eval` はなく、外部コマンドはシェルを通さない。

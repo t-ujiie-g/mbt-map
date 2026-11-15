@@ -196,12 +196,14 @@ pub fn Listener::off(self : Listener) -> Unit {
 }
 
 ///|
+/// `f` with what `p` resolves to, or with an empty array (the error logged) when it rejects.
 extern "js" fn js_then(p : JsValue, f : (JsValue) -> Unit) -> Unit =
-  #|(p, f) => { p.then(f); }
+  #|(p, f) => { p.then(f, (e) => { console.error(e); f([]); }); }
 
 ///|
 /// The features drawn at `point` (or in the whole view without it), topmost first, of `layers` if
-/// given, handed to `done` once the workers answered (MapLibre's `queryRenderedFeatures`).
+/// given, handed to `done` once the workers answered (MapLibre's `queryRenderedFeatures`); none when the
+/// query fails (an unknown layer), the error logged.
 pub fn Map::query_rendered_features(
   self : Map,
   point? : Point,

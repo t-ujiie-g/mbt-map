@@ -14,18 +14,18 @@ const DIST = path.join(PKG, "dist");
 // `files` are what a user of the entry loads on top of the entries it builds
 // on; `references` the dist files its JS may import or load by URL.
 const ENTRIES = [
-  { name: "mbtmap", files: ["index.js"], budget: 163_000, references: ["./geojson.js", "./pmtiles.js", "./legacy.js", "./sprite.js", "./media.js", "./custom.js", "./export.js", "./tilejson-merge.js", "./geotiff-source.js", "./worker.js", "./mbt-map.wasm"] },
-  { name: "GeoJSON sources (loaded by mbtmap when a style has one)", files: ["geojson.js"], budget: 5_000, references: ["./geojson-worker.js", "./geojson.wasm", "./geojson-properties.wasm"] },
-  { name: "PMTiles headers (loaded by mbtmap when a style has a pmtiles:// source)", files: ["pmtiles.js"], budget: 2_000, references: [] },
-  { name: "GeoTIFF sources (loaded by mbtmap with the first one; tiles by mbt-map/data)", files: ["geotiff-source.js"], budget: 1_000, references: ["./data.js"] },
-  { name: "legacy filters and functions (loaded by mbtmap when a style has them)", files: ["legacy.js"], budget: 5_000, references: [] },
-  { name: "sprite sheets (loaded by mbtmap when a style has a sprite)", files: ["sprite.js"], budget: 2_000, references: [] },
-  { name: "image, video and canvas sources (loaded by mbtmap when a style has one)", files: ["media.js"], budget: 3_000, references: [] },
-  { name: "custom layers (loaded by mbtmap with the first one)", files: ["custom.js"], budget: 3_000, references: [] },
-  { name: "image export (loaded by mbtmap with the first toBlob)", files: ["export.js"], budget: 1_000, references: [] },
-  { name: "TileJSON merging (loaded by mbtmap with the first source given by url)", files: ["tilejson-merge.js"], budget: 1_000, references: [] },
-  { name: "mbt-map/element (on top of mbtmap)", files: ["element.js"], budget: 5_000, references: ["./index.js"] },
-  { name: "mbt-map/moonbit (the MoonBit API's entry, on top of mbtmap)", files: ["moonbit.js"], budget: 500, references: ["./index.js"] },
+  { name: "mbt-map", files: ["index.js"], budget: 163_000, references: ["./geojson.js", "./pmtiles.js", "./legacy.js", "./sprite.js", "./media.js", "./custom.js", "./export.js", "./tilejson-merge.js", "./geotiff-source.js", "./worker.js", "./mbt-map.wasm"] },
+  { name: "GeoJSON sources (loaded by mbt-map when a style has one)", files: ["geojson.js"], budget: 5_000, references: ["./geojson-worker.js", "./geojson.wasm", "./geojson-properties.wasm"] },
+  { name: "PMTiles headers (loaded by mbt-map when a style has a pmtiles:// source)", files: ["pmtiles.js"], budget: 2_000, references: [] },
+  { name: "GeoTIFF sources (loaded by mbt-map with the first one; tiles by mbt-map/data)", files: ["geotiff-source.js"], budget: 1_000, references: ["./data.js"] },
+  { name: "legacy filters and functions (loaded by mbt-map when a style has them)", files: ["legacy.js"], budget: 5_000, references: [] },
+  { name: "sprite sheets (loaded by mbt-map when a style has a sprite)", files: ["sprite.js"], budget: 2_000, references: [] },
+  { name: "image, video and canvas sources (loaded by mbt-map when a style has one)", files: ["media.js"], budget: 3_000, references: [] },
+  { name: "custom layers (loaded by mbt-map with the first one)", files: ["custom.js"], budget: 3_000, references: [] },
+  { name: "image export (loaded by mbt-map with the first toBlob)", files: ["export.js"], budget: 1_000, references: [] },
+  { name: "TileJSON merging (loaded by mbt-map with the first source given by url)", files: ["tilejson-merge.js"], budget: 1_000, references: [] },
+  { name: "mbt-map/element (on top of mbt-map)", files: ["element.js"], budget: 5_000, references: ["./index.js"] },
+  { name: "mbt-map/moonbit (the MoonBit API's entry, on top of mbt-map)", files: ["moonbit.js"], budget: 500, references: ["./index.js"] },
   { name: "mbt-map/ui (every controller)", files: ["ui.js"], budget: 10_000, references: [] },
   { name: "mbt-map/search", files: ["search.js"], budget: 5_000, references: [] },
   { name: "mbt-map/services", files: ["services.js"], budget: 12_000, references: ["./services-gml.js", "./services-worker.js", "./services.wasm"] },
@@ -113,7 +113,7 @@ console.log(lines.join("\n"));
 const version = JSON.parse(await readFile(path.join(PKG, "package.json"), "utf8")).version;
 await writeFile(
   path.join(PKG, "../bench/results/npm-size.json"),
-  JSON.stringify({ env: { package: `mbtmap@${version}`, compression: "gzip -9" }, rows }, null, 2) + "\n",
+  JSON.stringify({ env: { package: `mbt-map@${version}`, compression: "gzip -9" }, rows }, null, 2) + "\n",
 );
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `## Bundle sizes\n\n${lines.join("\n")}\n`);
 if (failures.length > 0) {

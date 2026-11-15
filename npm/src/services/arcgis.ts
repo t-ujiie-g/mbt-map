@@ -1,6 +1,6 @@
 import { type Bounds, clampBounds, CLICK_PIXELS, clickWindow, type ImageRequest, isWebMercator, lngLatToMercator, MERCATOR_HALF, mercatorToLngLat, mercatorZoom, resolved, serviceBase, type TileSource, validBounds, withQuery, zoomResolution } from "./common.ts";
 
-/** The parts of an ArcGIS REST service's `?f=json` that mbtmap reads; the rest is kept as given. */
+/** The parts of an ArcGIS REST service's `?f=json` that mbt-map reads; the rest is kept as given. */
 export interface ArcGISService {
   serviceDescription?: string;
   description?: string;

@@ -39,7 +39,7 @@ export interface TextureRef {
   matrix?: Float64Array;
 }
 
-/** What mbtmap draws of a material: base color factor and texture, alpha mode and cutoff, `unlit` (KHR_materials_unlit). */
+/** What mbt-map draws of a material: base color factor and texture, alpha mode and cutoff, `unlit` (KHR_materials_unlit). */
 export interface Material {
   color: [number, number, number, number];
   texture?: TextureRef;

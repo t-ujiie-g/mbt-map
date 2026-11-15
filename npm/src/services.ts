@@ -282,7 +282,7 @@ export async function arcgisIdentify(
   return { type: "FeatureCollection", features: features.map((f, i) => ({ ...(f as object), layer: { id: results[i].layerId, name: results[i].layerName } })) };
 }
 
-/** What `followView` needs of a map: mbtmap's `Map` or MapLibre's. */
+/** What `followView` needs of a map: mbt-map's `Map` or MapLibre's. */
 export interface ViewMap {
   getBounds(): { getWest(): number; getSouth(): number; getEast(): number; getNorth(): number } | { west: number; south: number; east: number; north: number };
   getZoom(): number;

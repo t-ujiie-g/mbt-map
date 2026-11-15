@@ -9,7 +9,7 @@ import { Tile, type FrameState } from "../tiles/tileset.ts";
 /** The most nodes a layer may name. */
 export const MAX_NODES = 1_000_000;
 
-/** A node of a node page (I3S 1.7 `node`), as far as mbtmap reads it. */
+/** A node of a node page (I3S 1.7 `node`), as far as mbt-map reads it. */
 export interface I3sNode {
   index?: number;
   lodThreshold?: number;
