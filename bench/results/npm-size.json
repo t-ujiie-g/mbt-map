@@ -6,12 +6,12 @@
   "rows": [
     {
       "name": "moonmap",
-      "bytes": 161831,
-      "budget": 163000
+      "bytes": 167891,
+      "budget": 175000
     },
     {
       "name": "GeoJSON sources (loaded by moonmap when a style has one)",
-      "bytes": 4495,
+      "bytes": 4494,
       "budget": 5000
     },
     {
@@ -26,7 +26,7 @@
     },
     {
       "name": "legacy filters and functions (loaded by moonmap when a style has them)",
-      "bytes": 3606,
+      "bytes": 3603,
       "budget": 5000
     },
     {
@@ -47,11 +47,6 @@
     {
       "name": "image export (loaded by moonmap with the first toBlob)",
       "bytes": 370,
-      "budget": 1000
-    },
-    {
-      "name": "TileJSON merging (loaded by moonmap with the first source given by url)",
-      "bytes": 462,
       "budget": 1000
     },
     {

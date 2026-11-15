@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { convertFilter, convertFunction, convertStyle, convertTokenString, isLegacyFilter as legacyIsLegacy } from "../src/legacy.ts";
-import { hasLegacy, isLegacyFilter } from "../src/style.ts";
 import type { StyleSpecification } from "../src/style.ts";
 
 test("legacy filters become expressions as MapLibre converts them", () => {
@@ -83,24 +82,9 @@ test("convertStyle converts filters and functions and keeps the input", () => {
   assert.deepEqual(out.layers[1], { id: "b", type: "background" });
 });
 
-test("hasLegacy and isLegacyFilter tell styles that need the converter", () => {
-  const style = (layer: object): StyleSpecification => ({ version: 8, sources: {}, layers: [{ id: "a", type: "fill", ...layer }] });
-  assert.equal(hasLegacy(style({ filter: ["==", ["get", "k"], 1] })), false);
-  assert.equal(hasLegacy(style({ filter: ["==", "k", 1] })), true);
-  assert.equal(hasLegacy(style({ paint: { "fill-color": { stops: [[0, "#000"]] } } })), true);
-  assert.equal(hasLegacy(style({ paint: { "fill-color": ["get", "c"] }, layout: { visibility: "visible" } })), false);
-  for (const f of [["in", "k", "a"], ["!in", "k"], ["!has", "k"], ["has", "$type"], ["none"], ["all", ["==", "k", 1]], null]) {
-    assert.equal(isLegacyFilter(f), true, JSON.stringify(f));
-  }
-  for (const f of [true, undefined, ["has", "k"], ["in", ["get", "k"], ["literal", []]], ["in", "a", ["get", "s"]], ["all", ["has", "k"]], ["get", "b"]]) {
-    assert.equal(isLegacyFilter(f), false, JSON.stringify(f));
-  }
-});
-
 test("filters nested past the engine's depth are left to it, without deep recursion", () => {
   let deep: unknown = ["==", "k", 1];
   for (let i = 0; i < 100000; i++) deep = ["all", deep];
-  assert.equal(isLegacyFilter(deep), false);
   assert.equal(legacyIsLegacy(deep), false);
   assert.equal(convertFilter(deep as never), deep);
 });

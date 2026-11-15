@@ -47,7 +47,7 @@ const separate = (files) => ({
 const same = (names) => Object.fromEntries(names.map((name) => [`./${name}.js`, `./${name}.js`]));
 
 // Each loaded only by maps that need it.
-const MAP_PARTS = same(["geojson", "pmtiles", "legacy", "sprite", "media", "custom", "export", "tilejson-merge", "geotiff-source"]);
+const MAP_PARTS = same(["geojson", "pmtiles", "legacy", "sprite", "media", "custom", "export", "geotiff-source"]);
 // Imported by the display worker on first use.
 const WORKER_PARTS = { "./symbols.mjs": "./worker-labels.js", "./pmtiles.mjs": "./worker-pmtiles.js", "./query.mjs": "./worker-query.js" };
 // Imported by the data worker on first use.
