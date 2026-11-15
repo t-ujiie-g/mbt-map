@@ -16,7 +16,7 @@ import { useController } from "./use-controller.js";
 
 function Picked({ identify }) {
   const s = useController(identify);
-  const rows = selectedRows(s) ?? [["—", s.point ? "何もありません" : "地図をクリック"]];
+  const rows = selectedRows(s) ?? [["—", s.point ? "Nothing here" : "Click the map"]];
   useEffect(() => {
     if (s.point && !s.loading) window.__picked = rows;
   });
@@ -27,7 +27,7 @@ function Picked({ identify }) {
           {s.features.map((f, i) => (
             <button key={i} aria-pressed={i === s.index} onClick={() => identify.select(i)}>
               {f.layer.id}
-              {f.properties.name ?? f.properties.knj ? `：${f.properties.name ?? f.properties.knj}` : ""}
+              {f.properties.name ?? f.properties.knj ? `: ${f.properties.name ?? f.properties.knj}` : ""}
             </button>
           ))}
         </div>

@@ -100,12 +100,12 @@ export function createAnalysis(map, beforePick = () => {}) {
       setData("analysis-cells", fc);
       const fields = createFieldEditor(map, { source: "analysis-cells" });
       const byName = new Map(fc.features.map((f, i) => [f.properties.name, areas[i]]));
-      await fields.calculate("面積", (row) => byName.get(row.properties.name) ?? null);
-      await fields.calculate("面積_km2", ["/", ["round", ["/", ["get", "面積"], 10000]], 100]);
+      await fields.calculate("area", (row) => byName.get(row.properties.name) ?? null);
+      await fields.calculate("area_km2", ["/", ["round", ["/", ["get", "area"], 10000]], 100]);
       data["analysis-cells"] = await map.getSource("analysis-cells").getData();
-      const values = data["analysis-cells"].features.map((f) => f.properties["面積_km2"]);
+      const values = data["analysis-cells"].features.map((f) => f.properties["area_km2"]);
       const breaks = classBreaks(values, CLASS_COLORS.length, "jenks") ?? classBreaks(values, CLASS_COLORS.length, "quantile");
-      cellPaint = classStep(["get", "面積_km2"], breaks, CLASS_COLORS);
+      cellPaint = classStep(["get", "area_km2"], breaks, CLASS_COLORS);
       removeLayers("analysis-cells-line", "analysis-cells");
       keep();
       a.set({ cells: { breaks, count: values.length } });
@@ -162,12 +162,12 @@ export function createAnalysis(map, beforePick = () => {}) {
       const features = await map.querySourceFeatures("gsi", { sourceLayer: "road" });
       const lines = tileLines(features).map((c) => line(c));
       const [start, end] = [nearestVertex(lines, from), nearestVertex(lines, to)];
-      if (!start || !end) return a.set({ route: { error: "道路が見つかりません" } });
+      if (!start || !end) return a.set({ route: { error: "No road found" } });
       roads = await load({ type: "FeatureCollection", features: lines });
       network = await roads.network({ tolerance: 1e-5, snap: 2 });
       const found = await network.route(start, end);
       setData("analysis-route", { type: "FeatureCollection", features: [...(found ? [line(found.path)] : []), point(start), point(end)] });
-      a.set({ route: found ? { length: found.weight * 1000, steps: found.path.length - 1 } : { error: "つながる道がありません" } });
+      a.set({ route: found ? { length: found.weight * 1000, steps: found.path.length - 1 } : { error: "No connecting road" } });
     } catch (err) {
       failed(err, { route: null });
     } finally {
@@ -215,9 +215,9 @@ export function createAnalysis(map, beforePick = () => {}) {
   };
   /** Whether `to` can be seen from the viewshed's observer. */
   const sightTo = async (to) => {
-    if (!grid) return a.set({ target: { error: "先に「可視域」を押す" } });
+    if (!grid) return a.set({ target: { error: "Compute the viewshed first" } });
     const [w, s, e, n] = grid.bounds;
-    if (to[0] < w || to[0] > e || to[1] < s || to[1] > n) return a.set({ target: { error: "範囲の外です" } });
+    if (to[0] < w || to[0] > e || to[1] < s || to[1] > n) return a.set({ target: { error: "Outside the viewshed" } });
     try {
       const r = await grid.lineOfSight(observer, to);
       const marks = [point(observer, { blocked: false }), point(to, { blocked: !r.visible }), ...(r.blockedAt ? [point(r.blockedAt, { blocked: true })] : [])];
@@ -252,24 +252,24 @@ const meters = (v) => (v >= 1000 ? `${(v / 1000).toFixed(2)} km` : `${Math.round
 export function cellsLegendLabel(layer, category) {
   if (layer.id !== "analysis-cells" || !category.range) return undefined;
   const [from, to] = category.range;
-  return from === null ? `${km2(to)} 未満` : to === null ? `${km2(from)} 以上` : `${km2(from)} 〜 ${km2(to)}`;
+  return from === null ? `under ${km2(to)}` : to === null ? `${km2(from)} or more` : `${km2(from)} – ${km2(to)}`;
 }
 
 /** Each tool's buttons as [label, action, pressed (or undefined), enabled]; `center()` is the map's center. */
 export function analysisActions(a, s, center) {
   return {
     cells: [
-      ["面積で塗り分け", () => a.classify(), undefined, s.cells !== "loading"],
-      ["消す", () => a.clearCells(), undefined, Boolean(s.cells)],
+      ["Color by area", () => a.classify(), undefined, s.cells !== "loading"],
+      ["Clear", () => a.clearCells(), undefined, Boolean(s.cells)],
     ],
     route: [
-      ["2 点をクリック", () => a.pick(s.picking === "route" ? null : "route"), s.picking === "route", s.route !== "loading"],
-      ["消す", () => a.clearRoute(), undefined, Boolean(s.route) || s.points.length > 0],
+      ["Click 2 points", () => a.pick(s.picking === "route" ? null : "route"), s.picking === "route", s.route !== "loading"],
+      ["Clear", () => a.clearRoute(), undefined, Boolean(s.route) || s.points.length > 0],
     ],
     sight: [
-      ["中心からの可視域", () => a.viewshed(center()), undefined, s.sight !== "loading"],
-      ["見通しをクリック", () => a.pick(s.picking === "sight" ? null : "sight"), s.picking === "sight", Boolean(s.sight) && s.sight !== "loading"],
-      ["消す", () => a.clearSight(), undefined, Boolean(s.sight)],
+      ["Viewshed from center", () => a.viewshed(center()), undefined, s.sight !== "loading"],
+      ["Click for line of sight", () => a.pick(s.picking === "sight" ? null : "sight"), s.picking === "sight", Boolean(s.sight) && s.sight !== "loading"],
+      ["Clear", () => a.clearSight(), undefined, Boolean(s.sight)],
     ],
   };
 }
@@ -277,20 +277,20 @@ export function analysisActions(a, s, center) {
 /** Each tool's readout as [term, description] rows. */
 export function analysisRows(s) {
   const cells =
-    s.cells === "loading" ? [["", "計算中…"]] : s.cells ? [["地点", `${s.cells.count}`], ["区切り", s.cells.breaks.map((b) => b.toFixed(2)).join(" / ")]] : [["—", "地点のボロノイ領域を面積の 5 階級（自然分類）で塗る"]];
+    s.cells === "loading" ? [["", "Computing…"]] : s.cells ? [["Places", `${s.cells.count}`], ["Breaks", s.cells.breaks.map((b) => b.toFixed(2)).join(" / ")]] : [["—", "Colors the places' Voronoi cells by area in 5 classes (natural breaks)"]];
   const route =
-    s.route === "loading" ? [["", "計算中…"]]
+    s.route === "loading" ? [["", "Computing…"]]
     : s.route?.error ? [["—", s.route.error]]
-    : s.route ? [["距離", meters(s.route.length)], ["区間", `${s.route.steps}`]]
-    : s.picking === "route" ? [["", `${s.points.length === 0 ? "出発地" : "目的地"}をクリック`]]
-    : [["—", "表示している道路で最短経路を探す"]];
+    : s.route ? [["Distance", meters(s.route.length)], ["Segments", `${s.route.steps}`]]
+    : s.picking === "route" ? [["", `Click the ${s.points.length === 0 ? "start" : "destination"}`]]
+    : [["—", "Finds the shortest path on the roads shown"]];
   const sight = [];
-  if (s.sight === "loading") sight.push(["", "計算中…"]);
-  else if (s.sight) sight.push(["見える範囲", `${Math.round(s.sight.visible * 100)}%（半径 ${meters(SIGHT_METERS)}）`]);
-  else sight.push(["—", "地図の中心（地上 2 m）から見える範囲"]);
-  if (s.target?.error) sight.push(["見通し", s.target.error]);
-  else if (s.target) sight.push(["見通し", s.target.visible ? "見える" : "見えない（赤い点で遮られる）"]);
-  else if (s.picking === "sight") sight.push(["", "見たい地点をクリック"]);
+  if (s.sight === "loading") sight.push(["", "Computing…"]);
+  else if (s.sight) sight.push(["Visible", `${Math.round(s.sight.visible * 100)}% (within ${meters(SIGHT_METERS)})`]);
+  else sight.push(["—", "What can be seen from the map's center (2 m above ground)"]);
+  if (s.target?.error) sight.push(["Line of sight", s.target.error]);
+  else if (s.target) sight.push(["Line of sight", s.target.visible ? "Visible" : "Hidden (blocked at the red dot)"]);
+  else if (s.picking === "sight") sight.push(["", "Click a point to look at"]);
   return { cells, route, sight, error: s.error };
 }
 

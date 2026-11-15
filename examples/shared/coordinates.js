@@ -8,7 +8,7 @@ import { nearestZone } from "./analysis.js";
 /** A system of the page's own: the zone's name, then X (northing) and Y (easting). */
 const plane = {
   id: "plane",
-  title: "平面直角",
+  title: "Plane",
   async format(p) {
     const z = nearestZone(p.lng, p.lat);
     const [x, y] = await transform([p.lng, p.lat], 4326, z.epsg);
@@ -18,7 +18,7 @@ const plane = {
 
 export function createCoordinateReadout(map) {
   const c = createCoordinates(map, {
-    systems: [{ ...degrees(), title: "緯度経度" }, { ...degreesMinutesSeconds(), title: "度分秒" }, plane, { ...utm(transform), title: "UTM" }],
+    systems: [{ ...degrees(), title: "Lat, lng" }, { ...degreesMinutesSeconds(), title: "DMS" }, plane, { ...utm(transform), title: "UTM" }],
   });
   window.__coordinates = c;
   return c;

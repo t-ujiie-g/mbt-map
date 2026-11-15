@@ -11,7 +11,7 @@ export function describeFeature(features) {
   const p = f.properties;
   const name = p.name ?? p.knj;
   const rest = Object.entries(p).filter(([k]) => k !== "name" && k !== "knj").slice(0, name === undefined ? 4 : 2);
-  return [["レイヤー", f.layer.id], ...(name === undefined ? [] : [["名前", String(name)]]), ...rest.map(([k, v]) => [k, String(v)])];
+  return [["Layer", f.layer.id], ...(name === undefined ? [] : [["Name", String(name)]]), ...rest.map(([k, v]) => [k, String(v)])];
 }
 
 /**
@@ -67,7 +67,7 @@ export function mountIdentify(map) {
     nav.hidden = s.features.length < 2;
     count.textContent = `${s.index + 1} / ${s.features.length}`;
     if (s.loading) return;
-    const rows = selectedRows(s) ?? [["—", "何もありません"]];
+    const rows = selectedRows(s) ?? [["—", "Nothing here"]];
     showRows(dl, rows);
     window.__picked = rows;
   });

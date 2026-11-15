@@ -22,16 +22,16 @@ const PLACES = [
 
 /** The attributes shown first, as [key, label, unit]. */
 const SHOWN = [
-  ["gml:name", "名称"],
-  ["bldg:usage", "用途"],
-  ["bldg:class", "種類"],
-  ["bldg:measuredHeight", "計測高さ", " m"],
-  ["bldg:storeysAboveGround", "地上階数"],
-  ["bldg:storeysBelowGround", "地下階数"],
-  ["uro:BuildingDetailAttribute_uro:fireproofStructureType", "耐火構造"],
-  ["uro:BuildingDetailAttribute_uro:districtsAndZonesType", "用途地域"],
+  ["gml:name", "Name"],
+  ["bldg:usage", "Usage"],
+  ["bldg:class", "Class"],
+  ["bldg:measuredHeight", "Measured height", " m"],
+  ["bldg:storeysAboveGround", "Storeys above ground"],
+  ["bldg:storeysBelowGround", "Storeys below ground"],
+  ["uro:BuildingDetailAttribute_uro:fireproofStructureType", "Fireproof structure"],
+  ["uro:BuildingDetailAttribute_uro:districtsAndZonesType", "Zoning district"],
   ["uro:lodType", "LOD"],
-  ["uro:BuildingIDAttribute_uro:buildingID", "建物 ID"],
+  ["uro:BuildingIDAttribute_uro:buildingID", "Building ID"],
 ];
 
 const style = {
@@ -50,12 +50,12 @@ window.__layer = layer;
 
 const status = document.getElementById("status");
 const feature = document.getElementById("feature");
-layer.ready.catch((e) => (status.textContent = `PLATEAU のタイルセットを読めませんでした：${e.message}`));
+layer.ready.catch((e) => (status.textContent = `Could not read PLATEAU's tileset: ${e.message}`));
 map.on("error", (e) => console.error(e.error));
 
 function showStatus() {
-  if (!map.getLayer("plateau")) status.textContent = "地図の押し出しの建物（高さは国土地理院の建物の種類から仮に決めたもの）";
-  else if (layer.selected.length) status.textContent = `描いているタイル ${layer.selected.length}${layer.idle ? "" : "（読み込み中）"}`;
+  if (!map.getLayer("plateau")) status.textContent = "The map's extruded buildings (heights guessed from GSI's building types)";
+  else if (layer.selected.length) status.textContent = `Tiles drawn: ${layer.selected.length}${layer.idle ? "" : " (loading)"}`;
 }
 
 /** Shows PLATEAU's buildings, or else the map's extruded ones. */
@@ -67,7 +67,7 @@ function showPlateau(on) {
   showStatus();
 }
 
-const format = (v, unit = "") => (typeof v === "number" ? `${v.toLocaleString("ja-JP", { maximumFractionDigits: 1 })}${unit}` : String(v));
+const format = (v, unit = "") => (typeof v === "number" ? `${v.toLocaleString("en-US", { maximumFractionDigits: 1 })}${unit}` : String(v));
 
 function row(label, value) {
   const tr = document.createElement("tr");
@@ -91,11 +91,11 @@ function showFeature(hit) {
     if (!key.endsWith("_浸水ランク") || !given(v)) continue;
     // "<river>（<section>）_<scale>（<case>）_浸水ランク": the river and L1 / L2.
     const scale = key.match(/_(L\d)/)?.[1];
-    table.append(row(`浸水ランク（${key.split(/[（_]/)[0]}${scale ? ` ${scale}` : ""}）`, format(v)));
+    table.append(row(`Flood rank (${key.split(/[（_]/)[0]}${scale ? ` ${scale}` : ""})`, format(v)));
   }
   const all = document.createElement("details");
   const summary = document.createElement("summary");
-  summary.textContent = "すべての属性";
+  summary.textContent = "All attributes";
   const rest = document.createElement("table");
   for (const [key, v] of Object.entries(p)) if (given(v)) rest.append(row(key, String(v)));
   all.append(summary, rest);
@@ -105,14 +105,14 @@ function showFeature(hit) {
 // The tools: a building's attributes, measuring in 3D, a line of sight, a viewshed. Eyes stand 1.6 m up.
 const EYE = 1.6;
 const result = document.getElementById("tool-result");
-const meters = (m) => `${m.toLocaleString("ja-JP", { maximumFractionDigits: 1 })} m`;
+const meters = (m) => `${m.toLocaleString("en-US", { maximumFractionDigits: 1 })} m`;
 let tool = "feature";
 let measurement = null;
 let sightFrom = null;
 
 function showMeasurement(s) {
-  if (!s.mode || s.positions.length < 2) return (result.textContent = "建物や地面を順にクリックし、ダブルクリックで終えます。");
-  result.textContent = `直線 ${meters(s.length)}・水平 ${meters(s.horizontal ?? 0)}・高さの差 ${meters(s.vertical ?? 0)}`;
+  if (!s.mode || s.positions.length < 2) return (result.textContent = "Click buildings or the ground in turn; double-click to finish.");
+  result.textContent = `Straight ${meters(s.length)} · horizontal ${meters(s.horizontal ?? 0)} · height difference ${meters(s.vertical ?? 0)}`;
 }
 
 function drawSight(features) {
@@ -128,7 +128,7 @@ function chooseTool(name) {
   map.setViewshed(null);
   map.setClipping(null);
   feature.replaceChildren();
-  result.textContent = { feature: "", measure: "", sight: "見る位置、見たい位置の順にクリックします。", viewshed: "見る位置をクリックします（向きは地図の向き）。", section: "切る位置をクリックします（地図の向きに直交する縦の面）。" }[name];
+  result.textContent = { feature: "", measure: "", sight: "Click where to look from, then where to look at.", viewshed: "Click where to look from (facing the map's bearing).", section: "Click where to cut (a vertical plane across the map's bearing)." }[name];
   if (name === "measure") {
     measurement = createMeasurement(map, { measure3d });
     measurement.subscribe(showMeasurement);
@@ -146,19 +146,19 @@ async function click(e) {
     // A vertical plane through the point, across the view: what lies before it (toward the camera) is cut.
     const b = (map.getBearing() * Math.PI) / 180;
     map.setClipping({ origin: [at[0], at[1], 0], planes: [[Math.sin(b), Math.cos(b), 0, 0]], edgeWidth: 2, edgeColor: [1, 0.55, 0.1] });
-    result.textContent = "手前を切りました（橙は切り口）";
+    result.textContent = "Cut away the near side (orange marks the cut)";
   } else if (tool === "viewshed") {
     map.setViewshed({ position: eye, heading: map.getBearing(), pitch: -10, horizontalFov: 90, verticalFov: 60, distance: 400 });
-    result.textContent = "緑：見える所、赤：遮られる所";
+    result.textContent = "Green: visible, red: hidden";
   } else if (tool === "sight" && !sightFrom) {
     sightFrom = eye;
     drawSight([]);
-    result.textContent = "見たい位置をクリックします。";
+    result.textContent = "Click where to look at.";
   } else if (tool === "sight") {
     const s = lineOfSight(map, sightFrom, at);
     const line = (a, b, seen) => ({ type: "Feature", properties: { seen }, geometry: { type: "LineString", coordinates: [a.slice(0, 2), b.slice(0, 2)] } });
     drawSight(s.visible ? [line(sightFrom, at, true)] : [line(sightFrom, s.obstruction, true), line(s.obstruction, at, false)]);
-    result.textContent = s.visible ? "見えます" : `遮られます（${meters(measure3d([sightFrom, s.obstruction]).length)} 先、高さ ${meters(s.obstruction[2])}）`;
+    result.textContent = s.visible ? "Visible" : `Blocked ${meters(measure3d([sightFrom, s.obstruction]).length)} away, at a height of ${meters(s.obstruction[2])}`;
     sightFrom = null;
   }
 }

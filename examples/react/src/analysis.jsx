@@ -2,7 +2,7 @@
 import { analysisActions, analysisRows } from "../../shared/analyze.js";
 import { useController } from "./use-controller.js";
 
-const TOOLS = [["cells", "階級区分図"], ["route", "道路での経路"], ["sight", "見通しと可視域"]];
+const TOOLS = [["cells", "Choropleth"], ["route", "Route on roads"], ["sight", "Line of sight and viewshed"]];
 
 export function Analysis({ map, a }) {
   const s = useController(a);

@@ -19,21 +19,21 @@ export function DataPanel({ map }) {
   return (
     <div id="data">
       <label className={over ? "drop over" : "drop"} onDragOver={(e) => (e.preventDefault(), setOver(true))} onDragLeave={() => setOver(false)} onDrop={drop}>
-        ファイルを選ぶか、ここへドロップ
+        Choose a file or drop it here
         <input type="file" multiple onChange={(e) => void loader.addFiles(e.target.files)} />
       </label>
       <div className="chips" style={{ marginTop: 6 }}>
-        <button disabled={s.loading} onClick={() => void loader.addSample()}>サンプルを読む</button>
+        <button disabled={s.loading} onClick={() => void loader.addSample()}>Open the sample</button>
       </div>
-      <p className="hint">CSV、Shapefile（zip）、KML/KMZ、GPX、TopoJSON、FlatGeobuf、GeoJSON</p>
+      <p className="hint">CSV, Shapefile (zip), KML/KMZ, GPX, TopoJSON, FlatGeobuf, GeoJSON</p>
       {s.error && <p className="data-error">{s.error}</p>}
       <ul className="datasets">
         {s.items.map((item) => (
           <li key={item.id}>
-            <b>{item.name}</b><small>{`  ${item.count} 件`}</small>
+            <b>{item.name}</b><small>{`  ${item.count} features`}</small>
             <div className="chips">
               {WRITE_FORMATS.map(([format, label]) => <button key={format} onClick={() => void loader.save(item, format)}>{label}</button>)}
-              <button onClick={() => loader.remove(item.id)}>消す</button>
+              <button onClick={() => loader.remove(item.id)}>Remove</button>
             </div>
           </li>
         ))}

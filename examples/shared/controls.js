@@ -5,13 +5,13 @@ import { icon } from "./icons.js";
 import { createAttribution, createFullscreen, createGeolocation, createNavigation, createScale } from "mbt-map/ui";
 
 export const LOCATION_LABELS = {
-  unavailable: "現在地は使えません",
-  off: "現在地を表示",
-  waiting: "現在地を取得中",
-  active: "現在地を追跡中",
-  "active-error": "現在地を取得できません",
-  background: "現在地へ戻る",
-  "background-error": "現在地を取得できません",
+  unavailable: "Location unavailable",
+  off: "Show my location",
+  waiting: "Finding your location",
+  active: "Following your location",
+  "active-error": "Could not find your location",
+  background: "Back to my location",
+  "background-error": "Could not find your location",
 };
 
 function button(label, name, onClick) {
@@ -35,16 +35,16 @@ export function mountControls(map, parent, status) {
 
   const box = document.createElement("div");
   box.className = "controls";
-  const zoomIn = button("拡大", "plus", () => nav.zoomIn());
-  const zoomOut = button("縮小", "minus", () => nav.zoomOut());
-  const compass = button("北を上に", "north", () => nav.resetNorth(true));
+  const zoomIn = button("Zoom in", "plus", () => nav.zoomIn());
+  const zoomOut = button("Zoom out", "minus", () => nav.zoomOut());
+  const compass = button("Reset north", "north", () => nav.resetNorth(true));
   const needle = document.createElement("span");
   needle.className = "needle";
   needle.append(compass.firstChild);
   compass.append(needle);
-  const home = button("最初の位置へ", "home", () => nav.home());
+  const home = button("Back to start", "home", () => nav.home());
   const locate = button(LOCATION_LABELS.off, "locate", () => geo.trigger());
-  const fullscreen = button("全画面", "fullscreen", () => full.toggle());
+  const fullscreen = button("Full screen", "fullscreen", () => full.toggle());
   const group = (...buttons) => {
     const g = document.createElement("div");
     g.className = "control-group";

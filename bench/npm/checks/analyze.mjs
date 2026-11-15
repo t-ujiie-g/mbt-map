@@ -22,7 +22,7 @@ export async function analyzeChecks(page) {
     const data = await window.__map.getSource("analysis-cells").getData();
     return {
       error: s.error, count: s.cells?.count, breaks: s.cells?.breaks, labels: legend?.items.map((i) => i.label),
-      areas: data.features.map((f) => [f.properties.name, f.properties["面積"], f.properties["面積_km2"]]),
+      areas: data.features.map((f) => [f.properties.name, f.properties["area"], f.properties["area_km2"]]),
     };
   });
   // Two clicks east of the station (the panel covers the west), snapped to road vertices.
@@ -50,13 +50,13 @@ export async function analyzeChecks(page) {
   const rows = await page.evaluate(() => ["cells", "route", "sight"].map((k) => document.getElementById(`analysis-${k}-rows`).textContent));
   // A click while picking does not identify.
   const picked = await page.evaluate(() => window.__identify?.state.point ?? null);
-  for (const tool of ["cells", "route", "sight"]) await page.click(`#analysis-${tool} button >> text=消す`);
+  for (const tool of ["cells", "route", "sight"]) await page.click(`#analysis-${tool} button >> text=Clear`);
   const cleared = await page.evaluate(() => ({ layers: ["analysis-cells", "analysis-viewshed"].map((id) => Boolean(window.__map.getLayer(id))), state: window.__analysis.state }));
   await page.evaluate((c) => window.__map.jumpTo(c), camera);
   await page.evaluate(() => window.__map.once("idle"));
   // CI has no fixtures: no roads to route along, and the DEM tiles 404 as flat ground (everything seen).
   const fixtures = existsSync(path.join(ROOT, "bench/fixtures/gsi-bvmap/14"));
-  const routed = fixtures ? route?.length > 100 && route.length < 2000 && routeLine.includes("LineString") : route?.error === "道路が見つかりません";
+  const routed = fixtures ? route?.length > 100 && route.length < 2000 && routeLine.includes("LineString") : route?.error === "No road found";
   const clipped = clipChecks(roads);
   const sorted = [...(cells.breaks ?? [])].every((b, i, xs) => i === 0 || b >= xs[i - 1]);
   const ok =
