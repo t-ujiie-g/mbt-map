@@ -3,7 +3,7 @@
 すべての性能値はここのスクリプトで再現できること（docs/dev/VISION.md §2）。結果は `results/*.json` に保存し、
 PROGRESS.md の表はそこから転記する。
 
-コマンドの一覧（黄金テスト、速度の計測、例の配信、パッケージの確認）は [AGENTS.md](../AGENTS.md) §1 にある。どれも `bench/` で
+コマンドの一覧（黄金テスト、速度の計測、例の配信、パッケージの確認）は [docs/dev/COMMANDS.md](../docs/dev/COMMANDS.md) にある（毎回使うものは [AGENTS.md](../AGENTS.md) §1）。どれも `bench/` で
 `npm run <名前>` として走らせる（`package.json` の `scripts`）。初回は次を行う。
 
 ```sh
@@ -172,7 +172,7 @@ fixture がなくてもタイルが 404 になるだけで地図は読み込ま�
 
 ## そのほかの黄金テストと計測
 
-ほかのディレクトリは、それぞれ AGENTS.md §1 の `npm run` の名前に対応する（比べる相手と合格の条件もそこにある）：
+ほかのディレクトリは、それぞれ docs/dev/COMMANDS.md の `npm run` の名前に対応する（比べる相手と合格の条件もそこにある）：
 `raster/`、`pmtiles/`、`query/`、`track/`、`export/`、`ui/`、`labels/`、`style/`（`style:golden`・`style:public`・`style:compat`・
 `expression:golden`・`color:golden`。場面は `style/scenes.mjs`、公開のスタイルは `style/public-styles.mjs`）、`camera/`、`terrain/`、
 `proj/`、`clipper/`（`clipper:golden`・`buffer:check`・`geometry:node`）、`geodesic/`、`draw/`（`draw:golden`・`draw:many`・

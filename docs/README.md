@@ -19,4 +19,4 @@
 - [Analysis](./analysis.md) (`mbt-map/analysis`)
 - [3D](./3d.md) (`mbt-map/3d`)
 
-Contributor documents (design, binary formats, cloud development) are in [dev/](./dev/).
+Contributor documents (design, architecture, binary formats, commands, toolchain notes, releasing, cloud development) are in [dev/](./dev/).

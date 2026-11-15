@@ -1,5 +1,5 @@
 // Public styles vs MapLibre GL JS 6.16.0 pixel by pixel on tiles of their schema for the GSI area (z14),
-// symbol layers and the low-zoom shaded relief left out (AGENTS §1 `style:public`).
+// symbol layers and the low-zoom shaded relief left out (docs/dev/COMMANDS.md `style:public`).
 // node style/public.mjs [--scene=name] [--shots=dir]; writes bench/results/style-public.json.
 import { writeFile } from "node:fs/promises";
 import path from "node:path";

@@ -4,6 +4,27 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
+- **いま**：最初の公開（0.1.0）の準備中。npm の `mbt-map` と mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita` を同じ版で出す。残りは、ユーザーが行う公開（docs/dev/RELEASING.md「初めての公開」：npm、mooncakes、タグ `v0.1.0`）。
+- **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
+  - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
+  - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
+  - 文書：README、docs/ の入口ごとのガイド、その後の点検（リファクタリングとセキュリティ）。
+  - GitHub Pages：手書きのトップ、docs の HTML、動く例。サンプル集とテーマの切り替え、例の画面の英語化。
+  - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
+  - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test。
+- **次**：公開のあと、単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
+- **未解決**：
+  - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
+  - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。
+  - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
+  - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
+  - `setViewshed`・`setClipping`・`triggerRepaint` のあとに `idle` が来ない（MapLibre は描き終えるたびに `idle`）。合わせるかは別に決める。
+  - Linux の WebKit で `antialias: false` のキャンバスの最後のフレームが出ない件が headless だけのことか。Linux の headless Firefox に WebGL2 がない（pack test は飛ばす）。
+  - 世界が画面より狭い（ズーム約 1 未満）とき、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
+- **文書の置き場所**：毎回読む決まりは AGENTS.md、仕組みの詳しい説明は docs/dev/ARCHITECTURE.md とその分冊、コマンドの一覧は docs/dev/COMMANDS.md、ツールチェーンと計測で分かったことは docs/dev/TOOLCHAIN.md（AGENTS.md を 130KB から分けた）。
+
+## 進め方と名前の決定（2026-11-15、ユーザー判断）
+
 - **終わったもの**：mbmap の Phase 0〜20 と、その後の点検（mbmap #165 まで）。このリポジトリへ移した（2026-11-15）。
 - **名前**（2026-11-15 ユーザー判断。いったん `moon-map` にしたが、月の地図に読めるので同日に `mbt-map` へ改名。リポジトリも `t-ujiie-g/mbt-map`）：npm は `mbt-map`（入口は `mbt-map/ui`、`mbt-map/3d` など）、mooncakes は `t-ujiie-g/mbtmap`、要素は `<mbt-map>`、イベントは `mbt-map-error` など、エラーは `mbt-map: ...`。コードの識別子やラベルは `mbtmap`。
 - **進め方**（2026-11-15 ユーザー判断）：
@@ -15,11 +36,6 @@ Where things stand, decisions and open issues. The development history before th
   6. 公開の準備：Firefox・WebKit での pack test、npm 0.1.0 と mooncakes の公開（ユーザーが実行）。
   7. その後：単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21。
 - **Dependabot**（2026-11-15 ユーザー判断）：bench の依存はゴールデンの比べる相手なので版の更新の提案を止め（`open-pull-requests-limit: 0`）、セキュリティの更新だけ受ける。比べる相手を上げるときは、そのゴールデンを回し直す PR を意図して作る。
-- **前のリポジトリから引き継ぐ未解決**：
-  - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
-  - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。
-  - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
-  - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
 
 ## ファサードを MoonBit に移す試み（案 B）とその取りやめ（2026-11-15、Mac）
 

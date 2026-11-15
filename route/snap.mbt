@@ -118,8 +118,8 @@ fn Grid::near(
 
 ///|
 /// The lines (ranges of points in `coords`) noded within `snap` meters as
-/// AGENTS.md "Routing" describes; None for coordinates that are not finite or
-/// past `MAX_SNAP_CELLS` or `MAX_SNAP_TESTS`.
+/// docs/dev/ARCHITECTURE-MODULES.md "Routing" describes; None for coordinates
+/// that are not finite or past `MAX_SNAP_CELLS` or `MAX_SNAP_TESTS`.
 pub fn snap_lines(
   coords : Array[Double],
   lines : Array[(Int32, Int32)],
