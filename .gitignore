@@ -1,0 +1,15 @@
+# MoonBit
+_build/
+target/
+.mooncakes/
+*.mbti.bak
+
+# Node
+node_modules/
+dist/
+*.tgz
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/

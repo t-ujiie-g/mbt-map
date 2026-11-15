@@ -1,0 +1,13 @@
+# Dependency updates, batched weekly. A release must be 14 days old before it is proposed
+# (the project's rule for new versions); security updates are not delayed.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+    groups:
+      actions:
+        patterns: ["*"]
