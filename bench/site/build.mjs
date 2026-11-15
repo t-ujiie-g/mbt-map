@@ -132,7 +132,7 @@ async function buildExamples() {
       const text = await readFile(path.join(src, f));
       await writeFile(path.join(out, "samples", id, f), f.endsWith(".html") ? text.toString().replaceAll("../node_modules/mbt-map/dist/", "../../../lib/") : text);
     }
-    const imports = [...new Set([...code.matchAll(/from "(mbt-map[^"]*)"/g)].map((m) => m[1]))].join(" · ");
+    const imports = [...new Set([...code.matchAll(/(?:from|import) "(mbt-map[^"]*)"/g)].map((m) => m[1]))].join(" · ");
     if (!groups.has(group)) groups.set(group, []);
     groups.get(group).push(card(`./${id}.html`, title, description, imports));
     const markup = html.replace(/<script type="importmap">[\s\S]*?<\/script>\n/, "");
