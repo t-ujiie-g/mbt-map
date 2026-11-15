@@ -1,5 +1,5 @@
 // mbt-map/services vs OpenLayers 10.11.0 and @camptocamp/ogc-client 2.0.2 on live public services
-// (AGENTS.md §1 `services:golden`), and a tile fetched from each source made. Writes
+// (docs/dev/COMMANDS.md `services:golden`), and a tile fetched from each source made. Writes
 // bench/results/services-golden.json; behind a proxy Node needs NODE_USE_ENV_PROXY=1.
 import { writeFile } from "node:fs/promises";
 import path from "node:path";

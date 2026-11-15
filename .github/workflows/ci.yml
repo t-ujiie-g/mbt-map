@@ -31,7 +31,7 @@ jobs:
 
       - name: moon check
         run: moon check --target all --deny-warn
-      # The shipped backends; wasm and native are tested locally (AGENTS §2).
+      # The shipped backends; wasm and native are tested locally (AGENTS §6).
       - name: moon test (wasm-gc)
         run: moon test --target wasm-gc
       - name: moon test (js)

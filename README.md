@@ -82,7 +82,7 @@ mbt-map needs WebAssembly GC: Chrome and Edge 119+, Firefox 120+, Safari 18.2+. 
 
 ## Development
 
-The repository holds the MoonBit engine, the npm package (`npm/`), the web component (`element/`), the MoonBit API (`moonbit/`), examples and the test and comparison scripts (`bench/`). Contributor notes are in [AGENTS.md](AGENTS.md), the design in [docs/dev/VISION.md](docs/dev/VISION.md) and the state of work in [PROGRESS.md](PROGRESS.md).
+The repository holds the MoonBit engine, the npm package (`npm/`), the web component (`element/`), the MoonBit API (`moonbit/`), examples and the test and comparison scripts (`bench/`). Contributor notes are in [AGENTS.md](AGENTS.md), the design in [docs/dev/VISION.md](docs/dev/VISION.md), the architecture reference in [docs/dev/ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) and the state of work in [PROGRESS.md](PROGRESS.md).
 
 ## License
 

@@ -1,6 +1,8 @@
 # Claude Code on the web で開発する
 
-claude.ai/code のクラウドのセッションで mbt-map の開発を続けるための準備と使い方。作業の決まりは AGENTS.md（特に §2 と §9）、いまどこまで進んでいるかは PROGRESS.md の冒頭にある。
+claude.ai/code のクラウドのセッションで mbt-map の開発を続けるための準備と使い方。作業の決まりは AGENTS.md（特に §2）、いまどこまで進んでいるかは PROGRESS.md の冒頭にある。
+
+セッションは、リポジトリを取り出しただけの新しい Ubuntu 24.04 の VM（4 vCPU、16 GB）で動く。Node 22、`gh`、Chrome は入っていて、MoonBit は入っていない。
 
 ## 1. 環境を作る（最初に一度）
 
@@ -88,6 +90,8 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" && [ -x scripts/setu
 > AGENTS.md と PROGRESS.md を読んで、「現在の状況」の次の段階を進めて下さい。
 
 - セッションは、まず `moon version` と `ls bench/fixtures/gsi-bvmap | head` で準備ができているかを確かめる。なければ `scripts/setup.sh` を流す。
+- `scripts/setup.sh` は、`scripts/toolchain.env` で固定した MoonBit のツールチェーン（sha256 を照合）を入れ、`npm/`・`bench/`・`examples/react/` で `npm ci` を行い、Playwright の Chromium を入れ、GSI のフィクスチャを取る（`--no-fixtures`、`--no-browser` で後の 2 つを飛ばせる）。何度流してもよく、CI も同じものを使う。
+- 持ち越されるのはリポジトリだけ。検証の一連（AGENTS.md §1）と黄金テストはクラウドでも回せる（headless の Chromium は CI と同じく SwiftShader で描く）。
 - 進め方はローカルと同じ（AGENTS.md §2）：段階ごとに PR を出し、CI が通ったら日本語で報告して止まる。「マージしました」で次へ。
 - 並列に進めたいときは、作業ごとに別のセッションを開く（同じセッションの中の worktree のエージェントは、クラウドでは確かめていない）。
 
@@ -96,7 +100,7 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" && [ -x scripts/setu
 - **性能ベンチ**（`worker:browser`、`render`、`*:node` の時間）：数字は M2 の開発機で測ったものだけを PROGRESS に載せる（VISION §2、AGENTS.md §5）。クラウドのセッションは、測る必要があるときは報告にそう書く。ローカルのセッションでまとめて測る。
 - **moonbit-skills プラグイン**：リポジトリの設定に書いてあっても、クラウドでは読み込まれない。API は `moon ide doc`、生成された `.mbti`、docs.moonbitlang.com で確かめる。
 - **ローカルの自動メモリ**：クラウドには届かない。続けてほしい決まりは AGENTS.md §2 に書く。
-- **GitHub の一部の操作**：プロキシが GraphQL を止めることがあり、そのときは `gh pr create` / `gh pr checks` が失敗する。REST（`gh api repos/t-ujiie-g/mbt-map/pulls`、`.../commits/<sha>/check-runs`）を使う。ブランチの削除とタグの push はできない。
+- **GitHub の一部の操作**：push はプロキシを通る。プロキシが GraphQL を止めることがあり、そのときは `gh pr create` / `gh pr checks` が失敗する。REST を使う：`gh api repos/t-ujiie-g/mbt-map/pulls -f title=... -f head=<branch> -f base=main -f body=...`、`gh api repos/t-ujiie-g/mbt-map/commits/<sha>/check-runs`。ブランチの削除とタグの push はできない。`phaseN/...` への push が断られたら、セッションが示すブランチ名を使う。
 
 ## 4. ツールチェーンを上げるとき
 
