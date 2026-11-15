@@ -90,3 +90,7 @@ jobs:
       - name: Packed package runs the examples
         working-directory: bench
         run: npx playwright install --with-deps chromium && node npm/pack-test.mjs ${{ matrix.checks }}
+      - name: The Pages site builds on the examples packed above
+        if: startsWith(matrix.checks, '--except')
+        working-directory: bench
+        run: node site/build.mjs --no-prepare
