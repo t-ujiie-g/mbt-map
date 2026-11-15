@@ -4,8 +4,6 @@ package "t-ujiie-g/mbtmap_engine/tiff"
 // Values
 pub const MAX_VALUES : Int32 = 16777216
 
-pub fn band_bytes(Int32, Int32) -> Int32
-
 pub fn lzw(BytesView, Int32) -> FixedArray[Byte] raise TiffError
 
 pub fn packbits(BytesView, Int32) -> FixedArray[Byte]

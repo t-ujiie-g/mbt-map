@@ -20,11 +20,11 @@ let document_name : Int32 = -3
 
 ///|
 /// `XMLNS`: the namespace of `xmlns` declarations.
-pub let xmlns_namespace : String = "http://www.w3.org/2000/xmlns/"
+let xmlns_namespace : String = "http://www.w3.org/2000/xmlns/"
 
 ///|
 /// `XML`: the namespace of the `xml` prefix.
-pub let xml_namespace : String = "http://www.w3.org/XML/1998/namespace"
+let xml_namespace : String = "http://www.w3.org/XML/1998/namespace"
 
 ///|
 /// A parsed document, nodes in document order (an element's descendants follow it

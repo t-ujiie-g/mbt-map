@@ -37,10 +37,10 @@ const PATTERN_PADDING : Int32 = 1
 
 ///|
 /// The atlas is this wide; it grows in height up to `PATTERN_ATLAS_MAX`.
-pub const PATTERN_ATLAS_WIDTH : Int32 = 1024
+const PATTERN_ATLAS_WIDTH : Int32 = 1024
 
 ///|
-pub const PATTERN_ATLAS_MAX : Int32 = 4096
+const PATTERN_ATLAS_MAX : Int32 = 4096
 
 ///|
 /// The patterns (or, without `wrap`, icons) of a style in one texture, packed
