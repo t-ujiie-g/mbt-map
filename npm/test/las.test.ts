@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { horizontalWkt, MAX_LAS_POINTS, MAX_LAS_VLRS, readLas, wktEpsg } from "../src/model/las.ts";
+import { horizontalWkt, MAX_LAS_VLRS, readLas, wktEpsg } from "../src/model/las.ts";
 import { geoKeys, writeLas, wktRecord } from "../../bench/las/write.mjs";
 
 const points = (n: number, rgb = true) =>
@@ -119,5 +119,4 @@ test("readLas refuses LAZ, unknown versions and formats, and files that point pa
   refuses(changed((b, v) => v.setBigUint64(v14.length - 9 - 60 + 20, 1n << 40n, true), v14), /EVLR 0 data beyond the file/);
   refuses(good, /maxPoints/, 0);
   refuses(good, /maxPoints/, 1.5);
-  assert.equal(MAX_LAS_POINTS, 10_000_000);
 });

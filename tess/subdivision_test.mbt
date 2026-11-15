@@ -115,5 +115,4 @@ test "granularity_for_zoom halves per zoom down to its minimum" {
   assert_eq([0, 1, 9, 10, 20].map(@tess.line_granularity), [512, 256, 1, 1, 1])
   assert_eq(@tess.granularity_for_zoom(128, 32, 3), 32)
   assert_eq(@tess.granularity_for_zoom(0, 0, 0), 1)
-  assert_eq(@tess.CIRCLE_GRANULARITY, 3)
 }

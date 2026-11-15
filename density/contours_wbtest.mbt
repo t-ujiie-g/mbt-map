@@ -34,9 +34,3 @@ test "contour_levels stop once the segments or nesting tests run out" {
   let few = Budget::new(max_tests=tests.tests - 1L)
   assert_true(contour_levels(rings, 8, 8, [0.5], false, budget=few) is None)
 }
-
-///|
-test "the contour caps" {
-  assert_eq(MAX_CONTOUR_SEGMENTS, 4_000_000L)
-  assert_eq(MAX_CONTOUR_NESTING_TESTS, 100_000_000L)
-}

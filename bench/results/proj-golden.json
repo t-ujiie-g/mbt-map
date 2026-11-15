@@ -1,8 +1,8 @@
 {
   "reference": "proj4js 2.22.0",
   "points": 200,
-  "compared": 94600,
-  "skipped": 1400,
+  "compared": 97200,
+  "skipped": 0,
   "worst": {
     "meters": {
       "js": 4.6566128730773926e-9,
@@ -3835,7 +3835,7 @@
       "from": "EPSG:4326",
       "to": "Cassini on a sphere",
       "unit": "meters",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3844,7 +3844,7 @@
       "from": "Cassini on a sphere",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3871,7 +3871,7 @@
       "from": "EPSG:4326",
       "to": "LAEA north pole",
       "unit": "meters",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3880,7 +3880,7 @@
       "from": "LAEA north pole",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3889,7 +3889,7 @@
       "from": "EPSG:4326",
       "to": "LAEA on the equator",
       "unit": "meters",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3898,7 +3898,7 @@
       "from": "LAEA on the equator",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3907,7 +3907,7 @@
       "from": "EPSG:4326",
       "to": "LAEA on a sphere",
       "unit": "meters",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -3916,7 +3916,7 @@
       "from": "LAEA on a sphere",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -4006,7 +4006,7 @@
       "from": "Eckert VI",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -4141,7 +4141,7 @@
       "from": "EPSG:4326",
       "to": "Oblique Mercator by two points",
       "unit": "meters",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -4150,7 +4150,7 @@
       "from": "Oblique Mercator by two points",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
@@ -4213,16 +4213,16 @@
       "from": "EPSG:4326",
       "to": "Gnomonic",
       "unit": "meters",
-      "points": 0,
-      "maxJs": 0,
-      "maxWasm": 0
+      "points": 200,
+      "maxJs": 4.656612873077393e-10,
+      "maxWasm": 4.656612873077393e-10
     },
     {
       "label": "inverse",
       "from": "Gnomonic",
       "to": "EPSG:4326",
       "unit": "degrees",
-      "points": 0,
+      "points": 200,
       "maxJs": 0,
       "maxWasm": 0
     },
