@@ -1,10 +1,12 @@
 // Builds dist/: the facade and the files it loads, `<mbt-map>`, the ui, search, draw, services, GeoJSON,
 // analysis, geodesic, 3d and data modules, and their workers with their wasm. Usage: node scripts/build.mjs
 import { execFileSync } from "node:child_process";
-import { copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
+import { copyFile, mkdir, readFile, readdir, rm, rmdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { reachableDeclarations, typeEntries } from "./declarations.mjs";
 
 const PKG = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const ROOT = path.dirname(PKG);
@@ -106,5 +108,16 @@ for (const file of await readdir(DIST, { recursive: true })) {
   const text = await readFile(at, "utf8");
   const fixed = text.replace(/((?:from |import\()")(\.{1,2}\/[^"]*?)(\.ts)?"/g, (_, lead, spec) => `${lead}${spec}.js"`);
   if (fixed !== text) await writeFile(at, fixed);
+}
+// Only the declarations the entries' types reach are shipped; tsc also writes one per internal module.
+const pkg = JSON.parse(await readFile(path.join(PKG, "package.json"), "utf8"));
+const declared = (file) => (existsSync(path.join(DIST, file)) ? readFileSync(path.join(DIST, file), "utf8") : undefined);
+const kept = new Set(reachableDeclarations(typeEntries(pkg), declared));
+for (const file of await readdir(DIST, { recursive: true })) {
+  if (file.endsWith(".d.ts") && !kept.has(file.split(path.sep).join("/"))) await rm(path.join(DIST, file));
+}
+for (const dir of (await readdir(DIST, { recursive: true, withFileTypes: true })).filter((d) => d.isDirectory()).reverse()) {
+  const at = path.join(dir.parentPath, dir.name);
+  if ((await readdir(at)).length === 0) await rmdir(at);
 }
 for (const f of ["LICENSE", "NOTICE"]) await copyFile(path.join(ROOT, f), path.join(PKG, f));

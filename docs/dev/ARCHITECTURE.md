@@ -121,7 +121,7 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 - `npm/`, `element/`, `examples/` are not MoonBit packages (TS/HTML side).
 - `npm/src/index.ts` is a MapLibre-shaped TS facade (`Map`, `on`/`once`, `jumpTo`, …) over the `bundle/main` exports; esbuild aliases `mbt-map-engine` to that build and `npm/src/engine.d.ts` types it, so keep both in sync with `bundle/main/main.mbt` (`map_frame_count` and `map_placed_labels` are test hooks).
 - Pure parts of the facade live in their own modules for `npm test` (`engine-style.ts`, `feature-state.ts`, `query.ts`, `camera.ts` with the zoom and pitch limits that `element/parse.ts` mirrors).
-- The build rewrites `dist/*.d.ts` relative imports to `.js` so `moduleResolution: nodenext` resolves them, and `package.json` exports every file reached by URL (workers, wasm, worker parts).
+- The build rewrites `dist/*.d.ts` relative imports to `.js` so `moduleResolution: nodenext` resolves them, keeps only the declarations the entries' `types` reach (`npm/scripts/declarations.mjs`; internal modules' are deleted), and `package.json` exports every file reached by URL (workers, wasm, worker parts).
 - Sibling chunks by dynamic import need no entry.
 - `bench/pages/basic`, `bench/pages/terrain` and `bench/render/page.mjs` call those exports directly (`create_map` and others): change them with the signatures (the pack test starts both examples).
 - The facade resolves tile URLs against the style URL and loads `worker.js`/`mbt-map.wasm` next to itself via `new URL(..., import.meta.url)`.
