@@ -1,3 +1,10 @@
 [
-  { "id": "basic-map", "group": "Maps" }
+  { "id": "basic-map", "group": "Maps" },
+  { "id": "vector-style", "group": "Maps" },
+  { "id": "geojson-click", "group": "Maps" },
+  { "id": "clusters", "group": "Maps" },
+  { "id": "heatmap", "group": "Maps" },
+  { "id": "terrain", "group": "Maps" },
+  { "id": "buildings-shadows", "group": "Maps" },
+  { "id": "globe", "group": "Maps" }
 ]
