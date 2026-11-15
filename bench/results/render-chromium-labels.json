@@ -12,9 +12,9 @@
     "statistic": "median of runs"
   },
   "sizes": {
-    "mbt-map": {
-      "main": 97279,
-      "worker": 93108
+    "mbtmap": {
+      "main": 152288,
+      "worker": 96813
     },
     "maplibre": {
       "main": 295496,
@@ -22,69 +22,69 @@
     }
   },
   "summary": {
-    "mbt-map": {
-      "idle": 231.39500001072884,
+    "mbtmap": {
+      "idle": 230.07499998807907,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 16.66761111120383,
-          "frameP95Ms": 17.649999976158142,
+          "frameMeanMs": 16.667722222208976,
+          "frameP95Ms": 17.775000035762787,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.6049999892711639,
-          "rafCpuP95Ms": 1.475000023841858
+          "rafCpuP50Ms": 0.7950000166893005,
+          "rafCpuP95Ms": 1.7099999785423279
         },
         "pan-back": {
-          "frameMeanMs": 16.667611111038262,
-          "frameP95Ms": 17.700000017881393,
+          "frameMeanMs": 16.666944444510673,
+          "frameP95Ms": 17.65499997138977,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.7049999833106995,
-          "rafCpuP95Ms": 1.4900000095367432
+          "rafCpuP50Ms": 0.800000011920929,
+          "rafCpuP95Ms": 1.5899999737739563
         },
         "zoom-in": {
-          "frameMeanMs": 16.66655555549595,
-          "frameP95Ms": 17.51000002026558,
+          "frameMeanMs": 16.66566666662693,
+          "frameP95Ms": 17.569999992847443,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.49000000953674316,
-          "rafCpuP95Ms": 0.9300000071525574
+          "rafCpuP50Ms": 0.6100000143051147,
+          "rafCpuP95Ms": 1.149999976158142
         },
         "zoom-out": {
-          "frameMeanMs": 16.667361111111113,
-          "frameP95Ms": 17.53499999642372,
+          "frameMeanMs": 16.665694444709352,
+          "frameP95Ms": 17.514999985694885,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.48000001907348633,
-          "rafCpuP95Ms": 1.0600000023841858
+          "rafCpuP50Ms": 0.5799999833106995,
+          "rafCpuP95Ms": 1.1800000071525574
         }
       }
     },
     "maplibre": {
-      "idle": 270.7450000047684,
+      "idle": 268.64500004053116,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 16.672361110978656,
-          "frameP95Ms": 17.62999999523163,
+          "frameMeanMs": 16.672138888968362,
+          "frameP95Ms": 17.689999997615814,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.7649999856948853,
-          "rafCpuP95Ms": 2.6649999916553497
+          "rafCpuP50Ms": 1.75,
+          "rafCpuP95Ms": 2.7450000047683716
         },
         "pan-back": {
-          "frameMeanMs": 16.67625698330682,
-          "frameP95Ms": 17.62999999523163,
+          "frameMeanMs": 16.67944134080876,
+          "frameP95Ms": 17.7049999833107,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.929999977350235,
-          "rafCpuP95Ms": 2.949999988079071
+          "rafCpuP50Ms": 1.9300000071525574,
+          "rafCpuP95Ms": 3.0350000262260437
         },
         "zoom-in": {
-          "frameMeanMs": 16.673527777857252,
-          "frameP95Ms": 17.724999994039536,
+          "frameMeanMs": 16.67474999990728,
+          "frameP95Ms": 17.694999992847443,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.395000010728836,
-          "rafCpuP95Ms": 2.884999990463257
+          "rafCpuP50Ms": 1.4150000214576721,
+          "rafCpuP95Ms": 2.659999966621399
         },
         "zoom-out": {
-          "frameMeanMs": 16.676527777810893,
-          "frameP95Ms": 17.75499999523163,
+          "frameMeanMs": 16.678128491566834,
+          "frameP95Ms": 17.884999990463257,
           "over20ms": 1,
-          "rafCpuP50Ms": 1.5649999976158142,
-          "rafCpuP95Ms": 2.759999990463257
+          "rafCpuP50Ms": 1.5799999833106995,
+          "rafCpuP95Ms": 2.8549999594688416
         }
       }
     }

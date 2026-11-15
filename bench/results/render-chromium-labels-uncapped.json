@@ -4,16 +4,17 @@
     "uncapped": true,
     "viewport": "1280x800",
     "dpr": 2,
-    "style": "bench/maplibre/style.json + examples/basic labels"
+    "pitch": 0,
+    "style": "bench/maplibre/style.json + bench/pages/basic labels"
   },
   "params": {
     "runs": 11,
     "statistic": "median of runs"
   },
   "sizes": {
-    "mbt-map": {
-      "main": 30701,
-      "worker": 83629
+    "mbtmap": {
+      "main": 152288,
+      "worker": 96813
     },
     "maplibre": {
       "main": 295496,
@@ -21,69 +22,69 @@
     }
   },
   "summary": {
-    "mbt-map": {
-      "idle": 219.76500000059605,
+    "mbtmap": {
+      "idle": 243.4899999499321,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 1.5876455026486562,
-          "frameP95Ms": 2.885000005364418,
-          "over20ms": 1,
-          "rafCpuP50Ms": 2.21500001847744,
-          "rafCpuP95Ms": 2.8499999940395355
+          "frameMeanMs": 1.444956668277285,
+          "frameP95Ms": 2.574999988079071,
+          "over20ms": 0,
+          "rafCpuP50Ms": 2.149999976158142,
+          "rafCpuP95Ms": 2.475000023841858
         },
         "pan-back": {
-          "frameMeanMs": 1.5302575216768712,
-          "frameP95Ms": 2.865000009536743,
+          "frameMeanMs": 1.373644688627222,
+          "frameP95Ms": 2.5550000071525574,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.280000001192093,
-          "rafCpuP95Ms": 2.8299999982118607
+          "rafCpuP50Ms": 2.1149999499320984,
+          "rafCpuP95Ms": 2.465000033378601
         },
         "zoom-in": {
-          "frameMeanMs": 1.3820589590064396,
-          "frameP95Ms": 2.7899999916553497,
+          "frameMeanMs": 1.321312197264676,
+          "frameP95Ms": 2.465000033378601,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.29999999701976776,
-          "rafCpuP95Ms": 2.7549999952316284
+          "rafCpuP50Ms": 2.060000002384186,
+          "rafCpuP95Ms": 2.3799999952316284
         },
         "zoom-out": {
-          "frameMeanMs": 1.486800595238391,
-          "frameP95Ms": 2.864999994635582,
+          "frameMeanMs": 1.4516328011784048,
+          "frameP95Ms": 2.625,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.239999994635582,
-          "rafCpuP95Ms": 2.8199999928474426
+          "rafCpuP50Ms": 2.1700000166893005,
+          "rafCpuP95Ms": 2.509999990463257
         }
       }
     },
     "maplibre": {
-      "idle": 277.7099999934435,
+      "idle": 278.39000004529953,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 1.5293093781830946,
-          "frameP95Ms": 2.8299999982118607,
+          "frameMeanMs": 1.429230952376411,
+          "frameP95Ms": 2.574999988079071,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.7750000059604645,
-          "rafCpuP95Ms": 2.695000007748604
+          "rafCpuP50Ms": 0.7649999856948853,
+          "rafCpuP95Ms": 2.4600000381469727
         },
         "pan-back": {
-          "frameMeanMs": 1.59800851970308,
-          "frameP95Ms": 2.8299999982118607,
+          "frameMeanMs": 1.4904321907647973,
+          "frameP95Ms": 2.5699999928474426,
           "over20ms": 0,
-          "rafCpuP50Ms": 1.4200000017881393,
-          "rafCpuP95Ms": 2.7000000029802322
+          "rafCpuP50Ms": 1.1700000166893005,
+          "rafCpuP95Ms": 2.439999997615814
         },
         "zoom-in": {
-          "frameMeanMs": 1.606217880081186,
-          "frameP95Ms": 2.905000001192093,
+          "frameMeanMs": 1.5282373917509693,
+          "frameP95Ms": 2.665000021457672,
           "over20ms": 1,
-          "rafCpuP50Ms": 1.3600000143051147,
-          "rafCpuP95Ms": 2.75
+          "rafCpuP50Ms": 1.550000011920929,
+          "rafCpuP95Ms": 2.560000002384186
         },
         "zoom-out": {
-          "frameMeanMs": 1.6973040313579868,
-          "frameP95Ms": 3.0150000005960464,
+          "frameMeanMs": 1.6214081524792898,
+          "frameP95Ms": 2.8199999928474426,
           "over20ms": 1,
-          "rafCpuP50Ms": 1.2549999952316284,
-          "rafCpuP95Ms": 2.8499999940395355
+          "rafCpuP50Ms": 1.26500004529953,
+          "rafCpuP95Ms": 2.6449999809265137
         }
       }
     }
