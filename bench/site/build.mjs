@@ -1,7 +1,7 @@
 // Builds the GitHub Pages site into _site/: site/'s home page, docs/*.md as HTML, npm/dist once as lib/,
 // the samples gallery (examples/samples) and the example apps on that copy.
 // Usage: node site/build.mjs [--no-prepare] (from bench/; --no-prepare reuses examples packed already).
-import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Marked } from "marked";
 import { ROOT } from "../lib/root.mjs";
@@ -29,6 +29,7 @@ const APPS = [
 /** The extensions of a sample's text files, shown as code after index.html and main.js, with their language. */
 const SHOWN = new Map([[".json", "json"], [".geojson", "json"], [".js", "js"], [".css", "css"], [".csv", "text"], [".txt", "text"]]);
 const shownAs = (f) => SHOWN.get(path.extname(f));
+const MAX_SHOWN = 20_000;
 
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -151,8 +152,10 @@ async function buildExamples() {
     // The page as one would copy it: the package from jsDelivr at this version, the shared CSS and the sample's
     // binary files from the site; its other text files are shown after the two.
     const others = (await readdir(src)).filter((f) => f !== "index.html" && f !== "main.js").sort();
-    const texts = others.filter(shownAs);
-    const binaries = others.filter((f) => !shownAs(f));
+    // Text files up to MAX_SHOWN bytes are shown; data files beyond that are linked like the binary ones.
+    const sizes = new Map(await Promise.all(others.map(async (f) => [f, (await stat(path.join(src, f))).size])));
+    const texts = others.filter((f) => shownAs(f) && sizes.get(f) <= MAX_SHOWN);
+    const binaries = others.filter((f) => !texts.includes(f));
     const absolute = (text) => binaries.reduce((t, f) => t.replaceAll(`"./${f}"`, `"${SITE}examples/samples/${id}/${f}"`), text);
     const markup = absolute(html.replaceAll("../node_modules/mbt-map/dist/", `${CDN}`).replace('href="../sample.css"', `href="${SITE}examples/samples/sample.css"`));
     const blocks = [["main.js", "js", absolute(code)], ["index.html", "html", markup]];
