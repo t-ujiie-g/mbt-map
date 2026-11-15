@@ -2,9 +2,9 @@
 // style JSON into the compiled form the display worker's `init_style` reads.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/style",
-  "t-ujiie-g/moonmap/wasmio",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/style",
+  "t-ujiie-g/moonmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

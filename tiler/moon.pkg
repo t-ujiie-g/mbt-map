@@ -2,14 +2,14 @@
 // tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
   "moonbitlang/core/cmp",
   "moonbitlang/core/double",
   "moonbitlang/core/math",
 }
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
 } for "test"

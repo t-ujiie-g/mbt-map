@@ -2,8 +2,8 @@
 // graphs of a dataset's lines, kept by handle for repeated routes.
 
 import {
-  "t-ujiie-g/moonmap/route",
-  "t-ujiie-g/moonmap/wasmio",
+  "t-ujiie-g/moonmap_engine/route",
+  "t-ujiie-g/moonmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

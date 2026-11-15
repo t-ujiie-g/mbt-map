@@ -9,7 +9,7 @@ Where things stand, decisions and open issues. The development history before th
 - **進め方**（2026-11-15 ユーザー判断）：
   1. 土台：リポジトリの設定（`main` のルールセット、Dependabot、秘密情報の検出、SECURITY.md）。済み（#1）。
   2. 移行：コードを移し、名前を置き換え、CI を通す。MoonBit のモジュールは直下の 1 つ（`t-ujiie-g/moonmap`）のまま。`moon.work` は rabbita のモジュールを足すときに入れる（ワークスペースでは `_build` の出力がモジュール名の下に出る）。
-  3. MoonBit で書けるように：中身（ファサード）は TS のまま、MoonBit には npm の実装を中で使う型付きの API と rabbita の部品を作る（2026-11-15 ユーザー判断。いったん選んだ案 B「ファサードを MoonBit に移す」は、測った大きさを見て取りやめた。下の節）。スタイルは型付きで書け JSON も渡せる（同日のユーザー判断）。API の形は着手の前にダイアログで決める。
+  3. MoonBit で書けるように：中身（ファサード）は TS のまま、MoonBit には npm の実装を中で使う型付きの API と rabbita の部品を作る（2026-11-15 ユーザー判断。いったん選んだ案 B「ファサードを MoonBit に移す」は、測った大きさを見て取りやめた。下の節）。スタイルは型付きで書け JSON も渡せる（同日のユーザー判断）。API の形（2026-11-15 ユーザー判断）：スタイルは層ごとの関数とラベル付きの引数（MapLibre の `v8.json` から生成、`@style.Layer::json` で JSON も）、rabbita には `<moon-map>` 要素を包んで置き（イベントは rabbita のメッセージ、地図の操作は Cmd から型付き API）、モジュールはエンジンを `t-ujiie-g/moonmap_engine`（内部）、使う人向けを `t-ujiie-g/moonmap` と `t-ujiie-g/moonmap_rabbita` に。MoonBit から npm の実装は `#module` の静的 import で読み（呼べるのは関数なので、npm に `moon-map/moonbit` の入口を足す）、ワーカーと wasm は npm のパッケージが自分の場所から読む。段階：M1 ワークスペースと改名（#7）、M2 `moon-map/moonbit` と `moonmap` の土台（地図、カメラ、イベント、JSON のスタイル編集）、M3 型付きのスタイルと式（生成）、M4 `moonmap_rabbita` と rabbita のデモ。
   4. 文書：英語の README（日本語版も）、docs/ の API とガイド。MapLibre などと張り合う書き方はしない。ベンチは前に出さない。
   5. GitHub Pages：手書きの LP と、依存ゼロの marked で docs を HTML に、動く examples（html / web component / React / MoonBit）。
   6. 公開の準備：Firefox・WebKit での pack test、npm 0.1.0 と mooncakes の公開（ユーザーが実行）。

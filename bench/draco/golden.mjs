@@ -19,7 +19,7 @@ const require = createRequire(import.meta.url);
 const draco3d = require("draco3d");
 
 const CASES = Number(arg("cases", 60));
-const MODEL_WASM = "_build/wasm-gc/release/build/model_worker/model_worker.wasm";
+const MODEL_WASM = "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/model_worker/model_worker.wasm";
 const PLATEAU = path.join(ROOT, "bench/fixtures/plateau-chiyoda/data");
 const CAPS = { faces: 0x400000, points: 0x400000, attributes: 256, bytes: 0x10000000 };
 const TYPE_LENGTH = [0, 1, 1, 2, 2, 4, 4, 8, 8, 4, 8, 1];

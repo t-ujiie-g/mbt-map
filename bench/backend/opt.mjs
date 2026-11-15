@@ -11,7 +11,7 @@ const FEATURES = [
 ].map((f) => `--enable-${f}`);
 
 const bin = path.join(ROOT, "bench/node_modules/.bin/wasm-opt");
-const build = (t) => path.join(ROOT, `_build/${t}/release/build/bench/backend/entry/entry.wasm`);
+const build = (t) => path.join(ROOT, `_build/${t}/release/build/t-ujiie-g/moonmap_engine/bench/backend/entry/entry.wasm`);
 mkdirSync(path.join(ROOT, "bench/dist"), { recursive: true });
 execFileSync(bin, ["-O3", ...FEATURES, build("wasm"), "-o", path.join(ROOT, "bench/dist/entry.wasm-opt.wasm")], { stdio: "inherit" });
 execFileSync(bin, ["-O3", ...FEATURES, "--enable-gc", build("wasm-gc"), "-o", path.join(ROOT, "bench/dist/entry.wasm-gc-opt.wasm")], { stdio: "inherit" });

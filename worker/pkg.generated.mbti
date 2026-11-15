@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/worker"
+package "t-ujiie-g/moonmap_engine/worker"
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/style",
 }
 
 // Values

@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/geom"
+package "t-ujiie-g/moonmap_engine/geom"
 
 import {
   "moonbitlang/core/debug",
-  "t-ujiie-g/moonmap/core",
+  "t-ujiie-g/moonmap_engine/core",
 }
 
 // Values

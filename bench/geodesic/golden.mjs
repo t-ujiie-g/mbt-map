@@ -12,7 +12,7 @@ const G = geodesic.Geodesic;
 const WGS84 = G.WGS84;
 
 const { instance } = await WebAssembly.instantiate(
-  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/geodesic_worker/geodesic_worker.wasm")),
+  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/geodesic_worker/geodesic_worker.wasm")),
   { Math },
 );
 const w = instance.exports;

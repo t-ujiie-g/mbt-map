@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/mvt"
+package "t-ujiie-g/moonmap_engine/mvt"
 
 import {
   "moonbitlang/core/debug",
-  "t-ujiie-g/moonmap/pbf",
+  "t-ujiie-g/moonmap_engine/pbf",
 }
 
 // Values

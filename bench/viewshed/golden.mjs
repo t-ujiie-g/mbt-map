@@ -52,7 +52,7 @@ const tif = path.join(dir, "dem.tif");
 // AAIGrid reads decimals as Float32 unless told otherwise.
 execFileSync("gdal_translate", ["-q", "-oo", "DATATYPE=Float64", "-ot", "Float64", "-a_srs", "EPSG:3857", path.join(dir, "dem.asc"), tif]);
 
-const { instance } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/viewshed_worker/viewshed_worker.wasm")), { Math });
+const { instance } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/viewshed_worker/viewshed_worker.wasm")), { Math });
 const v = instance.exports;
 // As the analysis worker calls it: only the window of cells the viewshed reads goes in.
 const ours = (o) => {

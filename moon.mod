@@ -1,7 +1,7 @@
 // Learn more about moon.mod configuration:
 // https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html
 
-name = "t-ujiie-g/moonmap"
+name = "t-ujiie-g/moonmap_engine"
 
 version = "0.0.1"
 

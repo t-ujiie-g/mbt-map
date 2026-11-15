@@ -6,7 +6,7 @@ import { VectorTile } from "@mapbox/vector-tile";
 import { PbfReader } from "pbf";
 import { ROOT } from "../lib/root.mjs";
 
-export const wasmFile = (name) => readFile(path.join(ROOT, `_build/wasm-gc/release/build/${name}/${name}.wasm`));
+export const wasmFile = (name) => readFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`));
 
 // Equal as JSON with numbers by Object.is, or within `eps` if given; a Date of papaparse equals
 // the ISO string it came from.

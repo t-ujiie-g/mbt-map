@@ -157,7 +157,7 @@ compare("hillshade (0-255)", shade, gdal(["hillshade"], "hillshade.asc"), 1);
   const cog = path.join(dir, "dem3857-cog.tif");
   execFileSync("gdal_translate", ["-q", "-of", "COG", "-co", "COMPRESS=DEFLATE", "-co", "PREDICTOR=YES", path.join(dir, "dem3857.tif"), cog]);
   const { dataImports, dataReader, rasterSource } = await import("../../data_worker/js/read.mjs");
-  const wasmOf = (name) => readFile(path.join(ROOT, `_build/wasm-gc/release/build/${name}/${name}.wasm`));
+  const wasmOf = (name) => readFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`));
   const imports = dataImports(() => data.exports.memory);
   const data = (await WebAssembly.instantiate(await wasmOf("data_worker"), imports)).instance;
   const tiff = (await WebAssembly.instantiate(await wasmOf("geotiff_worker"), {})).instance.exports;

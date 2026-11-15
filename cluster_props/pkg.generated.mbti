@@ -1,11 +1,11 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/cluster_props"
+package "t-ujiie-g/moonmap_engine/cluster_props"
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
-  "t-ujiie-g/moonmap/style",
-  "t-ujiie-g/moonmap/tiler",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/moonmap_engine/style",
+  "t-ujiie-g/moonmap_engine/tiler",
 }
 
 // Values

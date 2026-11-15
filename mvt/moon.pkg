@@ -1,5 +1,5 @@
 import {
-  "t-ujiie-g/moonmap/pbf",
+  "t-ujiie-g/moonmap_engine/pbf",
   "moonbitlang/core/debug",
   "moonbitlang/core/int",
 }

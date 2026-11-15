@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap/overlay"
+package "t-ujiie-g/moonmap_engine/overlay"
 
 import {
-  "t-ujiie-g/moonmap/clipper",
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/clipper",
+  "t-ujiie-g/moonmap_engine/geom",
 }
 
 // Values

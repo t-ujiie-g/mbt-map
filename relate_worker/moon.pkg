@@ -2,10 +2,10 @@
 // pairs of table rows, candidates found by their boxes (`@analysis.Index`).
 
 import {
-  "t-ujiie-g/moonmap/analysis",
-  "t-ujiie-g/moonmap/geom",
-  "t-ujiie-g/moonmap/relate",
-  "t-ujiie-g/moonmap/wasmio",
+  "t-ujiie-g/moonmap_engine/analysis",
+  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/moonmap_engine/relate",
+  "t-ujiie-g/moonmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

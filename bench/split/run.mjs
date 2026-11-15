@@ -14,10 +14,10 @@ const runs = Number(arg("runs", 7));
 const wanted = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const build = (pkg) => execFileSync("moon", ["build", pkg, "--target", "wasm-gc", "--release"], { cwd: ROOT, stdio: ["ignore", "ignore", "inherit"] });
 const files = {
-  worker: ["worker", "_build/wasm-gc/release/build/worker/worker.wasm"],
-  combined: ["bench/split/combined_entry", "_build/wasm-gc/release/build/bench/split/combined_entry/combined_entry.wasm"],
-  analysis: ["bench/split/analysis_entry", "_build/wasm-gc/release/build/bench/split/analysis_entry/analysis_entry.wasm"],
-  empty: ["bench/split/empty_entry", "_build/wasm-gc/release/build/bench/split/empty_entry/empty_entry.wasm"],
+  worker: ["worker", "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm"],
+  combined: ["bench/split/combined_entry", "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/split/combined_entry/combined_entry.wasm"],
+  analysis: ["bench/split/analysis_entry", "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/split/analysis_entry/analysis_entry.wasm"],
+  empty: ["bench/split/empty_entry", "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/split/empty_entry/empty_entry.wasm"],
 };
 const sizes = {};
 for (const [name, [pkg, file]] of Object.entries(files)) {

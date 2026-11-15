@@ -3,10 +3,10 @@
 // host's `Number` and `String`.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
-  "t-ujiie-g/moonmap/kml",
-  "t-ujiie-g/moonmap/wasmio",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/moonmap_engine/kml",
+  "t-ujiie-g/moonmap_engine/wasmio",
   "moonbitlang/core/encoding/utf8",
 }
 

@@ -2,12 +2,12 @@
 // handle, with their index built on first use. js/worker.mjs is its glue.
 
 import {
-  "t-ujiie-g/moonmap/analysis",
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/formats",
-  "t-ujiie-g/moonmap/geom",
-  "t-ujiie-g/moonmap/raster",
-  "t-ujiie-g/moonmap/wasmio",
+  "t-ujiie-g/moonmap_engine/analysis",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/formats",
+  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/moonmap_engine/raster",
+  "t-ujiie-g/moonmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

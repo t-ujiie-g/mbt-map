@@ -3,8 +3,8 @@
 // an imported package are not exported, so each entry wraps these.
 
 import {
-  "t-ujiie-g/moonmap/core",
-  "t-ujiie-g/moonmap/geom",
+  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/moonmap_engine/geom",
   "moonbitlang/core/encoding/utf8",
 }
 
