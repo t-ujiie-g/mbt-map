@@ -126,6 +126,11 @@ export class Traversal {
     this.#refines = refines;
   }
 
+  /** The number of the last frame traversed; every tile it used (drawn, loading, or waiting for its siblings) has it as `lastUsed`. */
+  get frame(): number {
+    return this.#frame;
+  }
+
   traverse(root: Tile, frame: FrameState): void {
     this.#frame++;
     this.selected = new Map();
@@ -254,4 +259,16 @@ export class Traversal {
     const distance = Math.max(tile.distance, 1e-7);
     return (value * frame.height) / (distance * frame.sseDenominator);
   }
+}
+
+/**
+ * The contents to free to keep at most `max` of `loaded`: the ones used longest ago, never one the last
+ * frame (`frame`) used. A frame wanting more than `max` keeps them all, or tiles waiting for their
+ * siblings would be freed and loaded again forever.
+ */
+export function evictable(loaded: Iterable<Tile>, frame: number, max: number): Tile[] {
+  const all = [...loaded];
+  if (all.length <= max) return [];
+  const idle = all.filter((t) => t.lastUsed !== frame).sort((a, b) => a.lastUsed - b.lastUsed);
+  return idle.slice(0, all.length - max);
 }
