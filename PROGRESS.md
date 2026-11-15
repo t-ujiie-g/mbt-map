@@ -138,6 +138,14 @@ Where things stand, decisions and open issues. The development history before th
 - 確かめ：直す前と後の画面（傾き 70°、方位 0° と -20°）で下の空白が消えた。MoonBit のテスト（`core/covering_test.mbt`）：山頂を中心にした眺めで 0 m から中心の標高までの画面内の点がすべて覆われる（直す前は 13 点などが外れて失敗）、`heights` が中心より 5 km 高い土地を覆う、カメラより高い `heights`、海面の眺めは `heights` があっても同じ。`camera:golden`・`globe:golden`（覆うタイル 0 differ）・`track:golden`・pack test（terrain、showcase-html、samples）は通った。`track:golden` の `flank` は main でも時々 319 px 外れる（読み込みの時機による、この変更の前から）。
 - 大きさ：主バンドルが gzip 162.3KB → 163.0KB（162,989 バイト、予算 163,000 まで 11 バイト）。
 - 予算（2026-11-15 ユーザー判断）：表示（メインの束）の予算を 163KB から 168KB に上げた。この直しで 163.0KB（11 バイト手前）になり、0.1.0 の前に入れる CDN 対応、world copies、グリフのアトラスの直しの分を見込んだ。増えた分は各 PR で測って記録する。
+
+## CDN から HTML 1 枚で（2026-11-15、Mac）
+
+- 判断（ユーザー）：例は npm install 前提でなく、CDN から HTML 1 枚で動く形が適切。0.1.0 の前に入れる。
+- 問題：ブラウザは別のオリジンの Worker のスクリプトを起動しない。CDN から読むと、モジュールの隣から読む Worker だけが弾かれ、地図が読み込まれなかった（pack test の `cdn` で、直す前はタイムアウト）。
+- 直し：`workerScriptUrl`（`npm/src/urls.ts`）が、ライブラリ自身のフォルダ（CDN の `dist/`）にある Worker を、それを import するだけの同じオリジンの `blob:` から起こす（URL ごとに 1 つ作って使い回す）。オリジンでなくフォルダで判定する（CDN は誰のパッケージも同じオリジンから配るので、オリジンで許すと別のパッケージのスクリプトも通る。自動のセキュリティレビューの指摘）。ページのオリジンとライブラリのフォルダ以外は今までどおり拒むので、`<mbt-map worker-url>` などのマークアップから別のコードは起こせない。CSP を使うページが CDN から読むときは `worker-src blob:` が要る（Getting started に書いた）。wasm と動的 import は別のオリジンからでも読める。
+- 確かめ：pack test の `cdn`（`bench/npm/pages/cdn`、パッケージを CORS 付きの別のポートから読む。地図のタイルの Worker、GeoJSON の Worker、解析の Worker がそれぞれ動き、問い合わせと解析の結果が合う）。単体テスト（blob の中身、使い回し、別のオリジンを拒む）。
+- 見せ方：Getting started の最初を「CDN から HTML 1 枚」にし、npm は次の節に。README と npm の README に CDN の書き方。サイトのサンプルのページは、表示するコードの import map を jsDelivr の版つきの URL（今の版、`mbt-map@0.1.0`）に、CSS をサイトの絶対 URL にして、コピーしてそのまま動く形にした（サイトで動かすのは今どおり同じオリジンの `lib/`）。
 ## グリフのアトラスがあふれる問題（2026-11-15、Mac）
 
 - 症状：漢字の多い地図（OpenFreeMap の Liberty に中文・日本語のラベル）で都市を何か所も回ると「the glyph atlas is full; some labels miss characters」が出て、以後のラベルの文字が欠けたままになる。
