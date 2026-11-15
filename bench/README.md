@@ -22,6 +22,8 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 - GPU を使う計測は、ヘッドレス Chromium に `--use-angle=metal --enable-gpu --ignore-gpu-blocklist` を付ける（既定は SwiftShader）。
   性能の計測は同時に走らせない。
 - `bench/dist/` は生成物（バンドル、PMTiles、GeoJSON のデータなど）の置き場で、コミットしない。
+- `results/*.json` には要約（中央値、件数、最大の差、合わなかった行）だけをコミットする。描画の計測（`render`、`maplibre`）の各回の値は
+  `results/*.raw.json` に書き、コミットしない。
 
 ## ベンチ専用の MoonBit パッケージ
 
@@ -95,7 +97,8 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 ## npm/ — npm パッケージの確認
 
 `pack-test.mjs` は `npm/` をビルドして `npm pack` し、できた tarball を examples と試験用のページ（`bench/npm/pages/`）の
-`node_modules/mbt-map` に展開する（アプリがインストールするのと同じ形。`npm/prepare.mjs`）。そのうえで Chromium で次を確かめる。
+`node_modules/mbt-map` に展開する（アプリがインストールするのと同じ形。`npm/prepare.mjs`。点群のページの `cloud.las` もここで
+`las/synthetic.mjs` から作る。コミットしない）。そのうえで Chromium で次を確かめる。
 
 - `examples/{html,element,react}`（ショーケース。`?local=1` で fixture を読む）：3 つとも同じく、解析（5 km 以内の地点、平面直角座標系の
   座標）、3D の切り替え、地点への移動、コントロール（`checks/controls.mjs`）、クラスタ（`clusters.mjs`）、検索（`search.mjs`）、
