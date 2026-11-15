@@ -23,11 +23,11 @@ export class WorkerClient {
     return this.#generation;
   }
 
-  /** Starts the worker at `script` (same-origin) unless it runs, and sends it `init`. */
-  start(script: string | URL, init: (page: URL) => object): void {
+  /** Starts the worker unless it runs (the page's `given`, else the library's `own`: `workerScriptUrl`), and sends it `init`. */
+  start(given: string | URL | undefined, own: URL, init: (page: URL) => object): void {
     if (this.#worker) return;
     const page = new URL(document.baseURI);
-    const w = new Worker(workerScriptUrl(script, page, location.origin), { type: "module" });
+    const w = new Worker(workerScriptUrl(given, own, page, location.origin), { type: "module" });
     w.onmessage = (e: MessageEvent) => {
       const msg = e.data;
       const call = msg?.type === "result" ? this.#pending.get(msg.id) : undefined;

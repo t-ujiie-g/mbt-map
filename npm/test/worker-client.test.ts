@@ -35,30 +35,38 @@ Object.assign(globalThis, {
   location: { origin: "https://x.org" },
 });
 
+const OWN = new URL("https://x.org/lib/data-worker.js");
+
 function started(): { client: WorkerClient; worker: FakeWorker } {
   const client = new WorkerClient("data");
-  client.start("./data-worker.js", () => ({}));
+  client.start("./data-worker.js", OWN, () => ({}));
   return { client, worker: FakeWorker.last };
 }
 
 test("start resolves the script against the page and sends init once", () => {
   const client = new WorkerClient("data");
   assert.equal(client.started, false);
-  client.start("./data-worker.js", (page) => ({ page: page.href }));
+  client.start("./data-worker.js", OWN, (page) => ({ page: page.href }));
   const worker = FakeWorker.last;
   assert.equal(worker.url, "https://x.org/maps/data-worker.js");
   assert.deepEqual(worker.options, { type: "module" });
   assert.deepEqual(worker.posted, [{ type: "init", page: "https://x.org/maps/page.html" }]);
   assert.equal(client.started, true);
-  client.start("./other.js", () => ({}));
+  client.start("./other.js", OWN, () => ({}));
   assert.equal(FakeWorker.last, worker);
 });
 
 test("start refuses a worker from elsewhere", () => {
   const client = new WorkerClient("data");
-  assert.throws(() => client.start("https://y.org/w.js", () => ({})), /on the page.s origin or beside the library/);
-  assert.throws(() => client.start("data:text/javascript,", () => ({})), /on the page.s origin or beside the library/);
+  assert.throws(() => client.start("https://y.org/w.js", OWN, () => ({})), /on the page.s origin or beside the library/);
+  assert.throws(() => client.start("data:text/javascript,", OWN, () => ({})), /on the page.s origin or beside the library/);
   assert.equal(client.started, false);
+});
+
+test("start without a script takes the library's own worker", () => {
+  const client = new WorkerClient("data");
+  client.start(undefined, OWN, () => ({}));
+  assert.equal(FakeWorker.last.url, OWN.href);
 });
 
 test("a call before start rejects", async () => {
@@ -125,7 +133,7 @@ test("terminate rejects pending calls and lets the client start again", async ()
   await assert.rejects(call, /^Error: mbt-map: data: terminated$/);
   assert.equal(worker.terminated, true);
   assert.equal(client.generation, generation + 1);
-  client.start("./data-worker.js", () => ({}));
+  client.start("./data-worker.js", OWN, () => ({}));
   assert.notEqual(FakeWorker.last, worker);
   const next = client.call("read", {});
   FakeWorker.last.onmessage!({ data: { type: "result", id: 1, value: "again" } });

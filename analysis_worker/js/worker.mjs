@@ -224,7 +224,7 @@ const OPS = {
   async viewshed({ grid, observer, options }) {
     check((demTiles.has(grid) || rasterGrids.has(grid)) && Array.isArray(observer) && observer.length === 2 && observer.every(Number.isFinite));
     const cells = (x, y, w, h) => f64s(wasm.grid_window(grid, x, y, w, h));
-    const { viewshed } = await import("./viewshed.mjs");
+    const { viewshed } = await (viewshedPart ? import(viewshedPart) : import("./viewshed.mjs"));
     return viewshed({
       cells, size: gridSizes.get(grid), dem: demTiles.get(grid), raster: rasterGrids.get(grid), observer, options,
       check, checked, writeInput, f64sOf, module, crsId, transform: OPS.transform, tileXY, lngLatOf,
@@ -398,9 +398,12 @@ async function run(msg) {
   postMessage({ type: "result", id: msg.id, value }, transfer);
 }
 
+// Where a bundler put analysis-viewshed.js (the init message's `parts`); null: beside this file.
+let viewshedPart = null;
 onmessage = (e) => {
   const msg = e.data;
   if (msg?.type === "init" && !ready && typeof msg.wasm === "string") {
+    if (typeof msg.parts?.viewshed === "string") viewshedPart = msg.parts.viewshed;
     for (const name in modules) modules[name].url = typeof msg[name] === "string" ? msg[name] : null;
     const host = { number: hostNumber(() => wasm.memory) };
     ready = WebAssembly.instantiateStreaming(fetch(msg.wasm), { Math, host })

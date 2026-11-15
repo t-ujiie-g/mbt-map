@@ -239,6 +239,35 @@ Where things stand, decisions and open issues. The development history before th
 - 数（前 → 後）：`moon test --target all` は wasm 929、wasm-gc 941、js 987、native 929 で変わらず（3 つ減り 3 つ増えた）。npm は 446 → 449、bench は 20 のまま。js の行カバレッジは全体で 28467/39101（72.8%）→ 29664/39101（75.9%）。
 - 残した候補（判断待ち）：`core` の「Trig's methods call its functions」（委譲を 12 個なぞる）、`proj` の「Trig::moonbit is what a CRS computes with by default」、`raster` の「LOG2_WORLD_WIDTH is the log written out」（手書きの定数を式と比べる）、`globe` の「copy leaves the original alone」、`bench/backend/kernel` の 2 つ。
 - 残る穴：`clipper` の本体（`sweep.mbt` 62%、`horizontal.mbt` 54% など。`clipper:golden` は手元だけ）、`worker/query_geometry.mbt` 27%、`style/distance.mbt` 55%、`draco/edgebreaker_traversal.mbt` 38%。ほかの golden にも「比べた点が 0 の行」を失敗にする確かめが要るかは見ていない。
+## バンドラでの動作（2026-11-15、Mac）
+
+- 調べたこと：公開する配置のままでは、既定の設定で動くのは Vite の dev サーバだけだった。
+  1. Vite のビルドと webpack は `new URL("./x-worker.js", import.meta.url)` のワーカーをハッシュ付きのアセットとして出すが、ワーカーが自分の隣から `import("./worker-query.js")` などで読む部品（`worker-labels.js`、`worker-pmtiles.js`、`worker-query.js`、`analysis-viewshed.js`、`data-{zip,crs,fgb,geotiff,reproject}.js`）は出力されず 404。`queryRenderedFeatures` は警告だけで `[]` を返していた。
+  2. Vite のビルドは 4KB 未満のワーカー（`geodesic-worker.js`、`services-worker.js`）を `data:` URL に埋め込み、`workerScriptUrl` が断っていた。
+  3. `workerScriptUrl` の `home` の既定値 `new URL("./", import.meta.url)` で Parcel はビルドに失敗し、Vite は `index.js` をもう 1 つアセットとして出していた。
+- 直し：
+  - `home` は `import.meta.url` の文字列から切り出す（`npm/src/urls.ts`）。
+  - ワーカーの部品はメインスレッドが `new URL("./part.js", import.meta.url)` で名指しし（バンドラがアセットとして出す）、wasm の URL と同じく init メッセージの `parts` で渡す（`workerParts`）。ワーカーは渡された URL を import し、なければ従来どおり隣のファイル（ページが `workerUrl` を渡したとき、bench のページ）。表示ワーカーの分は `create_map` の最後の引数（`@map.WorkerParts`）から `post_init` へ。
+  - `workerScriptUrl(given, own, …)`：ページが渡した `workerUrl`（`given`）の規則は変えていない（ページのオリジンか、ライブラリのフォルダ。`data:`・`blob:` は URL オブジェクトでも断る）。渡されないときのライブラリ自身の既定（`own`）だけ、バンドラが置いた場所を認める：http(s) ならどのオリジンでも（ページのオリジン以外は import するだけの blob 経由）、`data:` なら同じ中身の同一オリジンの blob から起動。`own` はライブラリのコードとバンドラが決める値で、実行時の入力（スタイル、属性、オプション）からは作れない。
+  - CSP：埋め込まれたワーカーには `worker-src blob:`、ワーカーの中で `data:` から import される部品には `script-src data:` が要る。Vite では `build.assetsInlineLimit: 0` で埋め込みをやめれば `'self'` で足りる（docs/getting-started.md に記載）。
+- 結果（`npm run bundlers`、Chromium、`bench/results/bundlers.json`。地図が描かれる、問い合わせが 2 地物を返す、analysis・data（CRS 付き、`data-crs.js` と `proj.wasm`）・geodesic が答える）：
+
+| バンドラ | モード | 直す前 | 直した後 |
+|---|---|---|---|
+| Vite 8.3.8 | dev | 動く | 動く |
+| Vite 8.3.8 | build | 部品が 404、埋め込みワーカーを拒否 | 動く（設定なし） |
+| Vite 8.3.8 | build、アセットが別オリジン（`base`） | 未確認 | 動く |
+| webpack 5.112.2 | dev / build | 部品が 404 | 動く（設定なし） |
+| webpack 5.112.2 | build、別オリジンの `publicPath` | 未確認 | 動く |
+| Rollup 4.68.3 | build（node-resolve と `@web/rollup-plugin-import-meta-assets` 3.0.1） | 部品が出力されない | 動く |
+| esbuild 0.28.2 | build（ファイルを隣にコピー） | 動く | 動く（コピーするものは同じ） |
+| Parcel 2.16.4 | dev / build | ビルド失敗 | ビルドは通るが動かない |
+| Parcel 2.16.4 | build、ライブラリを束ねずに配る | 動く | 動く |
+
+- Parcel：`new URL(…, import.meta.url)` で名指ししたファイルをすべて自分のモジュール形式に変換するため、モジュールワーカーと部品の export が失われる（dev は「the worker failed」、build は変換後のコードが構文エラー）。ライブラリ側では直せないので「dist を束ねずに配って実行時に import する」と文書にした。`bundlers` は Parcel の 2 行を既知の失敗として持ち、動くようになったら知らせる。
+- 大きさ（gzip）：mbt-map（index.js）166.4KB → 166.7KB（+0.3KB、予算 168KB）。GeoJSON ソース 4.65 → 4.85KB（予算 5KB）、mbt-map/analysis 8.50 → 8.74KB（9KB）、mbt-map/data 4.87 → 5.14KB（6KB）、mbt-map/geodesic 1.41 → 1.61KB（2KB）、mbt-map/3d 9.26 → 9.46KB（10KB）、mbt-map/services 11.49 → 11.66KB（12KB）。`urls.ts` が各エントリに入るため。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`、npm のテストと大きさ、pack test（Chromium 23/23、WebKit の npm・cdn・geojson・analysis・data）、`npm run bundlers`。
+- 残り：AGENTS.md §8.3 の「例外は 1 つ」の文は、ライブラリ自身の既定のワーカー（バンドラが置いた場所、`data:` の埋め込み）をまだ書いていない。`bundlers` はバンドラを npm から取るので CI には入れていない。Rollup でプラグインなしにファイルをコピーする形と、Firefox・WebKit でのバンドラの出力は確かめていない。
 ## 公開前の整理：使っていないものを外す（2026-11-15）
 
 監査で見つかったもののうち、ユーザーが認めた分を外した。追跡しているファイルは 1530 個・11.5MB から 1492 個・9.2MB になった。外した実験（バックエンドの比較、モジュール分割の計測）のスクリプトと結果は、前のリポジトリ `t-ujiie-g/mbmap` に残っている。

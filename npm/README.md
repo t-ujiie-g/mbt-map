@@ -36,7 +36,7 @@ Styles follow the MapLibre style specification and the `Map` API is shaped like 
 | `mbt-map/3d` | 3D models, 3D Tiles, I3S and point clouds |
 | `mbt-map/moonbit` | the entry the MoonBit API (`t-ujiie-g/mbtmap` on mooncakes) imports |
 
-The modules load their workers and `.wasm` files from beside themselves: keep the files of `dist/` together. With a bundler, copy the workers and wasm next to the bundle or pass their URLs ([Getting started](https://t-ujiie-g.github.io/mbt-map/docs/getting-started.html#bundlers)).
+The modules load their workers and `.wasm` files from beside themselves: keep the files of `dist/` together. Vite and webpack need no configuration; for other bundlers see ([Getting started](https://t-ujiie-g.github.io/mbt-map/docs/getting-started.html#bundlers)).
 
 Requires WebAssembly GC (Chrome and Edge 119+, Firefox 120+, Safari 18.2+). Under a Content Security Policy, allow `script-src 'wasm-unsafe-eval'` and `worker-src 'self'`.
 

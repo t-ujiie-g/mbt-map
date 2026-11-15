@@ -198,9 +198,11 @@ A `@geom.Table` without feature ids:
 
 In:
 
-- `{type: "init", wasm, style, symbols, font}`: the wasm URL, the style ("Compiled
+- `{type: "init", wasm, style, symbols, font, parts?}`: the wasm URL, the style ("Compiled
   style", a Uint8Array), whether it has symbol layers (the label code is then loaded
-  ahead of the first tile) and the CSS font family labels are drawn in. The wasm is
+  ahead of the first tile), the CSS font family labels are drawn in, and the URLs of the
+  files imported on first use (`{labels, pmtiles, query}`; without one, the file beside
+  the worker). The wasm is
   instantiated with `{host, Math}`: the host's `Math` (`worker/host_math.mbt`) and
   `hostText`'s (`wasmio/js/host.mjs`) `host.text_char`, `text_number`,
   `number_text` and `text_code` for the expressions' `Number(string)` and
@@ -475,7 +477,8 @@ cluster properties' (reduced values) then `cluster`, `cluster_id`, `point_count`
 
 In:
 
-- `{type: "init", wasm, geometry, proj}`: the analysis, geometry and
+- `{type: "init", wasm, geometry, proj, parts?}` (`parts.viewshed`: the URL of
+  analysis-viewshed.js, else the file beside the worker): the analysis, geometry and
   coordinate system wasm URLs (the last two are fetched on their first use). The
   analysis module imports `Math` and `host.number` (`hostNumber`), proj.wasm only
   `Math`, the geometry module nothing.
@@ -680,7 +683,8 @@ Out: `{type: "result", id, value: {features, exceeded}}`, the GeoJSON features (
 
 ## Data worker messages (`data_worker/js/worker.mjs`)
 
-In: `{type: "init", wasm, proj, prj, xml, geotiff}` (data.wasm instantiated with `{ host: { number,
+In: `{type: "init", wasm, proj, prj, xml, geotiff, parts?}` (`parts`: the URLs of the files imported on
+first use, `{zip, crs, fgb, geotiff, reproject}`, else those beside the worker; data.wasm instantiated with `{ host: { number,
 decode, text_code, number_text } }` from `dataImports` in `data_worker/js/read.mjs`; `proj` the URL
 of proj.wasm, `prj` of prjwkt.js, `xml` of xml.wasm, the KML and GPX module `xml_worker` instantiated
 with `{ Math, host }` (`hostText`), and `geotiff` of geotiff.wasm, each loaded on first use), then `{type: "call", id, op: "read",

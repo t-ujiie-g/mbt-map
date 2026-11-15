@@ -3,7 +3,7 @@
 
 import { hostText, MAX_INPUT_BYTES } from "../../wasmio/js/host.mjs";
 import { dataFetchInit, readCapped } from "../../worker/js/body.mjs";
-import { dataImports, dataReader, isCrs, rasterSource } from "./read.mjs";
+import { dataImports, dataReader, isCrs, rasterSource, reprojectModule, setDataParts } from "./read.mjs";
 
 let reader = null;
 let ready = null;
@@ -101,7 +101,7 @@ async function run(msg) {
     if (msg.op === "reprojectTile") {
       const { spec, options = {}, init } = msg;
       const { z, x, y, tileSize = 256 } = options ?? {};
-      check((await import("./reproject.mjs")).isReprojected(spec));
+      check((await reprojectModule()).isReprojected(spec));
       checkTile({ z, x, y, tileSize });
       const value = await reader.reprojectTile(spec, { z, x, y, tileSize }, init);
       postMessage({ type: "result", id: msg.id, value }, value ? [value] : []);
@@ -124,6 +124,7 @@ async function run(msg) {
 onmessage = (e) => {
   const msg = e.data;
   if (msg?.type === "init" && !ready && typeof msg.wasm === "string") {
+    setDataParts(msg.parts);
     urls.proj = msg.proj;
     urls.prj = msg.prj;
     urls.xml = msg.xml;

@@ -125,6 +125,8 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 - Sibling chunks by dynamic import need no entry.
 - `bench/pages/basic`, `bench/pages/terrain` and `bench/render/page.mjs` call those exports directly (`create_map` and others): change them with the signatures (the pack test starts both examples).
 - The facade resolves tile URLs against the style URL and loads `worker.js`/`mbt-map.wasm` next to itself via `new URL(..., import.meta.url)`.
+- Bundlers (docs/getting-started.md "Bundlers", `npm run bundlers`): every file a worker loads later is named on the main thread by a literal `new URL("./file", import.meta.url)`, which bundlers emit as an asset, and sent in the worker's init message (wasm URLs, and `parts`: `workerParts` in `npm/src/urls.ts`; the display worker's go through `create_map` to `post_init`). A worker imports a part from the URL given, else from beside itself (the page's own `workerUrl`, the bench pages). Never write `new URL("./", import.meta.url)` (Parcel fails on it, Vite emits the module again for it).
+- `workerScriptUrl` (`npm/src/urls.ts`) tells the page's `workerUrl` (on the page's origin or in the library's folder, AGENTS.md §8.3) from the library's own default, which is where a bundler put it: http(s) on any origin (through the importing blob off the page's), or a `data:` URL (Vite inlines small files), started from a same-origin blob of the same text.
 
 ## `<mbt-map>` (`mbt-map/element`)
 

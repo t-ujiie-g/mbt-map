@@ -141,4 +141,4 @@ export function MapView({ style }) {
 - To use controllers from [mbt-map/ui](./ui.md) or [mbt-map/search](./search.md), take the map from `e.detail.map` in `onmbt-map-load`, keep it in state, and read a controller with `useSyncExternalStore(c.subscribe, () => c.state)`.
 - With TypeScript, React's JSX types do not know `<mbt-map>`; declare it in `JSX.IntrinsicElements` (or React's `react` module augmentation) in your project.
 
-Bundling: esbuild keeps the package's `new URL("./worker.js", import.meta.url)` references, so copying the package's workers and wasm next to the bundle is enough; `examples/react/build.mjs` does that. See [Getting started](./getting-started.md).
+Bundling: Vite and webpack need no configuration. esbuild keeps the package's `new URL("./worker.js", import.meta.url)` references, so copying the package's workers and wasm next to the bundle is enough; `examples/react/build.mjs` does that. See [Getting started](./getting-started.md#bundlers).
