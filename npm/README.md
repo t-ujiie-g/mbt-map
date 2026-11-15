@@ -18,6 +18,8 @@ const map = new Map({
 map.on("click", "stations", (e) => console.log(e.features[0].properties.name));
 ```
 
+From a CDN, no install: `<script type="importmap">{ "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.0/dist/index.js" } }</script>`, then `import { Map } from "mbt-map"` in a module script.
+
 Styles follow the MapLibre style specification and the `Map` API is shaped like MapLibre GL JS's.
 
 | Entry | What it gives |

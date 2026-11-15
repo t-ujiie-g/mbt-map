@@ -6,12 +6,12 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 162989,
+      "bytes": 163124,
       "budget": 168000
     },
     {
       "name": "GeoJSON sources (loaded by mbt-map when a style has one)",
-      "bytes": 4493,
+      "bytes": 4623,
       "budget": 5000
     },
     {
@@ -76,7 +76,7 @@
     },
     {
       "name": "mbt-map/services",
-      "bytes": 11338,
+      "bytes": 11468,
       "budget": 12000
     },
     {
@@ -126,7 +126,7 @@
     },
     {
       "name": "mbt-map/analysis",
-      "bytes": 8341,
+      "bytes": 8468,
       "budget": 9000
     },
     {
@@ -176,7 +176,7 @@
     },
     {
       "name": "mbt-map/geodesic",
-      "bytes": 1247,
+      "bytes": 1379,
       "budget": 2000
     },
     {
@@ -186,7 +186,7 @@
     },
     {
       "name": "mbt-map/3d",
-      "bytes": 9093,
+      "bytes": 9232,
       "budget": 10000
     },
     {
@@ -211,7 +211,7 @@
     },
     {
       "name": "mbt-map/data",
-      "bytes": 4727,
+      "bytes": 4849,
       "budget": 6000
     },
     {

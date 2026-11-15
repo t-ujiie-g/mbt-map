@@ -350,7 +350,7 @@ Everything fetched at runtime is attacker-controllable. Decoders must fail safel
 
 ### 8.3 Web platform
 - No `innerHTML`/`outerHTML`/`insertAdjacentHTML` with data from tiles, styles or attributes. Use `textContent` and DOM APIs, which matters most for future labels and attribution strings in `<mbt-map>`.
-- Work under a strict CSP: no `eval`, no `new Function`, and workers loaded from same-origin URLs (no blob or data-URL workers unless documented).
+- Work under a strict CSP: no `eval`, no `new Function`, and workers loaded from same-origin URLs. The one documented exception: a worker in the library's own folder on another origin (its `dist/` on a CDN) starts through a same-origin `blob:` script that only imports it (`workerScriptUrl` in `npm/src/urls.ts`). Anything else, other folders of the same CDN origin included (CDNs serve every package from one origin), and `data:`/`blob:` URLs given as options, is refused, so markup (`<mbt-map worker-url>`) cannot start foreign code.
 - Fetches for tiles, styles and sprites send no credentials by default. URL templates may only substitute MapLibre's placeholders (`{z}/{x}/{y}`, `{prefix}`, `{ratio}`, `{quadkey}`, `{bbox-epsg-3857}`, `{bbox}`; `TILE_PLACEHOLDERS` in `npm/src/urls.ts`, `tile_url` in `map/dom.mbt`), with no open redirects or arbitrary schemes. Any request transform hook is the caller's responsibility and documented as such.
 - `postMessage` handlers check message shape and type and ignore unknown messages.
 - `<mbt-map>` attributes (`style-url`, `center`, …) are parsed strictly; invalid values are rejected, not coerced.
