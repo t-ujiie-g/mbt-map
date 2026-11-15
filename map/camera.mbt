@@ -162,6 +162,34 @@ pub fn Map::set_handler(self : Map, h : Handler, enabled : Bool) -> Unit {
   } else {
     self.handlers & h.bit().lnot()
   }
+  set_touch_action(self.canvas, self.touch_action())
+}
+
+///|
+/// The CSS `touch-action` when the map takes one-finger drags (`pan`) and two-finger gestures
+/// (`pinch`), as MapLibre's canvas container: the browser keeps the gestures the map leaves alone.
+fn touch_action(pan : Bool, pinch : Bool) -> String {
+  match (pan, pinch) {
+    (true, true) => "none"
+    (true, false) => "pinch-zoom"
+    (false, true) => "pan-x pan-y"
+    (false, false) => "auto"
+  }
+}
+
+///|
+fn Map::touch_action(self : Map) -> String {
+  touch_action(self.takes_touches(1), self.takes_touches(2))
+}
+
+///|
+/// Whether a gesture of `fingers` fingers moves the map.
+fn Map::takes_touches(self : Map, fingers : Int32) -> Bool {
+  if fingers < 2 {
+    self.handler_enabled(DragPan)
+  } else {
+    self.handler_enabled(TouchZoomRotate) || self.handler_enabled(TouchPitch)
+  }
 }
 
 ///|

@@ -41,16 +41,26 @@ pub fn refusal(t : @geom.Table, geodesic~ : Bool = false) -> String? {
 }
 
 ///|
-/// Why a buffer of `meters` with `arc_tolerance` cannot be made, or None: a
-/// geodesic one wider than the Earth, a planar one past `MAX_COORDINATE`, or a
-/// tolerance that would put more than about 2,200 points on a circle.
+/// The widest geodesic buffer, in meters (a quarter of a meridian): a point's circle stays within a
+/// hemisphere, where the per-feature plane is within 0.6% of the ground.
+pub const MAX_GEODESIC_BUFFER : Double = 1.0e7
+
+///|
+/// Why a buffer of `meters` with `arc_tolerance` cannot be made, or None: no number, a geodesic
+/// distance past `MAX_GEODESIC_BUFFER`, a planar one past `MAX_COORDINATE`, or a tolerance that
+/// would put more than about 2,200 points on a circle.
 pub fn buffer_refusal(
   meters : Double,
   mode~ : BufferMode,
   arc_tolerance~ : Double,
 ) -> String? {
-  let widest = if mode is Geodesic { 2.0e7 } else { MAX_COORDINATE }
-  if !(meters.abs() <= widest) {
+  if meters.is_nan() {
+    return Some("invalid distance")
+  }
+  if mode is Geodesic && meters.abs() > MAX_GEODESIC_BUFFER {
+    return Some("a geodesic buffer takes at most 10,000 km")
+  }
+  if meters.abs() > MAX_COORDINATE {
     return Some("invalid distance")
   }
   if !(arc_tolerance == 0.0 || arc_tolerance >= meters.abs() * 1.0e-6) {

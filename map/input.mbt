@@ -441,6 +441,7 @@ fn Map::on_pointer_up(self : Map, e : JsValue) -> Unit {
     )
   } else {
     self.end_move(as_event(e))
+    self.request_render()
   }
 }
 
@@ -506,7 +507,16 @@ fn Map::on_key_down(self : Map, e : JsValue) -> Unit {
 fn Map::attach_input(self : Map) -> Unit {
   let c = self.canvas
   set_tab_index(c)
+  set_touch_action(c, self.touch_action())
   self.cleanups.push(prevent_context_menu(c))
+  // For browsers that ignore `touch-action`: the map's gestures do not scroll or zoom the page.
+  self.cleanups.push(
+    listen(c, "touchmove", e => {
+      if cancelable(e) && self.takes_touches(touch_count(e)) {
+        prevent_default(e)
+      }
+    }),
+  )
   self.cleanups.push(
     listen(c, "pointerdown", e => {
       capture_pointer(c, e)
@@ -562,6 +572,7 @@ fn Map::attach_input(self : Map) -> Unit {
         () => {
           self.wheel_timer = -1
           self.end_move(as_event(e))
+          self.request_render()
         },
         WHEEL_END_DELAY,
       )

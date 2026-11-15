@@ -45,21 +45,20 @@ export async function plateauChecks(page) {
   await page.evaluate(settled);
   const again = await page.evaluate(() => window.__layer.selected.length);
   // Clicks stay right of the panel (x > 330), whose buttons fly the map elsewhere.
-  // The listener goes in before the last click, whose frame can be over before the click returns. A viewshed and a
-  // clipping only draw a frame (no `idle` follows; one seen after them was the tool change's).
-  const tool = async (name, clicks, event = "idle") => {
+  // The listener goes in before the last click, whose frame can be over before the click returns.
+  const tool = async (name, clicks) => {
     crumb(`plateau: ${name}`);
     await page.click(`#tools input[value=${name}]`);
     for (const [x, y] of clicks.slice(0, -1)) await page.mouse.click(x, y);
     const [x, y] = clicks.at(-1);
-    await awaitAfter(page, `plateau: ${name} drawn`, () => page.mouse.click(x, y), { event });
+    await awaitAfter(page, `plateau: ${name} drawn`, () => page.mouse.click(x, y));
     return page.$eval("#tool-result", (e) => e.textContent);
   };
   const measured = await tool("measure", [[450, 250], [650, 380]]);
   const sight = await tool("sight", [[420, 450], [700, 250]]);
-  const viewshed = await tool("viewshed", [[600, 450]], "render");
+  const viewshed = await tool("viewshed", [[600, 450]]);
   const tinted = await page.evaluate(() => window.__map.pickPosition({ x: 600, y: 450 }) !== null);
-  const section = await tool("section", [[560, 300]], "render");
+  const section = await tool("section", [[560, 300]]);
   const clipped = await page.evaluate(() => window.__map.getClipping()?.planes?.length === 1);
   await page.click("#tools input[value=feature]");
   const ok =

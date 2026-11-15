@@ -97,6 +97,14 @@ test "buffers grow and shrink polygons, cap lines and drop what vanishes" {
   // Shrinking by more than half its width empties the square.
   let gone = buffer(t, -1000.0)
   assert_eq(gone.kinds[0], NoGeometry)
+  assert_eq(shrunk.kinds[1], NoGeometry)
+  let point = table([(Point, [[(139.0, 35.0)]], "a")])
+  assert_eq(buffer(point, -100.0).kinds[0], NoGeometry)
+  assert_eq(buffer(point, -100.0, mode=Planar).kinds[0], NoGeometry)
+  assert_eq(
+    buffer(point, -100.0).column("name").unwrap().values[0],
+    Some(Str("a")),
+  )
   // Butt caps make a shorter shape than round ones.
   assert_true(area_of(buffer(t, 100.0, cap=Butt), 1) < area_of(grown, 1))
 }
@@ -314,8 +322,16 @@ test "refusal keeps out coordinates Clipper cannot hold and edges that split too
 test "buffer_refusal bounds the distance and the arc tolerance" {
   assert_eq(buffer_refusal(1000.0, mode=Geodesic, arc_tolerance=0.0), None)
   assert_eq(buffer_refusal(-1000.0, mode=Geodesic, arc_tolerance=0.01), None)
+  assert_eq(
+    buffer_refusal(MAX_GEODESIC_BUFFER, mode=Geodesic, arc_tolerance=0.0),
+    None,
+  )
+  assert_eq(
+    buffer_refusal(-1.1e7, mode=Geodesic, arc_tolerance=0.0),
+    Some("a geodesic buffer takes at most 10,000 km"),
+  )
   assert_true(
-    buffer_refusal(3.0e7, mode=Geodesic, arc_tolerance=0.0) is Some(_),
+    buffer_refusal(1.0 / 0.0, mode=Planar, arc_tolerance=0.0) is Some(_),
   )
   assert_eq(buffer_refusal(3.0e7, mode=Planar, arc_tolerance=0.0), None)
   assert_true(
