@@ -23,6 +23,19 @@ function tokyoNow() {
 
 const mix = (a, b, t) => a + (b - a) * t;
 
+/** The color between `night` and `noon` ([r, g, b]) at `day` (0 to 1). */
+const shade = (night, noon, day) => `rgb(${night.map((c, i) => Math.round(mix(c, noon[i], day))).join(", ")})`;
+
+/** The sky between a night and a clear day's. */
+const sky = (day) => ({
+  "sky-color": shade([9, 13, 28], [120, 178, 236], day),
+  "horizon-color": shade([28, 36, 60], [222, 236, 250], day),
+  "fog-color": shade([28, 36, 60], [222, 236, 250], day),
+  "sky-horizon-blend": 0.7,
+  "horizon-fog-blend": 0.6,
+  "fog-ground-blend": 0.2,
+});
+
 /** The pale map's paint between night (0, dark gray) and day (1, light gray). */
 const basemap = (day) => ({
   "raster-brightness-min": mix(0.42, 0.3, day),
@@ -44,8 +57,9 @@ const map = new Map({
         attribution: "国土地理院 · 3D都市モデル（Project PLATEAU）千代田区（国土交通省）",
       },
     },
+    sky: sky(0),
     layers: [
-      { id: "background", type: "background", paint: { "background-color": "#0f141c" } },
+      { id: "background", type: "background", paint: { "background-color": shade([15, 20, 28], [233, 237, 242], 0) } },
       { id: "pale", type: "raster", source: "pale", paint: basemap(0) },
     ],
   },
@@ -64,13 +78,19 @@ function light() {
   const altitude = sunPosition(date, ...TOKYO).altitude;
   // Day comes in over civil twilight, from the sun 6° below the horizon to 6° above.
   const day = Math.min(1, Math.max(0, (altitude + 6) / 12));
-  // The sun as timeOfDayLights gives it; the ambient light kept bright enough at night to tell the buildings apart.
+  // By day the sun as timeOfDayLights gives it, with shadows; by night a weak moonlight from the south-west
+  // without shadows, so that the buildings' faces still differ.
   const sun = timeOfDayLights(date, ...TOKYO).find((l) => l.type === "directional");
-  const channel = (night, noon) => Math.round(mix(night, noon, day));
+  const directional =
+    altitude > 0
+      ? { ...sun, properties: { ...sun.properties, intensity: Math.max(sun.properties.intensity, 0.3), "cast-shadows": true, "shadow-intensity": 0.55 } }
+      : { id: "moon", type: "directional", properties: { color: "#cdd6ea", intensity: mix(0.45, 0.3, day), direction: [215, 50] } };
   map.setLights([
-    { id: "ambient", type: "ambient", properties: { color: `rgb(${channel(120, 255)}, ${channel(138, 255)}, ${channel(190, 255)})`, intensity: mix(0.75, 0.55, day) } },
-    { ...sun, properties: { ...sun.properties, "cast-shadows": altitude > 0, "shadow-intensity": 0.55 } },
+    { id: "ambient", type: "ambient", properties: { color: shade([132, 142, 165], [255, 255, 255], day), intensity: mix(0.5, 0.55, day) } },
+    directional,
   ]);
+  map.setSky(sky(day));
+  map.setPaintProperty("background", "background-color", shade([15, 20, 28], [233, 237, 242], day));
   for (const [name, value] of Object.entries(basemap(day))) map.setPaintProperty("pale", name, value);
   if (hint) hint.textContent = `${hint.dataset.text ?? (hint.dataset.text = hint.textContent)} · ${label}`;
 }
