@@ -41,8 +41,8 @@ const TILE_EXTENT = 8192;
 const TO_EXTENT = EXTENT / TILE_EXTENT;
 // Longest label kept, in characters: tile text is untrusted (AGENTS.md §8.2).
 export const MAX_LABEL_CHARS = 256;
-// Most glyphs a worker keeps, and draws for one tile; past them characters are
-// left blank, so a tile cannot make it draw without bound.
+// Most glyphs a worker keeps (it then starts again), and draws for one tile; past
+// them characters are left blank, so a tile cannot make it draw without bound.
 const MAX_GLYPHS = 4096;
 const MAX_NEW_GLYPHS_PER_TILE = 1024;
 // Most missing image names one entry reports.
@@ -56,20 +56,33 @@ const FONT_KEY = 2 ** 21;
 
 // SDF glyphs, drawn once per worker in the map's font (`fontFamily`) or a face of `text-font`
 // (`faces`: style, weight and family lines, worker/labels.mbt `Labels::font`; "" the map's font);
-// `fresh` lists the ones the main thread has not been sent yet.
+// `sent` are those the main thread has, `fresh` the ones used since that it has not been sent yet.
 export class Glyphs {
   constructor(fontFamily) {
     this.fontFamily = fontFamily;
     this.faces = [""];
     this.sdfs = [];
     this.cache = new Map();
+    this.sent = new Set();
     this.fresh = new Set();
     this.budget = MAX_NEW_GLYPHS_PER_TILE;
   }
 
-  // Starts a tile's allowance of new glyphs.
+  // Starts a tile's allowance of new glyphs; a full cache is emptied (the main thread keeps
+  // the glyphs sent, so they are drawn again but not sent again).
   startTile() {
     this.budget = MAX_NEW_GLYPHS_PER_TILE;
+    if (this.cache.size >= MAX_GLYPHS) {
+      this.cache.clear();
+      for (const key of this.fresh) this.sent.delete(key);
+      this.fresh.clear();
+    }
+  }
+
+  // The main thread rebuilt its atlas without the glyphs it was sent before: send them again when used.
+  reset() {
+    this.sent.clear();
+    this.fresh.clear();
   }
 
   // The index of a face, which then has the map's font after its families as MapLibre adds sans-serif.
@@ -83,7 +96,7 @@ export class Glyphs {
     const key = font * FONT_KEY + cp;
     let g = this.cache.get(key);
     if (!g) {
-      if (this.cache.size >= MAX_GLYPHS || this.budget <= 0) return BLANK;
+      if (this.budget <= 0) return BLANK;
       this.budget--;
       const [fontStyle, fontWeight, family] = this.faces[font].split("\n");
       this.sdfs[font] ??= new TinySDF({
@@ -93,6 +106,9 @@ export class Glyphs {
       const d = this.sdfs[font].draw(String.fromCodePoint(cp));
       g = { key, advance: d.glyphAdvance, left: d.glyphLeft - SDF_BUFFER, top: d.glyphTop + SDF_BUFFER, width: d.width, height: d.height, data: d.data };
       this.cache.set(key, g);
+    }
+    if (!this.sent.has(key)) {
+      this.sent.add(key);
       this.fresh.add(key);
     }
     return g;

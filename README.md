@@ -14,7 +14,7 @@ const map = new Map({
 map.on("click", "stations", (e) => console.log(e.features[0].properties.name));
 ```
 
-> mbt-map is approaching its first release (0.1.0). The npm package and the MoonBit modules are not published yet.
+Documentation, examples and a live demo: **<https://t-ujiie-g.github.io/mbt-map/>**
 
 ## What it does
 
@@ -32,6 +32,18 @@ The engine and the heavy parts (tile decoding, tessellation, analysis, format re
 
 ```sh
 npm install mbt-map
+```
+
+Or without installing, from a CDN in one HTML file:
+
+```html
+<script type="importmap">
+  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.0/dist/index.js" } }
+</script>
+<script type="module">
+  import { Map } from "mbt-map";
+  new Map({ container: "map", style: "https://example.com/style.json", center: [139.7671, 35.6812], zoom: 14 });
+</script>
 ```
 
 The package is plain ES modules plus workers and `.wasm` files that load from beside the module. Served as is (an import map, or a static copy of `dist/`), it works without configuration; with a bundler, see [Getting started](docs/getting-started.md#bundlers).

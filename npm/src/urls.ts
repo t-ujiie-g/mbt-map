@@ -35,13 +35,25 @@ export function resolveTemplate(template: string, base: string | URL, what = "ti
   return archive === null ? href : PMTILES + href;
 }
 
-/** Same-origin http(s) only, so markup cannot start data:, blob: or foreign workers (AGENTS.md §8.3). */
-export function workerScriptUrl(url: string | URL, base: URL, origin: string): string {
+const BOOTSTRAPS = new Map<string, string>();
+
+/**
+ * Where to start module worker `url`: on the page's origin as it is; inside `home`, the library's own folder (a
+ * CDN's), through a same-origin blob importing it (browsers start no cross-origin workers). Others refused (§8.3).
+ */
+export function workerScriptUrl(url: string | URL, base: URL, origin: string, home = new URL("./", import.meta.url).href): string {
   const u = new URL(url, base);
-  if (!/^https?:$/.test(u.protocol) || u.origin !== origin) {
-    throw new Error(`mbt-map: the worker must be a same-origin http(s) URL: ${u.href}`);
+  const inHome = /^https?:$/.test(new URL(home).protocol) && u.href.startsWith(home);
+  if (!/^https?:$/.test(u.protocol) || (u.origin !== origin && !inHome)) {
+    throw new Error(`mbt-map: the worker must be an http(s) URL on the page's origin or beside the library: ${u.href}`);
   }
-  return u.href;
+  if (u.origin === origin) return u.href;
+  let blob = BOOTSTRAPS.get(u.href);
+  if (!blob) {
+    blob = URL.createObjectURL(new Blob([`import ${JSON.stringify(u.href)};`], { type: "text/javascript" }));
+    BOOTSTRAPS.set(u.href, blob);
+  }
+  return blob;
 }
 
 export function wasmUrl(url: string | URL, base: URL): string {

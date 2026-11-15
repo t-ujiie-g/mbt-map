@@ -215,9 +215,9 @@ test "a flat view is covered by tiles of one zoom, nearest first" {
   let t = @core.Transform::new(tokyo(), 800.0, 600.0)
   let tiles = t.covering_tiles(0, 14)
   let center = @core.tile_containing(tokyo().center.to_mercator(), 14).unwrap()
-  assert_eq(tiles[0], center)
+  assert_eq(tiles[0], { id: center, wrap: 0, })
   for tile in tiles {
-    assert_eq(tile.z, 14)
+    assert_eq(tile.id.z, 14)
     let b = tile.mercator_bounds()
     let (x0, y0) = screen_of(t, { x: b.min_x, y: b.min_y, })
     let (x1, y1) = screen_of(t, { x: b.max_x, y: b.max_y, })
@@ -267,11 +267,11 @@ test "a pitched view uses lower zooms in the distance" {
   // away, which is one zoom level down (LOD_DISTANCE).
   let t = @core.Transform::new({ ..tokyo(), pitch: 60.0, }, 800.0, 600.0)
   let tiles = t.covering_tiles(4, 14)
-  let at = (z : Int32) => tiles.filter(tile => tile.z == z).length()
+  let at = (z : Int32) => tiles.filter(tile => tile.id.z == z).length()
   assert_eq((at(14), at(13), tiles.length()), (9, 3, 12))
-  assert_eq(tiles[0].z, 14)
+  assert_eq(tiles[0].id.z, 14)
   // The source's minimum zoom is a floor, whatever the distance.
-  assert_true(t.covering_tiles(14, 14).iter().all(tile => tile.z == 14))
+  assert_true(t.covering_tiles(14, 14).iter().all(tile => tile.id.z == 14))
 }
 
 ///|
@@ -291,12 +291,12 @@ test "the horizon comes on screen above 70 degrees and bounds the ground" {
   // twice): 2 zoom levels below the center's. A source that starts at the
   // center's zoom leaves the last stretch to the fog.
   let tiles = t.covering_tiles(4, 14)
-  assert_eq(tiles.fold(init=14, (z, tile) => @cmp.minimum(z, tile.z)), 12)
+  assert_eq(tiles.fold(init=14, (z, tile) => @cmp.minimum(z, tile.id.z)), 12)
   assert_true(tiles.length() < 60)
   let tiles = t.covering_tiles(14, 14)
-  assert_true(tiles.length() > 0 && tiles.iter().all(tile => tile.z == 14))
+  assert_true(tiles.length() > 0 && tiles.iter().all(tile => tile.id.z == 14))
   let distant = @core.tile_containing(sky, 14).unwrap()
-  assert_true(!tiles.contains(distant))
+  assert_true(!tiles.contains({ id: distant, wrap: 0, }))
 }
 
 ///|

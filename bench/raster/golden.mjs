@@ -102,6 +102,40 @@ try {
     }
   }
 
+  // World copies in mercator (MapLibre's `renderWorldCopies`, on by default): views wider than
+  // the world, across the antimeridian and turned over it, and one world only when turned off
+  // (pitched views are left out: their distant tiles take other zooms than MapLibre's).
+  const copiesStyle = {
+    version: 8,
+    sources: { std: world },
+    layers: [{ id: "bg", type: "background", paint: { "background-color": "#203040" } }, { id: "std", type: "raster", source: "std" }],
+  };
+  await writeFile(path.join(ROOT, "bench/dist/raster-copies.json"), JSON.stringify(copiesStyle));
+  const copiesCameras = {
+    z0: { center: [0, 0], zoom: 0, bearing: 0, pitch: 0 },
+    z1: { center: [120, 20], zoom: 1, bearing: 0, pitch: 0 },
+    antimeridian: { center: [180, -17], zoom: 3, bearing: 0, pitch: 0 },
+    turned: { center: [-175, 50], zoom: 2.5, bearing: 40, pitch: 0 },
+    "one-world": { center: [170, 20], zoom: 1, bearing: 0, pitch: 0, renderWorldCopies: false },
+  };
+  for (const [view, camera] of Object.entries(copiesCameras)) {
+    const page = await browser.newPage({ viewport: { width: 800, height: 1200 } });
+    page.on("pageerror", (e) => console.log("copies", "pageerror", e.message));
+    await page.goto(`${origin}/bench/query/index.html?style=/bench/dist/raster-copies.json&camera=${encodeURIComponent(JSON.stringify(camera))}`);
+    await page.waitForFunction(() => window.__ready, null, { timeout: 60000 });
+    const shot = (y) => page.screenshot({ clip: { x: 0, y, width: 800, height: 600 } }).then((b) => decodePng(b));
+    const [a, b] = [await shot(0), await shot(600)];
+    const diffs = [];
+    for (let i = 0; i < a.rgba.length; i += 4) for (let c = 0; c < 3; c++) diffs.push(Math.abs(a.rgba[i + c] - b.rgba[i + c]));
+    diffs.sort((x, y) => x - y);
+    const mean = diffs.reduce((s, d) => s + d, 0) / diffs.length;
+    const p99 = diffs[Math.floor(diffs.length * 0.99)];
+    const ok = mean <= LIMITS.mean && p99 <= LIMITS.p99;
+    if (!ok) failed++;
+    results.push({ paint: "copies", view, ok, mean: Number(mean.toFixed(3)), p99, max: diffs.at(-1) });
+    await page.close();
+  }
+
   // Each engine's template carries its name, so the requests of the two can be told apart.
   const tile = await readFile(path.join(ROOT, "bench/fixtures/gsi-std/14/14552/6451.png"));
   const placeholders = "p={prefix}&q={quadkey}&r={ratio}&b={bbox-epsg-3857}&c={bbox}&z={z}&x={x}&y={y}";

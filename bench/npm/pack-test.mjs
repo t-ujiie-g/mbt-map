@@ -16,6 +16,7 @@ import { modelChecks } from "./checks/model.mjs";
 import { moonbitChecks } from "./checks/moonbit.mjs";
 import { rabbitaChecks } from "./checks/rabbita.mjs";
 import { samplesChecks } from "./checks/samples.mjs";
+import { cdnChecks } from "./checks/cdn.mjs";
 import { tilesChecks } from "./checks/tiles.mjs";
 import { plateauChecks } from "./checks/plateau.mjs";
 import { pointCloudChecks } from "./checks/pointcloud.mjs";
@@ -72,6 +73,7 @@ const PAGES = {
   plateau: "examples/plateau/?local=1",
   rabbita: "examples/rabbita/?local=1",
   samples: "examples/samples/",
+  cdn: "bench/npm/pages/cdn/?cdn={cdn}",
 };
 
 // Each check runs in a fresh page and returns [name, ok, details].
@@ -141,7 +143,7 @@ const checks = {
       r.thrown === "mbt-map: style: layers[0].paint.line-width: unsupported: expression properties" &&
       JSON.stringify(r.warned) === JSON.stringify([{ path: "layers[0].paint.line-width", layer: "x", message: "expression properties" }]) &&
       r.lazy &&
-      r.workerRefused.startsWith("mbt-map: the worker must be a same-origin http(s) URL") &&
+      r.workerRefused.startsWith("mbt-map: the worker must be an http(s) URL on the page's origin or beside the library") &&
       r.leftovers === 0;
     // The display worker's parts load on first use: labels with the style's symbol layers,
     // queries with the first query, PMTiles with the first pmtiles:// tile.
@@ -513,6 +515,10 @@ const checks = {
     return samplesChecks(page);
   },
 
+  async cdn(page) {
+    return cdnChecks(page);
+  },
+
   async services(page, requests) {
     return servicesChecks(page, requests);
   },
@@ -684,6 +690,8 @@ async function engineStarted(page) {
 const unknown = [...(only ?? []), ...except].filter((name) => !(name in checks));
 if (unknown.length) throw new Error(`pack test: no check named ${unknown.join(", ")}`);
 const { server, origin } = await serve();
+// A second origin serving the same files with CORS, as a CDN does (the `cdn` page's package).
+const cdn = await serve(0, { cors: true });
 // Metal only exists on macOS; elsewhere (CI) Chromium falls back to SwiftShader.
 // Each example's checks take well under a minute; one that runs longer has hung.
 const CHECK_TIMEOUT = 180_000;
@@ -716,7 +724,7 @@ try {
     page.on("request", (r) => requests.push(r.url()));
     const { errors, settled } = watchErrors(page);
     await page.addInitScript(fakeGeolocation);
-    await page.goto(`${origin}/${PAGES[example]}`);
+    await page.goto(`${origin}/${PAGES[example].replace("{cdn}", cdn.origin)}`);
     await page.waitForFunction(() => window.__loaded, null, { timeout: 30000 });
     if (shots) await page.screenshot({ path: path.join(shots, `${example}.png`) });
     // A check that hangs (an event that never comes) fails after CHECK_TIMEOUT instead of holding CI,
@@ -741,6 +749,7 @@ try {
 } finally {
   await browser.close();
   server.close();
+  cdn.server.close();
 }
 if (failed) process.exit(1);
 console.log("pack test passed");

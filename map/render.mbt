@@ -252,8 +252,9 @@ fn Map::background(self : Map) -> (Double, Double, Double) {
 }
 
 ///|
-/// Draws `index`'s meshes of one tile; `shared` is the layer's paint for
-/// meshes without group properties; `height_scale` raises labels on terrain.
+/// Draws `index`'s meshes of one tile in world copy `wrap`; `shared` is the layer's paint for meshes
+/// without group properties; `height_scale` raises labels on terrain. Fill outlines go after the
+/// tile's fills, or into `outlines` to follow every tile's fills as MapLibre draws them.
 fn Map::draw_layer(
   self : Map,
   index : Int32,
@@ -264,6 +265,8 @@ fn Map::draw_layer(
   meshes : Array[LayerMesh],
   dpr : Double,
   height_scale~ : Double = 0.0,
+  wrap~ : Int32 = 0,
+  outlines? : Array[() -> Unit],
 ) -> Unit {
   let at = self.translated(at, layer, id)
   let zoom = self.transform.camera.zoom
@@ -274,8 +277,8 @@ fn Map::draw_layer(
     Some(e) if !by_feature => self.dash_of(e, zoom, layer.cap is Round)
     _ => None
   }
-  // Fill outlines go after every fill of the tile, as MapLibre draws them.
-  let outlines : Array[() -> Unit] = []
+  let after = outlines
+  let outlines : Array[() -> Unit] = after.unwrap_or([])
   for m in meshes {
     if m.kind == @core.KIND_HILLSHADE && layer.hillshade is Some(h) {
       self.draw_hillshade(h, m.mesh, at)
@@ -294,9 +297,9 @@ fn Map::draw_layer(
     }
     let p = mesh_paint(m, layer, shared, zoom)
     if m.labels is Some(s) {
-      // An ancestor standing in for several tiles is drawn once; MapLibre hides
-      // text below 0.1 opacity.
-      if s.drawn != self.frame_count && p.opacity >= 0.1 {
+      // An ancestor standing in for several tiles is drawn once, in the copy
+      // its labels were placed in; MapLibre hides text below 0.1 opacity.
+      if s.drawn != self.frame_count && s.wrap == wrap && p.opacity >= 0.1 {
         s.drawn = self.frame_count
         if s.line is Some(l) {
           let tile_px = at.units_per_pixel * dpr
@@ -428,8 +431,10 @@ fn Map::draw_layer(
       }
     }
   }
-  for f in outlines {
-    f()
+  if after is None {
+    for f in outlines {
+      f()
+    }
   }
 }
 
@@ -548,6 +553,7 @@ fn Map::draw_frame(
       continue
     }
     self.draw_icons(index, layer, draws, dpr, height_scale)
+    let outlines = []
     for d in draws {
       self.draw_layer(
         index,
@@ -558,7 +564,12 @@ fn Map::draw_frame(
         d.meshes,
         dpr,
         height_scale~,
+        wrap=d.wrap,
+        outlines~,
       )
+    }
+    for f in outlines {
+      f()
     }
   }
   self.draw_globe_atmosphere()

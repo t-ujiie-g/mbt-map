@@ -131,8 +131,9 @@ pub struct Map {
   priv mut has_labels : Bool
   priv targets : @hashmap.HashMap[Int64, TerrainTarget]
   priv mut content_version : Int32
-  priv atlas : @label.Atlas
+  priv mut atlas : @label.Atlas
   priv mut atlas_full : Bool
+  priv glyphs : @label.GlyphStore[Bitmap]
   priv fonts : @hashmap.HashMap[String, Int32]
   priv tile_fonts : Array[Int32]
   priv mut labels_dirty : Bool
@@ -267,6 +268,7 @@ pub fn Map::new(
       @render_webgl2.ATLAS_SIZE,
     ),
     atlas_full: false,
+    glyphs: @label.GlyphStore::new(),
     fonts: @hashmap.HashMap([]),
     tile_fonts: [],
     labels_dirty: false,

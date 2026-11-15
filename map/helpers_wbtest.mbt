@@ -24,6 +24,7 @@ fn placement_stub() -> @render_webgl2.Placement {
 fn label_set(labels : @render_webgl2.JsBuffer, count : Int32) -> LabelSet {
   {
     labels,
+    keys: [],
     count,
     allow_overlap: false,
     cooperative: false,
@@ -41,6 +42,8 @@ fn label_set(labels : @render_webgl2.JsBuffer, count : Int32) -> LabelSet {
     heights: FixedArray::make(count, 0.0),
     heights_at: 0,
     round: 0,
+    chosen: 0,
+    wrap: 0,
     drawn: 0,
     changed: false,
     moved: false,
@@ -72,7 +75,7 @@ test "pattern_tile places a tile in CSS pixels of the world at the integer zoom"
     800.0,
     600.0,
   )
-  let p = pattern_tile(t, @core.TileId::new(2, 1, 3).unwrap())
+  let p = pattern_tile(t, @core.TileId::new(2, 1, 3).unwrap(), 0)
   // 512 px tiles: a z2 tile is 1024 px wide at zoom 3.
   assert_eq(p.x, 1024.0)
   assert_eq(p.y, 3072.0)
@@ -86,6 +89,8 @@ test "placement_order puts deeper tiles first, then by x and y" {
   let draw = (z, x, y) => {
     let d : Draw = {
       id: @core.TileId::new(z, x, y).unwrap(),
+      wrap: 0,
+      copy: false,
       at,
       meshes: [],
       bounds: None,
@@ -105,8 +110,8 @@ test "placement_order puts deeper tiles first, then by x and y" {
     (1, 1, 0),
   ])
   // On the globe tiles on a later world copy come after.
-  let wrapped = placement_order([draw(1, 1, 0), draw(1, 0, 1), draw(1, 1, 1)], wrap=id => {
-    if id.x == 0 {
+  let wrapped = placement_order([draw(1, 1, 0), draw(1, 0, 1), draw(1, 1, 1)], wrap=d => {
+    if d.id.x == 0 {
       1
     } else {
       0
@@ -117,6 +122,13 @@ test "placement_order puts deeper tiles first, then by x and y" {
     (1, 1, 1),
     (1, 0, 1),
   ])
+  // In mercator each draw's own copy: the western copy first, as MapLibre.
+  let copies = placement_order([
+    draw(1, 0, 0),
+    { ..draw(1, 1, 0), wrap: -1, },
+    { ..draw(1, 0, 0), wrap: 1, },
+  ])
+  assert_eq(copies.map(d => (d.wrap, d.id.x)), [(-1, 1), (0, 0), (1, 0)])
 }
 
 ///|

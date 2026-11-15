@@ -169,12 +169,14 @@ pub fn Transform::shadow_sphere_view(
 
 ///|
 /// `light` (over world pixels relative to the center, as `shadow_view`'s) for
-/// tile units (`extent` per edge) of `tile`, as `tile_matrix` is for the view.
+/// tile units (`extent` per edge) of `tile` in copy `wrap`, as `tile_matrix` is
+/// for the view.
 pub fn Transform::tile_light_matrix(
   self : Transform,
   light : Mat4,
   tile : TileId,
   extent : Int32,
+  wrap~ : Int32 = 0,
 ) -> Mat4 {
   let ws = self.world_size()
   let tiles = (1 << tile.z).to_double()
@@ -182,7 +184,7 @@ pub fn Transform::tile_light_matrix(
   let units = self.tile_scale(tile, extent)
   light
   .translate(
-    (tile.x.to_double() / tiles - c.x) * ws,
+    (tile.x.to_double() / tiles + wrap.to_double() - c.x) * ws,
     (tile.y.to_double() / tiles - c.y) * ws,
     0.0,
   )

@@ -95,6 +95,9 @@ fn constrain_center(
   let world = TILE_SIZE * @math.pow(2.0, zoom)
   let (south, north, lng_range) = match limits.bounds {
     Some(b) => (b.south, b.north, Some((b.west, b.east)))
+    // One world only: the view stays within the antimeridian.
+    None if !limits.world_copies =>
+      (-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE, Some((-ALMOST_180, ALMOST_180)))
     None => (-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE, None)
   }
   let min_y = mercator_y_from_lat(north) * world
@@ -142,7 +145,11 @@ fn constrain_center(
   let mut new_x = x
   if lng_range is Some(_) {
     let mid = (min_x + max_x) / 2.0
-    let wrapped = wrap_range(x, mid - world / 2.0, mid + world / 2.0)
+    let wrapped = if limits.world_copies {
+      wrap_range(x, mid - world / 2.0, mid + world / 2.0)
+    } else {
+      x
+    }
     if wrapped - width / 2.0 < min_x {
       new_x = min_x + width / 2.0
     }
@@ -156,6 +163,10 @@ fn constrain_center(
   let c = ({ x: new_x / world, y: new_y / world, } : MercatorCoord).to_lnglat()
   ({ lng: wrap180(c.lng), lat: c.lat, }, zoom)
 }
+
+///|
+/// The longitude range MapLibre keeps a view without world copies to.
+const ALMOST_180 : Double = 180.0 - 1.0e-10
 
 ///|
 /// `v` in (`min`, `max`] (MapLibre's `wrap`).

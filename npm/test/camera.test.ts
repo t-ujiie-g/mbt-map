@@ -31,7 +31,8 @@ test("padding, limits and fits take the engine's layout", () => {
   const none = limitsArray({ minZoom: 1, maxZoom: 20, minPitch: 0, maxPitch: 60, maxBounds: null });
   assert.deepEqual(none.slice(0, 4), [1, 20, 0, 60]);
   assert.ok(Number.isNaN(none[4]));
-  assert.deepEqual(limitsArray({ minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, maxBounds: new LngLatBounds(1, 2, 3, 4) }).slice(4), [1, 2, 3, 4]);
+  assert.deepEqual(limitsArray({ minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, maxBounds: new LngLatBounds(1, 2, 3, 4) }).slice(4), [1, 2, 3, 4, 1]);
+  assert.equal(limitsArray({ minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, maxBounds: null, renderWorldCopies: false })[8], 0);
   const fit = fitArray(new LngLatBounds(1, 2, 3, 4), { padding: 20, bearing: 45, offset: [1, 2], maxZoom: 9 });
   assert.deepEqual(fit, [1, 2, 3, 4, 45, 20, 20, 20, 20, 1, 2, 9]);
 });

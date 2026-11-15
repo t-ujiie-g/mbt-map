@@ -110,16 +110,17 @@ fn Map::prune_media(self : Map, style : Array[@style.Source]) -> Unit {
 }
 
 ///|
-/// Image source `src`'s draw this frame, its picture uploaded if due, and
-/// whether it has settled: shown, or nothing to show.
-fn Map::media_draw(
+/// Image source `src`'s draws this frame, one per world copy in view and one
+/// more either side (MapLibre's `getVisibleUnwrappedCoordinates`), its picture
+/// uploaded if due, and whether it has settled: shown, or nothing to show.
+fn Map::media_draws(
   self : Map,
   src : SourceTiles,
   dpr : Double,
-) -> (Draw?, Bool) {
-  guard self.media_of(src.source.id) is Some(m) else { return (None, false) }
+) -> (Array[Draw], Bool) {
+  guard self.media_of(src.source.id) is Some(m) else { return ([], false) }
   guard !picture_is_null(m.picture) && m.tile is Some(tile) else {
-    return (None, true)
+    return ([], true)
   }
   if m.mesh is None || m.dirty || m.playing {
     let mesh = self.renderer.upload_picture(m.picture, m.mesh)
@@ -128,13 +129,8 @@ fn Map::media_draw(
     }
     m.mesh = mesh
   }
-  guard m.mesh is Some(mesh) else { return (None, false) }
+  guard m.mesh is Some(mesh) else { return ([], false) }
   self.renderer.set_quad(mesh, m.quad)
-  // Pictures reach past their tile and are not clipped (MapLibre's raster draw).
-  let at = {
-    ..self.placement(tile, None, dpr),
-    clip: [-1.0e9, -1.0e9, 1.0e9, 1.0e9],
-  }
   let layer : LayerMesh = {
     entry: 0,
     states: [],
@@ -153,13 +149,26 @@ fn Map::media_draw(
     gradient: None,
   }
   let q = m.quad
-  let draw = {
-    id: tile,
-    at,
-    meshes: [layer],
-    bounds: Some((q[15], q[16], q[17], q[18])),
+  let (first, last) = match self.transform.wraps() {
+    (0, 0) if !self.transform.limits.world_copies => (0, 0)
+    (w0, w1) => (w0 - 1, w1 + 1)
   }
-  (Some(draw), true)
+  let draws = []
+  for wrap in first..<=last {
+    draws.push({
+      id: tile,
+      wrap,
+      copy: wrap != 0,
+      // Pictures reach past their tile and are not clipped (MapLibre's raster draw).
+      at: {
+        ..self.placement(tile, None, dpr, wrap~),
+        clip: [-1.0e9, -1.0e9, 1.0e9, 1.0e9],
+      },
+      meshes: [layer],
+      bounds: Some((q[15], q[16], q[17], q[18])),
+    })
+  }
+  (draws, true)
 }
 
 ///|

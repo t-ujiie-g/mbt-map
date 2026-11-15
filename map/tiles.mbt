@@ -216,6 +216,7 @@ fn Map::on_message(self : Map, msg : JsValue) -> Unit {
     "tile" => self.on_tile(msg)
     "query" => self.on_query(msg)
     "ranges" => self.on_ranges(msg)
+    "glyphs" => self.glyphs.forgotten(get_int(msg, "epoch"))
     "error" => console_warn("worker: \{get_string(msg, "message")}")
     _ => ()
   }
@@ -403,10 +404,14 @@ fn Map::layer_mesh(
 fn Map::update_tiles(
   self : Map,
   src : SourceTiles,
-  cover : Array[@core.TileId],
+  cover : Array[@core.UnwrappedTile],
 ) -> Unit {
   let wanted = @hashset.HashSet([])
-  for id in cover {
+  for u in cover {
+    let id = u.id
+    if wanted.contains(id.key()) {
+      continue
+    }
     wanted.add(id.key())
     match src.tiles.get(id.key()) {
       Some({ state: Stale(meshes), .. }) =>

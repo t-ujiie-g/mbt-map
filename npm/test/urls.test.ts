@@ -38,7 +38,20 @@ test("workers load only from same-origin http(s) URLs", () => {
   assert.equal(workerScriptUrl("./worker.js", base, origin), "https://example.com/styles/worker.js");
   assert.equal(workerScriptUrl(new URL("https://example.com/w.js"), base, origin), "https://example.com/w.js");
   for (const bad of ["data:text/javascript,1", "blob:https://example.com/x", "https://evil.test/w.js", "javascript:1"]) {
-    assert.throws(() => workerScriptUrl(bad, base, origin), /same-origin http\(s\)/);
+    assert.throws(() => workerScriptUrl(bad, base, origin, "https://cdn.test/npm/mbt-map@0.1.0/dist/"), /on the page's origin or beside the library/);
+  }
+});
+
+test("a worker beside the library on a CDN starts through a same-origin blob; other folders of the CDN are refused", async () => {
+  const origin = "https://example.com";
+  const home = "https://cdn.test/npm/mbt-map@0.1.0/dist/";
+  const cdn = `${home}worker.js`;
+  const url = workerScriptUrl(cdn, base, origin, home);
+  assert.match(url, /^blob:/);
+  assert.equal(await (await fetch(url)).text(), `import "${cdn}";`);
+  assert.equal(workerScriptUrl(cdn, base, origin, home), url);
+  for (const bad of ["https://cdn.test/npm/evil@1.0.0/worker.js", `${home}../../evil/worker.js`, "https://cdn.test.evil.example/npm/mbt-map@0.1.0/dist/worker.js"]) {
+    assert.throws(() => workerScriptUrl(bad, base, origin, home), /beside the library/);
   }
 });
 

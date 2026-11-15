@@ -82,6 +82,30 @@ pub fn TileId::lnglat_bounds(self : TileId) -> BBox {
 }
 
 ///|
+/// A tile in one copy of the world (MapLibre's `UnwrappedTileID`): `wrap` 0 is
+/// the main world (x in [0, 1]), -1 the copy west of it, 1 the one east.
+#derive(Debug, Eq)
+pub(all) struct UnwrappedTile {
+  id : TileId
+  wrap : Int32
+}
+
+///|
+/// Unique per tile and copy for copies up to `MAX_WORLD_COPIES` either side
+/// (`TileId::key` leaves the top three bits free).
+pub fn UnwrappedTile::key(self : UnwrappedTile) -> Int64 {
+  self.id.key() | ((self.wrap + MAX_WORLD_COPIES).to_int64() << 61)
+}
+
+///|
+/// Bounds in Web Mercator world space, moved by `wrap` worlds.
+pub fn UnwrappedTile::mercator_bounds(self : UnwrappedTile) -> BBox {
+  let b = self.id.mercator_bounds()
+  let w = self.wrap.to_double()
+  { ..b, min_x: b.min_x + w, max_x: b.max_x + w, }
+}
+
+///|
 /// The tile at zoom `z` containing `coord`; coordinates outside the world are
 /// clamped to the edge tiles. Returns `None` only for an invalid `z`.
 pub fn tile_containing(coord : MercatorCoord, z : Int32) -> TileId? {

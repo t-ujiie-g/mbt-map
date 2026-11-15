@@ -16,6 +16,83 @@ test "the atlas packs glyphs in shelves, padded, and keeps each glyph's place" {
 }
 
 ///|
+test "an atlas tells where a glyph's bitmap goes inside its padding" {
+  let a = @label.Atlas::new(20, 12)
+  assert_eq(a.place(7, 8, 4), Some((1, 1)))
+  assert_eq(a.bitmap_at(7), Some((1, 1)))
+  assert_eq(a.bitmap_at(8), None)
+}
+
+///|
+test "a repacked atlas grows until its glyphs fill at most half of it" {
+  // 4 glyphs of 14 x 14 padded to 16 x 16: 1024 pixels, past half of 32 x 32.
+  let glyphs = [(1, 14, 14), (2, 14, 14), (3, 14, 14), (4, 14, 14)]
+  let a = @label.Atlas::repack(glyphs, 32, 1024)
+  assert_eq(a.width, 64)
+  assert_eq(a.height, 64)
+  for g in glyphs {
+    assert_true(a.rect(g.0) is Some(_))
+  }
+  // Few glyphs stay in the smallest side asked for.
+  assert_eq(@label.Atlas::repack([(1, 4, 4)], 32, 1024).width, 32)
+  assert_eq(@label.Atlas::repack([], 32, 1024).width, 32)
+}
+
+///|
+test "a repacked atlas puts the tallest glyphs first and leaves out keys not given" {
+  let a = @label.Atlas::repack([(1, 4, 2), (2, 4, 6), (3, 4, 2)], 32, 32)
+  assert_eq(a.rect(2), Some((0, 0, 6, 8)))
+  assert_eq(a.rect(1), Some((6, 0, 6, 4)))
+  assert_eq(a.rect(3), Some((12, 0, 6, 4)))
+  assert_eq(a.rect(4), None)
+}
+
+///|
+test "at its largest side a repacked atlas holds as many glyphs as fit" {
+  let glyphs = Array::makei(10, i => (i, 14, 14))
+  let a = @label.Atlas::repack(glyphs, 16, 32)
+  assert_eq(a.width, 32)
+  let placed = glyphs.iter().filter(g => a.rect(g.0) is Some(_)).count()
+  assert_eq(placed, 4)
+  // A max below the start side wins.
+  assert_eq(@label.Atlas::repack([], 64, 32).width, 32)
+}
+
+///|
+test "a glyph store keeps the glyphs used and drops the others once every worker forgot them" {
+  let s : @label.GlyphStore[String] = @label.GlyphStore::new()
+  s.add(1, "a")
+  s.add(2, "b")
+  s.add(3, "c")
+  assert_eq(s.keep([3, 1, 3, 9]), [(3, "c"), (1, "a")])
+  assert_eq(s.sizes(), (2, 1))
+  // Left out but kept for tiles made before the workers forgot it.
+  assert_eq(s.get(2), Some("b"))
+  let epoch = s.forget(2)
+  s.forgotten(epoch - 1)
+  s.forgotten(epoch)
+  assert_eq(s.sizes(), (2, 1))
+  // A glyph waiting to be dropped comes back when used again.
+  assert_eq(s.keep([2, 1]), [(2, "b"), (1, "a")])
+  assert_eq(s.sizes(), (2, 1))
+  s.forgotten(epoch)
+  assert_eq(s.sizes(), (2, 0))
+  assert_eq(s.get(3), None)
+  // Answers to an older epoch do not count toward a newer one.
+  assert_eq(s.keep([1]), [(1, "a")])
+  let next = s.forget(1)
+  s.forgotten(epoch)
+  assert_eq(s.sizes(), (1, 1))
+  s.forgotten(next)
+  assert_eq(s.sizes(), (1, 0))
+  // With no workers to wait for, the others go at once.
+  s.add(5, "e")
+  let _ = s.keep([1])
+  let _ = s.forget(0)
+  assert_eq(s.sizes(), (1, 0))
+}
+
+///|
 test "the grid finds overlapping and touching boxes across cells" {
   let g = @label.Grid::new(200.0, 100.0, cell=32.0)
   assert_false(g.hits(10.0, 10.0, 50.0, 20.0))

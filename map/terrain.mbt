@@ -21,10 +21,13 @@ priv struct TerrainTarget {
 }
 
 ///|
-/// One tile's meshes and where they go this frame; a picture reaching past its
-/// tile has its Mercator `bounds` (min x, min y, max x, max y).
+/// One tile's meshes and where they go this frame, in world copy `wrap` (`copy`
+/// when the same meshes are drawn in another copy too); a picture reaching past
+/// its tile has its Mercator `bounds` (min x, min y, max x, max y) in the main world.
 priv struct Draw {
   id : @core.TileId
+  wrap : Int32
+  copy : Bool
   at : @render_webgl2.Placement
   meshes : Array[LayerMesh]
   bounds : (Double, Double, Double, Double)?
@@ -62,6 +65,8 @@ fn Map::terrain_source(self : Map) -> SourceTiles? {
 /// The terrain's height in meters at `m`, from the deepest loaded DEM tile
 /// there, or None where none has loaded.
 fn elevation_at(src : SourceTiles, m : @core.MercatorCoord) -> Double? {
+  // World copies stand on the main world's terrain.
+  let m : @core.MercatorCoord = { ..m, x: m.x - m.x.floor(), }
   let mut z = src.source.max_zoom
   while z >= src.source.min_zoom {
     let n = (1 << z).to_double()
@@ -85,6 +90,47 @@ fn elevation_at(src : SourceTiles, m : @core.MercatorCoord) -> Double? {
     z -= 1
   }
   None
+}
+
+///|
+/// Each tile's lowest and highest terrain heights (meters, exaggerated) for
+/// covering (MapLibre's `getMinMaxElevation`): its DEM tile's, else those of
+/// all loaded DEM tiles and the center's. None without terrain.
+fn Map::ground_heights(self : Map) -> ((@core.TileId) -> (Double, Double))? {
+  guard self.terrain_source() is Some(src) else { return None }
+  let k = self.exaggeration()
+  let e = self.transform.elevation
+  let (lowest, highest, _) = dem_range(src, k)
+  let all = (@cmp.minimum(lowest, e), @cmp.maximum(highest, e))
+  Some(id => {
+    let z = @cmp.minimum(id.z, src.source.max_zoom)
+    let dz = id.z - z
+    match
+      @core.TileId::new(z, id.x >> dz, id.y >> dz)
+      .bind(dem => src.ready(dem))
+      .bind(dem_of) {
+      Some((_, d)) => (d.lowest * k, d.highest * k)
+      None => all
+    }
+  })
+}
+
+///|
+/// The lowest and highest heights of `src`'s loaded DEM tiles times `k`, with
+/// sea level, and whether any has loaded.
+fn dem_range(src : SourceTiles, k : Double) -> (Double, Double, Bool) {
+  let mut lowest = 0.0
+  let mut highest = 0.0
+  let mut any = false
+  for _, e in src.tiles {
+    if e.state is (Ready(meshes) | Stale(meshes)) &&
+      dem_of(meshes) is Some((_, d)) {
+      any = true
+      lowest = @cmp.minimum(lowest, d.lowest * k)
+      highest = @cmp.maximum(highest, d.highest * k)
+    }
+  }
+  (lowest, highest, any)
 }
 
 ///|
@@ -190,9 +236,14 @@ fn Map::render_terrain(
         self.globe_cover(g, 512, src.source.min_zoom, z, false),
         { ..self.fog(), opacity: 0.0, },
       )
-    _ => (t.covering_tiles(src.source.min_zoom, z), self.fog())
+    _ =>
+      (
+        t.covering_tiles(src.source.min_zoom, z, heights?=self.ground_heights()),
+        self.fog(),
+      )
   }
-  for id in tiles {
+  for u in tiles {
+    let id = u.id
     guard dem_under(src, id) is Some((mesh, part)) else { continue }
     let size = if id.z >= z { full } else { TERRAIN_TEXTURE }
     let (target, current) = self.target_for(
@@ -203,7 +254,7 @@ fn Map::render_terrain(
     if !current {
       self.draw_texture(id, target, size, draws_of)
     }
-    let at = self.placement(id, None, dpr)
+    let at = self.placement(id, None, dpr, wrap=u.wrap)
     self.renderer.draw_terrain(
       mesh, target, at, scale, skirt, per_meter, part, fog,
     )
@@ -279,7 +330,7 @@ fn Map::texture_signature(
   h = mix(h, self.content_version.to_int64())
   for _, draws in draws_of {
     for d in draws {
-      if d.reaches(id) {
+      if !d.copy && d.reaches(id) {
         h = mix(h, d.id.key())
         for c in d.at.clip {
           h = mix(h, c.reinterpret_as_int64())
@@ -318,14 +369,14 @@ fn Map::draw_texture(
       let draws = draws_of
         .get(layer.source)
         .unwrap_or([])
-        .filter(s => overlap(s.id, id))
+        .filter(s => !s.copy && overlap(s.id, id))
         .map(s => { ..s, at: texture_placement(s, id, size), })
       let scale = HEATMAP_TILE_SIZE / size.to_double()
       self.draw_heatmap(index, h, shared, draws, px, scale)
       continue
     }
     for s in draws_of.get(layer.source).unwrap_or([]) {
-      if s.reaches(id) {
+      if !s.copy && s.reaches(id) {
         self.draw_layer(
           index,
           layer,
@@ -380,17 +431,7 @@ fn Map::is_terrain_source(self : Map, request : Int32) -> Bool {
 fn Map::terrain_pick(self : Map) -> @core.Terrain? {
   guard self.terrain_source() is Some(src) else { return None }
   let k = self.exaggeration()
-  let mut lowest = 0.0
-  let mut highest = 0.0
-  let mut any = false
-  for _, e in src.tiles {
-    if e.state is (Ready(meshes) | Stale(meshes)) &&
-      dem_of(meshes) is Some((_, d)) {
-      any = true
-      lowest = @cmp.minimum(lowest, d.lowest * k)
-      highest = @cmp.maximum(highest, d.highest * k)
-    }
-  }
+  let (lowest, highest, any) = dem_range(src, k)
   guard any else { return None }
   Some({
     // Ground without DEM data is flat at 0 m, as MapLibre draws and picks it.

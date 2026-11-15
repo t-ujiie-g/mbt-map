@@ -230,6 +230,9 @@ In:
 - `{type: "ranges", id, tile, ids}`: where the features with these ids (strings,
   as `String(id)`) lie in the entries of the tile sent for request `tile`.
 - `{type: "drop", id}`: forget the bytes of the tile sent for request `id`.
+- `{type: "glyphs", epoch}`: the main thread rebuilt its glyph atlas without some of the
+  glyphs it was sent: send each glyph again the next time a tile uses it; answered with the
+  same message.
 - `{type: "images", images, loading}`: the style images icons are laid out with,
   `[name, width, height, pixelRatio, sdf]` each; while `loading` (a sprite is on its
   way) tiles wait, as MapLibre's do for icons.
@@ -256,11 +259,13 @@ Out:
   `missing` ("Symbol vertices"). `glyphs` are the
   SDF glyphs the worker drew since its last tile, `{cp, width, height, data}` (one
   byte per pixel, TinySDF at 48 px with a 6 px buffer; `cp` a glyph key as in
-  `codepoints`): each is sent once per worker, so the main thread takes them even
-  from tiles it no longer wants. `fonts` are the worker's faces, "" first for the map's
+  `codepoints`): each is sent once per worker (until a `glyphs` message), so the main
+  thread takes them even from tiles it no longer wants. `fonts` are the worker's faces, "" first for the map's
   own font; the main thread numbers them for its atlas. A tile the server does not
   have (404, 204, or missing from a PMTiles archive) is `{type: "tile", id, layers: []}`.
 - `{type: "tile-error", id, message}`.
+- `{type: "glyphs", epoch}`: the worker will send its glyphs again (tiles posted before
+  it may still use glyphs sent before).
 - A raster tile's message has one entry `{entry: 0, layer: -1, kind: 7, image}` (kind
   `KIND_RASTER` of `core/kinds.mbt`), `image` an ImageBitmap (transferred) for every
   raster layer of the source.

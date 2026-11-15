@@ -614,6 +614,29 @@
       "angleDiff": 0
     },
     {
+      "scene": "copies-points",
+      "same": true,
+      "maplibre": 25,
+      "mbtmap": 25,
+      "anchored": 0,
+      "justified": 0,
+      "icons": 25,
+      "boxDiff": 0
+    },
+    {
+      "scene": "copies-line",
+      "same": true,
+      "maplibre": 21,
+      "mbtmap": 21,
+      "anchored": 0,
+      "justified": 0,
+      "icons": 21,
+      "boxDiff": 0,
+      "glyphs": 114,
+      "glyphDiff": 0,
+      "angleDiff": 0
+    },
+    {
       "scene": "globe-points",
       "same": true,
       "maplibre": 41,

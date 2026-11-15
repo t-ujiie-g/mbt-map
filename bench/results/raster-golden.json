@@ -170,6 +170,46 @@
       "max": 0
     },
     {
+      "paint": "copies",
+      "view": "z0",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "max": 0
+    },
+    {
+      "paint": "copies",
+      "view": "z1",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "max": 0
+    },
+    {
+      "paint": "copies",
+      "view": "antimeridian",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "max": 0
+    },
+    {
+      "paint": "copies",
+      "view": "turned",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "max": 0
+    },
+    {
+      "paint": "copies",
+      "view": "one-world",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "max": 0
+    },
+    {
       "urls": "xyz",
       "ratio": 1,
       "view": "z14",

@@ -10,6 +10,10 @@ import { anchors, REPOSITORY, SITE_EXAMPLES, siteLink } from "./links.mjs";
 import { highlight } from "./highlight.mjs";
 
 const OUT = path.join(ROOT, "_site");
+const VERSION = JSON.parse(await readFile(path.join(ROOT, "npm/package.json"), "utf8")).version;
+/** Where the samples' code shown on the site loads the package and the shared CSS from. */
+const CDN = `https://cdn.jsdelivr.net/npm/mbt-map@${VERSION}/dist/`;
+const SITE = "https://t-ujiie-g.github.io/mbt-map/";
 /** Files of an example folder the site leaves out: sources, build scripts, packages. */
 const SKIP = new Set(["node_modules", "src", "main", "package.json", "package-lock.json", "build.mjs", "moon.mod", "README.md"]);
 
@@ -134,7 +138,8 @@ async function buildExamples() {
     const imports = [...new Set([...code.matchAll(/(?:from|import) "(mbt-map[^"]*)"/g)].map((m) => m[1]))].join(" · ");
     if (!groups.has(group)) groups.set(group, []);
     groups.get(group).push(card(`./${id}.html`, title, description, imports));
-    const markup = html.replace(/<script type="importmap">[\s\S]*?<\/script>\n/, "");
+    // The page as one would copy it: the package from jsDelivr at this version, the shared CSS from the site.
+    const markup = html.replaceAll("../node_modules/mbt-map/dist/", `${CDN}`).replace('href="../sample.css"', `href="${SITE}examples/samples/sample.css"`);
     const main = `<main class="wrap">
   <p class="crumbs"><a href="./">Examples</a> / ${escape(group)}</p>
   <div class="sample-head">
@@ -143,6 +148,7 @@ async function buildExamples() {
   </div>
   <iframe class="sample-frame" src="./samples/${id}/" title="${escape(title)}" loading="lazy"></iframe>
   <div class="sample-code">
+    <p class="sample-note">Copy both files into a folder and serve it over http: the import map loads mbt-map ${escape(VERSION)} from jsDelivr.</p>
     <h2>main.js</h2>
     <pre><code class="language-js">${escape(code)}</code></pre>
     <h2>index.html</h2>
