@@ -89,8 +89,8 @@ fn Renderer::use_globe(self : Renderer, g : GlobeTile?) -> Unit {
 }
 
 ///|
-/// Draws the background `color` (straight RGBA) over a tile on the globe.
-pub fn Renderer::draw_globe_background(
+/// Draws the background `color` (straight RGBA) over a tile.
+pub fn Renderer::draw_background(
   self : Renderer,
   at : Placement,
   color : FixedArray[Double],

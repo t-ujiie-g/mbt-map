@@ -80,7 +80,7 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 
 - `npm run geojson:golden`: tiler vs @maplibre/geojson-vt, every tile in range (js in full, wasm-gc by hash; must stay 0 differ).
 - `npm run cluster:golden`: tiler's ClusterIndex vs geojson-vt's ClusterTileIndex: tiles, expansion zooms, children, leaves (must stay 0 differ).
-- `npm run geojson:diffs`: tiler's updates vs @maplibre/geojson-vt 6.3.0's updateable index after seeded updateData diffs: every tile in range, ids, properties and order (js in full, wasm-gc by hash), clusters and clusterProperties too (must stay 0 differ).
+- `npm run geojson:diffs`: tiler's updates vs @maplibre/geojson-vt 6.3.0's updateable index after seeded updateData diffs: every tile in range, ids, properties and order (js in full, wasm-gc by hash), clusters and clusterProperties too (must stay 0 differ). An update that removes all properties and adds some is handed to geojson-vt as `removeProperties` of every key plus the adds (`forReference`): its `applyPropertyUpdates` drops the adds, and tiler follows MapLibre's `applySourceDiff` there.
 - `npm run geojson:update-node`: setData vs updateData in the GeoJSON worker's wasm and in geojson-vt, a few properties or one geometry on GSI features, tiles recut.
 - `npm run geojson:update`: updateData's diffs (npm/src/geojson-diff.ts) vs MapLibre 6.16's applySourceDiff / mergeSourceDiffs and the tiles its GeoJSONSource reloads (must stay all identical).
 - `npm run geojson:node`: GeoJSON read + index + tiles vs geojson-vt in Node (also geojson:browser).

@@ -608,6 +608,32 @@ const LINE_PATTERNS_SCENES = {
 
 };
 
+// Layer order around extrusions, as MapLibre's translucent pass: a translucent background over the
+// fills is hidden by the extrusions above it and covers those below, and so does a fill; it ends
+// at the horizon.
+const TINT = (id, color) => ({ id, type: "background", paint: { "background-color": color, "background-opacity": 0.5 } });
+const TOWERS = (id, filter, color) => ({ id, type: "fill-extrusion", source: "gsi", "source-layer": "building", filter,
+  paint: { "fill-extrusion-color": color, "fill-extrusion-height": ["match", ["get", "ftCode"], 3103, 40, 12] } });
+const WATER = { id: "water", type: "fill", source: "gsi", "source-layer": "waterarea", paint: { "fill-color": "#3f7fbf" } };
+const LAYER_ORDER_SCENES = {
+  "background-under-extrusions": {
+    style: style([WATER, TINT("tint", "#30208f"), TOWERS("towers", ["all"], "#d9b38c")]),
+    camera: { center: [139.7671, 35.6812], zoom: 15.5, bearing: 30, pitch: 50 },
+    limits: { mean: 0.2, p99: 1 },
+  },
+  "background-between-extrusions": {
+    style: style([WATER, TOWERS("high", ["==", ["get", "ftCode"], 3103], "#d9b38c"), TINT("tint", "#8f2030"), TOWERS("low", ["!=", ["get", "ftCode"], 3103], "#8fbf8f"),
+      { id: "veil", type: "fill", source: "gsi", "source-layer": "waterarea", paint: { "fill-color": "#ffd24a", "fill-opacity": 0.5 } }]),
+    camera: { center: [139.7671, 35.6812], zoom: 15.5, bearing: 30, pitch: 50 },
+    limits: { mean: 0.15, p99: 1 },
+  },
+  "background-over-horizon": {
+    style: { ...style([WATER, TINT("tint", "#30208f")]), sky: { "sky-color": "#88c6fc", "horizon-color": "#ffffff" } },
+    camera: { center: [139.7671, 35.6812], zoom: 15.5, bearing: 30, pitch: 80 },
+    limits: { mean: 0.3, p99: 1 },
+  },
+};
+
 // Translucent extrusions: each pixel colored once by its nearest surface, coincident roofs too
 // (MapLibre's depth pass, then a color pass counted by the stencil).
 const EXTRUSIONS_TRANSLUCENT_SCENES = {
@@ -720,6 +746,13 @@ const GLOBE_LINE_LABELS = { id: "along", type: "symbol", source: "world", filter
   paint: { "text-color": "#8a6d3b", "text-halo-color": "#fffbe6", "text-halo-width": 2, "text-halo-blur": 1.5 } };
 const GLOBE_RINGS = { id: "boxes", type: "symbol", source: "world", filter: ["==", ["geometry-type"], "Point"],
   layout: { "icon-image": "odd", "icon-size": 3, "icon-rotate": 30, "icon-rotation-alignment": "map", "icon-pitch-alignment": "map", "icon-allow-overlap": true, "icon-ignore-placement": true } };
+const BLOCKS = { type: "geojson", data: { type: "FeatureCollection", features: Array.from({ length: 25 }, (_, i) => {
+  const [x, y] = [138.5 + (i % 5) * 0.6, 34.5 + Math.floor(i / 5) * 0.5];
+  return { type: "Feature", properties: { i }, geometry: { type: "Polygon", coordinates: [[[x, y], [x + 0.35, y], [x + 0.35, y + 0.3], [x, y + 0.3], [x, y]]] } };
+}) } };
+const GLOBE_TOWERS = (id, filter) => ({ id, type: "fill-extrusion", source: "blocks", filter,
+  paint: { "fill-extrusion-color": ["match", ["%", ["get", "i"], 3], 0, "#d9b38c", 1, "#8fbf8f", "#9fb4d9"],
+    "fill-extrusion-height": ["*", 1500, ["+", 1, ["%", ["get", "i"], 4]]], "fill-extrusion-base": 0 } });
 const GLOBE_SCENES = {
   "globe-vectors": { style: globe(GLOBE_LAYERS), camera: { center: [139.7, 35.7], zoom: 1.2, bearing: 0, pitch: 0 }, limits: { mean: 0.05, p99: 1 } },
   "globe-pitched": { style: globe(GLOBE_LAYERS), camera: { center: [120, 40], zoom: 2.5, bearing: 30, pitch: 45 }, limits: { mean: 0.05, p99: 1 } },
@@ -739,13 +772,12 @@ const GLOBE_SCENES = {
     camera: { center: [60, 30], zoom: 1.4, bearing: -20, pitch: 20 }, limits: { mean: 0.05, p99: 1 },
   },
   "globe-extrusions": {
-    style: { ...globe([{ id: "towers", type: "fill-extrusion", source: "blocks",
-      paint: { "fill-extrusion-color": ["match", ["%", ["get", "i"], 3], 0, "#d9b38c", 1, "#8fbf8f", "#9fb4d9"],
-        "fill-extrusion-height": ["*", 1500, ["+", 1, ["%", ["get", "i"], 4]]], "fill-extrusion-base": 0 } }]),
-      sources: { blocks: { type: "geojson", data: { type: "FeatureCollection", features: Array.from({ length: 25 }, (_, i) => {
-        const [x, y] = [138.5 + (i % 5) * 0.6, 34.5 + Math.floor(i / 5) * 0.5];
-        return { type: "Feature", properties: { i }, geometry: { type: "Polygon", coordinates: [[[x, y], [x + 0.35, y], [x + 0.35, y + 0.3], [x, y + 0.3], [x, y]]] } };
-      }) } } } },
+    style: { ...globe([GLOBE_TOWERS("towers", ["all"])]), sources: { blocks: BLOCKS } },
+    camera: { center: [139.7, 35.6], zoom: 6.5, bearing: -30, pitch: 60 }, limits: { mean: 0.05, p99: 1 },
+  },
+  "globe-background-between-extrusions": {
+    style: { ...globe([GLOBE_LAYERS[0], GLOBE_TOWERS("even", ["==", ["%", ["get", "i"], 2], 0]), TINT("tint", "#8f2030"), GLOBE_TOWERS("odd", ["==", ["%", ["get", "i"], 2], 1])]),
+      sources: { world: WORLD, blocks: BLOCKS } },
     camera: { center: [139.7, 35.6], zoom: 6.5, bearing: -30, pitch: 60 }, limits: { mean: 0.05, p99: 1 },
   },
   "globe-translate": {
@@ -820,6 +852,7 @@ export const SCENES = {
   ...IMAGES_SCENES,
   ...LINE_PATTERNS_SCENES,
   ...EXTRUSIONS_TRANSLUCENT_SCENES,
+  ...LAYER_ORDER_SCENES,
   ...HILLSHADE_MULTIDIRECTIONAL_SCENES,
   ...HILLSHADE_TURNED_SCENES,
   ...COLOR_RELIEF_SCENES,

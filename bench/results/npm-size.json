@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 166922,
+      "bytes": 166971,
       "budget": 168000
     },
     {
@@ -121,7 +121,7 @@
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 56494,
+      "bytes": 56493,
       "budget": 57000
     },
     {

@@ -66,6 +66,16 @@
       }
     },
     {
+      "scene": "globe-background-between-extrusions",
+      "ok": true,
+      "mean": 0.012,
+      "p99": 0,
+      "limits": {
+        "mean": 0.05,
+        "p99": 1
+      }
+    },
+    {
       "scene": "globe-translate",
       "ok": true,
       "mean": 0.003,
@@ -617,6 +627,36 @@
       "p99": 0,
       "limits": {
         "mean": 0.05,
+        "p99": 1
+      }
+    },
+    {
+      "scene": "background-under-extrusions",
+      "ok": true,
+      "mean": 0.13,
+      "p99": 0,
+      "limits": {
+        "mean": 0.2,
+        "p99": 1
+      }
+    },
+    {
+      "scene": "background-between-extrusions",
+      "ok": true,
+      "mean": 0.093,
+      "p99": 0,
+      "limits": {
+        "mean": 0.15,
+        "p99": 1
+      }
+    },
+    {
+      "scene": "background-over-horizon",
+      "ok": true,
+      "mean": 0.228,
+      "p99": 0,
+      "limits": {
+        "mean": 0.3,
         "p99": 1
       }
     },

@@ -32,7 +32,7 @@ test "a view wider than the world is covered once per point, across its copies" 
     )
     let (first, last) = t.wraps()
     assert_true(first <= -1 && last >= 1)
-    let tiles = t.covering_tiles(0, 1)
+    let tiles = t.covering_tiles(0, 1, tile_size=256)
     for m in screen_samples(t) {
       let n = holding(tiles, m)
       assert_true(n == 1 || (n == 0 && (m.y >= 1.0 || m.y <= 0.0)))

@@ -1,7 +1,7 @@
 // Golden test: tiler's updates must cut every tile in range as @maplibre/geojson-vt 6.3.0 with
 // `updateable: true` does after the same seeded `updateData` diffs (ids, properties and order
 // included; js in full, wasm-gc by hash), clusters and clusterProperties too (wasm-gc without
-// clusterProperties, as cluster:golden). GSI data: 国土地理院ベクトルタイル提供実験.
+// clusterProperties, as cluster:golden). One knowing deviation: `forReference`. GSI data: 国土地理院ベクトルタイル提供実験.
 // Usage: npm run geojson:diffs (SETS=mixed,world,clusters-points,clusters-random for some); writes bench/results/geojson-diffs-golden.json and must stay 0 differ.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -206,10 +206,25 @@ function randomDiff(model, geometries, promoteId, next, points) {
   return d;
 }
 
+// The diff geojson-vt reads as tiler reads `diff`: its `applyPropertyUpdates` drops the properties
+// an update adds while removing all (tiler adds them, as MapLibre's `applySourceDiff`), so such an
+// update removes every key of `keys`, the data's and the diffs' so far, by name instead.
+function forReference(diff, keys) {
+  for (const f of diff.add ?? []) for (const k of Object.keys(f.properties ?? {})) keys.add(k);
+  for (const u of diff.update ?? []) for (const p of u.addOrUpdateProperties ?? []) keys.add(p.key);
+  const update = diff.update?.map((u) => {
+    if (!u.removeAllProperties || !u.addOrUpdateProperties?.length) return u;
+    counts.removeAllAdds++;
+    const { removeAllProperties: _, ...rest } = u;
+    return { ...rest, removeProperties: [...keys] };
+  });
+  return copy(update ? { ...diff, update } : diff);
+}
+
 const files = await makeGeoJSONFixtures();
 const load = async (name) => JSON.parse(await readFile(files[name], "utf8"));
 let failures = 0;
-const counts = { runs: 0, diffs: 0, tiles: 0, features: 0, queries: 0 };
+const counts = { runs: 0, diffs: 0, removeAllAdds: 0, tiles: 0, features: 0, queries: 0 };
 const fail = (what) => {
   if (failures < 10) console.log(what);
   failures++;
@@ -228,6 +243,7 @@ function run(name, data, promoteId, steps, tiles, start, update, compare, points
   data.features.push(...extras(promoteId, next));
   const model = new Set(data.features.map((f) => (promoteId ? f.properties[promoteId] : f.id)));
   const geometries = data.features.map((f) => f.geometry).filter(Boolean);
+  const keys = new Set(data.features.flatMap((f) => Object.keys(f.properties ?? {})));
   const text = encoder.encode(JSON.stringify(data));
   const input = concat(loadInput(promoteId, text));
   const ref = start(data, input);
@@ -236,7 +252,7 @@ function run(name, data, promoteId, steps, tiles, start, update, compare, points
   for (let step = 0; step <= steps; step++) {
     if (step > 0) {
       const diff = randomDiff(model, geometries, promoteId, next, points);
-      ref.updateData(copy(diff));
+      ref.updateData(forReference(diff, keys));
       const bytes = encodeDiff(copy(diff));
       const [a, b] = update(bytes);
       if (a < 0 || b < 0) fail(`${name} step ${step}: diff refused (${a}, ${b})`);
@@ -350,6 +366,6 @@ for (const [set, base] of Object.entries(clusterData)) {
   }
 }
 
-console.log(`${counts.runs} runs, ${counts.diffs} diffs, ${counts.tiles} tiles (${counts.features} features), ${counts.queries} cluster queries compared (js in full, wasm-gc by hash); ${failures} differ`);
+console.log(`${counts.runs} runs, ${counts.diffs} diffs (${counts.removeAllAdds} updates removing all and adding), ${counts.tiles} tiles (${counts.features} features), ${counts.queries} cluster queries compared (js in full, wasm-gc by hash); ${failures} differ`);
 await writeFile(path.join(ROOT, "bench/results/geojson-diffs-golden.json"), JSON.stringify({ env: { geojsonVt: "6.3.0" }, results, ...counts, differ: failures }, null, 2) + "\n");
 if (failures > 0) process.exit(1);

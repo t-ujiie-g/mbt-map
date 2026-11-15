@@ -231,25 +231,28 @@ fn Map::draw_circles_by_key(
 }
 
 ///|
-/// The first visible background layer's color, premultiplied onto white (white
-/// when it is a pattern, drawn over the tiles).
-fn Map::background(self : Map) -> (Double, Double, Double) {
-  let zoom = self.transform.camera.zoom
-  for l in self.style.layers {
-    if l.kind is Background && zoom >= l.min_zoom && zoom < l.max_zoom {
-      // A pattern is drawn over the tiles instead.
-      if l.pattern is Some(_) {
-        return (1.0, 1.0, 1.0)
+/// The layer the frame is cleared with: the lowest one shown at `zoom`, when it is a background of
+/// one color. Backgrounds above it are drawn in layer order (`draw_background`).
+fn Map::base_background(self : Map, zoom : Double) -> Int32? {
+  for i, l in self.style.layers {
+    if zoom >= l.min_zoom && zoom < l.max_zoom {
+      return if l.kind is Background && l.pattern is None {
+        Some(i)
+      } else {
+        None
       }
-      let p = paint_of(l, zoom, JsProps::none())
-      return (
-        p.r * p.a + 1.0 - p.a,
-        p.g * p.a + 1.0 - p.a,
-        p.b * p.a + 1.0 - p.a,
-      )
     }
   }
-  (1.0, 1.0, 1.0)
+  None
+}
+
+///|
+/// The color the frame starts from: the base background's over white.
+fn Map::background(self : Map) -> (Double, Double, Double) {
+  let zoom = self.transform.camera.zoom
+  guard self.base_background(zoom) is Some(i) else { return (1.0, 1.0, 1.0) }
+  let p = paint_of(self.style.layers[i], zoom, JsProps::none())
+  (p.r * p.a + 1.0 - p.a, p.g * p.a + 1.0 - p.a, p.b * p.a + 1.0 - p.a)
 }
 
 ///|
@@ -472,6 +475,7 @@ fn Map::draw_frame(
   let light = self.extrusion_light()
   let mut globe_depth = false
   let mut ground_shadows = terrain is Some(_)
+  let base = self.base_background(zoom)
   for index, layer in self.style.layers {
     // The ground's shadows go under the first layer that may cast them.
     if !ground_shadows &&
@@ -480,25 +484,17 @@ fn Map::draw_frame(
       ground_shadows = true
       self.draw_ground_shadows(s, dpr)
     }
-    // On terrain backgrounds are in its textures.
-    if globe &&
+    // On terrain backgrounds are in its textures; the globe's base is drawn on the sphere.
+    if layer.kind is Background &&
       terrain is None &&
-      layer.kind is Background &&
       zoom >= layer.min_zoom &&
-      zoom < layer.max_zoom {
+      zoom < layer.max_zoom &&
+      (globe || base != Some(index)) {
       if layer.pattern is Some(_) {
         self.draw_background_pattern(layer)
       } else {
-        self.draw_globe_background(layer)
+        self.draw_background(layer)
       }
-      continue
-    }
-    if layer.kind is Background &&
-      layer.pattern is Some(_) &&
-      terrain is None &&
-      zoom >= layer.min_zoom &&
-      zoom < layer.max_zoom {
-      self.draw_background_pattern(layer)
       continue
     }
     // With terrain, all but symbols, extrusions and custom layers are drawn onto it.
