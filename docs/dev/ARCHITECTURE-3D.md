@@ -80,7 +80,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). `mbt-map/3d` (its
 - Heights pass as they are.
 - `npm run las:golden` compares the reader with @loaders.gl/las 4.5.4 and PDAL's samples, and the op with proj4js.
 - The layer draws one POINTS mesh with the model program, colored by the file's RGB, height, intensity or ASPRS class (`setColor`).
-- `bench/las/synthetic.mjs` writes the pack test's cloud (`bench/npm/pages/pointcloud/cloud.las`, EPSG:6677).
+- `bench/las/synthetic.mjs` writes the pack test's cloud (`bench/npm/pages/pointcloud/cloud.las`, EPSG:6677; gitignored, written by `bench/npm/prepare.mjs`).
 
 ## Sun, lights and shadows
 

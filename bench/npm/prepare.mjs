@@ -5,6 +5,7 @@ import { build } from "esbuild";
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeCloud } from "../las/synthetic.mjs";
 import { ROOT } from "../lib/root.mjs";
 import { loadPublicStyle } from "../style/public-styles.mjs";
 
@@ -24,6 +25,7 @@ export async function prepareExamples() {
     run("tar", ["xzf", path.join(out, filename), "--strip-components=1", "-C", modules], ROOT);
   };
   for (const page of ["npm", "element", "geojson", "analysis", "data", "media", "custom", "model", "tiles", "pointcloud", "i3s", "globe", "services", "moonbit"]) await install(`bench/npm/pages/${page}`);
+  await writeCloud();
   // The MoonBit app the moonbit page runs, on the MoonBit API (moonbit/mbtmap).
   run("moon", ["build", "--target", "js", "--release", "bench/moonbit/app"], ROOT);
   await install("examples/html");
