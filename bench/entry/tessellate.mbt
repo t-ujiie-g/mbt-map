@@ -160,15 +160,3 @@ fn fill_hash(bytes : BytesView, feature_hashes : Array[Int32]) -> Int32 {
   }
   total
 }
-
-///|
-/// Vertex and index counts of the last `tessellate_tile` call, fills then lines.
-#export_name("last_counts")
-pub fn last_counts(which : Int32) -> Int32 {
-  match which {
-    0 => fills.num_vertices()
-    1 => fills.indices.length()
-    2 => lines.num_vertices()
-    _ => lines.indices.length()
-  }
-}
