@@ -1,10 +1,10 @@
 import {
   "moonbit-community/rabbita",
   "moonbit-community/rabbita/html",
-  "t-ujiie-g/moonmap",
-  "t-ujiie-g/moonmap/expr",
-  "t-ujiie-g/moonmap/style",
-  "t-ujiie-g/moonmap_rabbita",
+  "t-ujiie-g/mbtmap",
+  "t-ujiie-g/mbtmap/expr",
+  "t-ujiie-g/mbtmap/style",
+  "t-ujiie-g/mbtmap_rabbita",
 }
 
 supported_targets = "js"

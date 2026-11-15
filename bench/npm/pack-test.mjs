@@ -84,7 +84,7 @@ const checks = {
       const turned = { bearing: map.getBearing(), pitch: map.getPitch() };
       await map.once("idle");
       // Error paths: a style URL that fails fires `error`; an unsupported expression warns, or throws when strict.
-      const { Map } = await import("moon-map");
+      const { Map } = await import("mbt-map");
       const div = document.createElement("div");
       div.style.cssText = "width:10px;height:10px";
       document.body.append(div);
@@ -133,11 +133,11 @@ const checks = {
       r.turned.pitch === 85 &&
       r.attribution === ATTRIBUTION &&
       r.canvas &&
-      r.styleError === "moon-map: style: HTTP 404" &&
-      r.thrown === "moon-map: style: layers[0].paint.line-width: unsupported: expression properties" &&
+      r.styleError === "mbt-map: style: HTTP 404" &&
+      r.thrown === "mbt-map: style: layers[0].paint.line-width: unsupported: expression properties" &&
       JSON.stringify(r.warned) === JSON.stringify([{ path: "layers[0].paint.line-width", layer: "x", message: "expression properties" }]) &&
       r.lazy &&
-      r.workerRefused.startsWith("moon-map: the worker must be a same-origin http(s) URL") &&
+      r.workerRefused.startsWith("mbt-map: the worker must be a same-origin http(s) URL") &&
       r.leftovers === 0;
     // The display worker's parts load on first use: labels with the style's symbol layers,
     // queries with the first query, PMTiles with the first pmtiles:// tile.
@@ -176,7 +176,7 @@ const checks = {
 
   async element(page) {
     const r = await page.evaluate(async () => {
-      const el = document.querySelector("moon-map");
+      const el = document.querySelector("mbt-map");
       const events = window.__events;
       const before = events.length;
       el.setAttribute("zoom", "15");
@@ -184,7 +184,7 @@ const checks = {
       el.setAttribute("center", "200,0"); // out of range: rejected
       el.setAttribute("zoom", "1e3"); // not a plain decimal: rejected
       el.setAttribute("pitch", "86"); // above MAX_PITCH: rejected
-      await new Promise((r) => el.addEventListener("moon-map-idle", r, { once: true }));
+      await new Promise((r) => el.addEventListener("mbt-map-idle", r, { once: true }));
       const after = events.slice(before).map((e) => e.type);
       const camera = { center: el.center, zoom: el.zoom };
       el.setAttribute("pitch", "45");
@@ -200,7 +200,7 @@ const checks = {
       await Promise.resolve();
       const freed = el.map === null && map.getCanvas().isConnected === false;
       document.body.append(el);
-      await new Promise((r) => el.addEventListener("moon-map-load", r, { once: true }));
+      await new Promise((r) => el.addEventListener("mbt-map-load", r, { once: true }));
       // `attributionBox`: the attribution is one line in the bottom corner, not an overlay.
       return {
         after,
@@ -217,21 +217,21 @@ const checks = {
       };
     });
     // A right-button drag turns the map (horizontal) and tilts it (vertical).
-    const before = await page.evaluate(() => ({ bearing: document.querySelector("moon-map").bearing, pitch: document.querySelector("moon-map").pitch }));
+    const before = await page.evaluate(() => ({ bearing: document.querySelector("mbt-map").bearing, pitch: document.querySelector("mbt-map").pitch }));
     await page.mouse.move(400, 300);
     await page.mouse.down({ button: "right" });
     await page.mouse.move(500, 260, { steps: 5 });
     // Released after the 160 ms inertia buffer has emptied, so the map stops where the drag left it.
     await page.waitForTimeout(250);
     await page.mouse.up({ button: "right" });
-    const after = await page.evaluate(() => ({ bearing: document.querySelector("moon-map").bearing, pitch: document.querySelector("moon-map").pitch }));
+    const after = await page.evaluate(() => ({ bearing: document.querySelector("mbt-map").bearing, pitch: document.querySelector("mbt-map").pitch }));
     r.dragged = { before, after };
     const turn = ((after.bearing - before.bearing + 540) % 360) - 180;
     const ok =
       Math.abs(turn + 80) < 1e-6 &&
       Math.abs(after.pitch - Math.min(85, before.pitch + 20)) < 1e-6 &&
-      r.after.filter((t) => t === "moon-map-move").length === 1 &&
-      r.after.filter((t) => t === "moon-map-error").length === 3 &&
+      r.after.filter((t) => t === "mbt-map-move").length === 1 &&
+      r.after.filter((t) => t === "mbt-map-error").length === 3 &&
       r.tilted.pitch === 45 &&
       r.tilted.bearing === -30 &&
       r.camera.zoom === 15 &&
@@ -266,7 +266,7 @@ const checks = {
 
   async analysis(page, requests) {
     const r = await page.evaluate(async () => {
-      const { load, distance } = await import("moon-map/analysis");
+      const { load, distance } = await import("mbt-map/analysis");
       // A disposed dataset rejects; a non-http URL is refused before any request.
       const d = await load({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [0, 0] } });
       d.dispose();
@@ -274,7 +274,7 @@ const checks = {
       const refused = await load("data:application/json,{}").then(() => "", (e) => e.message);
       const malformed = await load(new TextEncoder().encode("{\"type\": ")).then(() => "", (e) => e.message);
       // A DEM grid of the Mt Fuji fixtures (tiles 404 without them: 0 m).
-      const { loadDem } = await import("moon-map/analysis");
+      const { loadDem } = await import("mbt-map/analysis");
       const dem = await loadDem("/bench/fixtures/gsi-dem-fuji/{z}/{x}/{y}.png", { zoom: 12, bounds: [138.6, 35.25, 138.85, 35.45], encoding: "gsi" });
       const slope = await dem.slope();
       const shade = await dem.hillshade();
@@ -322,7 +322,7 @@ const checks = {
         badBox: await five.voronoi([3, 3, -1, -1]).then(() => "", (e) => e.message),
       };
       // Surfaces (surface.wasm, loaded now): a grid, IDW, contours, density and clusters (counts as Turf gives them).
-      const { grid: makeGrid } = await import("moon-map/analysis");
+      const { grid: makeGrid } = await import("mbt-map/analysis");
       const hexes = await makeGrid([139.7, 35.6, 139.8, 35.7], 2, "hex");
       const spots = await load(fc([[139.71, 35.61, 10], [139.79, 35.62, 30], [139.75, 35.69, 50], [139.72, 35.68, 20]].map(([x, y, e]) => ({ type: "Feature", properties: { elevation: e }, geometry: { type: "Point", coordinates: [x, y] } }))));
       const idw = await spots.interpolate(2, { gridType: "point" });
@@ -350,11 +350,11 @@ const checks = {
         n.dispose();
       }
       // Classes and statistics on the main thread.
-      const { classBreaks, classStep, statistics } = await import("moon-map/analysis");
+      const { classBreaks, classStep, statistics } = await import("mbt-map/analysis");
       const numbers = [1, 2, 4, 5, 7, 9, 10, 20, 21, 22];
       const classes = { jenks: classBreaks(numbers, 3), mean: statistics(numbers).mean, step: classStep(["get", "v"], [1, 7, 20, 22], ["a", "b", "c"]) };
       // Coordinate systems: Tokyo Station in plane rectangular IX (EPSG:6677).
-      const { transform } = await import("moon-map/analysis");
+      const { transform } = await import("mbt-map/analysis");
       const ix = await transform([139.7671, 35.6812], "EPSG:4326", "EPSG:6677");
       const station = await load({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [ix[0], ix[1]] } }, { crs: 6677 });
       const back = (await station.toGeoJSON()).features[0].geometry.coordinates;
@@ -363,7 +363,7 @@ const checks = {
       const planarRadius = Math.max(...ring.map(([x, y]) => Math.abs(Math.hypot(x - ix[0], y - ix[1]) - 100)));
       const unknownCrs = await transform([0, 0], 4326, 9999).then(() => "", (e) => e.message);
       // A PROJ string (Lambert 93, loading the parser), a named one, the Tokyo datum.
-      const { defineCrs } = await import("moon-map/analysis");
+      const { defineCrs } = await import("mbt-map/analysis");
       const lambert = "+proj=lcc +lat_0=46.5 +lon_0=3 +lat_1=49 +lat_2=44 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs";
       const paris = await transform([2.3522, 48.8566], 4326, lambert);
       defineCrs("EPSG:2154", lambert);
@@ -371,7 +371,7 @@ const checks = {
       const tokyoDatum = await transform([139.7671, 35.6812], 4326, 30169);
       const badProj = await transform([0, 0], 4326, "+proj=geos +h=35785831").then(() => "", (e) => e.message);
       // Split and merge on GeoJSON features, mixed kinds refused; too many DEM tiles refused before any fetch.
-      const { splitFeatures, mergeFeatures, loadDem: loadDem2 } = await import("moon-map/analysis");
+      const { splitFeatures, mergeFeatures, loadDem: loadDem2 } = await import("mbt-map/analysis");
       const square = { properties: { name: "s" }, geometry: { type: "Polygon", coordinates: [[[0, 0], [2, 0], [2, 2], [0, 2], [0, 0]]] } };
       const halves = await splitFeatures([square], { type: "LineString", coordinates: [[1, -1], [1, 3]] });
       const whole = await mergeFeatures(halves);
@@ -406,7 +406,7 @@ const checks = {
         badProj,
       };
       // A restarted worker counts its ids from 0 again: a handle from before rejects rather than reach a new dataset.
-      const { terminate } = await import("moon-map/analysis");
+      const { terminate } = await import("mbt-map/analysis");
       terminate();
       const restarted = await load({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [1, 1] } });
       const stale = await pt.areas().then(() => "", (e) => e.message);
@@ -545,7 +545,7 @@ async function showcase(page) {
   await page.waitForFunction(() => window.__picked);
   const picked = await page.evaluate(() => ({ rows: window.__picked, text: document.getElementById("picked").textContent }));
   // The identify controller selects the top feature and highlights it through feature state; the
-  // coordinates follow the pointer in four systems (two through moon-map/analysis).
+  // coordinates follow the pointer in four systems (two through mbt-map/analysis).
   const identified = await page.evaluate(() => {
     const s = window.__identify.state;
     const top = s.features[0];
@@ -669,7 +669,7 @@ async function showcase(page) {
 }
 
 async function engineStarted(page) {
-  const r = await page.evaluate(() => ({ frames: window.__moonmap.map_frame_count(window.__map) }));
+  const r = await page.evaluate(() => ({ frames: window.__mbtmap.map_frame_count(window.__map) }));
   return [r.frames > 0, r];
 }
 
@@ -691,7 +691,7 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     // 404s are expected (missing style, missing fixtures); so are the
     // rejections the element and style checks provoke.
-    const expected = /404|moon-map: invalid|no layer "nope"|"gsi" is used by layer|expression properties|'nope' does not exist|sourceLayer parameter must be provided|image named "swatch" already exists|width \* height \* 4 bytes|media must be http|Invalid layer|no layer named nope|missing required method|not compatible with updateData/;
+    const expected = /404|mbt-map: invalid|no layer "nope"|"gsi" is used by layer|expression properties|'nope' does not exist|sourceLayer parameter must be provided|image named "swatch" already exists|width \* height \* 4 bytes|media must be http|Invalid layer|no layer named nope|missing required method|not compatible with updateData/;
     page.on("console", (m) => m.type() === "error" && !expected.test(m.text()) && errors.push(m.text()));
     await page.addInitScript(fakeGeolocation);
     await page.goto(`${origin}/${PAGES[example]}`);

@@ -1,7 +1,7 @@
-// What the showcase computes off the map, in moon-map/analysis's worker: the
+// What the showcase computes off the map, in mbt-map/analysis's worker: the
 // places within 5 km of the view's center (a geodesic buffer, then the places
 // it covers, DE-9IM's coveredBy) and the center in Japan's plane rectangular system.
-import { load, transform } from "moon-map/analysis";
+import { load, transform } from "mbt-map/analysis";
 import { PLACES } from "./places.js";
 
 export const RADIUS_METERS = 5000;

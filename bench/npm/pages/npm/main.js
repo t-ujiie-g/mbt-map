@@ -1,6 +1,6 @@
-// The npm package as an app uses it: `import { Map } from "moon-map"`, with the
+// The npm package as an app uses it: `import { Map } from "mbt-map"`, with the
 // style given by URL. Tiles are the z14 bench fixtures around Tokyo Station.
-import { Map } from "moon-map";
+import { Map } from "mbt-map";
 
 const map = new Map({
   container: "map",

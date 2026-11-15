@@ -1,4 +1,4 @@
-// Map.pickPosition, Map.castRay and Map.setViewshed (moonmap's 3D picking, line of sight and viewshed, drawn
+// Map.pickPosition, Map.castRay and Map.setViewshed (mbtmap's 3D picking, line of sight and viewshed, drawn
 // through the shadow map) in Chromium vs the analytic answers on boxes of known size (page/boxes.mjs):
 // segments' first hits, picked points on a surface, and pixels tinted seen or hidden.
 // Usage: node sight/golden.mjs (after npm --prefix npm run build); writes bench/results/sight-golden.json.
@@ -14,11 +14,11 @@ const PICKS = 24;
 /** Meters a hit may lie from the analytic one: the ray's 2 cm width and its depth's 24 bits. */
 const TOLERANCE = 0.05;
 
-// Mercator x, y and the engine's heights (meters at the center's scale, as moonmap draws extrusions).
+// Mercator x, y and the engine's heights (meters at the center's scale, as mbtmap draws extrusions).
 const mx = (lng) => (lng + 180) / 360;
 const my = (lat) => (1 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / Math.PI) / 2;
 const cosc = Math.cos((CENTER[1] * Math.PI) / 180);
-/** Meters per mercator unit at the center (moonmap's pixels per meter: 6371008.8 m Earth). */
+/** Meters per mercator unit at the center (mbtmap's pixels per meter: 6371008.8 m Earth). */
 const METERS = 2 * Math.PI * 6371008.8 * cosc;
 // The model box: 20 m either side on the 6378137 m sphere of Web Mercator, 40 m up in its own meters.
 const modelHalf = 20 / (2 * Math.PI * 6378137 * Math.cos((MODEL[1] * Math.PI) / 180));

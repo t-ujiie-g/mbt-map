@@ -43,7 +43,7 @@ for (const { date, lng, lat } of cases) {
   const a = getPosition(date, lat, lng);
   const b = sunPosition(date, lng, lat);
   if (Object.is(a.azimuth, b.azimuth) && Object.is(a.altitude, b.altitude)) identical++;
-  else if (differ.length < 10) differ.push({ date: date.toISOString(), lng, lat, suncalc: a, moonmap: b });
+  else if (differ.length < 10) differ.push({ date: date.toISOString(), lng, lat, suncalc: a, mbtmap: b });
 }
 
 // Cesium's IAU 2006 XYS samples (1975-2050) loaded from its assets, as preloadIcrfFixed would fetch.

@@ -223,7 +223,7 @@ extern "js" fn dash_pattern_at(v : JsValue, i : Int32) -> FixedArray[Double] =
 
 ///|
 extern "js" fn console_warn(message : String) -> Unit =
-  #|(m) => console.warn("[moonmap] " + m)
+  #|(m) => console.warn("[mbtmap] " + m)
 
 ///|
 /// Listens for `type` on `target`; returns a function that removes the listener.
@@ -376,7 +376,7 @@ extern "js" fn call_provider(
   #|(p, s, z, x, y, done) => {
   #|  Promise.resolve().then(() => p(s, z, x, y)).then(
   #|    (b) => done(b ?? null),
-  #|    (e) => { console.warn(`moon-map: tile ${z}/${x}/${y} of ${s}: ${e?.message ?? e}`); done(null); });
+  #|    (e) => { console.warn(`mbt-map: tile ${z}/${x}/${y} of ${s}: ${e?.message ?? e}`); done(null); });
   #|}
 
 ///|

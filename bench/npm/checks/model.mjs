@@ -1,4 +1,4 @@
-// moon-map/3d on bench/npm/pages/model: the model (meshopt-compressed, so through 3d.wasm) loads, stands at its points
+// mbt-map/3d on bench/npm/pages/model: the model (meshopt-compressed, so through 3d.wasm) loads, stands at its points
 // turned as `rotation` says, is lit by the style's `lights` as an extrusion is, casts shadows with them, and goes
 // onto the globe (shadows too).
 import { near, pixel } from "./pixels.mjs";
@@ -30,7 +30,7 @@ export async function modelChecks(page) {
   const halved = await lit([light("ambient", 0.25), light("directional", 0.5, [0, 60])]);
   // Noon in Tokyo by timeOfDayLights: lit, not black or white.
   const noon = await page.evaluate(async () => {
-    const { timeOfDayLights } = await import("moon-map");
+    const { timeOfDayLights } = await import("mbt-map");
     window.__map.setLights(timeOfDayLights(Date.UTC(2026, 5, 21, 3), 139.7671, 35.6812));
     await window.__settled();
     return window.__map.getLights();
@@ -55,7 +55,7 @@ export async function modelChecks(page) {
   // viewshed from the west at 10 m tints the ground before the block seen and behind it hidden.
   const sight = await page.evaluate(async () => {
     const map = window.__map;
-    const { lineOfSight, measure3d } = await import("moon-map/3d");
+    const { lineOfSight, measure3d } = await import("mbt-map/3d");
     const roof = map.pickPosition(map.project([139.7676, 35.68075]));
     const blocked = lineOfSight(map, [139.7672, 35.68075, 10], [139.768, 35.68075, 10]);
     const clear = lineOfSight(map, [139.7672, 35.68075, 30], [139.768, 35.68075, 30]);

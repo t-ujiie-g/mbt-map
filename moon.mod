@@ -1,13 +1,13 @@
 // Learn more about moon.mod configuration:
 // https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html
 
-name = "t-ujiie-g/moonmap_engine"
+name = "t-ujiie-g/mbtmap_engine"
 
 version = "0.0.1"
 
 readme = "README.md"
 
-repository = "https://github.com/t-ujiie-g/moon-map"
+repository = "https://github.com/t-ujiie-g/mbt-map"
 
 license = "Apache-2.0"
 

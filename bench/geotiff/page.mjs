@@ -1,4 +1,4 @@
 // The packed facades for bench/geotiff/tiles-golden.mjs.
 window.data = await import("/npm/dist/data.js");
-window.moonmap = await import("/npm/dist/index.js");
+window.mbtmap = await import("/npm/dist/index.js");
 window.__ready = true;

@@ -1,4 +1,4 @@
-// One map drawn on by moon-map/draw (?engine=moonmap) or by terra-draw 1.37 on MapLibre
+// One map drawn on by mbt-map/draw (?engine=mbtmap) or by terra-draw 1.37 on MapLibre
 // (?engine=terradraw): `__mode(m)` picks a mode, `__features()` gives the GeoJSON drawn.
 const engine = new URLSearchParams(location.search).get("engine");
 const CENTER = [139.7671, 35.6812];

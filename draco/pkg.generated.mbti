@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/moonmap_engine/draco"
+package "t-ujiie-g/mbtmap_engine/draco"
 
 // Values
 pub const MAX_ATTRIBUTES : Int32 = 256

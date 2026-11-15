@@ -1,4 +1,4 @@
-// `moon-map/ui` vs MapLibre GL JS 6.16.0's controls in Chromium (bench/ui's page): scale bars, zoom
+// `mbt-map/ui` vs MapLibre GL JS 6.16.0's controls in Chromium (bench/ui's page): scale bars, zoom
 // buttons, attributions, geolocation (a fake Geolocation fed to both) and legend colors.
 // Writes bench/results/ui-golden.json. Needs `npm --prefix npm run build`.
 import { writeFile } from "node:fs/promises";
@@ -59,7 +59,7 @@ try {
     return out;
   });
   // At the constrained minimum MapLibre's zoom after `jumpTo` misses its own `getMinZoom(true)` by one
-  // ulp, so its zoom-out button stays enabled there; moonmap's are equal and disable it.
+  // ulp, so its zoom-out button stays enabled there; mbtmap's are equal and disable it.
   const known = (n) => n.zoom === 0 && n.theirs.canZoomOut && !n.mine.canZoomOut;
   check("navigation", nav.every((n) => known(n) || JSON.stringify(n.theirs) === JSON.stringify(n.mine)), { cases: nav, known: nav.filter(known).map((n) => n.zoom) });
 

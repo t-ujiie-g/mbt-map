@@ -1,8 +1,8 @@
-// The map's controls drawn with plain DOM from `moon-map/ui`'s controllers (the
+// The map's controls drawn with plain DOM from `mbt-map/ui`'s controllers (the
 // React example draws the same controllers its own way): zoom, compass, home,
 // location, full screen, a scale bar and the attributions.
 import { icon } from "./icons.js";
-import { createAttribution, createFullscreen, createGeolocation, createNavigation, createScale } from "moon-map/ui";
+import { createAttribution, createFullscreen, createGeolocation, createNavigation, createScale } from "mbt-map/ui";
 
 export const LOCATION_LABELS = {
   unavailable: "現在地は使えません",

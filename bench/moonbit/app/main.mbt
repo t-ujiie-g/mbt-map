@@ -1,6 +1,6 @@
 ///|
 /// Hands `value` to the pack test as `window.__moonbit[key]`.
-extern "js" fn report(key : String, value : @moonmap.JsValue) -> Unit =
+extern "js" fn report(key : String, value : @mbtmap.JsValue) -> Unit =
   #|(k, v) => { (window.__moonbit ??= {})[k] = v; }
 
 ///|
@@ -10,8 +10,8 @@ extern "js" fn mark_loaded() -> Unit =
 
 ///|
 fn main {
-  let tokyo = @moonmap.lnglat(139.7671, 35.6812)
-  let map = @moonmap.Map::new(
+  let tokyo = @mbtmap.lnglat(139.7671, 35.6812)
+  let map = @mbtmap.Map::new(
     "map",
     style=@style.Style::new(sources=[], layers=[
       @style.background("background", background_color=@expr.color("#ffffff")),
@@ -82,7 +82,7 @@ fn main {
       let c = map.center()
       report(
         "result",
-        @moonmap.json_to_js({
+        @mbtmap.json_to_js({
           "layers": Json::array(map.layer_ids().map(Json::string)),
           "point": [at.x, at.y],
           "features": Json::array(names),

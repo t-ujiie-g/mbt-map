@@ -40,7 +40,7 @@ export async function moreCases({ reader, loads, byLayer, geometries, rowsOf, co
   };
   const wound = (ring, cw) => (clockwise(ring) === cw ? ring : ring.slice().reverse());
   // Normalization 1: RFC 7946's winding (outer rings counter-clockwise, holes clockwise), which
-  // moon-map/data writes; shpjs keeps the shapefile's.
+  // mbt-map/data writes; shpjs keeps the shapefile's.
   const rewind = (g) => {
     const poly = (rings) => rings.map((r, i) => wound(r, i > 0));
     return g?.type === "Polygon" ? { ...g, coordinates: poly(g.coordinates) } : g?.type === "MultiPolygon" ? { ...g, coordinates: g.coordinates.map(poly) } : g;
@@ -203,7 +203,7 @@ export async function moreCases({ reader, loads, byLayer, geometries, rowsOf, co
     ["not an archive", encoder.encode("PK\x03\x04 no end"), /not a zip archive/],
   ]) {
     const got = await ours("shapefile", { data: zip }, label === "a missing layer" ? { layer: "nope" } : {});
-    deviation("shapefile zip refused", label, pattern.test(got.error ?? "") ? got : { ok: got }, true, "refused by moon-map/data's zip reader (shpjs not asked)");
+    deviation("shapefile zip refused", label, pattern.test(got.error ?? "") ? got : { ok: got }, true, "refused by mbt-map/data's zip reader (shpjs not asked)");
   }
   const capped = readZip(writeZip(one), { bytes: 100 });
   deviation("shapefile zip refused", "a cap on inflated bytes", await capped.read(capped.entries[0]).then(() => [], (e) => ({ error: e.message })), true, "readZip's `bytes` limit holds across reads");
@@ -217,18 +217,18 @@ export async function moreCases({ reader, loads, byLayer, geometries, rowsOf, co
   const holeRows = await ours("shapefile", { shp: holes.shp });
   const expected = [{ geometry: { type: "MultiPolygon", coordinates: [[wound(B, false)], [wound(A, false), wound(H, true)]] }, properties: {} }];
   const theirs = shpjsRows(await shp({ shp: holes.shp }));
-  deviation("shapefile", "a hole inside one outer ring and another's box", JSON.stringify(holeRows) === JSON.stringify(expected) && JSON.stringify(theirs) !== JSON.stringify(expected) ? [] : { error: JSON.stringify(holeRows) }, false, "moon-map/data gives a hole to the smallest outer ring that contains it (point in ring); shpjs compares bounding boxes only");
+  deviation("shapefile", "a hole inside one outer ring and another's box", JSON.stringify(holeRows) === JSON.stringify(expected) && JSON.stringify(theirs) !== JSON.stringify(expected) ? [] : { error: JSON.stringify(holeRows) }, false, "mbt-map/data gives a hole to the smallest outer ring that contains it (point in ring); shpjs compares bounding boxes only");
   // Rings that all run counter-clockwise (outer rings the wrong way) read as shpjs reads them.
   const ccw = writeShapefile([{ parts: [wound(A, false), wound(H, true)], values: [] }], { type: 5 });
   compare("shapefile", "outer rings counter-clockwise, holes clockwise", await ours("shapefile", { shp: ccw.shp }), shpjsRows(await shp({ shp: ccw.shp })));
   const multipatch = writeShapefile([], { type: 31 });
   deviation("shapefile", "MultiPatch", await ours("shapefile", { shp: multipatch.shp }), true, "MultiPatch shapes are refused");
-  deviation("shapefile", "a record past the end", await ours("shapefile", { shp: pointFiles.shp.subarray(0, pointFiles.shp.length - 3) }), true, "shpjs stops at a record cut short; moon-map/data refuses the file");
+  deviation("shapefile", "a record past the end", await ours("shapefile", { shp: pointFiles.shp.subarray(0, pointFiles.shp.length - 3) }), true, "shpjs stops at a record cut short; mbt-map/data refuses the file");
   const unknownLogical = writeShapefile([{ parts: [[[1, 2]]], values: ["?"] }], { type: 1, fields: [{ name: "flag", type: "L", length: 1 }] });
   deviation("shapefile", "a logical field of ?", JSON.stringify(await ours("shapefile", unknownLogical)) === JSON.stringify([{ geometry: { type: "Point", coordinates: [1, 2] }, properties: { flag: null } }]) ? [] : { error: "not null" }, false, "a logical that is neither true nor false is null; shpjs makes it false");
 
   // --- TopoJSON ---
-  // Nested property values are JSON text in moon-map/data's tables.
+  // Nested property values are JSON text in mbt-map/data's tables.
   const flat = (props) => Object.fromEntries(Object.entries(props ?? {}).map(([k, v]) => [k, v !== null && typeof v === "object" ? JSON.stringify(v) : v]));
   const topoRows = (topology, name) => {
     const fc = topojsonClient.feature(topology, topology.objects[name]);

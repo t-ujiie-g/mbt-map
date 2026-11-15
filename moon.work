@@ -1,7 +1,7 @@
 members = [
   ".",
-  "./moonbit/moonmap",
-  "./moonbit/moonmap_rabbita",
+  "./moonbit/mbtmap",
+  "./moonbit/mbtmap_rabbita",
   "./bench/moonbit",
   "./examples/rabbita",
 ]

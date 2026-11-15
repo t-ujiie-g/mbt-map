@@ -1,5 +1,5 @@
 {
-  "name": "moon-map-showcase-react",
+  "name": "mbt-map-showcase-react",
   "private": true,
   "type": "module",
   "scripts": { "build": "node build.mjs" },

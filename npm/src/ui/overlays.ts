@@ -1,5 +1,5 @@
 // A basemap swap that keeps the overlays: the `transformStyle` of
-// `moon-map/ui`'s basemap controller. Import-free.
+// `mbt-map/ui`'s basemap controller. Import-free.
 
 interface Layer {
   id: string;
@@ -13,9 +13,9 @@ interface Style {
 }
 
 /** The `metadata` key that marks a layer as an overlay, kept when the basemap changes. */
-export const OVERLAY = "moon-map:overlay";
+export const OVERLAY = "mbt-map:overlay";
 
-/** Whether a layer is an overlay by default: its `metadata` says `"moon-map:overlay": true`. */
+/** Whether a layer is an overlay by default: its `metadata` says `"mbt-map:overlay": true`. */
 export function isOverlay(layer: Layer): boolean {
   return (layer.metadata as Record<string, unknown> | undefined)?.[OVERLAY] === true;
 }

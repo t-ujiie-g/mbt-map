@@ -1,5 +1,5 @@
-// examples/rabbita with ?local=1: the rabbita app (MoonBit, t-ujiie-g/moonmap_rabbita) flies with its buttons
-// and shows the camera from moon-map-moveend, names the station clicked (a query from update) and changes
+// examples/rabbita with ?local=1: the rabbita app (MoonBit, t-ujiie-g/mbtmap_rabbita) flies with its buttons
+// and shows the camera from mbt-map-moveend, names the station clicked (a query from update) and changes
 // a paint property through the typed API.
 
 const text = (page, id) => page.evaluate((id) => document.getElementById(id).textContent, id);
@@ -14,14 +14,14 @@ export async function rabbitaChecks(page) {
   const before = await text(page, "camera");
   const fuji = await go(page, "富士山", "11.50");
   const tokyo = await go(page, "東京駅", "15.00");
-  const box = await page.locator("moon-map").boundingBox();
+  const box = await page.locator("mbt-map").boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await page.waitForFunction(() => document.getElementById("clicked").textContent.includes("（"), null, { timeout: 15000 });
   const clicked = await text(page, "clicked");
   await page.click("#resize");
   await page.waitForFunction(() => document.getElementById("resize").textContent === "点を小さく");
   const radius = await page.evaluate(() => {
-    const el = document.querySelector("moon-map");
+    const el = document.querySelector("mbt-map");
     return new Promise((done) => el.map.once("idle", () => done(el.map.getPaintProperty("stations", "circle-radius"))));
   });
   const ok =

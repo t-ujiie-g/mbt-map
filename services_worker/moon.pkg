@@ -3,10 +3,10 @@
 // js/worker.mjs is its glue.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/formats",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/formats",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

@@ -9,7 +9,7 @@ import { hostNumber, hostText, writeInput } from "../../wasmio/js/host.mjs";
 import { ROOT } from "./root.mjs";
 
 const IMPORTS = { relate: () => ({}), shapes: () => ({ Math }), surface: () => ({ Math, host: hostText() }), viewshed: () => ({ Math }), route: () => ({ Math }) };
-const wasmPath = (name) => path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`);
+const wasmPath = (name) => path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/${name}/${name}.wasm`);
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
@@ -74,13 +74,13 @@ export function time(f, { warmMs = 300, samples = 7, sampleMs = 50 } = {}) {
   return xs[xs.length >> 1];
 }
 
-/** Rows of { js, moonmap } ms (and other columns), with `moonmap / js`. */
+/** Rows of { js, mbtmap } ms (and other columns), with `mbtmap / js`. */
 export function rows() {
   const all = {};
-  const row = (name, js, moonmap, extra = {}) => {
-    all[name] = { js: round(js), moonmap: round(moonmap), ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, round(v)])), ratio: round(moonmap / js) };
+  const row = (name, js, mbtmap, extra = {}) => {
+    all[name] = { js: round(js), mbtmap: round(mbtmap), ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, round(v)])), ratio: round(mbtmap / js) };
     const more = Object.keys(extra).map((k) => `, ${k} ${all[name][k]} ms`).join("");
-    console.log(`${name}: js ${all[name].js} ms, moonmap ${all[name].moonmap} ms${more}, moonmap / js ${all[name].ratio}`);
+    console.log(`${name}: js ${all[name].js} ms, mbtmap ${all[name].mbtmap} ms${more}, mbtmap / js ${all[name].ratio}`);
   };
   return { all, row };
 }

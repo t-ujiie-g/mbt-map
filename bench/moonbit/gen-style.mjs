@@ -1,4 +1,4 @@
-// Writes the MoonBit API's typed style functions (moonbit/moonmap/style/{layers,sources}.g.mbt) from
+// Writes the MoonBit API's typed style functions (moonbit/mbtmap/style/{layers,sources}.g.mbt) from
 // MapLibre's style specification (v8.json of @maplibre/maplibre-gl-style-spec, the version bench pins).
 // Usage: node moonbit/gen-style.mjs [--check] (--check fails when the files differ from what it writes).
 import { readFile, writeFile } from "node:fs/promises";
@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const OUT = path.join(ROOT, "moonbit/moonmap/style");
+const OUT = path.join(ROOT, "moonbit/mbtmap/style");
 
 /** Layers that draw a vector or GeoJSON source's features, and so take `source_layer` and `filter`. */
 const FEATURE_LAYERS = new Set(["fill", "line", "symbol", "circle", "heatmap", "fill-extrusion"]);

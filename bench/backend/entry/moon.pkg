@@ -1,7 +1,7 @@
 // Export surface of the backend comparison bench; exported names come from `#export_name`.
 
 import {
-  "t-ujiie-g/moonmap_engine/bench/backend/kernel",
+  "t-ujiie-g/mbtmap_engine/bench/backend/kernel",
 }
 
 pkgtype(kind: "foreign_library")

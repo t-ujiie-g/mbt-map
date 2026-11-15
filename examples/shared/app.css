@@ -20,7 +20,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #f5f3ee; }
 [hidden] { display: none !important; }
 button, input { font: inherit; color: inherit; }
 button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-#map, moon-map { position: absolute; inset: 0; }
+#map, mbt-map { position: absolute; inset: 0; }
 
 /* Panel */
 .panel {

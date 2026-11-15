@@ -132,25 +132,25 @@
     {
       "group": "wkt",
       "label": "POINT (1 2) trailing",
-      "why": "betterknown stops after one geometry; moon-map/data reads geometries to the end and refuses other text",
+      "why": "betterknown stops after one geometry; mbt-map/data reads geometries to the end and refuses other text",
       "ok": true
     },
     {
       "group": "wkt",
       "label": "POINT (1a 2)",
-      "why": "betterknown's parseFloat takes a number's prefix; moon-map/data refuses the field",
+      "why": "betterknown's parseFloat takes a number's prefix; mbt-map/data refuses the field",
       "ok": true
     },
     {
       "group": "wkt",
       "label": "POINT (1 2 3)",
-      "why": "betterknown refuses Z without a tag; moon-map/data takes 2 to 4 ordinates when untagged, as GDAL's older WKT writes them",
+      "why": "betterknown refuses Z without a tag; mbt-map/data takes 2 to 4 ordinates when untagged, as GDAL's older WKT writes them",
       "ok": true
     },
     {
       "group": "wkt",
       "label": "<http://www.opengis.net/def/crs/epsg/0/4326>POINT (1 2)",
-      "why": "betterknown takes an OGC CRS URI prefix; moon-map/data does not",
+      "why": "betterknown takes an OGC CRS URI prefix; mbt-map/data does not",
       "ok": true
     },
     {
@@ -168,7 +168,7 @@
     {
       "group": "wkb",
       "label": "trailing bytes",
-      "why": "wkx ignores bytes after the geometry; moon-map/data reads geometries to the end",
+      "why": "wkx ignores bytes after the geometry; mbt-map/data reads geometries to the end",
       "ok": true
     },
     {
@@ -186,43 +186,43 @@
     {
       "group": "shapefile zip refused",
       "label": "an encrypted entry",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
       "group": "shapefile zip refused",
       "label": "compression method 12",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
       "group": "shapefile zip refused",
       "label": "an entry larger than the cap",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
       "group": "shapefile zip refused",
       "label": "an entry that inflates past its size",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
       "group": "shapefile zip refused",
       "label": "no shapefile",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
       "group": "shapefile zip refused",
       "label": "a missing layer",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
       "group": "shapefile zip refused",
       "label": "not an archive",
-      "why": "refused by moon-map/data's zip reader (shpjs not asked)",
+      "why": "refused by mbt-map/data's zip reader (shpjs not asked)",
       "ok": true
     },
     {
@@ -234,7 +234,7 @@
     {
       "group": "shapefile",
       "label": "a hole inside one outer ring and another's box",
-      "why": "moon-map/data gives a hole to the smallest outer ring that contains it (point in ring); shpjs compares bounding boxes only",
+      "why": "mbt-map/data gives a hole to the smallest outer ring that contains it (point in ring); shpjs compares bounding boxes only",
       "ok": true
     },
     {
@@ -246,7 +246,7 @@
     {
       "group": "shapefile",
       "label": "a record past the end",
-      "why": "shpjs stops at a record cut short; moon-map/data refuses the file",
+      "why": "shpjs stops at a record cut short; mbt-map/data refuses the file",
       "ok": true
     },
     {

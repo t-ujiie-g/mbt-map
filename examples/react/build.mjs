@@ -1,5 +1,5 @@
 // Bundles the app with esbuild, which leaves `new URL("./worker.js", import.meta.url)` alone,
-// so the workers and wasm are copied next to the bundle; the shared modules resolve `moon-map`
+// so the workers and wasm are copied next to the bundle; the shared modules resolve `mbt-map`
 // from this example's node_modules.
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -8,7 +8,7 @@ import { build } from "esbuild";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(DIR, "dist");
-const PACKAGE = path.join(DIR, "node_modules/moon-map/dist");
+const PACKAGE = path.join(DIR, "node_modules/mbt-map/dist");
 await mkdir(DIST, { recursive: true });
 await build({
   entryPoints: [path.join(DIR, "src/main.jsx")],

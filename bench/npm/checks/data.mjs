@@ -1,4 +1,4 @@
-// moon-map/data on bench/npm/pages/data, run by npm/pack-test.mjs.
+// mbt-map/data on bench/npm/pages/data, run by npm/pack-test.mjs.
 import proj4 from "proj4";
 import { HILL, STATIONS, WARDS } from "../../data/pack-fixtures.mjs";
 import { pixel } from "./pixels.mjs";
@@ -10,7 +10,7 @@ export async function dataChecks(page, requests) {
   const startup = names();
   const [x, y] = proj4("EPSG:4326", "EPSG:6677", [139.7671, 35.6812]); // as pack-fixtures.mjs defines it
   const r = await page.evaluate(async ([x, y]) => {
-    const { read, parse } = await import("moon-map/data");
+    const { read, parse } = await import("mbt-map/data");
     const map = window.__map;
     const drawn = (await map.queryRenderedFeatures({ layers: ["stations"] })).length;
     const linesDrawn = (await map.queryRenderedFeatures({ layers: ["lines"] })).length;
@@ -41,7 +41,7 @@ export async function dataChecks(page, requests) {
   }, [x, y]);
   const afterPlane = names();
   const z = await page.evaluate(async () => {
-    const { read } = await import("moon-map/data");
+    const { read } = await import("mbt-map/data");
     const map = window.__map;
     const wards = await read("./wards.zip");
     map.addSource("wards", { type: "geojson", data: wards.toGeoJSON() });
@@ -94,8 +94,8 @@ export async function dataChecks(page, requests) {
     r.bytesKept === 21 &&
     /http\(s\) URL/.test(r.refused) &&
     /format cannot be told/.test(r.noFormat) &&
-    r.malformed === "moon-map: data: malformed CSV at 4: unterminated quoted field" &&
-    r.srid === "moon-map: data: SRID 9999: unsupported CRS EPSG:9999" &&
+    r.malformed === "mbt-map: data: malformed CSV at 4: unterminated quoted field" &&
+    r.srid === "mbt-map: data: SRID 9999: unsupported CRS EPSG:9999" &&
     /invalid delimiter/.test(r.badOption) &&
     /HTTP 404/.test(r.missing) &&
     z.drawn > 0 &&
@@ -111,7 +111,7 @@ export async function dataChecks(page, requests) {
   // of them only, and a KML is drawn.
   const xmlBefore = requests.filter((u) => u.endsWith("/xml.wasm")).length;
   const k = await page.evaluate(async () => {
-    const { read, parse } = await import("moon-map/data");
+    const { read, parse } = await import("mbt-map/data");
     const map = window.__map;
     const kml = await read("./places.kml");
     const text = await (await fetch("./places.kml")).text();
@@ -187,14 +187,14 @@ export async function dataChecks(page, requests) {
     JSON.stringify(k.heart) === JSON.stringify([90, 95]) &&
     JSON.stringify(k.parsed) === JSON.stringify([2, 1]) &&
     ["kml-points 東京駅", "kml-points 日本橋", "kml-lines 経路"].every((d) => k.drawn.includes(d)) &&
-    k.malformed === "moon-map: data: malformed XML at 16: opening and ending tag mismatch: Placemark != kml" &&
+    k.malformed === "mbt-map: data: malformed XML at 16: opening and ending tag mismatch: Placemark != kml" &&
     /no \.kml file/.test(k.badKmz) &&
     /always in EPSG:4326/.test(k.crs);
   // FlatGeobuf whole, by bbox through its index (range requests from the URL, and from bytes):
   // data-fgb.js is fetched with the first read only.
   const fgbBefore = requests.filter((u) => u.endsWith("/data-fgb.js")).length;
   const g = await page.evaluate(async () => {
-    const { read } = await import("moon-map/data");
+    const { read } = await import("mbt-map/data");
     const bbox = [139.766, 35.68, 139.775, 35.683];
     const rows = (t) => t.toGeoJSON().features.map((f) => [f.id, f.properties.名前, f.properties.番号]);
     const fail = (p) => p.then(() => "", (e) => e.message);
@@ -216,7 +216,7 @@ export async function dataChecks(page, requests) {
     /invalid bbox/.test(g.badBbox) && /bbox is for FlatGeobuf/.test(g.csvBbox);
   // Writing: a DataTable as GeoJSON, CSV and KML, a GeoJSON object as KML, each read back.
   const w = await page.evaluate(async () => {
-    const { read, parse, write } = await import("moon-map/data");
+    const { read, parse, write } = await import("mbt-map/data");
     const stations = await read("./stations.csv");
     const drawn = {
       type: "FeatureCollection",
@@ -256,8 +256,8 @@ export async function dataChecks(page, requests) {
   // tiles the browser decodes; a band as an analysis grid. geotiff.wasm is fetched once.
   const tiffBefore = requests.filter((u) => u.endsWith("/geotiff.wasm")).length;
   const t = await page.evaluate(async (HILL) => {
-    const { readRaster } = await import("moon-map/data");
-    const { loadGrid } = await import("moon-map/analysis");
+    const { readRaster } = await import("mbt-map/data");
+    const { loadGrid } = await import("mbt-map/analysis");
     // bench/data/pack-fixtures.mjs HILL.at.
     const at = (x, y) => Math.fround(40 + 30 * Math.exp(-(((x - 120) / 40) ** 2 + ((y - 80) / 30) ** 2)));
     const whole = await readRaster("./dem.tif");

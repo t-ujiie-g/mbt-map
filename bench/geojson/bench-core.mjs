@@ -37,7 +37,7 @@ function tilesOver(b) {
 export async function runGeoJSONBench(fetchBytes, { gc }, { runs = 5 } = {}) {
   const e = gc.exports;
   const o = OPTIONS;
-  const buildMoonmap = (bytes) => {
+  const buildMbtmap = (bytes) => {
     const addr = gc.copyIn(bytes);
     return e.geojson_tiler_mem(addr, bytes.length, o.maxZoom, o.indexMaxZoom, o.indexMaxPoints, o.tolerance, o.extent, o.buffer, o.wrap ? 1 : 0, 0);
   };
@@ -74,22 +74,22 @@ export async function runGeoJSONBench(fetchBytes, { gc }, { runs = 5 } = {}) {
       indexMs: time(() => new GeoJSONVT(data, o)),
       tilesMs: timeAfter(() => { index = new GeoJSONVT(data, o); }, () => { for (const [z, x, y] of tiles) index.getTile(z, x, y); }),
     };
-    if (buildMoonmap(bytes) !== data.features.length) throw new Error(`${name}: moonmap read a different feature count`);
+    if (buildMbtmap(bytes) !== data.features.length) throw new Error(`${name}: mbtmap read a different feature count`);
     const buildB = () => {
       const table = columnarize(JSON.parse(decoder.decode(bytes)));
       return e.geojson_tiler_table_mem(gc.copyIn(table), table.length, o.maxZoom, o.indexMaxZoom, o.indexMaxPoints, o.tolerance, o.extent, o.buffer, o.wrap ? 1 : 0);
     };
     if (buildB() !== data.features.length) throw new Error(`${name}: pipeline B read a different feature count`);
-    const moonmap = {
+    const mbtmap = {
       readMs: time(() => e.geojson_read_mem(gc.copyIn(bytes), bytes.length)),
-      readIndexMs: time(() => buildMoonmap(bytes)),
+      readIndexMs: time(() => buildMbtmap(bytes)),
       columnarizeMs: time(() => columnarize(JSON.parse(decoder.decode(bytes)))),
       bReadIndexMs: time(buildB),
-      tilesMs: timeAfter(() => buildMoonmap(bytes), () => { for (const [z, x, y] of tiles) e.geojson_tile_size(z, x, y); }),
+      tilesMs: timeAfter(() => buildMbtmap(bytes), () => { for (const [z, x, y] of tiles) e.geojson_tile_size(z, x, y); }),
     };
     js.totalMs = js.parseMs + js.indexMs + js.tilesMs;
-    moonmap.totalMs = moonmap.readIndexMs + moonmap.tilesMs;
-    datasets[name] = { bytes: bytes.length, features: data.features.length, tiles: tiles.length, js, moonmap };
+    mbtmap.totalMs = mbtmap.readIndexMs + mbtmap.tilesMs;
+    datasets[name] = { bytes: bytes.length, features: data.features.length, tiles: tiles.length, js, mbtmap };
   }
   return { params: { runs, statistic: "median of runs after one warm-up", options: o }, datasets };
 }
@@ -99,6 +99,6 @@ export function printGeoJSON(result) {
   console.table(Object.fromEntries(Object.entries(result.datasets).map(([n, d]) => [n, {
     MB: (d.bytes / 1e6).toFixed(1), tiles: d.tiles,
     "js parse": r(d.js.parseMs), "js index": r(d.js.indexMs), "js tiles": r(d.js.tilesMs), "js total": r(d.js.totalMs),
-    "A read+index": r(d.moonmap.readIndexMs), "B parse+columns": r(d.moonmap.columnarizeMs), "B read+index": r(d.moonmap.bReadIndexMs), "moonmap tiles": r(d.moonmap.tilesMs), "moonmap total (A)": r(d.moonmap.totalMs),
+    "A read+index": r(d.mbtmap.readIndexMs), "B parse+columns": r(d.mbtmap.columnarizeMs), "B read+index": r(d.mbtmap.bReadIndexMs), "mbtmap tiles": r(d.mbtmap.tilesMs), "mbtmap total (A)": r(d.mbtmap.totalMs),
   }])));
 }

@@ -1,6 +1,6 @@
 {
   "version": 8,
-  "name": "moonmap basic (GSI bvmap, fill/line/circle/background)",
+  "name": "mbtmap basic (GSI bvmap, fill/line/circle/background)",
   "sources": {
     "gsi": {
       "type": "vector",

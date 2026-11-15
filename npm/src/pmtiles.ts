@@ -12,7 +12,7 @@ const TYPES: Record<number, string> = { 1: "mvt", 2: "png", 3: "jpeg", 4: "webp"
  */
 export function headerDocument(archive: string, bytes: Uint8Array): Record<string, unknown> {
   if (bytes.length < 127 || new TextDecoder().decode(bytes.subarray(0, 7)) !== "PMTiles" || bytes[7] !== 3) {
-    throw new Error(`moon-map: ${archive} is not a PMTiles v3 archive`);
+    throw new Error(`mbt-map: ${archive} is not a PMTiles v3 archive`);
   }
   const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const deg = (at: number) => v.getInt32(at, true) / 1e7;

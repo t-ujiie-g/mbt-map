@@ -1,4 +1,4 @@
-// Clipping as CesiumJS's planes and polygons, packed for the engine's and moon-map/3d's shaders. Import-free.
+// Clipping as CesiumJS's planes and polygons, packed for the engine's and mbt-map/3d's shaders. Import-free.
 
 /** The shaders' limits, core/clipping.mbt's: planes, rings, and vertices of all rings together. */
 export const MAX_CLIP_PLANES = 16;
@@ -36,7 +36,7 @@ export function packClipping(c: Clipping): number[] {
   const verts = rings.flat().flatMap(([x, y]) => [((x - lng) / 360) * meters, (my(y) - my(lat)) * meters]);
   const n = [lng, lat, h, c.unionClippingRegions ? 1 : 0, c.inverse ? 1 : 0, c.edgeWidth ?? 0, ...(c.edgeColor ?? [1, 1, 1]), planes.length, ...planes.flat(), rings.length, ...rings.map((r) => r.length), ...verts];
   if (planes.length > MAX_CLIP_PLANES || rings.length > MAX_CLIP_RINGS || verts.length > 2 * MAX_CLIP_POINTS || !n.every(Number.isFinite)) {
-    throw new Error(`moon-map: setClipping: at most ${MAX_CLIP_PLANES} planes, ${MAX_CLIP_RINGS} rings and ${MAX_CLIP_POINTS} points, all finite`);
+    throw new Error(`mbt-map: setClipping: at most ${MAX_CLIP_PLANES} planes, ${MAX_CLIP_RINGS} rings and ${MAX_CLIP_POINTS} points, all finite`);
   }
   return n;
 }

@@ -11,7 +11,7 @@ import { median } from "../lib/rows.mjs";
 
 const POINTS = Number(arg("points", 1_000_000));
 const RUNS = Number(arg("runs", 7));
-const wasm = await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/proj_worker/proj_worker.wasm"));
+const wasm = await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/proj_worker/proj_worker.wasm"));
 const { instance } = await WebAssembly.instantiate(wasm, { Math });
 const p = instance.exports;
 
@@ -65,8 +65,8 @@ for (const c of cases) {
     ref.push(performance.now() - t);
     for (let i = 0; i < res.length; i++) diff = Math.max(diff, Math.abs(out[i] - res[i]));
   }
-  const row = { name: c.name, moonmapMs: median(ours), proj4jsMs: median(ref), maxDiffM: diff };
+  const row = { name: c.name, mbtmapMs: median(ours), proj4jsMs: median(ref), maxDiffM: diff };
   rows.push(row);
-  console.log(`${c.name}: moonmap ${row.moonmapMs.toFixed(0)} ms, proj4js ${row.proj4jsMs.toFixed(0)} ms (${(row.proj4jsMs / row.moonmapMs).toFixed(2)}x), largest difference ${diff.toExponential(1)} m`);
+  console.log(`${c.name}: mbtmap ${row.mbtmapMs.toFixed(0)} ms, proj4js ${row.proj4jsMs.toFixed(0)} ms (${(row.proj4jsMs / row.mbtmapMs).toFixed(2)}x), largest difference ${diff.toExponential(1)} m`);
 }
 await writeFile(path.join(ROOT, "bench/results/proj-node.json"), JSON.stringify({ node: process.version, points: POINTS, runs: RUNS, rows }, null, 2) + "\n");

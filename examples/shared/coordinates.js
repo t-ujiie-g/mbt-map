@@ -1,8 +1,8 @@
-// The pointer's coordinates in four systems from `moon-map/ui`'s controller:
+// The pointer's coordinates in four systems from `mbt-map/ui`'s controller:
 // degrees and DMS as it writes them, Japan's plane rectangular system (the
-// nearest zone) and UTM through moon-map/analysis's `transform`.
-import { transform } from "moon-map/analysis";
-import { createCoordinates, degrees, degreesMinutesSeconds, utm } from "moon-map/ui";
+// nearest zone) and UTM through mbt-map/analysis's `transform`.
+import { transform } from "mbt-map/analysis";
+import { createCoordinates, degrees, degreesMinutesSeconds, utm } from "mbt-map/ui";
 import { nearestZone } from "./analysis.js";
 
 /** A system of the page's own: the zone's name, then X (northing) and Y (easting). */

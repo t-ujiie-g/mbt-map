@@ -1,7 +1,7 @@
 // A LAS point cloud (./cloud.las, written by bench/las/synthetic.mjs in plane rectangular IX) drawn by
-// moon-map/3d's point cloud layer, for the pack test's pointcloud check (bench/npm/checks/pointcloud.mjs).
-import { Map } from "moon-map";
-import { pointCloudLayer } from "moon-map/3d";
+// mbt-map/3d's point cloud layer, for the pack test's pointcloud check (bench/npm/checks/pointcloud.mjs).
+import { Map } from "mbt-map";
+import { pointCloudLayer } from "mbt-map/3d";
 
 const map = new Map({
   container: "map",

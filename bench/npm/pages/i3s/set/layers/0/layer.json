@@ -14,7 +14,7 @@
   "heightUnit": "meter"
  },
  "alias": "Synthetic buildings",
- "copyrightText": "moonmap test data",
+ "copyrightText": "mbtmap test data",
  "capabilities": [
   "View",
   "Query"

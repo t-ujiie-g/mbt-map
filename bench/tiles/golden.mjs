@@ -1,4 +1,4 @@
-// moon-map/3d's 3D Tiles selection (npm/src/tiles: tree, implicit tiling, traversal) vs @loaders.gl/tiles
+// mbt-map/3d's 3D Tiles selection (npm/src/tiles: tree, implicit tiling, traversal) vs @loaders.gl/tiles
 // 4.5.4's Tileset3D: for each tileset and view, both traverse with loaders.gl's frame state (from a
 // WebMercatorViewport of the camera) and load what they ask for until nothing is left; the tiles
 // selected then must be the same. The frame states come from a camera of the golden's own (60° field
@@ -272,7 +272,7 @@ try {
         // Tiles outside the fixture's box are missing: both sides count them as failed.
         await Promise.all(requested.map((t) => t.loadContent().catch(() => {})));
       }
-      // moonmap, with the same frame state.
+      // mbtmap, with the same frame state.
       const json = await expandTileset(JSON.parse(new TextDecoder().decode(await fetchBytes(url))), url, fetchBytes);
       const root = buildTree(json, url);
       const traversal = new Traversal(8);

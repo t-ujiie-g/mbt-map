@@ -36,7 +36,7 @@ test("crsArg looks names up, ahead of the codes", async () => {
 
 test("crsArg refuses anything else, naming the entry", async () => {
   for (const bad of [0, -1, 1.5, NaN, "", "tokyo", "EPSG:", "EPSG:1234567", "EPSG:66.77"]) {
-    await assert.rejects(crsArg(bad, "data"), /^Error: moon-map: data: not a CRS: /);
+    await assert.rejects(crsArg(bad, "data"), /^Error: mbt-map: data: not a CRS: /);
   }
-  await assert.rejects(crsArg(null as unknown as string, "analysis"), /^Error: moon-map: analysis: not a CRS: null$/);
+  await assert.rejects(crsArg(null as unknown as string, "analysis"), /^Error: mbt-map: analysis: not a CRS: null$/);
 });

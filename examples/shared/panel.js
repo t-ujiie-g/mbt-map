@@ -1,6 +1,6 @@
 // The panel's basemaps, layer list and legend drawn with plain DOM from
-// `moon-map/ui`'s controllers (the React example draws them its own way).
-import { createBasemaps, createLayerList, createLegend } from "moon-map/ui";
+// `mbt-map/ui`'s controllers (the React example draws them its own way).
+import { createBasemaps, createLayerList, createLegend } from "mbt-map/ui";
 import { cellsLegendLabel } from "./analyze.js";
 import { BASEMAPS, LAYER_GROUPS, LAYER_TITLES, createStyle, datasets, legendLabel } from "./style.js";
 

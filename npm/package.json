@@ -1,12 +1,12 @@
 {
-  "name": "moon-map",
+  "name": "mbt-map",
   "version": "0.1.0",
   "private": true,
   "description": "A lightweight vector-tile map renderer for the Web, written in MoonBit",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/t-ujiie-g/moon-map.git",
+    "url": "git+https://github.com/t-ujiie-g/mbt-map.git",
     "directory": "npm"
   },
   "type": "module",
@@ -59,7 +59,7 @@
     "./worker-labels.js": "./dist/worker-labels.js",
     "./worker-pmtiles.js": "./dist/worker-pmtiles.js",
     "./worker-query.js": "./dist/worker-query.js",
-    "./moon-map.wasm": "./dist/moon-map.wasm",
+    "./mbt-map.wasm": "./dist/mbt-map.wasm",
     "./package.json": "./package.json",
     "./geojson-worker.js": "./dist/geojson-worker.js",
     "./geojson.wasm": "./dist/geojson.wasm",

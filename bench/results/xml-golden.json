@@ -15,7 +15,7 @@
     "nested property values (objects and arrays) are their JSON.stringify text",
     "lone surrogates in keys and values are U+FFFD, as UTF-8 carries text (TextEncoder's replacement)",
     "bounding boxes are left out: tables carry none",
-    "togeojson's NetworkLink features (links to other documents, with their Region's box) are left out: moon-map/data reads none"
+    "togeojson's NetworkLink features (links to other documents, with their Region's box) are left out: mbt-map/data reads none"
   ],
   "results": {
     "kml cases": {
@@ -65,7 +65,7 @@
     {
       "group": "hostile",
       "label": "nesting past MAX_XML_DEPTH",
-      "why": "xmldom has no depth limit; moon-map/data refuses documents nested deeper than 256 (AGENTS.md §8.2)",
+      "why": "xmldom has no depth limit; mbt-map/data refuses documents nested deeper than 256 (AGENTS.md §8.2)",
       "ok": true
     },
     {
@@ -77,19 +77,19 @@
     {
       "group": "hostile",
       "label": "attributes past MAX_XML_ATTRIBUTES",
-      "why": "xmldom has no attribute limit; moon-map/data refuses more than 1024 on one element",
+      "why": "xmldom has no attribute limit; mbt-map/data refuses more than 1024 on one element",
       "ok": true
     },
     {
       "group": "hostile",
       "label": "malformed internal subset",
-      "why": "xmldom checks declarations in an internal subset; moon-map/data skips the subset (nothing in it is ever used)",
+      "why": "xmldom checks declarations in an internal subset; mbt-map/data skips the subset (nothing in it is ever used)",
       "ok": true
     },
     {
       "group": "hostile",
       "label": "XML declaration version 2",
-      "why": "xmldom checks an XML declaration's version, encoding and standalone parts; moon-map/data only that it comes first",
+      "why": "xmldom checks an XML declaration's version, encoding and standalone parts; mbt-map/data only that it comes first",
       "ok": true
     },
     {

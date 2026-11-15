@@ -1,9 +1,9 @@
-// Stations read from a CSV, an area from WKT and lines from TopoJSON by moon-map/data,
-// drawn as GeoJSON sources and counted in moon-map/analysis from the same tables. The
+// Stations read from a CSV, an area from WKT and lines from TopoJSON by mbt-map/data,
+// drawn as GeoJSON sources and counted in mbt-map/analysis from the same tables. The
 // shapefiles (bench/data/pack-fixtures.mjs writes them) are read by the pack test.
-import { Map } from "moon-map";
-import { load } from "moon-map/analysis";
-import { parse, read } from "moon-map/data";
+import { Map } from "mbt-map";
+import { load } from "mbt-map/analysis";
+import { parse, read } from "mbt-map/data";
 
 const stations = await read("./stations.csv");
 const area = await parse("SRID=4326;POLYGON ((139.760 35.670, 139.775 35.670, 139.775 35.688, 139.760 35.688, 139.760 35.670))", { format: "wkt" });

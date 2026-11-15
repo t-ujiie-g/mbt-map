@@ -1,102 +1,102 @@
 {
   "env": {
-    "package": "moonmap@0.1.0",
+    "package": "mbtmap@0.1.0",
     "compression": "gzip -9"
   },
   "rows": [
     {
-      "name": "moonmap",
-      "bytes": 161843,
+      "name": "mbtmap",
+      "bytes": 161842,
       "budget": 163000
     },
     {
-      "name": "GeoJSON sources (loaded by moonmap when a style has one)",
-      "bytes": 4495,
+      "name": "GeoJSON sources (loaded by mbtmap when a style has one)",
+      "bytes": 4493,
       "budget": 5000
     },
     {
-      "name": "PMTiles headers (loaded by moonmap when a style has a pmtiles:// source)",
-      "bytes": 792,
+      "name": "PMTiles headers (loaded by mbtmap when a style has a pmtiles:// source)",
+      "bytes": 791,
       "budget": 2000
     },
     {
-      "name": "GeoTIFF sources (loaded by moonmap with the first one; tiles by moon-map/data)",
+      "name": "GeoTIFF sources (loaded by mbtmap with the first one; tiles by mbt-map/data)",
       "bytes": 301,
       "budget": 1000
     },
     {
-      "name": "legacy filters and functions (loaded by moonmap when a style has them)",
-      "bytes": 3606,
+      "name": "legacy filters and functions (loaded by mbtmap when a style has them)",
+      "bytes": 3605,
       "budget": 5000
     },
     {
-      "name": "sprite sheets (loaded by moonmap when a style has a sprite)",
+      "name": "sprite sheets (loaded by mbtmap when a style has a sprite)",
       "bytes": 1831,
       "budget": 2000
     },
     {
-      "name": "image, video and canvas sources (loaded by moonmap when a style has one)",
-      "bytes": 2602,
+      "name": "image, video and canvas sources (loaded by mbtmap when a style has one)",
+      "bytes": 2601,
       "budget": 3000
     },
     {
-      "name": "custom layers (loaded by moonmap with the first one)",
+      "name": "custom layers (loaded by mbtmap with the first one)",
       "bytes": 2983,
       "budget": 3000
     },
     {
-      "name": "image export (loaded by moonmap with the first toBlob)",
+      "name": "image export (loaded by mbtmap with the first toBlob)",
       "bytes": 370,
       "budget": 1000
     },
     {
-      "name": "TileJSON merging (loaded by moonmap with the first source given by url)",
+      "name": "TileJSON merging (loaded by mbtmap with the first source given by url)",
       "bytes": 462,
       "budget": 1000
     },
     {
-      "name": "moon-map/element (on top of moonmap)",
-      "bytes": 1695,
+      "name": "mbt-map/element (on top of mbtmap)",
+      "bytes": 1694,
       "budget": 5000
     },
     {
-      "name": "moon-map/moonbit (the MoonBit API's entry, on top of moonmap)",
+      "name": "mbt-map/moonbit (the MoonBit API's entry, on top of mbtmap)",
       "bytes": 100,
       "budget": 500
     },
     {
-      "name": "moon-map/ui (every controller)",
-      "bytes": 9347,
+      "name": "mbt-map/ui (every controller)",
+      "bytes": 9346,
       "budget": 10000
     },
     {
-      "name": "moon-map/search",
+      "name": "mbt-map/search",
       "bytes": 2849,
       "budget": 5000
     },
     {
-      "name": "moon-map/services",
+      "name": "mbt-map/services",
       "bytes": 11338,
       "budget": 12000
     },
     {
-      "name": "WFS GML (loaded by moon-map/services with the first GML answer)",
+      "name": "WFS GML (loaded by mbt-map/services with the first GML answer)",
       "bytes": 2012,
       "budget": 2500
     },
     {
-      "name": "services worker (ArcGIS f=json and f=pbf; loaded by moon-map/services on the first such read)",
-      "bytes": 20305,
+      "name": "services worker (ArcGIS f=json and f=pbf; loaded by mbt-map/services on the first such read)",
+      "bytes": 20281,
       "budget": 21000
     },
     {
-      "name": "moon-map/draw",
+      "name": "mbt-map/draw",
       "bytes": 4932,
       "budget": 10000
     },
     {
       "name": "display worker",
-      "bytes": 85172,
+      "bytes": 85000,
       "budget": 100000
     },
     {
@@ -116,86 +116,86 @@
     },
     {
       "name": "GeoJSON worker",
-      "bytes": 36991,
+      "bytes": 36996,
       "budget": 37000
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 56522,
+      "bytes": 56494,
       "budget": 57000
     },
     {
-      "name": "moon-map/analysis",
-      "bytes": 8338,
+      "name": "mbt-map/analysis",
+      "bytes": 8341,
       "budget": 9000
     },
     {
-      "name": "PROJ strings (loaded by moon-map/analysis and moon-map/data on the first one)",
+      "name": "PROJ strings (loaded by mbt-map/analysis and mbt-map/data on the first one)",
       "bytes": 2742,
       "budget": 5000
     },
     {
       "name": "analysis worker",
-      "bytes": 30307,
+      "bytes": 30318,
       "budget": 31000
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 41692,
+      "bytes": 41781,
       "budget": 50000
     },
     {
       "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
-      "bytes": 26864,
+      "bytes": 26826,
       "budget": 30000
     },
     {
       "name": "shapes (simplify, hulls, Delaunay, Voronoi, line slices; loaded by the analysis worker on first use)",
-      "bytes": 27948,
+      "bytes": 27957,
       "budget": 30000
     },
     {
       "name": "surfaces (grids, IDW, clusters, contours, density; loaded by the analysis worker on first use)",
-      "bytes": 29262,
+      "bytes": 29259,
       "budget": 30000
     },
     {
       "name": "viewshed (GDAL's; loaded by the analysis worker on first use)",
-      "bytes": 10744,
+      "bytes": 10742,
       "budget": 12000
     },
     {
       "name": "routing (geojson-path-finder; loaded by the analysis worker on first use)",
-      "bytes": 16041,
+      "bytes": 16059,
       "budget": 17000
     },
     {
       "name": "coordinate systems (loaded by the analysis and data workers on first use)",
-      "bytes": 21665,
+      "bytes": 21628,
       "budget": 25000
     },
     {
-      "name": "moon-map/geodesic",
-      "bytes": 1246,
+      "name": "mbt-map/geodesic",
+      "bytes": 1247,
       "budget": 2000
     },
     {
       "name": "geodesic worker",
-      "bytes": 12051,
+      "bytes": 12039,
       "budget": 15000
     },
     {
-      "name": "moon-map/3d",
-      "bytes": 9094,
+      "name": "mbt-map/3d",
+      "bytes": 9093,
       "budget": 10000
     },
     {
-      "name": "3D Tiles (loaded by moon-map/3d with the first tilesLayer)",
+      "name": "3D Tiles (loaded by mbt-map/3d with the first tilesLayer)",
       "bytes": 10480,
       "budget": 12000
     },
     {
-      "name": "I3S (loaded by moon-map/3d with the first i3sLayer)",
+      "name": "I3S (loaded by mbt-map/3d with the first i3sLayer)",
       "bytes": 8314,
       "budget": 10000
     },
@@ -206,17 +206,17 @@
     },
     {
       "name": "3d worker",
-      "bytes": 44075,
+      "bytes": 44086,
       "budget": 50000
     },
     {
-      "name": "moon-map/data",
-      "bytes": 4728,
+      "name": "mbt-map/data",
+      "bytes": 4727,
       "budget": 6000
     },
     {
       "name": "data worker",
-      "bytes": 40646,
+      "bytes": 40614,
       "budget": 41000
     },
     {
@@ -246,82 +246,82 @@
     },
     {
       "name": "KML and GPX (loaded by the data worker on the first such read)",
-      "bytes": 26709,
+      "bytes": 26775,
       "budget": 27000
     },
     {
       "name": "GeoTIFF (loaded by the data worker on the first raster read)",
-      "bytes": 19801,
+      "bytes": 19834,
       "budget": 20000
     },
     {
-      "name": "moon-map/ui createAttribution alone",
-      "bytes": 483,
+      "name": "mbt-map/ui createAttribution alone",
+      "bytes": 482,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createFullscreen alone",
-      "bytes": 516,
+      "name": "mbt-map/ui createFullscreen alone",
+      "bytes": 515,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createGeolocation alone",
+      "name": "mbt-map/ui createGeolocation alone",
       "bytes": 1415,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createNavigation alone",
-      "bytes": 538,
+      "name": "mbt-map/ui createNavigation alone",
+      "bytes": 539,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createScale alone",
-      "bytes": 889,
+      "name": "mbt-map/ui createScale alone",
+      "bytes": 888,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createBasemaps alone",
-      "bytes": 717,
+      "name": "mbt-map/ui createBasemaps alone",
+      "bytes": 714,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createLayerList alone",
-      "bytes": 849,
+      "name": "mbt-map/ui createLayerList alone",
+      "bytes": 848,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createLegend alone",
-      "bytes": 1566,
+      "name": "mbt-map/ui createLegend alone",
+      "bytes": 1565,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createCoordinates alone",
-      "bytes": 920,
+      "name": "mbt-map/ui createCoordinates alone",
+      "bytes": 921,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createIdentify alone",
-      "bytes": 813,
+      "name": "mbt-map/ui createIdentify alone",
+      "bytes": 812,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createMeasurement alone",
-      "bytes": 1585,
+      "name": "mbt-map/ui createMeasurement alone",
+      "bytes": 1583,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createProfile alone",
-      "bytes": 926,
+      "name": "mbt-map/ui createProfile alone",
+      "bytes": 925,
       "budget": 2000
     },
     {
-      "name": "moon-map/ui createAttributeTable alone",
+      "name": "mbt-map/ui createAttributeTable alone",
       "bytes": 2037,
       "budget": 2200
     },
     {
-      "name": "moon-map/ui createFieldEditor alone",
-      "bytes": 1362,
+      "name": "mbt-map/ui createFieldEditor alone",
+      "bytes": 1361,
       "budget": 2000
     }
   ]

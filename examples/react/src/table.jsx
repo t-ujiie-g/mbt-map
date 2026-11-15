@@ -1,7 +1,7 @@
 // The places' attribute table and its field form in React, from the controllers the plain-DOM
 // examples draw with the same shared helpers.
 import { useEffect, useState } from "react";
-import { cellText } from "moon-map/ui";
+import { cellText } from "mbt-map/ui";
 import { FIELD_ACTIONS, FIELD_DEFAULTS, FIELD_PLACEHOLDERS, chooseRow, createPlacesFields, createPlacesTable, onTableKey, runField, sortOf, tableCounts, tableHeadings } from "../../shared/table.js";
 import { useController } from "./use-controller.js";
 

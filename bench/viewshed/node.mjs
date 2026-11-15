@@ -126,6 +126,6 @@ for (const k of [1, 4]) {
 await writeResults("viewshed-node", {
   gdal: version, runs: RUNS,
   statistic: "median of runs after one warm-up run each",
-  columns: "js: GDAL net, the GTiff run's wall clock minus the 2 x 2 run's (baseline); gdalWall / gdalCpu: the GTiff run's wall clock and user + sys; gdalMemWall: wall clock writing to the MEM driver; moonmap: the window of cells the viewshed reads, those cells out of analysis.wasm, into viewshed.wasm, the call and its output read (one thread); exportOnly: the cells copied into viewshed.wasm and the call, its output not read",
+  columns: "js: GDAL net, the GTiff run's wall clock minus the 2 x 2 run's (baseline); gdalWall / gdalCpu: the GTiff run's wall clock and user + sys; gdalMemWall: wall clock writing to the MEM driver; mbtmap: the window of cells the viewshed reads, those cells out of analysis.wasm, into viewshed.wasm, the call and its output read (one thread); exportOnly: the cells copied into viewshed.wasm and the call, its output not read",
   baseline,
 }, all);

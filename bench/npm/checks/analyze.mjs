@@ -27,7 +27,7 @@ export async function analyzeChecks(page) {
   });
   // Two clicks east of the station (the panel covers the west), snapped to road vertices.
   const at = (lng, lat) => page.evaluate(([x, y]) => window.__map.project([x, y]), [lng, lat]);
-  const box = await page.locator("#map, moon-map").first().boundingBox();
+  const box = await page.locator("#map, mbt-map").first().boundingBox();
   const click = async (lng, lat) => {
     const p = await at(lng, lat);
     await page.mouse.click(box.x + p.x, box.y + p.y);

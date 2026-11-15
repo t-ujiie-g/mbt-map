@@ -1,8 +1,8 @@
-// The moonmap side of bench/cesium/run.mjs: PLATEAU's buildings by moon-map/3d's tilesLayer over a plain
+// The mbtmap side of bench/cesium/run.mjs: PLATEAU's buildings by mbt-map/3d's tilesLayer over a plain
 // background, at the camera of ?view=; `__run` adds the layer and waits until it settles, `__orbit`
 // turns the camera a degree a frame.
-import { Map } from "moon-map";
-import { tilesLayer } from "moon-map/3d";
+import { Map } from "mbt-map";
+import { tilesLayer } from "mbt-map/3d";
 import { HEIGHT_OFFSET, ORBIT_FRAMES, VIEWS, quantiles, settle, trackFrames } from "./views.mjs";
 
 const frames = trackFrames();

@@ -5,11 +5,11 @@ Where things stand, decisions and open issues. The development history before th
 ## 現在の状況（2026-11-15）
 
 - **終わったもの**：mbmap の Phase 0〜20 と、その後の点検（mbmap #165 まで）。このリポジトリへ移した（2026-11-15）。
-- **名前**（2026-11-15 ユーザー判断）：npm は `moon-map`（入口は `moon-map/ui`、`moon-map/3d` など）、mooncakes は `t-ujiie-g/moonmap`、要素は `<moon-map>`、イベントは `moon-map-error` など、エラーは `moon-map: ...`。コードの識別子やラベルは `moonmap`。
+- **名前**（2026-11-15 ユーザー判断。いったん `moon-map` にしたが、月の地図に読めるので同日に `mbt-map` へ改名。リポジトリも `t-ujiie-g/mbt-map`）：npm は `mbt-map`（入口は `mbt-map/ui`、`mbt-map/3d` など）、mooncakes は `t-ujiie-g/mbtmap`、要素は `<mbt-map>`、イベントは `mbt-map-error` など、エラーは `mbt-map: ...`。コードの識別子やラベルは `mbtmap`。
 - **進め方**（2026-11-15 ユーザー判断）：
   1. 土台：リポジトリの設定（`main` のルールセット、Dependabot、秘密情報の検出、SECURITY.md）。済み（#1）。
-  2. 移行：コードを移し、名前を置き換え、CI を通す。MoonBit のモジュールは直下の 1 つ（`t-ujiie-g/moonmap`）のまま。`moon.work` は rabbita のモジュールを足すときに入れる（ワークスペースでは `_build` の出力がモジュール名の下に出る）。
-  3. MoonBit で書けるように：中身（ファサード）は TS のまま、MoonBit には npm の実装を中で使う型付きの API と rabbita の部品を作る（2026-11-15 ユーザー判断。いったん選んだ案 B「ファサードを MoonBit に移す」は、測った大きさを見て取りやめた。下の節）。スタイルは型付きで書け JSON も渡せる（同日のユーザー判断）。API の形（2026-11-15 ユーザー判断）：スタイルは層ごとの関数とラベル付きの引数（MapLibre の `v8.json` から生成、`@style.Layer::json` で JSON も）、rabbita には `<moon-map>` 要素を包んで置き（イベントは rabbita のメッセージ、地図の操作は Cmd から型付き API）、モジュールはエンジンを `t-ujiie-g/moonmap_engine`（内部）、使う人向けを `t-ujiie-g/moonmap` と `t-ujiie-g/moonmap_rabbita` に。MoonBit から npm の実装は `#module` の静的 import で読み（呼べるのは関数なので、npm に `moon-map/moonbit` の入口を足す）、ワーカーと wasm は npm のパッケージが自分の場所から読む。段階：M1 ワークスペースと改名（#7）、M2 `moon-map/moonbit` と `moonmap` の土台（地図、カメラ、イベント、JSON のスタイル編集）、M3 型付きのスタイルと式（生成）、M4 `moonmap_rabbita` と rabbita のデモ。
+  2. 移行：コードを移し、名前を置き換え、CI を通す。MoonBit のモジュールは直下の 1 つ（`t-ujiie-g/mbtmap`）のまま。`moon.work` は rabbita のモジュールを足すときに入れる（ワークスペースでは `_build` の出力がモジュール名の下に出る）。
+  3. MoonBit で書けるように：中身（ファサード）は TS のまま、MoonBit には npm の実装を中で使う型付きの API と rabbita の部品を作る（2026-11-15 ユーザー判断。いったん選んだ案 B「ファサードを MoonBit に移す」は、測った大きさを見て取りやめた。下の節）。スタイルは型付きで書け JSON も渡せる（同日のユーザー判断）。API の形（2026-11-15 ユーザー判断）：スタイルは層ごとの関数とラベル付きの引数（MapLibre の `v8.json` から生成、`@style.Layer::json` で JSON も）、rabbita には `<mbt-map>` 要素を包んで置き（イベントは rabbita のメッセージ、地図の操作は Cmd から型付き API）、モジュールはエンジンを `t-ujiie-g/mbtmap_engine`（内部）、使う人向けを `t-ujiie-g/mbtmap` と `t-ujiie-g/mbtmap_rabbita` に。MoonBit から npm の実装は `#module` の静的 import で読み（呼べるのは関数なので、npm に `mbt-map/moonbit` の入口を足す）、ワーカーと wasm は npm のパッケージが自分の場所から読む。段階：M1 ワークスペースと改名（#7）、M2 `mbt-map/moonbit` と `mbtmap` の土台（地図、カメラ、イベント、JSON のスタイル編集）、M3 型付きのスタイルと式（生成）、M4 `mbtmap_rabbita` と rabbita のデモ。
   4. 文書：英語の README（日本語版も）、docs/ の API とガイド。MapLibre などと張り合う書き方はしない。ベンチは前に出さない。
   5. GitHub Pages：手書きの LP と、依存ゼロの marked で docs を HTML に、動く examples（html / web component / React / MoonBit）。
   6. 公開の準備：Firefox・WebKit での pack test、npm 0.1.0 と mooncakes の公開（ユーザーが実行）。
@@ -30,26 +30,26 @@ Where things stand, decisions and open issues. The development history before th
 
 ## M2：MoonBit の API の土台（2026-11-15、Mac）
 
-- npm に `moon-map/moonbit`（`createMap`、0.1KB。MoonBit の `#module` の import は関数として呼ぶので、コンストラクタを関数で渡す）。
-- `t-ujiie-g/moonmap`（`moonbit/moonmap/`、js 専用）：`Map::new(container, style=Url(..) | Spec(json), center?, zoom?, bearing?, pitch?, 範囲, interactive?, attribution?)`、カメラ（`center`・`zoom`・`bearing`・`pitch`、`jump_to`・`ease_to`・`fly_to`・`fit_bounds`、`project`・`unproject`）、スタイル（`set_style`・`style`、ソースと層の追加・削除・移動、`layer_ids`、`set_paint`・`set_layout`・`set_filter`、`set_data`、`set_feature_state`）、イベント（`EventType` の enum、型付きの `Event` と `Feature`、`on`・`on_layer` が返す `Listener::off`）、`query_rendered_features`（Promise をコールバックに）。JS のメソッドは汎用の `js_call` 1 つを通す。パッケージの中では使う人向けの `Map` が標準の `Map` を隠すので、標準のは `@builtin.Map` と書く。
-- 確かめ：`bench/moonbit/app`（モジュール `t-ujiie-g/moonmap_check`）が MoonBit だけで地図を作り、読み込みでソースと層を足し、落ち着いたら中心の地物を問い合わせ、`paint` とカメラを変え、イベントの受け取りを外す。pack test の `moonbit` が結果を確かめる（20 項目）。`Idle` は `Load` の直後にも来る（MapLibre と同じ）ので、足した層を問い合わせるのはその次の `Idle`（`EventType` の説明に書いた）。
+- npm に `mbt-map/moonbit`（`createMap`、0.1KB。MoonBit の `#module` の import は関数として呼ぶので、コンストラクタを関数で渡す）。
+- `t-ujiie-g/mbtmap`（`moonbit/mbtmap/`、js 専用）：`Map::new(container, style=Url(..) | Spec(json), center?, zoom?, bearing?, pitch?, 範囲, interactive?, attribution?)`、カメラ（`center`・`zoom`・`bearing`・`pitch`、`jump_to`・`ease_to`・`fly_to`・`fit_bounds`、`project`・`unproject`）、スタイル（`set_style`・`style`、ソースと層の追加・削除・移動、`layer_ids`、`set_paint`・`set_layout`・`set_filter`、`set_data`、`set_feature_state`）、イベント（`EventType` の enum、型付きの `Event` と `Feature`、`on`・`on_layer` が返す `Listener::off`）、`query_rendered_features`（Promise をコールバックに）。JS のメソッドは汎用の `js_call` 1 つを通す。パッケージの中では使う人向けの `Map` が標準の `Map` を隠すので、標準のは `@builtin.Map` と書く。
+- 確かめ：`bench/moonbit/app`（モジュール `t-ujiie-g/mbtmap_check`）が MoonBit だけで地図を作り、読み込みでソースと層を足し、落ち着いたら中心の地物を問い合わせ、`paint` とカメラを変え、イベントの受け取りを外す。pack test の `moonbit` が結果を確かめる（20 項目）。`Idle` は `Load` の直後にも来る（MapLibre と同じ）ので、足した層を問い合わせるのはその次の `Idle`（`EventType` の説明に書いた）。
 - `moon info` は js 専用のパッケージに `.mbti` を書かない（mooncakes に出すときに扱う）。
 
 ## M3：型付きのスタイルと式（2026-11-15、Mac）
 
-- `t-ujiie-g/moonmap/expr`：`Expr`（式の JSON を包む）。定数（`num`・`str`・`bool`・`color`・`nums`・`literal`）、`get`・`has`・`id`・`geometry_type`・`zoom`・`feature_state`・`global_state`、`match_`（ラベルは JSON）・`case_`・`coalesce`・`interpolate`（`Curve`：直線、指数、3 次ベジェ）・`step`、比較・論理・`in_`・四則・文字列・`image`、生の `raw`。
-- `t-ujiie-g/moonmap/style`：`Layer`・`Source`・`Style`（`Style::new(sources~, layers~, sprite?, …)`、`Style::url`、`Style::json`、`Layer::json`、`Source::json`）。層ごとの関数 10 個（`fill` … `background`；`paint`・`layout` のプロパティは省略できるラベル付きの引数で、型は `@expr.Expr`）とソースの関数 6 個（`vector_source` … `video_source`；層の `raster` と名前がぶつかるので `_source` 付き。数や文字列は型付き、複雑なものは JSON）は `bench/moonbit/gen-style.mjs` が style-spec 26.5.0 の `v8.json` から生成する（`npm run moonbit:style`）。生成したものと同じかは bench の `npm test` が確かめる（空白と閉じ括弧の前のカンマを除いて比べ、`moon fmt` の整形は無視する）。予約語の候補（`volatile`）は `_` を付ける。`background` は `source` を取らず、`source_layer` と `filter` は地物を描く層だけ。
-- `moonmap` の `Map::new`・`set_style` は `@style.Style`、`add_source` は `@style.Source`、`add_layer` は `@style.Layer`、`set_paint`・`set_layout`・`set_filter` は `@expr.Expr` を取るように変えた（M2 の `Style` の enum はなくした）。確かめのアプリと README も型付きの書き方に。
+- `t-ujiie-g/mbtmap/expr`：`Expr`（式の JSON を包む）。定数（`num`・`str`・`bool`・`color`・`nums`・`literal`）、`get`・`has`・`id`・`geometry_type`・`zoom`・`feature_state`・`global_state`、`match_`（ラベルは JSON）・`case_`・`coalesce`・`interpolate`（`Curve`：直線、指数、3 次ベジェ）・`step`、比較・論理・`in_`・四則・文字列・`image`、生の `raw`。
+- `t-ujiie-g/mbtmap/style`：`Layer`・`Source`・`Style`（`Style::new(sources~, layers~, sprite?, …)`、`Style::url`、`Style::json`、`Layer::json`、`Source::json`）。層ごとの関数 10 個（`fill` … `background`；`paint`・`layout` のプロパティは省略できるラベル付きの引数で、型は `@expr.Expr`）とソースの関数 6 個（`vector_source` … `video_source`；層の `raster` と名前がぶつかるので `_source` 付き。数や文字列は型付き、複雑なものは JSON）は `bench/moonbit/gen-style.mjs` が style-spec 26.5.0 の `v8.json` から生成する（`npm run moonbit:style`）。生成したものと同じかは bench の `npm test` が確かめる（空白と閉じ括弧の前のカンマを除いて比べ、`moon fmt` の整形は無視する）。予約語の候補（`volatile`）は `_` を付ける。`background` は `source` を取らず、`source_layer` と `filter` は地物を描く層だけ。
+- `mbtmap` の `Map::new`・`set_style` は `@style.Style`、`add_source` は `@style.Source`、`add_layer` は `@style.Layer`、`set_paint`・`set_layout`・`set_filter` は `@expr.Expr` を取るように変えた（M2 の `Style` の enum はなくした）。確かめのアプリと README も型付きの書き方に。
 - 確かめ：`expr`・`style` の単体テスト（8 件）、pack test の `moonbit`。
 
 ## M4：rabbita の部品とデモ（2026-11-15、Mac）
 
 - 依存の確認（AGENTS §8.1）：`moonbit-community/rabbita` 0.16.7 と、それが引く `moonbitlang/async` 0.22.4・`moonbitlang/x` 0.5.1・`moonbitlang/moonback` 0.8.5。どれも Apache-2.0 で MoonBit の公式の組織のもの。rabbita のソースに `eval`・`new Function` はなく、`innerHTML` は `Attrs::inner_html`（XSS の警告付きで `#internal` の印）を使ったときだけ。通信（`fetch`、WebSocket）はそのパッケージを使ったときだけ。使うのは `html`・`cmd`・`sub` と最上位だけ。
-- rabbita の公開の API では任意の属性やイベントを要素に付けられない（`Attrs::attribute` と独自のイベントの受け手は非公開。`@html.node(tag, attrs, children)` はある）。そこで `t-ujiie-g/moonmap_rabbita`（`moonbit/moonmap_rabbita/`、js 専用）は、
-  - `view(id, css?, class?)`：id の付いた `<moon-map>` を置く。
+- rabbita の公開の API では任意の属性やイベントを要素に付けられない（`Attrs::attribute` と独自のイベントの受け手は非公開。`@html.node(tag, attrs, children)` はある）。そこで `t-ujiie-g/mbtmap_rabbita`（`moonbit/mbtmap_rabbita/`、js 専用）は、
+  - `view(id, css?, class?)`：id の付いた `<mbt-map>` を置く。
   - `setup(id, @style.Style, center?, zoom?, bearing?, pitch?)`：描いた後に動く Cmd。要素のプロパティにカメラを入れ、スタイルを渡す（URL なら `style-url`、JSON なら `mapStyle`）。ここで地図ができる。
   - `events(id, on_load?, on_idle?, on_move?, on_moveend?, on_click?, on_error?)`：`subscriptions` から返す Sub。要素のイベントは泡立って Shadow DOM の外へ出るので、`document` で受けて id で選び、メッセージ（型付きの `Camera`・`Click`、エラーの文）にする。
-  - `with_map(id, f)`：型付きの `@moonmap.Map` で操作して、次の Cmd を返す。`query_features(id, point, layers?, emit)`：地物の問い合わせの答えをメッセージに。
-- 要素に `moon-map-click`（`detail` に `point` と `lngLat`）と、id で要素を返す `moonMapElement(id)` を足した。MoonBit 側は `#module("moon-map/element")` でこれを import するので、要素の定義も読まれる。
-- デモ `examples/rabbita/`（モジュール `t-ujiie-g/moonmap_rabbita_example`）：rabbita の `create_state_with_init` のアプリ。行き先のボタン（`fly_to`）、`moon-map-moveend` からの中心とズームの表示、クリックした点の座標と駅名（`query_features`）、点の大きさの切り替え（`set_paint`）。スタイルは MoonBit の型付きの関数で書く（地理院の淡色地図のラスタ、`?local=1` でフィクスチャの標準地図、駅の円とラベル）。Vite などは使わず、`bench/npm/prepare.mjs` が `moon build` の出力を esbuild で縮めて `examples/rabbita/app.js`（gitignore）に置き、ページは import map で `moon-map` を読む。`app.js` は gzip 25.9KB（rabbita 込み、moon-map 本体は別）。
-- 確かめ：`moonmap_rabbita` の whitebox テスト 3 件（イベントの `detail` の読み、受け手のある種類だけ答える）。rabbita の `Html` の等しさは物理的な比較なので `view` は単体で比べられず、pack test の `rabbita`（ボタンで富士山へ行って戻る、中心の点のクリックで「（東京駅）」、`circle-radius` の変更）で確かめる。
+  - `with_map(id, f)`：型付きの `@mbtmap.Map` で操作して、次の Cmd を返す。`query_features(id, point, layers?, emit)`：地物の問い合わせの答えをメッセージに。
+- 要素に `mbt-map-click`（`detail` に `point` と `lngLat`）と、id で要素を返す `mbtMapElement(id)` を足した。MoonBit 側は `#module("mbt-map/element")` でこれを import するので、要素の定義も読まれる。
+- デモ `examples/rabbita/`（モジュール `t-ujiie-g/mbtmap_rabbita_example`）：rabbita の `create_state_with_init` のアプリ。行き先のボタン（`fly_to`）、`mbt-map-moveend` からの中心とズームの表示、クリックした点の座標と駅名（`query_features`）、点の大きさの切り替え（`set_paint`）。スタイルは MoonBit の型付きの関数で書く（地理院の淡色地図のラスタ、`?local=1` でフィクスチャの標準地図、駅の円とラベル）。Vite などは使わず、`bench/npm/prepare.mjs` が `moon build` の出力を esbuild で縮めて `examples/rabbita/app.js`（gitignore）に置き、ページは import map で `mbt-map` を読む。`app.js` は gzip 25.9KB（rabbita 込み、mbt-map 本体は別）。
+- 確かめ：`mbtmap_rabbita` の whitebox テスト 3 件（イベントの `detail` の読み、受け手のある種類だけ答える）。rabbita の `Html` の等しさは物理的な比較なので `view` は単体で比べられず、pack test の `rabbita`（ボタンで富士山へ行って戻る、中心の点のクリックで「（東京駅）」、`circle-radius` の変更）で確かめる。

@@ -12,7 +12,7 @@ import * as legacy from "../../npm/src/legacy.ts";
 import { ROOT } from "../lib/root.mjs";
 import { CASES, CONVERTED_OTHERWISE, LEGACY_FILTERS, LEGACY_FUNCTIONS, MAPLIBRE_REJECTS } from "./expression-cases.mjs";
 
-const { expr_eval } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bench/expr/expr.js")).href);
+const { expr_eval } = await import(pathToFileURL(path.join(ROOT, "_build/js/release/build/t-ujiie-g/mbtmap_engine/bench/expr/expr.js")).href);
 const ZOOMS = [0, 9.5, 14, 17.25, 22];
 
 function features() {
@@ -101,7 +101,7 @@ for (const [e, type = "value", state] of CASES) {
     continue;
   }
   if (typeof ours[0] === "string") {
-    rows.push({ expression: text, type, problem: `moonmap rejects it: ${ours[0]}` });
+    rows.push({ expression: text, type, problem: `mbtmap rejects it: ${ours[0]}` });
     continue;
   }
   let bad = 0;
@@ -117,7 +117,7 @@ for (const [e, type = "value", state] of CASES) {
       evaluations++;
       if (!same(want, ours[zi][i])) {
         bad++;
-        sample ??= { zoom, properties: f.properties, id: f.id, maplibre: want, moonmap: ours[zi][i] };
+        sample ??= { zoom, properties: f.properties, id: f.id, maplibre: want, mbtmap: ours[zi][i] };
       }
     });
   });
@@ -139,7 +139,7 @@ for (const f of LEGACY_FILTERS) {
   const ml = featureFilter(f, "layers[0].filter");
   const results = expr_eval(JSON.stringify(ours), "boolean", 14, feats, "{}");
   if (typeof results === "string") {
-    legacyRows.push({ filter: text, problem: `moonmap rejects the conversion: ${results}` });
+    legacyRows.push({ filter: text, problem: `mbtmap rejects the conversion: ${results}` });
     continue;
   }
   const bad = feats.filter((feature, i) => ml.filter({ zoom: 14 }, feature) !== (results[i] === true)).length;
@@ -166,7 +166,7 @@ for (const [name, fn] of LEGACY_FUNCTIONS) {
   for (const zoom of ZOOMS) {
     const results = expr_eval(JSON.stringify(ours), spec.type, zoom, feats, "{}");
     if (typeof results === "string") {
-      legacyRows.push({ function: text, problem: `moonmap rejects the conversion: ${results}` });
+      legacyRows.push({ function: text, problem: `mbtmap rejects the conversion: ${results}` });
       break;
     }
     feats.forEach((f, i) => {
@@ -176,7 +176,7 @@ for (const [name, fn] of LEGACY_FUNCTIONS) {
       evaluations++;
       if (!same(want, got)) {
         bad++;
-        sample ??= { zoom, properties: f.properties, maplibre: want, moonmap: got };
+        sample ??= { zoom, properties: f.properties, maplibre: want, mbtmap: got };
       }
     });
   }

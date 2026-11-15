@@ -19,7 +19,7 @@ const CAMERAS = {
   tokyo: { center: [139.7671, 35.6812], zoom: 15, bearing: 0, pitch: 0 },
   turned: { center: [139.764, 35.6795], zoom: 14.6, bearing: 25, pitch: 0 },
 };
-// Measured in the cloud (SwiftShader) and set just above, with what moonmap lacks there.
+// Measured in the cloud (SwiftShader) and set just above, with what mbtmap lacks there.
 const DASHES = "thin dashed paths past the source's maxzoom: MapLibre lays the tile out again (sharp corners split by overscaling)";
 const LIMITS = {
   "osm-bright-tokyo": { mean: 0.08, p99: 1, gap: DASHES },

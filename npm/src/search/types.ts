@@ -29,5 +29,5 @@ export interface SearchProvider {
   reverse?(lngLat: LngLat, request: SearchRequest): SearchResult[] | Promise<SearchResult[]>;
 }
 
-/** Coordinates from one CRS to another, as moon-map/analysis's `transform`. */
+/** Coordinates from one CRS to another, as mbt-map/analysis's `transform`. */
 export type Transform = (coords: ArrayLike<number>, from: number | string, to: number | string) => Promise<ArrayLike<number>>;

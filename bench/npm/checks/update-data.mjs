@@ -55,7 +55,7 @@ export async function updateDataChecks(page) {
     JSON.stringify(r.ids) === JSON.stringify([1, "two", 3, 4]) &&
     r.styled === 4 &&
     r.updated > 0 && r.updated < r.all &&
-    JSON.stringify(r.errors) === JSON.stringify(['moon-map: GeoJSONSource "route": GeoJSON data is not compatible with updateData']) &&
+    JSON.stringify(r.errors) === JSON.stringify(['mbt-map: GeoJSONSource "route": GeoJSON data is not compatible with updateData']) &&
     r.names === 8 && r.left === 7 && !r.first;
   return { ok, ...r };
 }

@@ -1,4 +1,4 @@
-// moon-map/3d's tilesLayer vs CesiumJS 1.146.0 on PLATEAU's buildings (bench/fixtures/plateau-chiyoda),
+// mbt-map/3d's tilesLayer vs CesiumJS 1.146.0 on PLATEAU's buildings (bench/fixtures/plateau-chiyoda),
 // in Chromium at the same viewport and cameras (bench/cesium/views.mjs): tiles selected, tile requests
 // and bytes, time from adding the layer until the selection settles, screenshots side by side,
 // per-frame CPU of the rAF callbacks over an orbit, and the gzip bytes of the code each page loads.
@@ -17,9 +17,9 @@ import { HEIGHT, ORBIT_FRAMES, VIEWS, WIDTH, cameraDistance } from "./views.mjs"
 const runs = Number(arg("runs", 3));
 // Frame timings count only on the M2's GPU (AGENTS §5); headless Chromium otherwise uses SwiftShader.
 const gpu = process.argv.includes("--gpu");
-const ENGINES = ["moonmap", "cesium"];
+const ENGINES = ["mbtmap", "cesium"];
 const FIXTURE = "/bench/fixtures/plateau-chiyoda/";
-const CODE = { moonmap: "/npm/dist/", cesium: "/bench/node_modules/cesium/Build/Cesium/" };
+const CODE = { mbtmap: "/npm/dist/", cesium: "/bench/node_modules/cesium/Build/Cesium/" };
 const SHOTS = path.join(ROOT, "bench/results/cesium");
 await mkdir(SHOTS, { recursive: true });
 
@@ -75,7 +75,7 @@ async function visit(engine, v) {
   };
 }
 
-/** Two screenshots side by side, moonmap on the left. */
+/** Two screenshots side by side, mbtmap on the left. */
 function sideBySide(left, right) {
   const [a, b] = [decodePng(left), decodePng(right)];
   const gap = 8;
@@ -115,9 +115,9 @@ for (const [v, view] of VIEWS.entries()) {
     };
     console.log(view.name, engine, JSON.stringify({ selected: run.selected, settleMs: Math.round(out[engine].settleMs), requests: first.requests, orbit: out[engine].orbitCpuMs }));
   }
-  const both = new Set(out.moonmap.contents.filter((c) => out.cesium.contents.includes(c)));
+  const both = new Set(out.mbtmap.contents.filter((c) => out.cesium.contents.includes(c)));
   out.sharedContents = both.size;
-  await writeFile(path.join(SHOTS, `${view.name}.png`), sideBySide(shots.moonmap, shots.cesium));
+  await writeFile(path.join(SHOTS, `${view.name}.png`), sideBySide(shots.mbtmap, shots.cesium));
   views.push(out);
 }
 const result = {
@@ -126,7 +126,7 @@ const result = {
     runs, statistic: "median of runs (settle and orbit); tiles and bytes from the first run",
     orbit: `${ORBIT_FRAMES} frames, bearing +1° per frame, after settling`,
     selection: "maximumScreenSpaceError 8 on both; Cesium without dynamic or foveated SSE, skipLevelOfDetail off, cullRequestsWhileMoving off",
-    height: "moonmap tilesLayer height -36.7; Cesium modelMatrix translating the tileset 36.7 m down its bounding sphere center's ellipsoid normal",
+    height: "mbtmap tilesLayer height -36.7; Cesium modelMatrix translating the tileset 36.7 m down its bounding sphere center's ellipsoid normal",
     camera: "MapLibre's camera (vertical fov 36.87°, distance 1.5 viewport heights at the center latitude's meters per pixel) as Cesium's lookAt of heading = bearing, pitch = pitch - 90° around the center at 0 m; Cesium's fov the horizontal one",
     code: "gzip -9 of the .js/.mjs/.wasm each page fetched from npm/dist or cesium/Build/Cesium (its prebuilt IIFE Cesium.js carries the workers, CESIUM_WORKERS, started from blobs); assetsGzip is the rest (css, json, images)",
   },

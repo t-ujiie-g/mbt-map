@@ -1,4 +1,4 @@
-// `moon-map/analysis`: spatial analysis in a worker of its own, started on the first `load`, matching
+// `mbt-map/analysis`: spatial analysis in a worker of its own, started on the first `load`, matching
 // Turf.js, flatbush, Clipper2, JTS, concaveman, d3 and GDAL, each module loaded on its first use.
 import { crsArg as crsArgOf, type Crs } from "./crs";
 import { demZoom } from "./dem-zoom";
@@ -43,7 +43,7 @@ const named = new Map<string, string>();
  * a known EPSG code of that name. The string is parsed when first used.
  */
 export function defineCrs(name: string, projString: string): void {
-  if (typeof projString !== "string" || !projString.trim().startsWith("+")) throw new Error(`moon-map: analysis: not a PROJ string: ${String(projString)}`);
+  if (typeof projString !== "string" || !projString.trim().startsWith("+")) throw new Error(`mbt-map: analysis: not a PROJ string: ${String(projString)}`);
   named.set(name.trim().toUpperCase(), projString);
 }
 
@@ -121,7 +121,7 @@ export class Network {
    */
   async route(from: [number, number], to: [number, number]): Promise<{ path: [number, number][]; weight: number } | null> {
     const network = live(this.#id, this.#generation, this.#disposed, "network");
-    if (!isPoint(from) || !isPoint(to)) throw new Error("moon-map: analysis: invalid points");
+    if (!isPoint(from) || !isPoint(to)) throw new Error("mbt-map: analysis: invalid points");
     const v = await call<Float64Array>("route", { network, from, to });
     if (v.length === 0) return null;
     return { weight: v[0], path: Array.from({ length: (v.length - 1) / 2 }, (_, i): [number, number] => [v[1 + i * 2], v[2 + i * 2]]) };
@@ -166,7 +166,7 @@ const GRIDS = { point: 0, square: 1, hex: 2, triangle: 3 } as const;
  * (squareGrid), `hex` (hexGrid; `triangles` splits each hexagon in six) or `triangle` (triangleGrid).
  */
 export async function grid(bbox: BBox, cellSide: number, type: keyof typeof GRIDS = "square", options: AnalysisOptions & { triangles?: boolean } = {}): Promise<Dataset> {
-  if (!isBox(bbox) || !(cellSide > 0 && cellSide < Infinity) || !(type in GRIDS)) throw new Error("moon-map: analysis: invalid grid");
+  if (!isBox(bbox) || !(cellSide > 0 && cellSide < Infinity) || !(type in GRIDS)) throw new Error("mbt-map: analysis: invalid grid");
   start(options);
   const fn = ["point_grid", "square_grid", "hex_grid", "triangle_grid"][GRIDS[type]];
   return datasetOf(call("surface", { dataset: -1, fn, args: [...bbox, cellSide, options.triangles ? 1 : 0] }));
@@ -205,7 +205,7 @@ function start(options: AnalysisOptions): void {
 }
 
 function call<T>(op: string, args: object, transfer: Transferable[] = []): Promise<T> {
-  if (!client.started) return Promise.reject(new Error("moon-map: analysis: no dataset has been loaded"));
+  if (!client.started) return Promise.reject(new Error("mbt-map: analysis: no dataset has been loaded"));
   return client.call<T>(op, args, transfer);
 }
 
@@ -214,8 +214,8 @@ const isBox = (b: unknown): b is BBox => Array.isArray(b) && b.length === 4 && b
 
 // A handle's worker id, refused once disposed or when the worker that gave it was stopped (ids start again).
 function live(id: number, generation: number, disposed: boolean, what: string): number {
-  if (disposed) throw new Error(`moon-map: analysis: the ${what} was disposed`);
-  if (generation !== client.generation) throw new Error(`moon-map: analysis: the ${what} went with the terminated worker`);
+  if (disposed) throw new Error(`mbt-map: analysis: the ${what} was disposed`);
+  if (generation !== client.generation) throw new Error(`mbt-map: analysis: the ${what} went with the terminated worker`);
   return id;
 }
 
@@ -326,7 +326,7 @@ export class Dataset {
    */
   async relate(other: Dataset, relation: Relation | { pattern: string }): Promise<Int32Array> {
     const predicate = typeof relation === "string" ? RELATIONS.indexOf(relation) : -1;
-    if (typeof relation === "string" && predicate < 0) throw new Error(`moon-map: analysis: unknown relation ${relation}`);
+    if (typeof relation === "string" && predicate < 0) throw new Error(`mbt-map: analysis: unknown relation ${relation}`);
     const pattern = typeof relation === "string" ? 0 : packPattern(relation.pattern);
     return call("relate", { a: Dataset.#idOf(this, "related "), b: Dataset.#idOf(other, "relating "), predicate, pattern });
   }
@@ -340,7 +340,7 @@ export class Dataset {
    * `highQuality` skips the first), `tolerance` in degrees; properties kept.
    */
   async simplify({ tolerance = 1, highQuality = false }: { tolerance?: number; highQuality?: boolean } = {}): Promise<Dataset> {
-    if (!(tolerance >= 0 && tolerance < Infinity)) throw new Error("moon-map: analysis: invalid tolerance");
+    if (!(tolerance >= 0 && tolerance < Infinity)) throw new Error("mbt-map: analysis: invalid tolerance");
     return this.#shapes("simplify", [tolerance, highQuality ? 1 : 0]);
   }
 
@@ -354,7 +354,7 @@ export class Dataset {
    * edges shorter than `lengthThreshold` degrees stay), or no feature for fewer than three.
    */
   async concaveHull({ concavity = 2, lengthThreshold = 0 }: { concavity?: number; lengthThreshold?: number } = {}): Promise<Dataset> {
-    if (!(concavity > 0) || !(lengthThreshold >= 0)) throw new Error("moon-map: analysis: invalid concave hull options");
+    if (!(concavity > 0) || !(lengthThreshold >= 0)) throw new Error("mbt-map: analysis: invalid concave hull options");
     return this.#shapes("concave", [concavity, lengthThreshold]);
   }
 
@@ -368,13 +368,13 @@ export class Dataset {
    * `cellPolygon`); a point without a cell (a duplicate) keeps its row without geometry.
    */
   async voronoi(bbox: BBox): Promise<Dataset> {
-    if (!isBox(bbox) || bbox[0] > bbox[2] || bbox[1] > bbox[3]) throw new Error("moon-map: analysis: invalid bbox");
+    if (!isBox(bbox) || bbox[0] > bbox[2] || bbox[1] > bbox[3]) throw new Error("mbt-map: analysis: invalid bbox");
     return this.#shapes("voronoi", bbox);
   }
 
   /** Each line cut between the points on it nearest to `start` and `stop`, as Turf's `lineSlice`; properties kept. */
   async lineSlice(start: [number, number], stop: [number, number]): Promise<Dataset> {
-    if (!isPoint(start) || !isPoint(stop)) throw new Error("moon-map: analysis: invalid points");
+    if (!isPoint(start) || !isPoint(stop)) throw new Error("mbt-map: analysis: invalid points");
     return this.#shapes("line_slice", [...start, ...stop]);
   }
 
@@ -384,7 +384,7 @@ export class Dataset {
    * (`multiFeatureIndex`); null for features without lines.
    */
   async nearestPointOnLine(x: number, y: number): Promise<(NearestOnLine | null)[]> {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("moon-map: analysis: invalid point");
+    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("mbt-map: analysis: invalid point");
     const v = await this.#call<Float64Array>("nearestOnLine", { x, y });
     return Array.from({ length: v.length / 6 }, (_, i) => {
       const [px, py, dist, location, index, multiFeatureIndex] = v.subarray(i * 6, i * 6 + 6);
@@ -402,19 +402,19 @@ export class Dataset {
    * `point`, `hex` or `triangle`, `cellSize` in kilometers, `weight` the power of the distance.
    */
   async interpolate(cellSize: number, { gridType = "square", property = "elevation", weight = 1 }: InterpolateOptions = {}): Promise<Dataset> {
-    if (!(cellSize > 0 && cellSize < Infinity) || !(gridType in GRIDS) || !Number.isFinite(weight)) throw new Error("moon-map: analysis: invalid interpolation options");
+    if (!(cellSize > 0 && cellSize < Infinity) || !(gridType in GRIDS) || !Number.isFinite(weight)) throw new Error("mbt-map: analysis: invalid interpolation options");
     return this.#surface("interpolate", [cellSize, GRIDS[gridType], weight], property);
   }
 
   /** Lines where the grid of points here (a `pointGrid`) crosses each of `breaks` in `zProperty` (Turf's `isolines`). */
   async isolines(breaks: number[], { zProperty = "elevation" }: { zProperty?: string } = {}): Promise<Dataset> {
-    if (!Array.isArray(breaks) || !breaks.every(Number.isFinite)) throw new Error("moon-map: analysis: invalid breaks");
+    if (!Array.isArray(breaks) || !breaks.every(Number.isFinite)) throw new Error("mbt-map: analysis: invalid breaks");
     return this.#surface("isolines", [], zProperty, breaks);
   }
 
   /** Polygons of the grid of points here between each two of `breaks` in `zProperty` (Turf's `isobands`). */
   async isobands(breaks: number[], { zProperty = "elevation" }: { zProperty?: string } = {}): Promise<Dataset> {
-    if (!Array.isArray(breaks) || !breaks.every(Number.isFinite)) throw new Error("moon-map: analysis: invalid breaks");
+    if (!Array.isArray(breaks) || !breaks.every(Number.isFinite)) throw new Error("mbt-map: analysis: invalid breaks");
     return this.#surface("isobands", [], zProperty, breaks);
   }
 
@@ -426,7 +426,7 @@ export class Dataset {
   async density({ bbox, width = 960, height = 500, cellSize = 4, bandwidth = 20.4939015319192, thresholds = 20, weight }: DensityOptions = {}): Promise<Dataset> {
     const box = bbox ?? [NaN, NaN, NaN, NaN];
     if (![width, height, cellSize, bandwidth].every(Number.isFinite) || !(width > 0 && height > 0 && cellSize >= 1 && bandwidth >= 0 && Number.isInteger(thresholds) && thresholds >= 0) || box.length !== 4) {
-      throw new Error("moon-map: analysis: invalid density options");
+      throw new Error("mbt-map: analysis: invalid density options");
     }
     return this.#surface("density", [...box, width, height, cellSize, bandwidth, thresholds, weight === undefined ? 0 : 1], weight ?? "");
   }
@@ -436,7 +436,7 @@ export class Dataset {
    * cluster (-1 for none) and whether it is a `core`, `edge` or `noise` point (null for other features).
    */
   async dbscan(maxDistance: number, { minPoints = 3 }: { minPoints?: number } = {}): Promise<{ clusters: Int32Array; kinds: (DbscanKind | null)[] }> {
-    if (!(maxDistance >= 0) || !Number.isInteger(minPoints) || minPoints < 1) throw new Error("moon-map: analysis: invalid DBSCAN options");
+    if (!(maxDistance >= 0) || !Number.isInteger(minPoints) || minPoints < 1) throw new Error("mbt-map: analysis: invalid DBSCAN options");
     const v = await this.#call<Float64Array>("surface", { fn: "dbscan", args: [maxDistance, minPoints] });
     const kinds: (DbscanKind | null)[] = [];
     const clusters = new Int32Array(v.length / 2);
@@ -452,7 +452,7 @@ export class Dataset {
    * feature its cluster (-1 for features that are not points) and the centroids as x, y pairs.
    */
   async kmeans(k?: number): Promise<{ clusters: Int32Array; centroids: Float64Array }> {
-    if (k !== undefined && !(Number.isInteger(k) && k > 0)) throw new Error("moon-map: analysis: invalid k");
+    if (k !== undefined && !(Number.isInteger(k) && k > 0)) throw new Error("mbt-map: analysis: invalid k");
     const v = await this.#call<Float64Array>("surface", { fn: "kmeans", args: [k ?? 0] });
     const n = v[0];
     return { clusters: Int32Array.from(v.subarray(1, 1 + n)), centroids: v.slice(1 + n) };
@@ -464,14 +464,14 @@ export class Dataset {
    * another line's segment is joined to it at its nearest point, and ends that close to each other become one.
    */
   async network({ tolerance = 1e-5, snap = 0 }: { tolerance?: number; snap?: number } = {}): Promise<Network> {
-    if (!(tolerance > 0)) throw new Error("moon-map: analysis: invalid tolerance");
-    if (!(snap >= 0 && snap < Infinity)) throw new Error("moon-map: analysis: invalid snap");
+    if (!(tolerance > 0)) throw new Error("mbt-map: analysis: invalid tolerance");
+    if (!(snap >= 0 && snap < Infinity)) throw new Error("mbt-map: analysis: invalid snap");
     return new Network(await this.#call<number>("network", { tolerance, snap }));
   }
 
   /** The DE-9IM matrix of feature `i` here and feature `j` of `other`, as JTS writes it (`"FF2F11212"`). */
   async relateMatrix(other: Dataset, i: number, j: number): Promise<string> {
-    if (!Number.isInteger(i) || !Number.isInteger(j) || i < 0 || j < 0) throw new Error("moon-map: analysis: invalid feature indices");
+    if (!Number.isInteger(i) || !Number.isInteger(j) || i < 0 || j < 0) throw new Error("mbt-map: analysis: invalid feature indices");
     return call("relate", { a: Dataset.#idOf(this, "related "), b: Dataset.#idOf(other, "relating "), predicate: 0, pattern: 0, pair: [i, j] });
   }
 
@@ -482,7 +482,7 @@ export class Dataset {
    */
   async buffer(meters: number, { mode = "geodesic", join = "round", cap = "round", arcTolerance = 0, crs = 3857 }: BufferOptions = {}): Promise<Dataset> {
     if (!(mode in { geodesic: 0, planar: 1 }) || !(join in JOIN) || !(cap in CAP) || !Number.isFinite(meters) || !(arcTolerance >= 0)) {
-      throw new Error("moon-map: analysis: invalid buffer options");
+      throw new Error("mbt-map: analysis: invalid buffer options");
     }
     const code = await crsArg(crs);
     return datasetOf(call("buffer", {
@@ -595,7 +595,7 @@ export class DemGrid {
    */
   async viewshed(observer: [number, number], options: ViewshedOptions = {}): Promise<ViewshedResult> {
     const { observerHeight = 2, targetHeight = 0, maxDistance = 0, curvatureCoeff = CURVATURE_COEFF, mode = "normal", visibleValue = 255, invisibleValue = 0, outOfRangeValue = 0 } = options;
-    if (!(mode in VIEWSHED_MODES)) throw new Error(`moon-map: analysis: unknown viewshed mode ${mode}`);
+    if (!(mode in VIEWSHED_MODES)) throw new Error(`mbt-map: analysis: unknown viewshed mode ${mode}`);
     return this.#call("viewshed", {
       observer,
       options: { observerHeight, targetHeight, maxDistance, curvatureCoeff, mode: VIEWSHED_MODES[mode], visible: visibleValue, invisible: invisibleValue, outOfRange: outOfRangeValue },
@@ -608,10 +608,10 @@ export class DemGrid {
    * distances on Turf's sphere; `blockedAt` is the first sample that hides it.
    */
   async lineOfSight(from: [number, number], to: [number, number], { observerHeight = 2, targetHeight = 0, curvatureCoeff = CURVATURE_COEFF, samples }: LineOfSightOptions = {}): Promise<{ visible: boolean; blockedAt: [number, number] | null }> {
-    if (!isPoint(from) || !isPoint(to)) throw new Error("moon-map: analysis: invalid points");
+    if (!isPoint(from) || !isPoint(to)) throw new Error("mbt-map: analysis: invalid points");
     const cell = distance([this.bounds[0], this.bounds[1]], [this.bounds[2], this.bounds[1]]) / this.width;
     const n = samples ?? Math.min(MAX_SIGHT_SAMPLES, Math.max(2, Math.ceil(distance(from, to) / cell) + 1));
-    if (!Number.isInteger(n) || n < 2 || n > MAX_SIGHT_SAMPLES) throw new Error("moon-map: analysis: invalid number of samples");
+    if (!Number.isInteger(n) || n < 2 || n > MAX_SIGHT_SAMPLES) throw new Error("mbt-map: analysis: invalid number of samples");
     const points = Array.from({ length: n }, (_, i): [number, number] => [from[0] + ((to[0] - from[0]) * i) / (n - 1), from[1] + ((to[1] - from[1]) * i) / (n - 1)]);
     const heights = await this.sample(points);
     const s = sight(heights, points.map((p) => distance(from, p)), observerHeight, targetHeight, curvatureCoeff);
@@ -655,7 +655,7 @@ export class DemGrid {
   }
 }
 
-/** A raster as moon-map/data's `readRaster` gives it, only what `loadGrid` reads: `bands` (rows from the north),
+/** A raster as mbt-map/data's `readRaster` gives it, only what `loadGrid` reads: `bands` (rows from the north),
  * `bbox` and `resolution` in `crs` (an EPSG code, null for EPSG:4326), `noData`, `pixelIsPoint`. */
 export interface GridRaster {
   width: number;
@@ -674,9 +674,9 @@ export async function loadGrid(raster: GridRaster, options: AnalysisOptions & { 
   const { band = 0, scale = 1 } = options;
   const { width, height, bands, bbox, resolution, crs, noData } = raster ?? ({} as GridRaster);
   const values = bands?.[band];
-  if (!values || values.length !== width * height) throw new Error("moon-map: analysis: invalid raster or band");
-  if (!(Number.isFinite(scale) && scale > 0)) throw new Error("moon-map: analysis: invalid scale");
-  if (!Array.isArray(resolution) || !resolution.every((r) => Number.isFinite(r) && r !== 0) || !Array.isArray(bbox)) throw new Error("moon-map: analysis: a raster without geo tags (resolution and bbox)");
+  if (!values || values.length !== width * height) throw new Error("mbt-map: analysis: invalid raster or band");
+  if (!(Number.isFinite(scale) && scale > 0)) throw new Error("mbt-map: analysis: invalid scale");
+  if (!Array.isArray(resolution) || !resolution.every((r) => Number.isFinite(r) && r !== 0) || !Array.isArray(bbox)) throw new Error("mbt-map: analysis: a raster without geo tags (resolution and bbox)");
   const f64 = Float64Array.from(values, (v) => (v === noData ? NaN : v));
   const [rx, ry] = resolution;
   const half = raster.pixelIsPoint ? 0.5 : 0;
@@ -717,7 +717,7 @@ export async function sampleDem(
     bounds[2] = Math.max(bounds[2], lng);
     bounds[3] = Math.max(bounds[3], lat);
   }
-  if (!bounds.every(Number.isFinite)) throw new Error("moon-map: analysis: positions must be finite [lng, lat] pairs");
+  if (!bounds.every(Number.isFinite)) throw new Error("mbt-map: analysis: positions must be finite [lng, lat] pairs");
   const zoom = demZoom(bounds, options.maxZoom ?? 14, options.tileSize);
   const grid = await loadDem(tiles, { ...options, zoom, bounds });
   try {
@@ -744,7 +744,7 @@ async function onFeatures(features: Feature[], op: (d: Dataset) => Promise<Datas
   }
 }
 
-/** `features` split by `line` (a LineString), as `Dataset.split`: what moon-map/draw's `geometry.split` takes. */
+/** `features` split by `line` (a LineString), as `Dataset.split`: what mbt-map/draw's `geometry.split` takes. */
 export async function splitFeatures(features: Feature[], line: Feature["geometry"], options: AnalysisOptions = {}): Promise<Feature[]> {
   const cut = await load({ type: "Feature", properties: {}, geometry: line }, options);
   try {
@@ -754,19 +754,19 @@ export async function splitFeatures(features: Feature[], line: Feature["geometry
   }
 }
 
-/** `features` as one, as `Dataset.merge`: what moon-map/draw's `geometry.merge` takes. */
+/** `features` as one, as `Dataset.merge`: what mbt-map/draw's `geometry.merge` takes. */
 export async function mergeFeatures(features: Feature[], options: AnalysisOptions = {}): Promise<Feature> {
   return (await onFeatures(features, (d) => d.merge(), options))[0];
 }
 
-/** Rows in @geom.Table's byte form, as moon-map/data's `DataTable` gives them. */
+/** Rows in @geom.Table's byte form, as mbt-map/data's `DataTable` gives them. */
 export interface TableSource {
   tableBytes(): ArrayBuffer;
 }
 
 /**
  * Reads data into the analysis worker: GeoJSON as an object, its UTF-8 bytes, or an http(s) URL
- * (resolved against the page, fetched without credentials), or a table read by moon-map/data.
+ * (resolved against the page, fetched without credentials), or a table read by mbt-map/data.
  */
 export async function load(data: unknown, options: LoadOptions = {}): Promise<Dataset> {
   const crs = options.crs === undefined ? undefined : await crsArg(options.crs);
@@ -777,7 +777,7 @@ export async function load(data: unknown, options: LoadOptions = {}): Promise<Da
     args = { url: httpUrl(data, document.baseURI, "analysis: data") };
   } else if (typeof (data as TableSource | null)?.tableBytes === "function") {
     const table = (data as TableSource).tableBytes();
-    if (!(table instanceof ArrayBuffer)) throw new Error("moon-map: analysis: tableBytes() must give an ArrayBuffer");
+    if (!(table instanceof ArrayBuffer)) throw new Error("mbt-map: analysis: tableBytes() must give an ArrayBuffer");
     args = { table };
     transfer = [table];
   } else {
@@ -800,7 +800,7 @@ export async function transform(coords: ArrayLike<number>, from: Crs, to: Crs, o
   const codes = { from: await crsArg(from), to: await crsArg(to) };
   start(options);
   const buffer = Float64Array.from(coords).buffer;
-  if (buffer.byteLength % 16 !== 0) throw new Error("moon-map: analysis: coordinates must come in x, y pairs");
+  if (buffer.byteLength % 16 !== 0) throw new Error("mbt-map: analysis: coordinates must come in x, y pairs");
   return call<Float64Array>("transform", { coords: buffer, ...codes }, [buffer]);
 }
 

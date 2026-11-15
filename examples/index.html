@@ -2,7 +2,7 @@
 <html lang="ja">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>moon-map examples</title>
+<title>mbt-map examples</title>
 <link rel="icon" href="data:,">
 <style>
   :root { --ink: #1c2330; --muted: #5d6878; --line: #e2e5ea; --accent: #2f5bd0; --soft: #f4f5f7; }
@@ -22,24 +22,24 @@
   .features dd { margin: 0; font-size: 13.5px; color: var(--muted); }
   footer { margin-top: 48px; padding-top: 16px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
-<h1>moon-map</h1>
+<h1>mbt-map</h1>
 <p class="lead">MoonBit で書いた、Web のためのベクトルタイル地図エンジン。同じ地図アプリを 3 通りの書き方で作っています。</p>
 
 <h2>書き方を選ぶ</h2>
 <div class="cards">
-  <a class="card" href="./html/"><b>HTML</b><span>素の DOM から使う</span><code>import { Map } from "moon-map"</code></a>
-  <a class="card" href="./element/"><b>Web Component</b><span>属性とイベントで使う</span><code>&lt;moon-map center="139.77,35.68"&gt;</code></a>
-  <a class="card" href="./react/"><b>React</b><span>React 19 の JSX から使う</span><code>&lt;moon-map onmoon-map-load={onLoad} /&gt;</code></a>
+  <a class="card" href="./html/"><b>HTML</b><span>素の DOM から使う</span><code>import { Map } from "mbt-map"</code></a>
+  <a class="card" href="./element/"><b>Web Component</b><span>属性とイベントで使う</span><code>&lt;mbt-map center="139.77,35.68"&gt;</code></a>
+  <a class="card" href="./react/"><b>React</b><span>React 19 の JSX から使う</span><code>&lt;mbt-map onmbt-map-load={onLoad} /&gt;</code></a>
 </div>
 
 <h2>MoonBit</h2>
 <div class="cards">
-  <a class="card" href="./rabbita/"><b>rabbita</b><span>MoonBit の Web フレームワークのアプリに地図を置く</span><code>@moonmap_rabbita.view("map")</code></a>
+  <a class="card" href="./rabbita/"><b>rabbita</b><span>MoonBit の Web フレームワークのアプリに地図を置く</span><code>@mbtmap_rabbita.view("map")</code></a>
 </div>
 
 <h2>3D</h2>
 <div class="cards">
-  <a class="card" href="./plateau/"><b>PLATEAU の建物</b><span>千代田区の 3D 都市モデルを 3D Tiles のまま重ね、クリックで属性を見る</span><code>import { tilesLayer } from "moon-map/3d"</code></a>
+  <a class="card" href="./plateau/"><b>PLATEAU の建物</b><span>千代田区の 3D 都市モデルを 3D Tiles のまま重ね、クリックで属性を見る</span><code>import { tilesLayer } from "mbt-map/3d"</code></a>
 </div>
 
 <h2>アプリでできること</h2>

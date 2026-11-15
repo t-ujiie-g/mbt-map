@@ -1,4 +1,4 @@
-// Golden test: every bench fixture decoded by moonmap's mvt (js build) must equal
+// Golden test: every bench fixture decoded by mbtmap's mvt (js build) must equal
 // @mapbox/vector-tile's output, and the wasm-gc build must agree on the totals.
 import { readFile } from "node:fs/promises";
 import path from "node:path";

@@ -1,6 +1,6 @@
 // Rows of the tess bench, shared by the Node and Worker runners. Fill rows
 // cover the bench style's fill layers; the JS rows run MapLibre's fill
-// pipeline (classifyRings + earcut) and give the vertex count moonmap must match.
+// pipeline (classifyRings + earcut) and give the vertex count mbtmap must match.
 import { VectorTile } from "@mapbox/vector-tile";
 import { PbfReader } from "pbf";
 import earcut from "earcut";

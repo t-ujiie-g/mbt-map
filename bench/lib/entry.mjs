@@ -2,8 +2,8 @@
 // shared by the mvt and tess benches).
 import { hostNumber } from "../../wasmio/js/host.mjs";
 
-export const ENTRY_JS = "_build/js/release/build/t-ujiie-g/moonmap_engine/bench/entry/entry.js";
-const ENTRY_WASM_GC = "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/entry/entry.wasm";
+export const ENTRY_JS = "_build/js/release/build/t-ujiie-g/mbtmap_engine/bench/entry/entry.js";
+const ENTRY_WASM_GC = "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/entry/entry.wasm";
 
 const WASM_PAGE = 65536;
 

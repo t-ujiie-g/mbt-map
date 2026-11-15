@@ -1,4 +1,4 @@
-// Drawing glTF models for moon-map/3d's layers in WebGL2: a model's primitives uploaded once, then drawn
+// Drawing glTF models for mbt-map/3d's layers in WebGL2: a model's primitives uploaded once, then drawn
 // with its meters taken to clip space by a Web Mercator matrix and, on the globe, a unit-sphere one.
 import { MAX_CLIP_PLANES, MAX_CLIP_POINTS, MAX_CLIP_RINGS, mercatorMeters, packClipping, type Clipping } from "../clipping";
 import type { CustomRenderMethodInput } from "../custom";
@@ -256,7 +256,7 @@ export class ModelProgram {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, source);
       gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(`moon-map: 3d: ${gl.getShaderInfoLog(s)}`);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(`mbt-map: 3d: ${gl.getShaderInfoLog(s)}`);
       return s;
     };
     const p = gl.createProgram()!;
@@ -264,7 +264,7 @@ export class ModelProgram {
     for (const s of shaders) gl.attachShader(p, s);
     gl.linkProgram(p);
     for (const s of shaders) gl.deleteShader(s);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`moon-map: 3d: ${gl.getProgramInfoLog(p)}`);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`mbt-map: 3d: ${gl.getProgramInfoLog(p)}`);
     this.#program = p;
     this.#u = Object.fromEntries(UNIFORMS.map((u) => [u, gl.getUniformLocation(p, u)])) as Uniforms;
     gl.useProgram(p);

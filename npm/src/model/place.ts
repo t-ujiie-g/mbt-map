@@ -1,4 +1,4 @@
-// Where moon-map/3d's models go: the transforms from a model's meters to Web Mercator and to the globe's
+// Where mbt-map/3d's models go: the transforms from a model's meters to Web Mercator and to the globe's
 // unit sphere, and the points of GeoJSON data with their values.
 export { multiply as mul } from "../tiles/geo.ts";
 

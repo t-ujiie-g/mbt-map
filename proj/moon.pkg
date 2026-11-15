@@ -1,5 +1,5 @@
 import {
-  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/core",
   "moonbitlang/core/cmp",
   "moonbitlang/core/double",
   "moonbitlang/core/math",

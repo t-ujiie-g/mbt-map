@@ -2,10 +2,10 @@
 // boolean operations and offsetting over tables (`@overlay`).
 
 import {
-  "t-ujiie-g/moonmap_engine/clipper",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/overlay",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/clipper",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/overlay",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

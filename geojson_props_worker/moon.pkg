@@ -3,10 +3,10 @@
 // `set_properties`. geojson_worker/js/worker.mjs is its glue too.
 
 import {
-  "t-ujiie-g/moonmap_engine/cluster_props",
-  "t-ujiie-g/moonmap_engine/geojson_tiles",
-  "t-ujiie-g/moonmap_engine/style",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/cluster_props",
+  "t-ujiie-g/mbtmap_engine/geojson_tiles",
+  "t-ujiie-g/mbtmap_engine/style",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

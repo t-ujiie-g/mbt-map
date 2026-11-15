@@ -1,6 +1,6 @@
-// The MoonBit exports of bundle/main (esbuild aliases "moon-map-engine" to its
+// The MoonBit exports of bundle/main (esbuild aliases "mbt-map-engine" to its
 // js build). Keep in sync with bundle/main/main.mbt.
-declare module "moon-map-engine" {
+declare module "mbt-map-engine" {
   export interface EngineMap {
     readonly __engineMap: unique symbol;
   }

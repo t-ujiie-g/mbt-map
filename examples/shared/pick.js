@@ -1,7 +1,7 @@
 // What the panel shows of a clicked feature (its layer, then its name, GSI's
 // `knj` or the places' `name`, or its first properties), and the places'
 // hover highlight.
-import { createIdentify } from "moon-map/ui";
+import { createIdentify } from "mbt-map/ui";
 import { showRows } from "./readout.js";
 
 /** Rows of [label, value] for the topmost of `features`, or null when there is none. */
@@ -44,7 +44,7 @@ export function selectedRows(state) {
 }
 
 /**
- * The features under each click from `moon-map/ui`'s identify controller, drawn into `#picked`: the
+ * The features under each click from `mbt-map/ui`'s identify controller, drawn into `#picked`: the
  * selected one's rows and buttons to step through the others (the selection is highlighted). The
  * page calls `identify` (it skips clicks that measure).
  */

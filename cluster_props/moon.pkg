@@ -2,14 +2,14 @@
 // for `@tiler.ClusterIndex`: only the GeoJSON worker that has expressions imports it.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/style",
-  "t-ujiie-g/moonmap_engine/tiler",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/style",
+  "t-ujiie-g/mbtmap_engine/tiler",
 }
 
 import {
-  "t-ujiie-g/moonmap_engine/formats",
+  "t-ujiie-g/mbtmap_engine/formats",
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/json",

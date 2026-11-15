@@ -123,7 +123,7 @@ function cellGeometry(v) {
   }
 }
 
-// papaparse's rows mapped as moon-map/data maps CSV rows, or null if it reports a quoting error.
+// papaparse's rows mapped as mbt-map/data maps CSV rows, or null if it reports a quoting error.
 function papaRows(text, options = {}) {
   const { delimiter, header = true, dynamicTyping = true, latitude, longitude, geometry } = options;
   const r = Papa.parse(text, { header, dynamicTyping, skipEmptyLines: true, delimiter });
@@ -307,10 +307,10 @@ for (const t of WKT) compare("wkt cases", t, ours("wkt", t), wktRows([t]));
 const WKT_REFUSED = ["POINT (1)", "POINT (1 2", "POINT ()", "POINT 1 2", "CIRCLE (1 2)", "POLYGON (1 2)", "MULTIPOINT (EMPTY)", "POINT Z (1 2)", "SRID=x;POINT (1 2)", "POINT (NaN 1)", "POINT (1e400 1)", "LINESTRING (0 0, 1)", ""];
 for (const t of WKT_REFUSED.slice(0, -1)) compare("wkt refused", t, ours("wkt", t), null);
 compare("wkt cases", "empty input", ours("wkt", ""), []);
-deviation("wkt", "POINT (1 2) trailing", ours("wkt", "POINT (1 2) trailing"), true, "betterknown stops after one geometry; moon-map/data reads geometries to the end and refuses other text");
-deviation("wkt", "POINT (1a 2)", ours("wkt", "POINT (1a 2)"), true, "betterknown's parseFloat takes a number's prefix; moon-map/data refuses the field");
-deviation("wkt", "POINT (1 2 3)", ours("wkt", "POINT (1 2 3)"), false, "betterknown refuses Z without a tag; moon-map/data takes 2 to 4 ordinates when untagged, as GDAL's older WKT writes them");
-deviation("wkt", "<http://www.opengis.net/def/crs/epsg/0/4326>POINT (1 2)", ours("wkt", "<http://www.opengis.net/def/crs/epsg/0/4326>POINT (1 2)"), true, "betterknown takes an OGC CRS URI prefix; moon-map/data does not");
+deviation("wkt", "POINT (1 2) trailing", ours("wkt", "POINT (1 2) trailing"), true, "betterknown stops after one geometry; mbt-map/data reads geometries to the end and refuses other text");
+deviation("wkt", "POINT (1a 2)", ours("wkt", "POINT (1a 2)"), true, "betterknown's parseFloat takes a number's prefix; mbt-map/data refuses the field");
+deviation("wkt", "POINT (1 2 3)", ours("wkt", "POINT (1 2 3)"), false, "betterknown refuses Z without a tag; mbt-map/data takes 2 to 4 ordinates when untagged, as GDAL's older WKT writes them");
+deviation("wkt", "<http://www.opengis.net/def/crs/epsg/0/4326>POINT (1 2)", ours("wkt", "<http://www.opengis.net/def/crs/epsg/0/4326>POINT (1 2)"), true, "betterknown takes an OGC CRS URI prefix; mbt-map/data does not");
 
 // --- Hand-written WKB ---
 const SHAPES = [
@@ -352,7 +352,7 @@ for (const [label, b] of [
 ]) compare("wkb refused", label, ours("wkb", b), b.length === 0 ? [] : wkbRows([b]));
 deviation("wkb", "byte order 2", ours("wkb", Uint8Array.from([2, ...point.subarray(1)])), true, "wkx reads any byte but 0 as little-endian");
 deviation("wkb", "MultiPoint of a LineString", ours("wkb", Uint8Array.from([1, 4, 0, 0, 0, 1, 0, 0, 0, ...toWkb(SHAPES[2])])), true, "wkx takes members of any type");
-deviation("wkb", "trailing bytes", ours("wkb", join([point, [1, 2, 3]])), true, "wkx ignores bytes after the geometry; moon-map/data reads geometries to the end");
+deviation("wkb", "trailing bytes", ours("wkb", join([point, [1, 2, 3]])), true, "wkx ignores bytes after the geometry; mbt-map/data reads geometries to the end");
 
 // --- GSI tile features in every format ---
 const byLayer = await gsiFeatures();

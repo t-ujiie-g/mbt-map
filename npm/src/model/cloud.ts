@@ -1,4 +1,4 @@
-// Point cloud colors for moon-map/3d's point cloud and I3S layers: the file's RGB, or classes and ramps.
+// Point cloud colors for mbt-map/3d's point cloud and I3S layers: the file's RGB, or classes and ramps.
 
 /** Points as decoded: f32 east, north, up meters and their per-point attributes (null when absent). */
 export interface CloudPoints {

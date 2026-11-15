@@ -1,4 +1,4 @@
-// `moon-map/search`: GeoSearch without its look (VISION §6). The providers that
+// `mbt-map/search`: GeoSearch without its look (VISION §6). The providers that
 // come with it ask no server; external APIs are providers of the same shape.
 export { coordinates } from "./search/coordinates";
 export { createSearch, MAX_QUERY_LENGTH, type Search, type SearchOptions, type SearchState } from "./search/controller";

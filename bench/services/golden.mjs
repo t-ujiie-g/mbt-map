@@ -1,4 +1,4 @@
-// moon-map/services vs OpenLayers 10.11.0 and @camptocamp/ogc-client 2.0.2 on live public services
+// mbt-map/services vs OpenLayers 10.11.0 and @camptocamp/ogc-client 2.0.2 on live public services
 // (AGENTS.md §1 `services:golden`), and a tile fetched from each source made. Writes
 // bench/results/services-golden.json; behind a proxy Node needs NODE_USE_ENV_PROXY=1.
 import { writeFile } from "node:fs/promises";
@@ -81,7 +81,7 @@ const get = async (url) => {
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   return res.text();
 };
-// moonmap resolves a document's URLs against the document, which drops default ports (`:443`).
+// mbtmap resolves a document's URLs against the document, which drops default ports (`:443`).
 const href = (u, base) => (u === undefined ? u : new URL(u, base).href);
 const trim = (s) => (typeof s === "string" ? s.trim() || undefined : s);
 const close = (a, b) => (a === undefined && b === undefined) || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= 1e-9 * Math.max(1, Math.abs(v))));
@@ -275,7 +275,7 @@ for (const url of WMTS_DOCS) {
       const set = ours.tileMatrixSets.find((s) => layer.tileMatrixSets.includes(s.id) && services.mercatorZooms(s));
       const rest = layer.resources.some((r) => r.resourceType === "tile" && r.format === layer.formats[0]);
       const options = optionsFromCapabilities(ol, { layer: layer.id, matrixSet: set.id, format: layer.formats[0], requestEncoding: rest ? "REST" : "KVP" });
-      // OpenLayers spreads tiles over every ResourceURL of the format; moonmap takes the first.
+      // OpenLayers spreads tiles over every ResourceURL of the format; mbtmap takes the first.
       const olSource = new WMTS({ ...options, urls: options.urls.slice(0, 1) });
       const tiles = TILES.filter(([z]) => z >= source.minzoom && z <= source.maxzoom);
       const mismatch = tiles.map((t) => {

@@ -1,6 +1,6 @@
-// Files read with moon-map/data and drawn as GeoJSON sources: CSV, Shapefile (zip), KML, GPX, TopoJSON,
+// Files read with mbt-map/data and drawn as GeoJSON sources: CSV, Shapefile (zip), KML, GPX, TopoJSON,
 // FlatGeobuf or GeoJSON. Each dataset stays in `datasets` (style.js), so that it survives a new style.
-import { read, write } from "moon-map/data";
+import { read, write } from "mbt-map/data";
 import { datasetLayers, datasetSource, datasets } from "./style.js";
 
 export const WRITE_FORMATS = [["geojson", "GeoJSON", "application/geo+json"], ["csv", "CSV", "text/csv"], ["kml", "KML", "application/vnd.google-earth.kml+xml"]];

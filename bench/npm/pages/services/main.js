@@ -1,6 +1,6 @@
 // A map of GSI's standard tiles for the pack test's services check (bench/npm/checks/services.mjs),
-// which adds sources made by moon-map/services from the capabilities documents next to this page.
-import { Map } from "moon-map";
+// which adds sources made by mbt-map/services from the capabilities documents next to this page.
+import { Map } from "mbt-map";
 
 const map = new Map({
   container: "map",

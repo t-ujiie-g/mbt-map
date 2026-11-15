@@ -1,4 +1,4 @@
-// `moon-map/geodesic`: distances, azimuths and areas on the WGS 84 ellipsoid, in a
+// `mbt-map/geodesic`: distances, azimuths and areas on the WGS 84 ellipsoid, in a
 // worker of its own started on the first call. A port of GeographicLib's
 // geodesic routines whose results equal geographiclib-geodesic 2.2.0's.
 import { wasmUrl } from "./urls";

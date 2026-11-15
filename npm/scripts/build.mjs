@@ -1,4 +1,4 @@
-// Builds dist/: the facade and the files it loads, `<moon-map>`, the ui, search, draw, services, GeoJSON,
+// Builds dist/: the facade and the files it loads, `<mbt-map>`, the ui, search, draw, services, GeoJSON,
 // analysis, geodesic, 3d and data modules, and their workers with their wasm. Usage: node scripts/build.mjs
 import { execFileSync } from "node:child_process";
 import { copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
@@ -13,7 +13,7 @@ const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: "inherit" 
 
 // No wasm-opt: it made the wasm-gc worker slower in every browser (AGENTS.md §4).
 const WASM = {
-  worker: "moon-map.wasm",
+  worker: "mbt-map.wasm",
   geojson_worker: "geojson.wasm",
   geojson_props_worker: "geojson-properties.wasm",
   analysis_worker: "analysis.wasm",
@@ -55,11 +55,11 @@ const DATA_PARTS = { "../../npm/src/zip.ts": "./data-zip.js", "./crs.mjs": "./da
 // Loaded on the first PROJ string.
 const PROJSTRING = separate(same(["projstring"]));
 
-// Output file, source and what stays out of it: data.js for GeoTIFF sources (moon-map/data's worker draws
+// Output file, source and what stays out of it: data.js for GeoTIFF sources (mbt-map/data's worker draws
 // their tiles), the main entry for the element and the controllers (they take a `Map`), 3d-tiles.js's
 // engine for I3S.
 const ENTRIES = [
-  ["index.js", "npm/src/index.ts", { alias: { "moon-map-engine": path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_engine/bundle/main/main.js") }, plugins: [separate(MAP_PARTS)] }],
+  ["index.js", "npm/src/index.ts", { alias: { "mbt-map-engine": path.join(ROOT, "_build/js/release/build/t-ujiie-g/mbtmap_engine/bundle/main/main.js") }, plugins: [separate(MAP_PARTS)] }],
   ...Object.keys(MAP_PARTS).filter((file) => file !== "./geotiff-source.js").map((file) => [file.slice(2), `npm/src/${file.slice(2, -3)}.ts`]),
   ["geotiff-source.js", "npm/src/geotiff-source.ts", { plugins: [separate({ "./data": "./data.js" })] }],
   ["ui.js", "npm/src/ui.ts"],
@@ -86,14 +86,14 @@ const ENTRIES = [
   ["data-worker.js", "data_worker/js/worker.mjs", { plugins: [separate(DATA_PARTS)] }],
   ...Object.entries(DATA_PARTS).map(([source, file]) => [file.slice(2), path.join("data_worker/js", source)]),
   ["prjwkt.js", "npm/src/prjwkt.ts"],
-  ["element.js", "element/element.ts", { plugins: [separate({ "moon-map": "./index.js" })] }],
+  ["element.js", "element/element.ts", { plugins: [separate({ "mbt-map": "./index.js" })] }],
   ["moonbit.js", "npm/src/moonbit.ts", { plugins: [separate({ "./index": "./index.js" })] }],
 ];
 for (const [file, source, options] of ENTRIES) {
   await build({ ...common, ...options, entryPoints: [path.join(ROOT, source)], outfile: path.join(DIST, file) });
 }
 for (const [name, file] of Object.entries(WASM)) {
-  await copyFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/${name}/${name}.wasm`), path.join(DIST, file));
+  await copyFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/${name}/${name}.wasm`), path.join(DIST, file));
 }
 const tsc = path.join(PKG, "node_modules/typescript/bin/tsc");
 run(process.execPath, [tsc, "-p", path.join(PKG, "tsconfig.json")], PKG);

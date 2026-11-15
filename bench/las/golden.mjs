@@ -1,4 +1,4 @@
-// moon-map/3d's LAS reader (npm/src/model/las.ts) vs @loaders.gl/las 4.5.4: synthetic files of every
+// mbt-map/3d's LAS reader (npm/src/model/las.ts) vs @loaders.gl/las 4.5.4: synthetic files of every
 // version and point format (its laz-rs parser, which reads 1.4 and formats 0 to 10; its default laz-perf
 // one too where it reads them), PDAL's sample files, and hostile copies refused.
 // Usage: node las/golden.mjs; writes bench/results/las-golden.json.

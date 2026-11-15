@@ -107,7 +107,7 @@ try {
       if (!requested.length && !traverser._tileManager.hasPendingTiles("view", n)) break;
       for (const t of requested) t.contentState = TILE_CONTENT_STATE.READY;
     }
-    // moonmap, with the same frame state.
+    // mbtmap, with the same frame state.
     const layer = readLayer(await fetchJson(url), url);
     const root = nodeTile(layer, await nodeById(layer, 0, fetchJson), null);
     const traversal = new Traversal(8, (tile, frame) => lodStatus(tile, frame) === "DIG");

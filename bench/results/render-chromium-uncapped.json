@@ -12,7 +12,7 @@
     "statistic": "median of runs"
   },
   "sizes": {
-    "moon-map": {
+    "mbt-map": {
       "main": 148158,
       "worker": 96820
     },
@@ -22,7 +22,7 @@
     }
   },
   "summary": {
-    "moon-map": {
+    "mbt-map": {
       "idle": 138.50499999523163,
       "scenarios": {
         "pan": {
@@ -90,9 +90,9 @@
     }
   },
   "runs": {
-    "moon-map": [
+    "mbt-map": [
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 43.49000000953674,
           "imported": 62.50499999523163,
@@ -165,7 +165,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 46.82499998807907,
           "imported": 66.75499999523163,
@@ -238,7 +238,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 40.16499996185303,
           "imported": 60.064999997615814,
@@ -311,7 +311,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 40.27500003576279,
           "imported": 59.14000004529953,
@@ -384,7 +384,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 40.469999969005585,
           "imported": 59.33499997854233,
@@ -457,7 +457,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 69.63499999046326,
           "imported": 92.87999999523163,
@@ -530,7 +530,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 48.339999973773956,
           "imported": 70.65499997138977,
@@ -603,7 +603,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 38.65499997138977,
           "imported": 56.435000002384186,
@@ -676,7 +676,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 41.105000019073486,
           "imported": 59.810000002384186,
@@ -749,7 +749,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 41.714999973773956,
           "imported": 60.37999999523163,
@@ -822,7 +822,7 @@
         ]
       },
       {
-        "engine": "moonmap",
+        "engine": "mbtmap",
         "marks": {
           "scriptStart": 39.92500001192093,
           "imported": 57.72500002384186,

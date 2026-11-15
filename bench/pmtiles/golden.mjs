@@ -1,5 +1,5 @@
 // PMTiles archives written from the fixtures, read by pmtiles 4.5.0 and worker/js/pmtiles.mjs (every
-// tile's bytes), then drawn by moonmap in Chromium vs MapLibre from the files (queries, raster pixels).
+// tile's bytes), then drawn by mbtmap in Chromium vs MapLibre from the files (queries, raster pixels).
 // Writes bench/results/pmtiles-golden.json. Needs `npm --prefix npm run build`.
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -50,7 +50,7 @@ for (const [name, [tiles, options]] of Object.entries(archives)) {
   results.push({ check: "node", archive: name, bytes: bytes.length, tiles: tiles.length + 2, same, ok });
 }
 
-// In Chromium: moonmap from the archives, MapLibre from the files.
+// In Chromium: mbtmap from the archives, MapLibre from the files.
 const tokyo = [139.7671, 35.6812];
 const base = JSON.parse(await readFile(path.join(ROOT, "bench/maplibre/style.json"), "utf8"));
 const styles = {
@@ -85,8 +85,8 @@ try {
       for (const g of asks) {
         const r = await page.evaluate((geom) => window.__query("rendered", geom), g);
         const key = (xs) => JSON.stringify(xs.map((f) => ({ ...f, source: undefined })));
-        features += r.moonmap.length;
-        if (key(r.moonmap) === key(r.maplibre)) same++;
+        features += r.mbtmap.length;
+        if (key(r.mbtmap) === key(r.maplibre)) same++;
       }
       const ok = same === asks.length && features > 0;
       if (!ok) failed++;

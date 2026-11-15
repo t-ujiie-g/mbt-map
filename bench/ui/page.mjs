@@ -1,7 +1,7 @@
-// moonmap with `moon-map/ui` controllers and MapLibre with its controls, one style and
+// mbtmap with `mbt-map/ui` controllers and MapLibre with its controls, one style and
 // camera; bench/ui/golden.mjs drives both. The page's Geolocation is the fake one
 // golden.mjs installs (`window.__geo`).
-import { Map as MoonMap } from "/npm/dist/index.js";
+import { Map as MbtMap } from "/npm/dist/index.js";
 import * as ui from "/npm/dist/ui.js";
 import * as maplibregl from "/bench/node_modules/maplibre-gl/dist/maplibre-gl.mjs";
 
@@ -23,7 +23,7 @@ const style = given ?? {
 };
 const camera = { center: [139.7671, 35.6812], zoom: 12, bearing: 0, pitch: 0, maxZoom: 18 };
 
-const mb = new MoonMap({ container: "moonmap", style: structuredClone(style), ...camera, maxPitch: 85, attributionControl: false });
+const mb = new MbtMap({ container: "mbtmap", style: structuredClone(style), ...camera, maxPitch: 85, attributionControl: false });
 const ml = new maplibregl.Map({ container: "maplibre", style: structuredClone(style), ...camera, maxPitch: 85, attributionControl: false, pixelRatio: 1, fadeDuration: 0 });
 const scales = [
   ["metric", 100],

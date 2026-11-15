@@ -55,7 +55,7 @@ export function mountShell(current) {
   card.className = "panel-card";
   const brand = document.createElement("header");
   brand.className = "brand";
-  const logo = Object.assign(document.createElement("a"), { className: "logo", href: "../", textContent: "moon-map" });
+  const logo = Object.assign(document.createElement("a"), { className: "logo", href: "../", textContent: "mbt-map" });
   const variants = document.createElement("nav");
   variants.className = "variants";
   variants.setAttribute("aria-label", "書き方");

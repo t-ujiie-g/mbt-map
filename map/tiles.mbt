@@ -107,7 +107,7 @@ fn Map::worker_failed(self : Map, w : Int32, message : String) -> Unit {
   }
   self.failed_workers[w] = true
   terminate(self.workers[w])
-  console_warn("moonmap worker: \{message}")
+  console_warn("mbtmap worker: \{message}")
   let answers = []
   for request, at in self.requests {
     if self.source_tiles(at.0) is Some(src) &&

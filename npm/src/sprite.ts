@@ -21,10 +21,10 @@ export async function loadSprites(
   const sheets = await Promise.all(spriteList(sprite).map(async ({ id, url }) => {
     const at = httpUrl(url, base, "the sprite");
     const [json, png] = await Promise.all([fetch(spriteUrl(at, suffix, ".json"), "SpriteJSON"), fetch(spriteUrl(at, suffix, ".png"), "SpriteImage")]);
-    if (!json.ok || !png.ok) throw new Error(`moon-map: sprite ${at}: HTTP ${json.ok ? png.status : json.status}`);
-    const what = `moon-map: sprite ${at}`;
+    if (!json.ok || !png.ok) throw new Error(`mbt-map: sprite ${at}: HTTP ${json.ok ? png.status : json.status}`);
+    const what = `mbt-map: sprite ${at}`;
     const blob = new Blob([await read(png, what)], { type: png.headers.get("content-type") ?? "image/png" });
-    await checkBlobImageSize(blob, MAX_SHEET_SIZE, `moon-map: sprite ${at}`);
+    await checkBlobImageSize(blob, MAX_SHEET_SIZE, `mbt-map: sprite ${at}`);
     const bitmap = await decodeImage(blob);
     try {
       return spriteImages(JSON.parse(new TextDecoder().decode(await read(json, what))), canvasPixels(bitmap), id === "default" ? "" : `${id}:`);

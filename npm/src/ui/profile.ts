@@ -1,6 +1,6 @@
 // An elevation profile without its look: samples along a line's geodesics, their
 // distance and elevation, the one pointed at. Measuring and elevations come from
-// the page (moon-map/geodesic's `measure`, moon-map/analysis's `sampleDem`).
+// the page (mbt-map/geodesic's `measure`, mbt-map/analysis's `sampleDem`).
 import { Store, type Controller } from "./controller";
 import { nearestIndex, profileStats } from "./elevation";
 import type { Measure, Position } from "./measurement";
@@ -27,7 +27,7 @@ export interface ProfileState {
   error: string | null;
 }
 
-/** `measure`: moon-map/geodesic's; `elevation`: the heights at positions; `samples`: about how many along the line (default 200). */
+/** `measure`: mbt-map/geodesic's; `elevation`: the heights at positions; `samples`: about how many along the line (default 200). */
 export interface ProfileOptions {
   measure: Measure;
   elevation: Elevation;

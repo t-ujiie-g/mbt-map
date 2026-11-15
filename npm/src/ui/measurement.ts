@@ -1,6 +1,6 @@
 // Measuring a line or an area by clicks: lengths and area on the ellipsoid, the
-// path drawn along the geodesics. The measuring is moon-map/geodesic's `measure`,
-// passed by the page, so `moon-map/ui` loads no geodesic code itself.
+// path drawn along the geodesics. The measuring is mbt-map/geodesic's `measure`,
+// passed by the page, so `mbt-map/ui` loads no geodesic code itself.
 import type { Map } from "../index";
 import { Store, type Controller } from "./controller";
 import { addOverlay } from "./overlays";
@@ -8,7 +8,7 @@ import { addOverlay } from "./overlays";
 /** `[longitude, latitude]` in degrees, and meters up when measured in 3D. */
 export type Position = [number, number] | [number, number, number];
 
-/** What `moon-map/geodesic`'s `measure` is. */
+/** What `mbt-map/geodesic`'s `measure` is. */
 export type Measure = (
   positions: Position[],
   options: { closed: boolean; step?: number },
@@ -32,9 +32,9 @@ export interface MeasurementState {
 }
 
 /**
- * `measure`: moon-map/geodesic's, or `measure3d`: moon-map/3d's, which measures in 3D between the points drawn under
+ * `measure`: mbt-map/geodesic's, or `measure3d`: mbt-map/3d's, which measures in 3D between the points drawn under
  * the clicks (`Map.pickPosition`); `step`: meters between the points that draw each geodesic (default 1000);
- * `id`: of the GeoJSON source and the layers' prefix (default `"moon-map-measure"`); `color`: of the line, the
+ * `id`: of the GeoJSON source and the layers' prefix (default `"mbt-map-measure"`); `color`: of the line, the
  * vertices and the area's fill (default `"#e4572e"`).
  */
 export interface MeasurementOptions {
@@ -68,7 +68,7 @@ class MeasurementStore extends Store<MeasurementState> implements Measurement {
     super({ mode: null, positions: [], pointer: null, length: 0, area: null, segments: [], finished: false });
     this.#map = map;
     this.#options = options;
-    this.#id = options.id ?? "moon-map-measure";
+    this.#id = options.id ?? "mbt-map-measure";
     this.listen(map, "click", (e) => {
       // The clicks of a double click land on the vertex already placed.
       const last = this.state.positions.at(-1);

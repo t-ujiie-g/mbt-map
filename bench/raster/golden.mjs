@@ -123,12 +123,12 @@ try {
         : { ...cameras, z3: { center: [139.7671, 35.6812], zoom: 3.4, bearing: 0, pitch: 0 } };
       for (const [view, camera] of Object.entries(views)) {
         const files = {};
-        for (const engine of ["moonmap", "maplibre"]) {
+        for (const engine of ["mbtmap", "maplibre"]) {
           files[engine] = `bench/dist/raster-urls-${engine}.json`;
           await writeFile(path.join(ROOT, files[engine]), JSON.stringify(urlStyle(engine, scheme)));
         }
         const page = await browser.newPage({ viewport: { width: 800, height: 1200 }, deviceScaleFactor: ratio });
-        const urls = { moonmap: new Set(), maplibre: new Set() };
+        const urls = { mbtmap: new Set(), maplibre: new Set() };
         const record = (url) => {
           const u = new URL(url);
           const engine = u.searchParams.get("engine");
@@ -142,13 +142,13 @@ try {
           return route.fulfill({ contentType: "image/png", body: tile });
         });
         page.on("pageerror", (e) => console.log("urls pageerror", e.message));
-        await page.goto(`${origin}/bench/query/index.html?style=/${files.moonmap}&mlstyle=/${files.maplibre}&ratio=${ratio}&camera=${encodeURIComponent(JSON.stringify(camera))}`);
+        await page.goto(`${origin}/bench/query/index.html?style=/${files.mbtmap}&mlstyle=/${files.maplibre}&ratio=${ratio}&camera=${encodeURIComponent(JSON.stringify(camera))}`);
         await page.waitForFunction(() => window.__ready, null, { timeout: 60000 });
         const only = (a, b) => [...urls[a]].filter((u) => !urls[b].has(u)).sort();
-        const [mbOnly, mlOnly] = [only("moonmap", "maplibre"), only("maplibre", "moonmap")];
-        const ok = urls.moonmap.size > 0 && mbOnly.length === 0 && mlOnly.length === 0;
+        const [mbOnly, mlOnly] = [only("mbtmap", "maplibre"), only("maplibre", "mbtmap")];
+        const ok = urls.mbtmap.size > 0 && mbOnly.length === 0 && mlOnly.length === 0;
         if (!ok) failed++;
-        results.push({ urls: scheme, ratio, view, ok, requested: urls.moonmap.size, moonmapOnly: mbOnly.slice(0, 3), maplibreOnly: mlOnly.slice(0, 3) });
+        results.push({ urls: scheme, ratio, view, ok, requested: urls.mbtmap.size, mbtmapOnly: mbOnly.slice(0, 3), maplibreOnly: mlOnly.slice(0, 3) });
         await page.close();
       }
     }

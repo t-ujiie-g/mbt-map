@@ -1,4 +1,4 @@
-// A controller's state in a component: `moon-map/ui` and `moon-map/search` controllers
+// A controller's state in a component: `mbt-map/ui` and `mbt-map/search` controllers
 // fit `useSyncExternalStore` as they are.
 import { useSyncExternalStore } from "react";
 

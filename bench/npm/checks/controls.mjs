@@ -1,4 +1,4 @@
-// The showcase's map controls from `moon-map/ui`: a scale and the attributions, zoom through the navigation, and the
+// The showcase's map controls from `mbt-map/ui`: a scale and the attributions, zoom through the navigation, and the
 // location from the fake Geolocation followed by the camera, its dot drawn.
 export async function controlChecks(page) {
   const r = await page.evaluate(async () => {

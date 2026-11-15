@@ -1,8 +1,8 @@
-// Measuring on the map with `moon-map/ui`'s controller and moon-map/geodesic's
+// Measuring on the map with `mbt-map/ui`'s controller and mbt-map/geodesic's
 // `measure` (GeographicLib on WGS 84): click to place vertices, double click or
 // 「終える」 to finish. While it measures or draws, clicks do not identify features.
-import { measure } from "moon-map/geodesic";
-import { createMeasurement, formatArea, formatLength } from "moon-map/ui";
+import { measure } from "mbt-map/geodesic";
+import { createMeasurement, formatArea, formatLength } from "mbt-map/ui";
 import { showRows } from "./readout.js";
 
 export function createShowcaseMeasurement(map) {

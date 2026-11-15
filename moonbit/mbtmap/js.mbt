@@ -1,5 +1,5 @@
 ///|
-/// A JS value as moon-map's npm package gives or takes it.
+/// A JS value as mbt-map's npm package gives or takes it.
 #external
 pub type JsValue
 

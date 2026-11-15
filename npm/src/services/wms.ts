@@ -60,7 +60,7 @@ const fromHint = (v: string | null): number | undefined =>
 export const MAX_WMS_LAYERS = 10_000;
 
 function readLayer(e: Element, v13: boolean, parent: WMSLayer | null, count: { layers: number }): WMSLayer {
-  if (++count.layers > MAX_WMS_LAYERS) throw new Error(`moon-map: services: the WMS capabilities have more than ${MAX_WMS_LAYERS} layers`);
+  if (++count.layers > MAX_WMS_LAYERS) throw new Error(`mbt-map: services: the WMS capabilities have more than ${MAX_WMS_LAYERS} layers`);
   const geo = first(e, v13 ? "EX_GeographicBoundingBox" : "LatLonBoundingBox");
   const ownBounds = geo
     ? v13
@@ -106,7 +106,7 @@ const getUrl = (operation: Element | null): string | undefined => href(at(operat
 export function readWMSCapabilities(xml: string | Document, base?: string): WMSCapabilities {
   const root = parseXml(xml, "WMS capabilities");
   const version = root.getAttribute("version") ?? "";
-  if (!/^(WMS_Capabilities|WMT_MS_Capabilities)$/.test(root.localName)) throw new Error("moon-map: services: not a WMS capabilities document");
+  if (!/^(WMS_Capabilities|WMT_MS_Capabilities)$/.test(root.localName)) throw new Error("mbt-map: services: not a WMS capabilities document");
   const v13 = !version.startsWith("1.1");
   const capability = first(root, "Capability");
   const request = first(capability, "Request");
@@ -115,7 +115,7 @@ export function readWMSCapabilities(xml: string | Document, base?: string): WMSC
   const service = first(root, "Service");
   const getMapUrl = getUrl(getMap);
   const infoUrl = getUrl(info);
-  if (!getMapUrl) throw new Error("moon-map: services: the WMS capabilities have no GetMap URL");
+  if (!getMapUrl) throw new Error("mbt-map: services: the WMS capabilities have no GetMap URL");
   const count = { layers: 0 };
   return {
     service: "WMS",
@@ -162,8 +162,8 @@ function getMap(capabilities: WMSCapabilities, options: WMSSourceOptions, crs?: 
   const offers = (l: WMSLayer) => (crs === undefined ? l.crs.some(isWebMercator) : l.crs.some((c) => c.toUpperCase() === crs.toUpperCase()));
   const layers = names.map((name, i) => {
     const layer = found[i];
-    if (!layer) throw new Error(`moon-map: services: the WMS has no layer named ${name}`);
-    if (!offers(layer)) throw new Error(`moon-map: services: the WMS layer ${name} is not offered in ${crs ?? "EPSG:3857"}`);
+    if (!layer) throw new Error(`mbt-map: services: the WMS has no layer named ${name}`);
+    if (!offers(layer)) throw new Error(`mbt-map: services: the WMS layer ${name} is not offered in ${crs ?? "EPSG:3857"}`);
     return layer;
   });
   const v13 = !capabilities.version.startsWith("1.1");
@@ -183,7 +183,7 @@ function getMap(capabilities: WMSCapabilities, options: WMSSourceOptions, crs?: 
 /**
  * A raster source drawing `options.layers` of a WMS by GetMap requests in EPSG:3857, one per tile, with the layers' geographic
  * bounds and attribution. Layers without EPSG:3857 make a `reprojected` source instead, asked in `options.crs` (by default
- * EPSG:4326 if all offer it, else the first layer's first EPSG CRS that all offer) and drawn by moon-map/data's worker.
+ * EPSG:4326 if all offer it, else the first layer's first EPSG CRS that all offer) and drawn by mbt-map/data's worker.
  */
 export function wmsSource(capabilities: WMSCapabilities, options: WMSSourceOptions): TileSource | ReprojectedSource {
   const lookup = named(capabilities, options);
@@ -191,7 +191,7 @@ export function wmsSource(capabilities: WMSCapabilities, options: WMSSourceOptio
   const mercator = options.crs === undefined ? found.every((l) => !l || l.crs.some(isWebMercator)) : isWebMercator(options.crs);
   const common = (c: string) => found.every((l) => !l || l.crs.some((d) => d.toUpperCase() === c.toUpperCase()));
   const crs = mercator ? undefined : options.crs ?? (common("EPSG:4326") ? "EPSG:4326" : found[0]?.crs.find((c) => epsgCode(c) !== undefined && common(c)));
-  if (!mercator && crs === undefined) throw new Error(`moon-map: services: the WMS layers ${names.join(",")} share no EPSG CRS`);
+  if (!mercator && crs === undefined) throw new Error(`mbt-map: services: the WMS layers ${names.join(",")} share no EPSG CRS`);
   const { layers, params, crs: crsParam, v13 } = getMap(capabilities, options, crs, lookup);
   const size = options.tileSize ?? 256;
   const bounds = layers.map((l) => l.bounds).filter((b) => b !== undefined);
@@ -204,7 +204,7 @@ export function wmsSource(capabilities: WMSCapabilities, options: WMSSourceOptio
   };
   if (crs !== undefined) {
     const code = epsgCode(crs);
-    if (code === undefined) throw new Error(`moon-map: services: ${crs} is not an EPSG CRS`);
+    if (code === undefined) throw new Error(`mbt-map: services: ${crs} is not an EPSG CRS`);
     const template = withQuery(capabilities.getMapUrl, { ...params, WIDTH: "{width}", HEIGHT: "{height}", ...crsParam, BBOX: "{bbox}", ...options.params });
     return { type: "reprojected", crs: code, image: { template, northFirst: v13 && northFirst(crs) }, ...(options.tileSize === 512 && { tileSize: 512 }), ...extra };
   }
@@ -233,10 +233,10 @@ export interface WMSFeatureInfoOptions extends WMSSourceOptions {
  * pixel window in EPSG:3857 around the point.
  */
 export function wmsFeatureInfoUrl(capabilities: WMSCapabilities, options: WMSFeatureInfoOptions, lngLat: [number, number], zoom: number): string {
-  if (!capabilities.getFeatureInfoUrl) throw new Error("moon-map: services: the WMS has no GetFeatureInfo");
+  if (!capabilities.getFeatureInfoUrl) throw new Error("mbt-map: services: the WMS has no GetFeatureInfo");
   const { names, params, v13, crs } = getMap(capabilities, options);
   const format = options.infoFormat ?? geojsonFormat(capabilities.infoFormats);
-  if (!format) throw new Error("moon-map: services: the WMS offers GetFeatureInfo in no JSON format");
+  if (!format) throw new Error("mbt-map: services: the WMS offers GetFeatureInfo in no JSON format");
   const [x, y] = lngLatToMercator(...lngLat);
   const resolution = zoomResolution(zoom);
   const bbox = clickWindow(x, y, resolution);

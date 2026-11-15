@@ -55,7 +55,7 @@ const boxBounds = (box: Element | null): Bounds | undefined => (box ? validBound
 /** Reads a WMTS 1.0.0 GetCapabilities document; `base`: its URL, which relative URLs in it are resolved against. */
 export function readWMTSCapabilities(xml: string | Document, base?: string): WMTSCapabilities {
   const root = parseXml(xml, "WMTS capabilities");
-  if (root.localName !== "Capabilities") throw new Error("moon-map: services: not a WMTS capabilities document");
+  if (root.localName !== "Capabilities") throw new Error("mbt-map: services: not a WMTS capabilities document");
   const contents = first(root, "Contents");
   const getTile = children(first(root, "OperationsMetadata"), "Operation").find((o) => o.getAttribute("name") === "GetTile");
   const kvp = children(at(getTile, "DCP", "HTTP"), "Get").find((g) => {
@@ -139,19 +139,19 @@ export interface WMTSSourceOptions {
  */
 export function wmtsSource(capabilities: WMTSCapabilities, options: WMTSSourceOptions): TileSource | ReprojectedSource {
   const layer = capabilities.layers.find((l) => l.id === options.layer);
-  if (!layer) throw new Error(`moon-map: services: the WMTS has no layer ${options.layer}`);
+  if (!layer) throw new Error(`mbt-map: services: the WMTS has no layer ${options.layer}`);
   const sets = capabilities.tileMatrixSets.filter((s) => layer.tileMatrixSets.includes(s.id) && (options.tileMatrixSet === undefined || s.id === options.tileMatrixSet));
   const bounds = layer.bounds && { bounds: clampBounds(layer.bounds) };
   const set = sets.map((s) => ({ s, zooms: mercatorZooms(s) })).find((m) => m.zooms);
   if (set) {
     const [minzoom, maxzoom] = set.zooms!;
     const matrix = zoomTemplate(set.s.matrices.map((m) => m.id), minzoom);
-    if (matrix === null) throw new Error(`moon-map: services: the tile matrices of ${set.s.id} are not named by zoom`);
+    if (matrix === null) throw new Error(`mbt-map: services: the tile matrices of ${set.s.id} are not named by zoom`);
     return { type: "raster", tiles: [tileTemplate(capabilities, layer, set.s, options, matrix, "{y}", "{x}")], tileSize: set.s.matrices[0].tileWidth, minzoom, maxzoom, ...bounds };
   }
-  // Another CRS: drawn by moon-map/data's worker, which reprojects the set's tiles.
+  // Another CRS: drawn by mbt-map/data's worker, which reprojects the set's tiles.
   const other = sets.find((s) => epsgCode(s.crs) !== undefined && s.matrices.length > 0);
-  if (!other) throw new Error(`moon-map: services: the WMTS layer ${layer.id} has no tile matrix set in Web Mercator or an EPSG CRS${options.tileMatrixSet ? ` named ${options.tileMatrixSet}` : ""}`);
+  if (!other) throw new Error(`mbt-map: services: the WMTS layer ${layer.id} has no tile matrix set in Web Mercator or an EPSG CRS${options.tileMatrixSet ? ` named ${options.tileMatrixSet}` : ""}`);
   const unit = metersPerUnit(other.crs);
   const matrices = other.matrices.map((m) => {
     const [x, y] = northFirst(other.crs) ? [m.topLeft[1], m.topLeft[0]] : m.topLeft;
@@ -187,7 +187,7 @@ function tileTemplate(capabilities: WMTSCapabilities, layer: WMTSLayer, set: WMT
       return dimension === undefined ? all : encodeURIComponent(values[dimension]);
     });
   }
-  if (!capabilities.getTileUrl) throw new Error(`moon-map: services: the WMTS layer ${layer.id} has no URL for ${format}`);
+  if (!capabilities.getTileUrl) throw new Error(`mbt-map: services: the WMTS layer ${layer.id} has no URL for ${format}`);
   return withQuery(capabilities.getTileUrl, {
     SERVICE: "WMTS",
     REQUEST: "GetTile",

@@ -28,7 +28,7 @@
         "tilesMs": 11.26000000000002,
         "totalMs": 16.380000000000024
       },
-      "moon-map": {
+      "mbt-map": {
         "readMs": 11.360000000000014,
         "readIndexMs": 14.879999999999995,
         "columnarizeMs": 10.5,
@@ -47,7 +47,7 @@
         "tilesMs": 308.0600000000002,
         "totalMs": 411.58000000000015
       },
-      "moon-map": {
+      "mbt-map": {
         "readMs": 288.1199999999999,
         "readIndexMs": 371.6799999999994,
         "columnarizeMs": 192.34000000000015,
@@ -66,7 +66,7 @@
         "tilesMs": 304.47999999999956,
         "totalMs": 456.53999999999905
       },
-      "moon-map": {
+      "mbt-map": {
         "readMs": 217.41999999999825,
         "readIndexMs": 261.8799999999974,
         "columnarizeMs": 169.20000000000073,
@@ -85,7 +85,7 @@
         "tilesMs": 409.2800000000025,
         "totalMs": 644.4200000000019
       },
-      "moon-map": {
+      "mbt-map": {
         "readMs": 360.9599999999991,
         "readIndexMs": 416.3600000000006,
         "columnarizeMs": 254.63999999999942,

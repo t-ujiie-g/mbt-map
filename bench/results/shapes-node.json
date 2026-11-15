@@ -8,117 +8,117 @@
   "params": {
     "tiles": 4,
     "statistic": "median ms of one call: warm-up 300 ms, then 7 samples of at least 50 ms each",
-    "columns": "moon-map: the dataset's table out of analysis.wasm and into shapes.wasm, the export, a table result read back into analysis.wasm as a dataset; tablesIn: the copies in alone; exportOnly: the copies in and the export, its table left in shapes.wasm"
+    "columns": "mbt-map: the dataset's table out of analysis.wasm and into shapes.wasm, the export, a table result read back into analysis.wasm as a dataset; tablesIn: the copies in alone; exportOnly: the copies in and the export, its table left in shapes.wasm"
   },
   "rows": {
     "simplify roads (13004 features, 1e-4, highQuality false)": {
       "js": 1.94,
-      "moon-map": 2.33,
+      "mbt-map": 2.33,
       "tablesIn": 0.117,
       "ratio": 1.2
     },
     "simplify roads (13004 features, 1e-4, highQuality true)": {
       "js": 1.9,
-      "moon-map": 2.19,
+      "mbt-map": 2.19,
       "tablesIn": 0.232,
       "ratio": 1.15
     },
     "simplify buildings (30758 features, 1e-4, highQuality false)": {
       "js": 56.8,
-      "moon-map": 21.9,
+      "mbt-map": 21.9,
       "tablesIn": 0.994,
       "ratio": 0.386
     },
     "simplify buildings (30758 features, 1e-4, highQuality true)": {
       "js": 62.3,
-      "moon-map": 22.5,
+      "mbt-map": 22.5,
       "tablesIn": 0.564,
       "ratio": 0.361
     },
     "simplify contours (322 features, 1e-4, highQuality false)": {
       "js": 0.627,
-      "moon-map": 0.591,
+      "mbt-map": 0.591,
       "tablesIn": 0.0153,
       "ratio": 0.942
     },
     "simplify contours (322 features, 1e-4, highQuality true)": {
       "js": 0.661,
-      "moon-map": 0.645,
+      "mbt-map": 0.645,
       "tablesIn": 0.0152,
       "ratio": 0.976
     },
     "convex hull (8000 buildings)": {
       "js": 25.1,
-      "moon-map": 17.3,
+      "mbt-map": 17.3,
       "tablesIn": 0.153,
       "ratio": 0.69
     },
     "concave hull (58177 vertices, concavity 2)": {
       "js": 65.2,
-      "moon-map": 43.7,
+      "mbt-map": 43.7,
       "tablesIn": 0.154,
       "ratio": 0.669
     },
     "delaunay 1000 points (JS: d3-delaunay and its triangle polygons)": {
       "js": 0.372,
-      "moon-map": 0.455,
+      "mbt-map": 0.455,
       "tablesIn": 0.00601,
       "exportOnly": 0.376,
       "ratio": 1.22
     },
     "delaunay 1000 points (JS: delaunator, indices only)": {
       "js": 0.285,
-      "moon-map": 0.443,
+      "mbt-map": 0.443,
       "ratio": 1.55
     },
     "voronoi 1000 points (JS: d3-delaunay's cell polygons)": {
       "js": 0.471,
-      "moon-map": 0.63,
+      "mbt-map": 0.63,
       "ratio": 1.34
     },
     "delaunay 10000 points (JS: d3-delaunay and its triangle polygons)": {
       "js": 5.49,
-      "moon-map": 6.18,
+      "mbt-map": 6.18,
       "tablesIn": 0.0578,
       "exportOnly": 5.44,
       "ratio": 1.13
     },
     "delaunay 10000 points (JS: delaunator, indices only)": {
       "js": 3.93,
-      "moon-map": 6.2,
+      "mbt-map": 6.2,
       "ratio": 1.58
     },
     "voronoi 10000 points (JS: d3-delaunay's cell polygons)": {
       "js": 5.88,
-      "moon-map": 7.92,
+      "mbt-map": 7.92,
       "ratio": 1.35
     },
     "delaunay 100000 points (JS: d3-delaunay and its triangle polygons)": {
       "js": 87.2,
-      "moon-map": 71.7,
+      "mbt-map": 71.7,
       "tablesIn": 0.566,
       "exportOnly": 62.3,
       "ratio": 0.823
     },
     "delaunay 100000 points (JS: delaunator, indices only)": {
       "js": 59.3,
-      "moon-map": 70.6,
+      "mbt-map": 70.6,
       "ratio": 1.19
     },
     "voronoi 100000 points (JS: d3-delaunay's cell polygons)": {
       "js": 72.2,
-      "moon-map": 91.8,
+      "mbt-map": 91.8,
       "ratio": 1.27
     },
     "nearestPointOnLine (1522 lines x 10 points)": {
       "js": 101.5,
-      "moon-map": 22.6,
+      "mbt-map": 22.6,
       "tablesIn": 0.271,
       "ratio": 0.223
     },
     "lineSlice (1502 lines x 10 cuts)": {
       "js": 192.9,
-      "moon-map": 42.3,
+      "mbt-map": 42.3,
       "tablesIn": 0.259,
       "ratio": 0.219
     }

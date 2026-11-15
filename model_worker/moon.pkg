@@ -1,8 +1,8 @@
 import {
-  "t-ujiie-g/moonmap_engine/draco",
-  "t-ujiie-g/moonmap_engine/lepcc",
-  "t-ujiie-g/moonmap_engine/meshopt",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/draco",
+  "t-ujiie-g/mbtmap_engine/lepcc",
+  "t-ujiie-g/mbtmap_engine/meshopt",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

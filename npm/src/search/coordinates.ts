@@ -1,5 +1,5 @@
 // The coordinates provider: places written as text, the projected ones taken
-// to degrees through a `transform` the page passes (moon-map/analysis's).
+// to degrees through a `transform` the page passes (mbt-map/analysis's).
 import { parseLngLat, parsePlaneRectangular, parseUtm } from "./parse";
 import type { LngLat, SearchProvider, SearchResult, Transform } from "./types";
 

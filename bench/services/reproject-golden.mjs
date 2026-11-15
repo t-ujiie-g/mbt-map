@@ -1,4 +1,4 @@
-// `reprojected` sources (moon-map/services' wmtsSource / wmsSource of other CRSs, tiles by moon-map/data's reprojectTile in
+// `reprojected` sources (mbt-map/services' wmtsSource / wmsSource of other CRSs, tiles by mbt-map/data's reprojectTile in
 // Chromium) vs proj4js 2.22.0: synthetic WMTS sets and WMS GetMaps in EPSG:4326, 6677 and 32654 whose pixels hold their
 // own index; each tile pixel must show the source pixel its center falls in. Needs `npm --prefix npm run build`.
 import { createServer } from "node:http";

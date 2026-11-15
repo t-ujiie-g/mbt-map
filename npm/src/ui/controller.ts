@@ -1,4 +1,4 @@
-// The shape every `moon-map/ui` controller has (VISION §6): its `state` as a value,
+// The shape every `mbt-map/ui` controller has (VISION §6): its `state` as a value,
 // operations as methods, and `subscribe` for changes. Import-free.
 
 /**

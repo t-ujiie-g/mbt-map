@@ -4,7 +4,7 @@
 pub type Map
 
 ///|
-#module("moon-map/moonbit")
+#module("mbt-map/moonbit")
 extern "js" fn create_map(options : JsValue) -> Map = "createMap"
 
 ///|

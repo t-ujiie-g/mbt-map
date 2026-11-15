@@ -30,7 +30,7 @@ function jsPairs(left, right, relation) {
   }
   return out;
 }
-const moonmapPairs = (a, b, code) => {
+const mbtmapPairs = (a, b, code) => {
   const lenA = env.put([a, b]);
   return new Int32Array(outputOf(m, m.relate_pairs(lenA, code, 0) * 4).buffer);
 };
@@ -74,7 +74,7 @@ const random = (n) => Array.from({ length: n }, () => feature(SHAPES[int(SHAPES.
 sets["random sets (20 of 60 x 60)"] = Array.from({ length: 20 }, () => [random(60), random(60)]);
 
 const allFeatures = tiles.flatMap((t) => [...t.layer("building"), ...t.layer("waterarea"), ...t.layer("road")]);
-row(`read GeoJSON (${allFeatures.length} GSI features; moonmap: JSON text into a dataset)`,
+row(`read GeoJSON (${allFeatures.length} GSI features; mbtmap: JSON text into a dataset)`,
   time(() => allFeatures.map((f) => reader.read(f.geometry))),
   time(() => env.dispose(env.load(fc(allFeatures)))),
   { stringify: time(() => JSON.stringify(fc(allFeatures))) });
@@ -85,11 +85,11 @@ for (const [name, pairs] of Object.entries(sets)) {
   for (const relation of ["intersects", "touches"]) {
     const code = RELATIONS.indexOf(relation);
     const want = js.reduce((s, [l, r]) => s + jsPairs(l, r, relation).length, 0);
-    const got = ids.reduce((s, [a, b]) => s + moonmapPairs(a, b, code).length, 0);
+    const got = ids.reduce((s, [a, b]) => s + mbtmapPairs(a, b, code).length, 0);
     if (want !== got) throw new Error(`${name} ${relation}: ${got} vs ${want}`);
     row(`${name} ${relation} (${want / 2} pairs)`,
       time(() => js.forEach(([l, r]) => jsPairs(l, r, relation))),
-      time(() => ids.forEach(([a, b]) => moonmapPairs(a, b, code))),
+      time(() => ids.forEach(([a, b]) => mbtmapPairs(a, b, code))),
       { tablesIn: time(() => ids.forEach(([a, b]) => env.put([a, b]))) });
   }
   for (const [a, b] of ids) env.dispose(a), env.dispose(b);
@@ -108,4 +108,4 @@ row("100 DE-9IM matrices (random pairs, one call a pair, tables copied by the fi
   time(() => { for (let k = 0; k < 100; k++) matrix(k); }),
   { tablesIn: time(() => env.put([la, rb])) });
 
-await writeResults("relate-node", { jsts: "2.12.1", tiles: TILES, statistic: TIMING, columns: "moon-map: both datasets' tables out of analysis.wasm and into relate.wasm, the export, the result read; tablesIn: those copies alone" }, all);
+await writeResults("relate-node", { jsts: "2.12.1", tiles: TILES, statistic: TIMING, columns: "mbt-map: both datasets' tables out of analysis.wasm and into relate.wasm, the export, the result read; tablesIn: those copies alone" }, all);

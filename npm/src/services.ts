@@ -1,4 +1,4 @@
-// moon-map/services: reading GIS web services (OGC WMS, WMTS, WFS and OGC API; ArcGIS REST) into
+// mbt-map/services: reading GIS web services (OGC WMS, WMTS, WFS and OGC API; ArcGIS REST) into
 // style sources. Requests go through `transformRequest` as the map's do; no credentials otherwise.
 import { readOGCCollection, readOGCCollections, type OGCCollection, ogcTileSource, ogcTilesetUrl, ogcLink, ogcLinks } from "./services/ogcapi";
 import { type ArcGISIdentifyOptions, arcgisIdentifyUrl, arcgisVectorStyle, type ArcGISService } from "./services/arcgis";
@@ -42,8 +42,8 @@ async function loadBytes(url: string, options: ServiceOptions, accept?: string):
     credentials: r?.credentials ?? "omit",
     signal: options.signal,
   });
-  if (!res.ok) throw new Error(`moon-map: services: HTTP ${res.status} for ${href}`);
-  const tooLarge = () => new Error(`moon-map: services: ${href} is larger than ${MAX_DOCUMENT_BYTES} bytes`);
+  if (!res.ok) throw new Error(`mbt-map: services: HTTP ${res.status} for ${href}`);
+  const tooLarge = () => new Error(`mbt-map: services: ${href} is larger than ${MAX_DOCUMENT_BYTES} bytes`);
   return counted(await readCapped(res, MAX_DOCUMENT_BYTES, tooLarge), options);
 }
 
@@ -58,7 +58,7 @@ const gathering = <T extends ServiceOptions>(options: T): T => ({ ...options, ga
 /** `bytes`, counted against the call's budget when `options` has one. */
 function counted(bytes: Uint8Array<ArrayBuffer>, options: Gathering): Uint8Array<ArrayBuffer> {
   const g = options.gathered;
-  if (g && (g.left -= bytes.byteLength) < 0) throw new Error(`moon-map: services: the pages weigh more than ${MAX_GATHERED_BYTES} bytes in all`);
+  if (g && (g.left -= bytes.byteLength) < 0) throw new Error(`mbt-map: services: the pages weigh more than ${MAX_GATHERED_BYTES} bytes in all`);
   return bytes;
 }
 
@@ -74,7 +74,7 @@ async function loadJSON(url: string, options: ServiceOptions, accept?: string): 
   } catch {
     // An OGC service reports a refused request as an XML exception report.
     if (text.trimStart().startsWith("<")) parseXml(text, url);
-    throw new Error(`moon-map: services: ${url} is not JSON`);
+    throw new Error(`mbt-map: services: ${url} is not JSON`);
   }
 }
 
@@ -95,7 +95,7 @@ export async function getCapabilities(url: string, service: "WMS" | "WMTS" | "WF
 /** Fetches an ArcGIS REST service's (or layer's) `?f=json`; an `error` it answers with throws. */
 export async function arcgisService(url: string, options: ServiceOptions = {}): Promise<ArcGISService> {
   const json = await loadJSON(withQuery(url, { f: "json" }), options);
-  if (json === null || typeof json !== "object" || Array.isArray(json)) throw new Error("moon-map: services: not an ArcGIS service description");
+  if (json === null || typeof json !== "object" || Array.isArray(json)) throw new Error("mbt-map: services: not an ArcGIS service description");
   arcgisError(json);
   return json as ArcGISService;
 }
@@ -109,7 +109,7 @@ export async function arcgisStyle(url: string, options: ServiceOptions & { style
   const service = await arcgisService(base, options);
   const styleUrl = httpUrl(options.style ?? `${service.defaultStyles ?? "resources/styles"}/root.json`, `${base}/`, "services: the style");
   const style = await loadJSON(styleUrl, options);
-  if (style === null || typeof style !== "object" || (style as { version?: unknown }).version !== 8) throw new Error("moon-map: services: not a version 8 style");
+  if (style === null || typeof style !== "object" || (style as { version?: unknown }).version !== 8) throw new Error("mbt-map: services: not a version 8 style");
   return arcgisVectorStyle(style as StyleSpecification, styleUrl, service, base);
 }
 
@@ -129,9 +129,9 @@ export async function ogcCollection(url: string, options: ServiceOptions = {}): 
 /** A source for a collection's vector or map tiles on WebMercatorQuad (OGC API - Tiles). */
 export async function ogcTiles(collection: OGCCollection, kind: "vector" | "map", options: ServiceOptions = {}): Promise<TileSource> {
   const list = kind === "vector" ? collection.vectorTilesUrl : collection.mapTilesUrl;
-  if (!list) throw new Error(`moon-map: services: the collection ${collection.id} has no ${kind} tiles`);
+  if (!list) throw new Error(`mbt-map: services: the collection ${collection.id} has no ${kind} tiles`);
   const tileset = ogcTilesetUrl(await loadJSON(list, options), list);
-  if (!tileset) throw new Error(`moon-map: services: the collection ${collection.id} has no ${kind} tiles on WebMercatorQuad`);
+  if (!tileset) throw new Error(`mbt-map: services: the collection ${collection.id} has no ${kind} tiles on WebMercatorQuad`);
   return ogcTileSource(await loadJSON(tileset, options), tileset);
 }
 
@@ -151,7 +151,7 @@ const most = (options: FeatureOptions): number => Math.min(options.maxFeatures ?
 export async function ogcFeatures(collection: OGCCollection | string, options: OGCItemsOptions & FeatureOptions = {}): Promise<FeatureCollection> {
   options = gathering(options);
   const items = typeof collection === "string" ? collection : collection.itemsUrl;
-  if (!items) throw new Error(`moon-map: services: the collection ${(collection as OGCCollection).id} has no items`);
+  if (!items) throw new Error(`mbt-map: services: the collection ${(collection as OGCCollection).id} has no items`);
   const first = ogcItemsUrl(absolute(items), options);
   return gather(first, (url) => loadJSON(url, options, GEOJSON_ACCEPT), (page, url) => ogcLink(ogcLinks(page, url), ["next"], /json/), most(options), "OGC API items");
 }
@@ -163,8 +163,8 @@ export async function ogcFeatures(collection: OGCCollection | string, options: O
 export async function wfsFeatures(capabilities: WFSCapabilities, options: WFSFeatureOptions & FeatureOptions): Promise<FeatureCollection> {
   options = gathering(options);
   const type = capabilities.featureTypes.find((t) => t.name === options.typeName);
-  if (!type) throw new Error(`moon-map: services: the WFS has no feature type ${options.typeName}`);
-  if (!capabilities.getFeatureUrl) throw new Error("moon-map: services: the WFS capabilities have no GetFeature URL");
+  if (!type) throw new Error(`mbt-map: services: the WFS has no feature type ${options.typeName}`);
+  if (!capabilities.getFeatureUrl) throw new Error("mbt-map: services: the WFS capabilities have no GetFeature URL");
   const formats = type.outputFormats.length ? type.outputFormats : capabilities.outputFormats;
   const outputFormat = options.outputFormat ?? geojsonFormat(formats) ?? gmlFormat(formats);
   const gml = outputFormat === undefined || !/json/i.test(outputFormat);
@@ -282,7 +282,7 @@ export async function arcgisIdentify(
   return { type: "FeatureCollection", features: features.map((f, i) => ({ ...(f as object), layer: { id: results[i].layerId, name: results[i].layerName } })) };
 }
 
-/** What `followView` needs of a map: moonmap's `Map` or MapLibre's. */
+/** What `followView` needs of a map: mbtmap's `Map` or MapLibre's. */
 export interface ViewMap {
   getBounds(): { getWest(): number; getSouth(): number; getEast(): number; getNorth(): number } | { west: number; south: number; east: number; north: number };
   getZoom(): number;

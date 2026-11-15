@@ -1,4 +1,4 @@
-// glTF 2.0 for moon-map/3d: a .glb or .gltf read into flat primitives (each attribute its own typed array,
+// glTF 2.0 for mbt-map/3d: a .glb or .gltf read into flat primitives (each attribute its own typed array,
 // sparse accessors applied, quantized ones kept), world matrices, materials and image bytes; meshopt
 // buffer views go through `meshopt`.
 import { IDENTITY, multiply } from "../tiles/geo.ts";
@@ -39,7 +39,7 @@ export interface TextureRef {
   matrix?: Float64Array;
 }
 
-/** What moonmap draws of a material: base color factor and texture, alpha mode and cutoff, `unlit` (KHR_materials_unlit). */
+/** What mbtmap draws of a material: base color factor and texture, alpha mode and cutoff, `unlit` (KHR_materials_unlit). */
 export interface Material {
   color: [number, number, number, number];
   texture?: TextureRef;

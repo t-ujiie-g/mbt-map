@@ -58,7 +58,7 @@ function flatten(g) {
 
 // The reference's rows: a row per member with the feature's properties, nested values as
 // their JSON text, lone surrogates as U+FFFD (as UTF-8 carries text); bounding boxes are left
-// out (tables carry none), as are network links (moon-map/data reads none).
+// out (tables carry none), as are network links (mbt-map/data reads none).
 function rowsOf(collection) {
   const value = (v) => (v !== null && typeof v === "object" ? JSON.stringify(v) : typeof v === "string" ? v.toWellFormed() : v);
   return collection.features.filter((f) => f.properties["@geometry-type"] !== "networklink").flatMap((f) => {
@@ -106,7 +106,7 @@ function deviation(group, label, got, expectError, why) {
 }
 
 const KML = (body, ns = "") => `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"${ns}>\n<Document>\n${body}\n</Document>\n</kml>\n`;
-const GPX = (body, ns = "") => `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="moonmap" xmlns="http://www.topografix.com/GPX/1/1"${ns}>\n${body}\n</gpx>\n`;
+const GPX = (body, ns = "") => `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="mbtmap" xmlns="http://www.topografix.com/GPX/1/1"${ns}>\n${body}\n</gpx>\n`;
 const pm = (inner, attrs = "") => `<Placemark${attrs}>${inner}</Placemark>`;
 
 // --- Hand-written KML ---
@@ -264,11 +264,11 @@ const HOSTILE = [
   ["many placemarks", `<kml>${pm("<name>n</name><Point><coordinates>1,2</coordinates></Point>").repeat(20000)}</kml>`],
 ];
 for (const [label, text] of HOSTILE) check("hostile", "kml", label, text);
-deviation("hostile", "nesting past MAX_XML_DEPTH", ours("kml", `<kml>${"<Folder>".repeat(300)}${"</Folder>".repeat(300)}</kml>`), true, "xmldom has no depth limit; moon-map/data refuses documents nested deeper than 256 (AGENTS.md §8.2)");
+deviation("hostile", "nesting past MAX_XML_DEPTH", ours("kml", `<kml>${"<Folder>".repeat(300)}${"</Folder>".repeat(300)}</kml>`), true, "xmldom has no depth limit; mbt-map/data refuses documents nested deeper than 256 (AGENTS.md §8.2)");
 deviation("hostile", "100000 levels", ours("kml", `<kml>${"<a>".repeat(100000)}${"</a>".repeat(100000)}</kml>`), true, "as above; togeojson overflows the stack on it");
-deviation("hostile", "attributes past MAX_XML_ATTRIBUTES", ours("kml", `<kml><Placemark${Array.from({ length: 2000 }, (_, i) => ` a${i}="1"`).join("")}/></kml>`), true, "xmldom has no attribute limit; moon-map/data refuses more than 1024 on one element");
-deviation("hostile", "malformed internal subset", ours("kml", `<!DOCTYPE kml [<!ENTITY a "%x">]><kml/>`), false, "xmldom checks declarations in an internal subset; moon-map/data skips the subset (nothing in it is ever used)");
-deviation("hostile", "XML declaration version 2", ours("kml", '<?xml version="2.0"?><kml/>'), false, "xmldom checks an XML declaration's version, encoding and standalone parts; moon-map/data only that it comes first");
+deviation("hostile", "attributes past MAX_XML_ATTRIBUTES", ours("kml", `<kml><Placemark${Array.from({ length: 2000 }, (_, i) => ` a${i}="1"`).join("")}/></kml>`), true, "xmldom has no attribute limit; mbt-map/data refuses more than 1024 on one element");
+deviation("hostile", "malformed internal subset", ours("kml", `<!DOCTYPE kml [<!ENTITY a "%x">]><kml/>`), false, "xmldom checks declarations in an internal subset; mbt-map/data skips the subset (nothing in it is ever used)");
+deviation("hostile", "XML declaration version 2", ours("kml", '<?xml version="2.0"?><kml/>'), false, "xmldom checks an XML declaration's version, encoding and standalone parts; mbt-map/data only that it comes first");
 deviation("hostile", "XML declaration with a bad encoding", ours("kml", '<?xml version="1.0" encoding="?"?><kml/>'), false, "as above");
 
 // --- GSI tile features written as KML and GPX ---
@@ -393,7 +393,7 @@ await writeFile(
       "nested property values (objects and arrays) are their JSON.stringify text",
       "lone surrogates in keys and values are U+FFFD, as UTF-8 carries text (TextEncoder's replacement)",
       "bounding boxes are left out: tables carry none",
-      "togeojson's NetworkLink features (links to other documents, with their Region's box) are left out: moon-map/data reads none",
+      "togeojson's NetworkLink features (links to other documents, with their Region's box) are left out: mbt-map/data reads none",
     ],
     results,
     deviations,

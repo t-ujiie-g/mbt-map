@@ -1,9 +1,9 @@
-// Drawing with moon-map/draw (clicks as terra-draw's; circles on the ellipsoid
-// through moon-map/geodesic). Drawing and measuring exclude each other, and keys
+// Drawing with mbt-map/draw (clicks as terra-draw's; circles on the ellipsoid
+// through mbt-map/geodesic). Drawing and measuring exclude each other, and keys
 // go to the drawing unless they belong to an IME composition or a text field.
-import { mergeFeatures, splitFeatures } from "moon-map/analysis";
-import { createDraw } from "moon-map/draw";
-import * as geodesic from "moon-map/geodesic";
+import { mergeFeatures, splitFeatures } from "mbt-map/analysis";
+import { createDraw } from "mbt-map/draw";
+import * as geodesic from "mbt-map/geodesic";
 
 export const DRAW_MODES = [["select", "選択"], ["split", "分割"], ["point", "点"], ["linestring", "線"], ["polygon", "多角形"], ["rectangle", "矩形"], ["circle", "円"], ["freehand", "フリーハンド"]];
 

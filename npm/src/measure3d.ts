@@ -1,4 +1,4 @@
-// Measuring between 3D points on WGS 84 for moon-map/3d. Import-free, so that `npm test` can load it.
+// Measuring between 3D points on WGS 84 for mbt-map/3d. Import-free, so that `npm test` can load it.
 
 /** `[longitude, latitude, height]`: degrees and meters above the ellipsoid. */
 export type Position3d = [number, number, number];

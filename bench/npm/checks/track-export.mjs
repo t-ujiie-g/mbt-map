@@ -50,6 +50,6 @@ export async function trackExportChecks(page) {
     r.set.at.lng === 139.7 && r.set.last.x < 0 &&
     r.after === 0 &&
     JSON.stringify(r.size) === "[1600,1200]" && r.same && near(r.centre, [255, 0, 0]) &&
-    r.refused[0] === "moon-map: pixelRatio must be a positive number: 0" && r.refused[1] === "moon-map: cannot make a 80000 x 60000 image";
+    r.refused[0] === "mbt-map: pixelRatio must be a positive number: 0" && r.refused[1] === "mbt-map: cannot make a 80000 x 60000 image";
   return { ok, ...r };
 }

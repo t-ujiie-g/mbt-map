@@ -43,7 +43,7 @@ test("workers load only from same-origin http(s) URLs", () => {
 });
 
 test("wasm loads only from http(s) URLs", () => {
-  assert.equal(wasmUrl("https://cdn.test/moon-map.wasm", base), "https://cdn.test/moon-map.wasm");
+  assert.equal(wasmUrl("https://cdn.test/mbt-map.wasm", base), "https://cdn.test/mbt-map.wasm");
   for (const bad of ["data:application/wasm;base64,AA==", "file:///x.wasm"]) {
     assert.throws(() => wasmUrl(bad, base), /http\(s\)/);
   }

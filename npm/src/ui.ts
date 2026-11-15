@@ -1,4 +1,4 @@
-// `moon-map/ui`: headless controllers over a `Map` (state, operations, subscribe;
+// `mbt-map/ui`: headless controllers over a `Map` (state, operations, subscribe;
 // VISION §6). Each is its own module, so a bundle keeps only those it imports.
 export type { Controller } from "./ui/controller";
 export { createAttribution, type AttributionOptions, type AttributionState } from "./ui/attribution";

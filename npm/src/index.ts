@@ -1,4 +1,4 @@
-import * as engine from "moon-map-engine";
+import * as engine from "mbt-map-engine";
 import {
   type EaseToOptions,
   type FitBoundsOptions,
@@ -127,7 +127,7 @@ function reducedMotion(): boolean {
 
 function checkCamera(c: Camera): Camera {
   if (![c.lng, c.lat, c.zoom, c.bearing, c.pitch].every(Number.isFinite)) {
-    throw new TypeError(`moon-map: center, zoom, bearing and pitch must be finite numbers: ${JSON.stringify(c)}`);
+    throw new TypeError(`mbt-map: center, zoom, bearing and pitch must be finite numbers: ${JSON.stringify(c)}`);
   }
   return c;
 }
@@ -169,7 +169,7 @@ export function evaluateExpression(expression: unknown, features: readonly Expre
     return o;
   });
   const out = engine.evaluate_expression(JSON.stringify(expression), objects, zoom);
-  if (typeof out === "string") throw new Error(`moon-map: expression: ${out}`);
+  if (typeof out === "string") throw new Error(`mbt-map: expression: ${out}`);
   return out.map((v) => (typeof v === "number" && Number.isNaN(v) ? null : v));
 }
 
@@ -232,7 +232,7 @@ export class Map {
   constructor(options: MapOptions) {
     const container =
       typeof options.container === "string" ? document.getElementById(options.container) : options.container;
-    if (!container) throw new Error(`moon-map: container not found: ${String(options.container)}`);
+    if (!container) throw new Error(`mbt-map: container not found: ${String(options.container)}`);
     this.#container = container;
     this.#options = options;
     this.#limits = {
@@ -320,8 +320,8 @@ export class Map {
       const url = new URL(httpUrl(style, document.baseURI, "the style"));
       this.#fetch(url.href, "Style")
         .then((res) => {
-          if (!res.ok) throw new Error(`moon-map: style: HTTP ${res.status}`);
-          return readJsonCapped(res, MAX_DOCUMENT_BYTES, () => new Error(`moon-map: style: larger than ${MAX_DOCUMENT_BYTES} bytes`)) as Promise<StyleSpecification>;
+          if (!res.ok) throw new Error(`mbt-map: style: HTTP ${res.status}`);
+          return readJsonCapped(res, MAX_DOCUMENT_BYTES, () => new Error(`mbt-map: style: larger than ${MAX_DOCUMENT_BYTES} bytes`)) as Promise<StyleSpecification>;
         })
         .then((s) => ready(s, url))
         .catch((err: unknown) => this.#fail(err));
@@ -412,8 +412,8 @@ export class Map {
         return;
       }
       const res = await this.#fetch(url, "Source");
-      if (!res.ok) throw new Error(`moon-map: TileJSON ${url}: HTTP ${res.status}`);
-      this.#tilejson.set(url, await readJsonCapped(res, MAX_DOCUMENT_BYTES, () => new Error(`moon-map: TileJSON ${url}: larger than ${MAX_DOCUMENT_BYTES} bytes`)));
+      if (!res.ok) throw new Error(`mbt-map: TileJSON ${url}: HTTP ${res.status}`);
+      this.#tilejson.set(url, await readJsonCapped(res, MAX_DOCUMENT_BYTES, () => new Error(`mbt-map: TileJSON ${url}: larger than ${MAX_DOCUMENT_BYTES} bytes`)));
     }));
   }
 
@@ -467,7 +467,7 @@ export class Map {
     this.#warned = key;
     if (flat.length === 0) return;
     const warnings = edit.styleWarnings(flat, drawn);
-    console.warn(`moon-map: the style uses what is not drawn yet:\n${warnings.map((w) => `${w.path}: ${w.message}`).join("\n")}`);
+    console.warn(`mbt-map: the style uses what is not drawn yet:\n${warnings.map((w) => `${w.path}: ${w.message}`).join("\n")}`);
     // After the constructor, which draws an object style at once, has returned.
     queueMicrotask(() => this.#events.warn(warnings));
   }
@@ -504,7 +504,7 @@ export class Map {
 
   /** Runs `f` on the current style and draws what it gives; its errors fire `error`. */
   #edit(f: (style: StyleSpecification) => StyleSpecification): this {
-    if (!this.#style) throw new Error("moon-map: the style has not loaded yet");
+    if (!this.#style) throw new Error("mbt-map: the style has not loaded yet");
     let next: StyleSpecification;
     try {
       next = f(this.#style);
@@ -527,7 +527,7 @@ export class Map {
     const custom = layer as CustomLayerInterface;
     this.#edit((s) => {
       const why = edit.invalidCustomLayer(custom);
-      if (why) throw new Error(`moon-map: layers.${String(custom.id)}: ${why}`);
+      if (why) throw new Error(`mbt-map: layers.${String(custom.id)}: ${why}`);
       return edit.addLayer(s, { id: custom.id, type: "custom" }, beforeId);
     });
     // Only while the style still has it: an error or a later removeLayer leaves it out.
@@ -630,7 +630,7 @@ export class Map {
     if (s.type === "geojson") {
       const geojson = <T,>(f: (t: GeoJSONTiles) => Promise<T>): Promise<T> =>
         (this.#geojsonLoading ?? Promise.resolve(null)).then((t) => {
-          if (!t) throw new Error("moon-map: GeoJSON sources did not load");
+          if (!t) throw new Error("mbt-map: GeoJSON sources did not load");
           return f(t);
         });
       const ask =
@@ -644,8 +644,8 @@ export class Map {
           const data = (this.#style && (edit.sourceOf(this.#style, id) as { data?: unknown } | undefined))?.data;
           if (typeof data !== "string") return Promise.resolve(edit.copy(data));
           return this.#fetch(httpUrl(data, this.#base, `GeoJSON source ${id}: data`), "Source").then((res) => {
-            if (!res.ok) throw new Error(`moon-map: GeoJSON source ${id}: HTTP ${res.status}`);
-            return readJsonCapped(res, MAX_DATA_BYTES, () => new Error(`moon-map: GeoJSON source ${id}: larger than ${MAX_DATA_BYTES} bytes`));
+            if (!res.ok) throw new Error(`mbt-map: GeoJSON source ${id}: HTTP ${res.status}`);
+            return readJsonCapped(res, MAX_DATA_BYTES, () => new Error(`mbt-map: GeoJSON source ${id}: larger than ${MAX_DATA_BYTES} bytes`));
           });
         },
         getClusterExpansionZoom: ask("expansion"),
@@ -717,9 +717,9 @@ export class Map {
   }
 
   /**
-   * Sets the style's `lights` (moonmap's, with Mapbox's names): an `ambient` and a `directional` light,
+   * Sets the style's `lights` (mbtmap's, with Mapbox's names): an `ambient` and a `directional` light,
    * `{id, type, properties: {color, intensity, direction?: [azimuthal, polar]}}`, which light extrusions
-   * and moon-map/3d's layers in place of `light`; null removes them. `timeOfDayLights` gives them for a moment and place.
+   * and mbt-map/3d's layers in place of `light`; null removes them. `timeOfDayLights` gives them for a moment and place.
    */
   setLights(lights: unknown[] | null): this {
     return this.#edit((s) => edit.setRoot(s, "lights", lights));
@@ -796,7 +796,7 @@ export class Map {
       c.bearing,
       c.pitch,
       workerScriptUrl(o.workerUrl ?? new URL("./worker.js", import.meta.url), page, location.origin),
-      wasmUrl(o.wasmUrl ?? new URL("./moon-map.wasm", import.meta.url), page),
+      wasmUrl(o.wasmUrl ?? new URL("./mbt-map.wasm", import.meta.url), page),
       o.workerCount ?? 0,
       (source, z, x, y) => this.#providedTile(source, z, x, y),
       o.fontFamily ?? "sans-serif",
@@ -993,7 +993,7 @@ export class Map {
   /**
    * The features drawn at a point or in a box (`[[x0, y0], [x1, y1]]`, CSS pixels; the whole map
    * when left out), topmost first, as MapLibre's `queryRenderedFeatures` finds them. A Promise:
-   * the workers hold the geometry. Rejects on a filter moonmap cannot evaluate.
+   * the workers hold the geometry. Rejects on a filter mbtmap cannot evaluate.
    */
   queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): Promise<MapGeoJSONFeature[]> {
     const { geometry, options: o } = queryArgs(geometryOrOptions, options);
@@ -1106,10 +1106,10 @@ export class Map {
    */
   async toBlob(options: ToBlobOptions = {}): Promise<Blob> {
     const ratio = options.pixelRatio ?? globalThis.devicePixelRatio ?? 1;
-    if (!(ratio > 0 && Number.isFinite(ratio))) throw new Error(`moon-map: pixelRatio must be a positive number: ${ratio}`);
+    if (!(ratio > 0 && Number.isFinite(ratio))) throw new Error(`mbt-map: pixelRatio must be a positive number: ${ratio}`);
     const loading = import("./export.js");
     while (!this.#engine || !engine.map_is_idle(this.#engine) || this.#fetching > 0) {
-      if (this.#removed) throw new Error("moon-map: the map was removed");
+      if (this.#removed) throw new Error("mbt-map: the map was removed");
       await new Promise<void>((resolve) => {
         this.once("idle", () => resolve());
         this.#dom.signal.addEventListener("abort", () => resolve(), { once: true });
@@ -1117,7 +1117,7 @@ export class Map {
     }
     const { encodeImage } = await loading;
     const map = this.#engine;
-    if (!map) throw new Error("moon-map: the map was removed");
+    if (!map) throw new Error("mbt-map: the map was removed");
     const side = Math.max(1, Math.min(options.maxSize ?? Infinity, engine.map_max_region(map)));
     const region = (x: number, y: number, w: number, h: number) => engine.map_render_region(map, ratio, x, y, w, h);
     return encodeImage(Math.round(this.#canvas.clientWidth * ratio), Math.round(this.#canvas.clientHeight * ratio), side, region, options.type, options.quality);
@@ -1384,7 +1384,7 @@ export class Map {
   }
 
   /**
-   * moonmap's: the longitude, latitude and height (meters) of what is drawn under `point`: extrusions, 3D
+   * mbtmap's: the longitude, latitude and height (meters) of what is drawn under `point`: extrusions, 3D
    * layers, terrain, else sea level (on the globe, its ground); null if nothing. From the last frame's tiles.
    */
   pickPosition(point: PointLike): [number, number, number] | null {
@@ -1394,31 +1394,31 @@ export class Map {
   }
 
   /**
-   * moonmap's: where the segment from `from` to `to` ([longitude, latitude, meters]) first meets what is drawn
+   * mbtmap's: where the segment from `from` to `to` ([longitude, latitude, meters]) first meets what is drawn
    * (as `pickPosition` sees it), stopping `margin` meters (default 0.1) short of `to`; null if nothing is in the way.
    */
   castRay(from: [number, number, number], to: [number, number, number], margin = 0.1): [number, number, number] | null {
-    if (from.length !== 3 || to.length !== 3 || ![...from, ...to, margin].every(Number.isFinite)) throw new Error("moon-map: castRay: points must be 3 finite numbers");
+    if (from.length !== 3 || to.length !== 3 || ![...from, ...to, margin].every(Number.isFinite)) throw new Error("mbt-map: castRay: points must be 3 finite numbers");
     const r = this.#engine ? engine.map_cast_ray(this.#engine, [...from, ...to], margin) : [];
     return r.length ? [r[0], r[1], r[2]] : null;
   }
 
   /**
-   * moonmap's: tints what is seen (green) and hidden (red) from `position` ([lng, lat, m]) toward `heading`
+   * mbtmap's: tints what is seen (green) and hidden (red) from `position` ([lng, lat, m]) toward `heading`
    * and `pitch`, `horizontalFov` by `verticalFov` (degrees; 0, 0, 90, 60) and `distance` m (500), instead of shadows.
    */
   setViewshed(v: { position: [number, number, number]; heading?: number; pitch?: number; horizontalFov?: number; verticalFov?: number; distance?: number } | null): this {
     const n = v ? [...v.position, v.heading ?? 0, v.pitch ?? 0, v.horizontalFov ?? 90, v.verticalFov ?? 60, v.distance ?? 500] : [];
-    if (v && v.position.length !== 3) throw new Error("moon-map: setViewshed: position must be [lng, lat, m]");
-    if (n.some((x) => !Number.isFinite(x))) throw new Error("moon-map: setViewshed: not finite numbers");
-    if (v && !(n[5] > 0 && n[5] < 180 && n[6] > 0 && n[6] < 180 && n[7] > 1)) throw new Error("moon-map: setViewshed: fields of view must lie between 0 and 180 degrees and distance exceed 1 m");
+    if (v && v.position.length !== 3) throw new Error("mbt-map: setViewshed: position must be [lng, lat, m]");
+    if (n.some((x) => !Number.isFinite(x))) throw new Error("mbt-map: setViewshed: not finite numbers");
+    if (v && !(n[5] > 0 && n[5] < 180 && n[6] > 0 && n[6] < 180 && n[7] > 1)) throw new Error("mbt-map: setViewshed: fields of view must lie between 0 and 180 degrees and distance exceed 1 m");
     this.#viewshed = n;
     if (this.#engine) engine.map_set_viewshed(this.#engine, n);
     return this;
   }
 
   /**
-   * moonmap's, as CesiumJS's clipping planes and polygons, on extrusions and moon-map/3d's layers (`Clipping` in clipping.ts
+   * mbtmap's, as CesiumJS's clipping planes and polygons, on extrusions and mbt-map/3d's layers (`Clipping` in clipping.ts
    * says what it keeps); null clears it.
    */
   setClipping(c: Clipping | null): this {

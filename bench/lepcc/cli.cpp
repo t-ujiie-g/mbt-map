@@ -81,7 +81,7 @@ static int decode() {
     lepcc_status cs = data ? (kind == 0 ? lepcc_getPointCount : kind == 1 ? lepcc_getRGBCount : lepcc_getIntensityCount)(ctx, data, (int)n, &count) : 2;
     lepcc_status ds = 1;
     std::vector<unsigned char> out;
-    // Past moonmap's MAX_POINTS the port refuses; such counts are only reported.
+    // Past mbtmap's MAX_POINTS the port refuses; such counts are only reported.
     if (!cs && count > 0x400000) ds = 0xffffffffu;
     else if (!cs && data) {
       const unsigned char* p = data;

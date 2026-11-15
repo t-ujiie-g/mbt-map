@@ -1,4 +1,4 @@
-// moon-map/draw over `?shapes=` polygons of 32 vertices: per pointer move while a polygon is drawn,
+// mbt-map/draw over `?shapes=` polygons of 32 vertices: per pointer move while a polygon is drawn,
 // the time until the map is idle again (the shape under way on screen).
 const params = new URLSearchParams(location.search);
 const n = Number(params.get("shapes") ?? 500);

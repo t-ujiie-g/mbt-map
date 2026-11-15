@@ -113,14 +113,14 @@ export function arcgisFormat(layer: unknown): "geojson" | "json" | "pbf" {
 /** Throws the ArcGIS error a JSON answer (`json`, to `what` when named) holds, if any. */
 export function arcgisError(json: unknown, what?: string): void {
   const error = (json as { error?: { code?: number; message?: string } } | null)?.error;
-  if (error) throw new Error(`moon-map: services: ${what ? `${what}: ` : ""}ArcGIS error ${error.code ?? ""}: ${error.message ?? ""}`);
+  if (error) throw new Error(`mbt-map: services: ${what ? `${what}: ` : ""}ArcGIS error ${error.code ?? ""}: ${error.message ?? ""}`);
 }
 
 /** The features of a GeoJSON page; anything else throws. */
 export function pageFeatures(page: unknown, what: string): unknown[] {
   const features = (page as { features?: unknown } | null)?.features;
   arcgisError(page, what);
-  if (!Array.isArray(features)) throw new Error(`moon-map: services: ${what} did not answer with GeoJSON features`);
+  if (!Array.isArray(features)) throw new Error(`mbt-map: services: ${what} did not answer with GeoJSON features`);
   return features;
 }
 

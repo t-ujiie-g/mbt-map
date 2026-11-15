@@ -1,6 +1,6 @@
 // A shape being drawn, as drawing tools draw it: a GeoJSON source updated with
 // setData as one vertex moves. Per update, the time until the map is idle again
-// (?engine=moonmap through the npm facade, or maplibre), over the bench base map.
+// (?engine=mbtmap through the npm facade, or maplibre), over the bench base map.
 const params = new URLSearchParams(location.search);
 const engine = params.get("engine");
 const CENTER = [139.7671, 35.6812];

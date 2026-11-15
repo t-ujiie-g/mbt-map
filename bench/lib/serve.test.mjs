@@ -12,7 +12,7 @@ test("serves files under the repository root", () => {
 });
 
 test("never resolves outside the root, including sibling-prefix directories", () => {
-  for (const p of ["/..%2fmoonmap-other%2fx", "/..%2f..%2fetc%2fpasswd", "/%2e%2e/x"]) {
+  for (const p of ["/..%2fmbtmap-other%2fx", "/..%2f..%2fetc%2fpasswd", "/%2e%2e/x"]) {
     const file = resolveRequestPath(p);
     assert.ok(file === null || !path.relative(ROOT, file).startsWith(".."), `${p} -> ${file}`);
   }

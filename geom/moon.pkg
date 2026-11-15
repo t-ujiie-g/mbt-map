@@ -3,7 +3,7 @@
 // Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/core",
   "moonbitlang/core/debug",
   "moonbitlang/core/encoding/utf8",
 }

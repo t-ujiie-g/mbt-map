@@ -1,4 +1,4 @@
-// moon-map/3d's I3S node contents (npm/src/i3s/content.ts; Draco by model_worker's wasm) vs @loaders.gl/i3s 4.5.4
+// mbt-map/3d's I3S node contents (npm/src/i3s/content.ts; Draco by model_worker's wasm) vs @loaders.gl/i3s 4.5.4
 // on Esri's sample layers (bench/fixtures/i3s-sf, i3s-frankfurt) and the synthetic one, hostile copies refused.
 // Usage: node i3s/content-golden.mjs; writes bench/results/i3s-contents.json.
 import { existsSync } from "node:fs";
@@ -17,7 +17,7 @@ import { eastNorthUp } from "../../npm/src/tiles/geo.ts";
 import { ROOT } from "../lib/root.mjs";
 
 setLoaderOptions({ worker: false, modules: { draco3d } });
-const MODEL_WASM = path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/model_worker/model_worker.wasm");
+const MODEL_WASM = path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/model_worker/model_worker.wasm");
 const { instance } = await WebAssembly.instantiate(await readFile(MODEL_WASM), {});
 const decode = draco(instance.exports);
 

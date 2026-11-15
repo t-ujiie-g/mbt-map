@@ -51,7 +51,7 @@ test("headerDocument reads zooms, bounds and the tile type of a v3 header", () =
 });
 
 test("headerDocument refuses a header too short, another magic and other versions", () => {
-  assert.throws(() => headerDocument("https://x.test/a", header.subarray(0, 126)), /moon-map: https:\/\/x.test\/a is not a PMTiles v3 archive/);
+  assert.throws(() => headerDocument("https://x.test/a", header.subarray(0, 126)), /mbt-map: https:\/\/x.test\/a is not a PMTiles v3 archive/);
   const other = header.slice();
   other[0] = 0x51;
   assert.throws(() => headerDocument("a", other), /not a PMTiles v3 archive/);

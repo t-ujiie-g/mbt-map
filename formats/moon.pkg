@@ -2,18 +2,18 @@
 // `@geom.Table`s. Pure MoonBit, tested on every backend.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/pbf",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/pbf",
   "moonbitlang/core/cmp",
   "moonbitlang/core/debug",
   "moonbitlang/core/double",
 }
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/pbf",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/pbf",
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
 } for "test"

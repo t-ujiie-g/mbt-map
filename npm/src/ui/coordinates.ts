@@ -1,6 +1,6 @@
 // The coordinates of the pointer (or of the view's center) in several systems,
 // without their look. Projected systems go through a `transform` the page
-// passes (moon-map/analysis's), so `moon-map/ui` loads no projection code itself.
+// passes (mbt-map/analysis's), so `mbt-map/ui` loads no projection code itself.
 import type { LngLat, Map } from "../index";
 import { Store, type Controller } from "./controller";
 import { formatDegrees, formatDms, utmZone } from "./format";
@@ -25,7 +25,7 @@ export interface CoordinatesOptions {
   follow?: "pointer" | "center";
 }
 
-/** What `moon-map/analysis`'s `transform` is: coordinates from one CRS to another. */
+/** What `mbt-map/analysis`'s `transform` is: coordinates from one CRS to another. */
 export type Transform = (coords: ArrayLike<number>, from: number | string, to: number | string) => Promise<ArrayLike<number>>;
 
 export function degrees(digits = 5): CoordinateSystem {

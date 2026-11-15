@@ -1,6 +1,6 @@
 import {
-  "t-ujiie-g/moonmap_engine/clipper",
-  "t-ujiie-g/moonmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/clipper",
+  "t-ujiie-g/mbtmap_engine/geom",
   "moonbitlang/core/cmp",
   "moonbitlang/core/int64",
   "moonbitlang/core/math",

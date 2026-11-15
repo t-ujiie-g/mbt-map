@@ -41,8 +41,8 @@ async function bytes(url) {
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   return new Uint8Array(await res.arrayBuffer());
 }
-// Features without attributes have `{}` for properties in moonmap and null in terraformer; an empty
-// geometry (`"rings": []`) is null in moonmap, as in its other readers.
+// Features without attributes have `{}` for properties in mbtmap and null in terraformer; an empty
+// geometry (`"rings": []`) is null in mbtmap, as in its other readers.
 const empty = (g) => g && Array.isArray(g.coordinates) && g.coordinates.length === 0;
 const normalized = (features) => features.map((f) => ({ ...f, properties: f.properties ?? {}, geometry: empty(f.geometry) ? null : f.geometry }));
 // The index and the two values of the first feature where `a` and `b` differ.

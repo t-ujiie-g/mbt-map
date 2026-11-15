@@ -1,5 +1,5 @@
 // bench/fixtures/gsi-dem-fuji as Terrarium PNGs under bench/dist (a form both
-// moonmap and MapLibre read), and a style with them as hillshade and terrain.
+// mbtmap and MapLibre read), and a style with them as hillshade and terrain.
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { decodePng, encodePng, gsiToTerrarium } from "./png.mjs";

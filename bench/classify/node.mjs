@@ -1,4 +1,4 @@
-// moon-map/analysis's classBreaks and statistics (npm/src/classify.ts, TypeScript on the main thread) vs
+// mbt-map/analysis's classBreaks and statistics (npm/src/classify.ts, TypeScript on the main thread) vs
 // simple-statistics 8.0.0 and geostats 2.1.0 on classify:golden's kinds of values, larger.
 // Usage: node --experimental-strip-types classify/node.mjs; writes bench/results/classify-node.json.
 import * as ss from "simple-statistics";
@@ -28,4 +28,4 @@ for (const [name, x] of sets) {
 const jenksSet = randoms(5000);
 row("jenks 7 classes (random 5000)", time(() => ss.jenks(jenksSet, 7)), time(() => classBreaks(jenksSet, 7, "jenks")));
 
-await writeResults("classify-node", { simpleStatistics: "8.0.0", geostats: "2.1.0", statistic: TIMING, columns: "both JavaScript: moonmap's classify.ts copies the finite values into a Float64Array on every call" }, all);
+await writeResults("classify-node", { simpleStatistics: "8.0.0", geostats: "2.1.0", statistic: TIMING, columns: "both JavaScript: mbtmap's classify.ts copies the finite values into a Float64Array on every call" }, all);

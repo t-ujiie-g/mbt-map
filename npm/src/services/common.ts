@@ -1,4 +1,4 @@
-// Pure parts of moon-map/services shared by the readers: query strings, Web Mercator grids and the
+// Pure parts of mbt-map/services shared by the readers: query strings, Web Mercator grids and the
 // sources they make. Import-free, for `npm test`.
 
 /** `[west, south, east, north]` in degrees. */
@@ -16,7 +16,7 @@ export interface TileSource {
 }
 
 /**
- * moonmap's own source of a raster in another CRS (`crs`, an EPSG code), drawn on Web Mercator tiles by moon-map/data's worker:
+ * mbtmap's own source of a raster in another CRS (`crs`, an EPSG code), drawn on Web Mercator tiles by mbt-map/data's worker:
  * a WMTS set (`grid`) or one GetMap per tile (`image`, its box northing first when `northFirst`); npm/README.md has the fields.
  */
 export interface ReprojectedSource {

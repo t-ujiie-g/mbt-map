@@ -3,8 +3,8 @@
  "layerType": "PointCloud",
  "name": "Synthetic point cloud",
  "alias": "Synthetic point cloud",
- "desc": "moonmap test data: a ground grid and colored blocks near Tokyo Station",
- "copyrightText": "moonmap test data",
+ "desc": "mbtmap test data: a ground grid and colored blocks near Tokyo Station",
+ "copyrightText": "mbtmap test data",
  "capabilities": [
   "View"
  ],

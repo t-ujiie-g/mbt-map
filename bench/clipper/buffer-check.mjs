@@ -10,11 +10,11 @@ import { ROOT } from "../lib/root.mjs";
 const WGS84 = geodesic.Geodesic.WGS84;
 let a;
 const { instance: ai } = await WebAssembly.instantiate(
-  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/analysis_worker/analysis_worker.wasm")),
+  await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/analysis_worker/analysis_worker.wasm")),
   { Math, host: { number: hostNumber(() => a.memory) } },
 );
 a = ai.exports;
-const { instance: gi } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/geometry_worker/geometry_worker.wasm")), {});
+const { instance: gi } = await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/geometry_worker/geometry_worker.wasm")), {});
 const g = gi.exports;
 const put = (e, bytes) => {
   const at = e.prepare_input(bytes.length);

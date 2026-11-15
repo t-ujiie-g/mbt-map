@@ -1,5 +1,5 @@
 // GeoTIFF sources (`{ type: "geotiff", url, ... }`): their bounds and zooms read from the file, and their
-// tiles, and those of `reprojected` sources, drawn by moon-map/data's worker. Loaded by the map with the first one.
+// tiles, and those of `reprojected` sources, drawn by mbt-map/data's worker. Loaded by the map with the first one.
 import { rasterInfo, rasterTile, type RasterInfo, reprojectTile } from "./data";
 import type { ReprojectedSource } from "./services/common";
 import type { TransformedRequest } from "./urls";

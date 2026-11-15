@@ -14,7 +14,7 @@
     "outDir": "../npm/dist",
     "rootDir": ".",
     "paths": {
-      "moon-map": [
+      "mbt-map": [
         "../npm/dist/index.d.ts"
       ]
     }

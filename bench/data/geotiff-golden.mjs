@@ -1,4 +1,4 @@
-// moon-map/data's readRaster (geotiff.wasm with data_worker/js/geotiff.mjs) vs geotiff 3.0.5's
+// mbt-map/data's readRaster (geotiff.wasm with data_worker/js/geotiff.mjs) vs geotiff 3.0.5's
 // readRasters on the Mt Fuji DEM and GSI map tiles (国土地理院) written as TIFFs of every layout
 // this reads, from bytes and over HTTP range requests. Usage: node data/geotiff-golden.mjs.
 import { readFile, writeFile } from "node:fs/promises";

@@ -1,7 +1,7 @@
 // What `updateData` saves over `setData` in the GeoJSON worker: an edit of a few properties and
 // of one geometry on GSI features (国土地理院ベクトルタイル提供実験), as the whole data loaded
 // again (setData) and as a diff (updateData), each followed by cutting the z15 tiles of the data,
-// in moonmap's wasm-gc tiler and in @maplibre/geojson-vt 6.3.0 (MapLibre's worker).
+// in mbtmap's wasm-gc tiler and in @maplibre/geojson-vt 6.3.0 (MapLibre's worker).
 // Usage: npm run geojson:update-node; writes bench/results/geojson-update-node.json.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -61,7 +61,7 @@ for (const [name, edit] of Object.entries(edits)) {
   // setData: the whole data again, with the edit applied, then the tiles.
   const edited = structuredClone(data);
   const full = {
-    moonmap: median(() => (mbLoad(edited), mbTiles())),
+    mbtmap: median(() => (mbLoad(edited), mbTiles())),
     "geojson-vt": median(() => vtTiles(new GeoJSONVT(edited, { ...o, updateable: true }))),
   };
   mbLoad(data);
@@ -69,7 +69,7 @@ for (const [name, edit] of Object.entries(edits)) {
   mbTiles();
   vtTiles(ref);
   const diff = {
-    moonmap: median(() => {
+    mbtmap: median(() => {
       const bytes = encodeDiff(edit(k++));
       gc.exports.geojson_update_mem(gc.copyIn(bytes), bytes.length);
       mbTiles();
@@ -80,7 +80,7 @@ for (const [name, edit] of Object.entries(edits)) {
     }),
   };
   results.push({ edit: name, setData: full, updateData: diff });
-  console.log(`${name}: setData moonmap ${full.moonmap.toFixed(1)} ms, geojson-vt ${full["geojson-vt"].toFixed(1)} ms; updateData moonmap ${diff.moonmap.toFixed(2)} ms, geojson-vt ${diff["geojson-vt"].toFixed(2)} ms`);
+  console.log(`${name}: setData mbtmap ${full.mbtmap.toFixed(1)} ms, geojson-vt ${full["geojson-vt"].toFixed(1)} ms; updateData mbtmap ${diff.mbtmap.toFixed(2)} ms, geojson-vt ${diff["geojson-vt"].toFixed(2)} ms`);
 }
 
 const out = { env: { runtime: `node ${process.version}`, v8: process.versions.v8 }, features: data.features.length, tiles: tiles.length, results };

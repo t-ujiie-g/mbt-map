@@ -1,14 +1,14 @@
-// The import-free part of `moon-map/data`: which reader a name asks for, and CSV
+// The import-free part of `mbt-map/data`: which reader a name asks for, and CSV
 // options as the data worker takes them.
 
 /**
- * The formats `moon-map/data` reads: CSV (or TSV), WKT or EWKT, WKB or EWKB (binary or hexadecimal), a
+ * The formats `mbt-map/data` reads: CSV (or TSV), WKT or EWKT, WKB or EWKB (binary or hexadecimal), a
  * shapefile (a .shp with its .dbf, .prj and .cpg, or a .zip of them), TopoJSON, KML (or KMZ, a zip
  * holding it), GPX, FlatGeobuf and GeoJSON.
  */
 export type DataFormat = "csv" | "wkt" | "wkb" | "shapefile" | "topojson" | "kml" | "gpx" | "flatgeobuf" | "geojson";
 
-/** The formats `moon-map/data` writes. */
+/** The formats `mbt-map/data` writes. */
 export type WriteFormat = "geojson" | "csv" | "kml";
 
 /**
@@ -69,7 +69,7 @@ export function formatOf(name: string): DataFormat | null {
 export function csvArgs(options: CsvOptions): { delimiter: number; header: boolean; dynamicTyping: boolean; latitude?: string; longitude?: string; geometry?: string } {
   const { delimiter, header = true, dynamicTyping = true, latitude, longitude, geometry } = options;
   const fail = (what: string): never => {
-    throw new Error(`moon-map: data: invalid ${what}`);
+    throw new Error(`mbt-map: data: invalid ${what}`);
   };
   const code = delimiter === undefined ? -1 : typeof delimiter === "string" && delimiter.length === 1 ? delimiter.charCodeAt(0) : -2;
   if (code < -1 || code > 127 || delimiter === '"' || delimiter === "\n" || delimiter === "\r") fail("delimiter");
@@ -85,7 +85,7 @@ export function csvArgs(options: CsvOptions): { delimiter: number; header: boole
 /** `bbox` as the data worker takes it: `[minX, minY, maxX, maxY]` of finite numbers; throws on another value. */
 export function bboxArg(bbox: unknown): [number, number, number, number] {
   if (!Array.isArray(bbox) || bbox.length !== 4 || !bbox.every(Number.isFinite) || bbox[0] > bbox[2] || bbox[1] > bbox[3]) {
-    throw new Error("moon-map: data: invalid bbox: [minX, minY, maxX, maxY] of finite numbers, min at most max");
+    throw new Error("mbt-map: data: invalid bbox: [minX, minY, maxX, maxY] of finite numbers, min at most max");
   }
   return [bbox[0], bbox[1], bbox[2], bbox[3]];
 }
@@ -94,7 +94,7 @@ export function bboxArg(bbox: unknown): [number, number, number, number] {
 export function csvWriteArgs(options: CsvWriteOptions): { delimiter: number; header: boolean; geometryFormat?: string; geometry?: string; longitude?: string; latitude?: string } {
   const { delimiter = ",", header = true, geometryFormat, geometry, longitude, latitude } = options;
   const fail = (what: string): never => {
-    throw new Error(`moon-map: data: invalid ${what}`);
+    throw new Error(`mbt-map: data: invalid ${what}`);
   };
   if (typeof delimiter !== "string" || delimiter.length !== 1 || delimiter.charCodeAt(0) > 127 || /["\r\n]/.test(delimiter)) fail("delimiter");
   if (typeof header !== "boolean") fail("header");

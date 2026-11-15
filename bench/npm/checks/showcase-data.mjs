@@ -1,4 +1,4 @@
-// The showcase's data tab (moon-map/data): the sample CSV drawn as points, a chosen file, a dataset kept
+// The showcase's data tab (mbt-map/data): the sample CSV drawn as points, a chosen file, a dataset kept
 // across a new style, written out again, and an unreadable file reported in the panel.
 import { awaitAfter, openTab } from "./step.mjs";
 

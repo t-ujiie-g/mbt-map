@@ -17,13 +17,13 @@ export function encodeImage(
   quality?: number,
 ): Promise<Blob> {
   if (width < 1 || height < 1 || width > MAX_IMAGE_SIDE || height > MAX_IMAGE_SIDE || width * height > MAX_IMAGE_PIXELS) {
-    throw new Error(`moon-map: cannot make a ${width} x ${height} image`);
+    throw new Error(`mbt-map: cannot make a ${width} x ${height} image`);
   }
   const out = document.createElement("canvas");
   out.width = width;
   out.height = height;
   const ctx = out.getContext("2d");
-  if (!ctx) throw new Error("moon-map: no 2D canvas for the image");
+  if (!ctx) throw new Error("mbt-map: no 2D canvas for the image");
   for (let y = 0; y < height; y += side) {
     for (let x = 0; x < width; x += side) {
       const w = Math.min(side, width - x);
@@ -32,6 +32,6 @@ export function encodeImage(
     }
   }
   return new Promise((resolve, reject) => {
-    out.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("moon-map: the image could not be encoded"))), type, quality);
+    out.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("mbt-map: the image could not be encoded"))), type, quality);
   });
 }

@@ -1,4 +1,4 @@
-// One style, tiles and camera script for moonmap and MapLibre (?engine=): time to
+// One style, tiles and camera script for mbtmap and MapLibre (?engine=): time to
 // first `idle`, then per scripted move the rAF intervals and per-frame CPU time
 // of all rAF callbacks (both engines render inside rAF).
 const params = new URLSearchParams(location.search);
@@ -19,22 +19,22 @@ const START = { lng: 139.7671, lat: 35.6812, zoom: 14.5 };
 const marks = { scriptStart: performance.now() };
 const styleText = (await (await fetch(params.get("style") ?? "/bench/maplibre/style.json")).text()).replaceAll("{origin}", location.origin);
 
-async function createMoonmap() {
+async function createMbtmap() {
   // The minified build run.mjs produces, as an app bundler would ship it.
-  const moonmap = await import("/bench/dist/moon-map-main.min.js");
+  const mbtmap = await import("/bench/dist/mbt-map-main.min.js");
   marks.imported = performance.now();
   const canvas = document.createElement("canvas");
   canvas.id = "map";
   document.body.append(canvas);
-  const map = moonmap.create_map(canvas, styleText, START.lng, START.lat, START.zoom, 0, pitch,
-    "/worker/js/worker.mjs", "/_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm", 0, null, "sans-serif",
+  const map = mbtmap.create_map(canvas, styleText, START.lng, START.lat, START.zoom, 0, pitch,
+    "/worker/js/worker.mjs", "/_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm", 0, null, "sans-serif",
     [0, 22, 0, 85, NaN, 0, 0, 0], false);
   let idle = null;
-  moonmap.map_on_idle(map, () => idle?.());
+  mbtmap.map_on_idle(map, () => idle?.());
   return {
     nextIdle: () => new Promise((r) => { idle = r; }),
-    set: (c) => moonmap.map_set_camera(map, c.lng, c.lat, c.zoom, 0, pitch),
-    get: () => moonmap.map_camera(map),
+    set: (c) => mbtmap.map_set_camera(map, c.lng, c.lat, c.zoom, 0, pitch),
+    get: () => mbtmap.map_camera(map),
   };
 }
 
@@ -55,7 +55,7 @@ async function createMaplibre() {
   };
 }
 
-const view = engine === "maplibre" ? await createMaplibre() : await createMoonmap();
+const view = engine === "maplibre" ? await createMaplibre() : await createMbtmap();
 marks.created = performance.now();
 await view.nextIdle();
 marks.idle = performance.now();

@@ -17,13 +17,13 @@ export async function prepareExamples() {
   const [{ filename, files }] = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", out], path.join(ROOT, "npm")));
   console.log(`${filename}: ${files.map((f) => f.path).join(", ")}`);
   const install = async (dir) => {
-    const modules = path.join(ROOT, dir, "node_modules/moon-map");
+    const modules = path.join(ROOT, dir, "node_modules/mbt-map");
     await rm(modules, { recursive: true, force: true });
     await mkdir(modules, { recursive: true });
     run("tar", ["xzf", path.join(out, filename), "--strip-components=1", "-C", modules], ROOT);
   };
   for (const page of ["npm", "element", "geojson", "analysis", "data", "media", "custom", "model", "tiles", "pointcloud", "i3s", "globe", "services", "moonbit"]) await install(`bench/npm/pages/${page}`);
-  // The MoonBit app the moonbit page runs, on the MoonBit API (moonbit/moonmap).
+  // The MoonBit app the moonbit page runs, on the MoonBit API (moonbit/mbtmap).
   run("moon", ["build", "--target", "js", "--release", "bench/moonbit/app"], ROOT);
   await install("examples/html");
   await install("examples/element");
@@ -32,7 +32,7 @@ export async function prepareExamples() {
   await install("examples/rabbita");
   run("moon", ["build", "--target", "js", "--release", "examples/rabbita/main"], ROOT);
   await build({
-    entryPoints: [path.join(ROOT, "_build/js/release/build/t-ujiie-g/moonmap_rabbita_example/main/main.js")],
+    entryPoints: [path.join(ROOT, "_build/js/release/build/t-ujiie-g/mbtmap_rabbita_example/main/main.js")],
     outfile: path.join(ROOT, "examples/rabbita/app.js"),
     format: "esm",
     minify: true,

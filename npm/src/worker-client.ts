@@ -9,7 +9,7 @@ export class WorkerClient {
   #next = 0;
   #generation = 0;
 
-  /** `name` prefixes the errors: `moon-map: <name>: ...`. */
+  /** `name` prefixes the errors: `mbt-map: <name>: ...`. */
   constructor(name: string) {
     this.#name = name;
   }
@@ -33,7 +33,7 @@ export class WorkerClient {
       const call = msg?.type === "result" ? this.#pending.get(msg.id) : undefined;
       if (!call) return;
       this.#pending.delete(msg.id);
-      if (typeof msg.error === "string") call.reject(new Error(`moon-map: ${this.#name}: ${msg.error}`));
+      if (typeof msg.error === "string") call.reject(new Error(`mbt-map: ${this.#name}: ${msg.error}`));
       else call.resolve(msg.value);
     };
     // A worker that fails to load or run fails its calls rather than leaving them waiting.
@@ -45,7 +45,7 @@ export class WorkerClient {
 
   call<T>(op: string, args: object, transfer: Transferable[] = []): Promise<T> {
     const w = this.#worker;
-    if (!w) return Promise.reject(new Error(`moon-map: ${this.#name}: the worker has not been started`));
+    if (!w) return Promise.reject(new Error(`mbt-map: ${this.#name}: the worker has not been started`));
     const id = this.#next++;
     return new Promise<T>((resolve, reject) => {
       this.#pending.set(id, { resolve, reject });
@@ -62,7 +62,7 @@ export class WorkerClient {
     this.#worker?.terminate();
     this.#worker = null;
     this.#generation++;
-    for (const p of this.#pending.values()) p.reject(new Error(`moon-map: ${this.#name}: ${why}`));
+    for (const p of this.#pending.values()) p.reject(new Error(`mbt-map: ${this.#name}: ${why}`));
     this.#pending.clear();
   }
 }

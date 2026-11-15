@@ -3,13 +3,13 @@
 // d3-delaunay over a dataset's table, computing with the host's Math.
 
 import {
-  "t-ujiie-g/moonmap_engine/core",
-  "t-ujiie-g/moonmap_engine/delaunay",
-  "t-ujiie-g/moonmap_engine/geom",
-  "t-ujiie-g/moonmap_engine/hull",
-  "t-ujiie-g/moonmap_engine/lineops",
-  "t-ujiie-g/moonmap_engine/simplify",
-  "t-ujiie-g/moonmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/delaunay",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/hull",
+  "t-ujiie-g/mbtmap_engine/lineops",
+  "t-ujiie-g/mbtmap_engine/simplify",
+  "t-ujiie-g/mbtmap_engine/wasmio",
 }
 
 supported_targets = "+wasm-gc"

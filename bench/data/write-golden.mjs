@@ -1,4 +1,4 @@
-// moon-map/data's CSV and KML vs papaparse 5.7.0's `unparse` (WKT by betterknown 1.2.0) and tokml 0.4.0's
+// mbt-map/data's CSV and KML vs papaparse 5.7.0's `unparse` (WKT by betterknown 1.2.0) and tokml 0.4.0's
 // `toKML` of the table's `toGeoJSON`, on GSI features (国土地理院ベクトルタイル提供実験) and hand-written
 // cases, byte for byte. Usage: node data/write-golden.mjs; writes bench/results/write-golden.json.
 import { readFile, writeFile } from "node:fs/promises";

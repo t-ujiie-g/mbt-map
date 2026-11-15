@@ -1,4 +1,4 @@
-// The showcase's attribute table (moon-map/ui's createAttributeTable over the places' source): sorted,
+// The showcase's attribute table (mbt-map/ui's createAttributeTable over the places' source): sorted,
 // filtered (folded as the search folds), paged, a row's click selecting and fitting to the place;
 // columns added by expression and function with createFieldEditor, renamed and removed.
 import { awaitAfter, openTab } from "./step.mjs";

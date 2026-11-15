@@ -1,5 +1,5 @@
 // The world's standard map on a globe, for the pack test's globe check (bench/npm/checks/globe.mjs).
-import { Map } from "moon-map";
+import { Map } from "mbt-map";
 
 const map = new Map({
   container: "map",

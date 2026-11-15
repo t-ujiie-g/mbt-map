@@ -1,6 +1,6 @@
-// GIS Web services read with moon-map/services and drawn over the map: the layers of a WMS or WMTS (another CRS's
+// GIS Web services read with mbt-map/services and drawn over the map: the layers of a WMS or WMTS (another CRS's
 // reprojected), an ArcGIS MapServer, ImageServer or VectorTileServer, and an ArcGIS layer's features.
-import { allLayers, arcgisFeatures, arcgisService, arcgisSource, getCapabilities, wmsSource, wmtsSource } from "moon-map/services";
+import { allLayers, arcgisFeatures, arcgisService, arcgisSource, getCapabilities, wmsSource, wmtsSource } from "mbt-map/services";
 import { datasetLayers, datasetSource, datasets, firstVectorOverlay, serviceLayer, serviceLayers, tileUrl } from "./style.js";
 
 const SAMPLE = new URL("../shared/services/gsi-wmts.xml", location.href).href;

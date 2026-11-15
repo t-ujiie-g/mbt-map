@@ -1,4 +1,4 @@
-// Draws scenes with moonmap and MapLibre GL JS 6.16.0 in Chromium (bench/query/index.html: the same
+// Draws scenes with mbtmap and MapLibre GL JS 6.16.0 in Chromium (bench/query/index.html: the same
 // style and camera on both) and compares them pixel by pixel: each scene's per-channel mean and
 // 99th percentile (0-255) against its limits. Shared by style/golden.mjs and style/public.mjs.
 import { mkdir, writeFile } from "node:fs/promises";
@@ -28,7 +28,7 @@ export async function compareScenes(scenes, { only, shots, dir = "bench/dist/sty
       const shot = (y) => page.screenshot({ clip: { x: 0, y, width: 800, height: 600 } });
       const [pa, pb] = [await shot(0), await shot(600)];
       if (shots) {
-        await writeFile(path.join(shots, `${name}-moonmap.png`), pa);
+        await writeFile(path.join(shots, `${name}-mbtmap.png`), pa);
         await writeFile(path.join(shots, `${name}-maplibre.png`), pb);
       }
       const [a, b] = [decodePng(pa), decodePng(pb)];

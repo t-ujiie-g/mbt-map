@@ -4,7 +4,7 @@
 
 import { MAX_ZOOM_LIMIT, MIN_ZOOM } from "./camera.ts";
 
-/** A MapLibre style document; anything moonmap cannot draw faithfully is an error. */
+/** A MapLibre style document; anything mbtmap cannot draw faithfully is an error. */
 export interface StyleSpecification {
   version: 8;
   sources: Record<string, unknown>;
@@ -32,7 +32,7 @@ function layers(style: StyleSpecification): LayerSpecification[] {
 
 function indexOf(style: StyleSpecification, id: string): number {
   const i = layers(style).findIndex((l) => l.id === id);
-  if (i < 0) throw new Error(`moon-map: the style has no layer "${id}"`);
+  if (i < 0) throw new Error(`mbt-map: the style has no layer "${id}"`);
   return i;
 }
 
@@ -87,10 +87,10 @@ export function invalidCustomLayer(layer: { id?: unknown; render?: unknown; rend
 
 /** Adds `layer` before the layer `beforeId` names, or on top. */
 export function addLayer(style: StyleSpecification, layer: LayerSpecification, beforeId?: string): StyleSpecification {
-  if (typeof layer?.id !== "string" || typeof layer.type !== "string") throw new Error("moon-map: a layer needs an id and a type");
-  if (getLayer(style, layer.id)) throw new Error(`moon-map: the style already has a layer "${layer.id}"`);
+  if (typeof layer?.id !== "string" || typeof layer.type !== "string") throw new Error("mbt-map: a layer needs an id and a type");
+  if (getLayer(style, layer.id)) throw new Error(`mbt-map: the style already has a layer "${layer.id}"`);
   if (layer.type !== "background" && layer.type !== "custom" && !(typeof layer.source === "string" && hasSource(style, layer.source))) {
-    throw new Error(`moon-map: layer "${layer.id}": the style has no source "${String(layer.source)}"`);
+    throw new Error(`mbt-map: layer "${layer.id}": the style has no source "${String(layer.source)}"`);
   }
   const next = [...layers(style)];
   next.splice(beforeId === undefined ? next.length : indexOf(style, beforeId), 0, copy(layer));
@@ -156,7 +156,7 @@ export function getFilter(style: StyleSpecification, id: string): unknown {
 
 /** Shows layer `id` only from zoom `minzoom` up to `maxzoom`. */
 export function setLayerZoomRange(style: StyleSpecification, id: string, minzoom: number, maxzoom: number): StyleSpecification {
-  if (!(minzoom >= MIN_ZOOM && maxzoom <= MAX_ZOOM_LIMIT && minzoom <= maxzoom)) throw new RangeError("moon-map: a layer's zoom range must lie in 0-24, min not above max");
+  if (!(minzoom >= MIN_ZOOM && maxzoom <= MAX_ZOOM_LIMIT && minzoom <= maxzoom)) throw new RangeError("mbt-map: a layer's zoom range must lie in 0-24, min not above max");
   return withLayer(style, id, (l) => ({ ...l, minzoom, maxzoom }));
 }
 
@@ -176,17 +176,17 @@ export function sourceOf(style: StyleSpecification, id: string): unknown {
 }
 
 export function addSource(style: StyleSpecification, id: string, source: unknown): StyleSpecification {
-  if (hasSource(style, id)) throw new Error(`moon-map: the style already has a source "${id}"`);
-  if (typeof (source as { type?: unknown })?.type !== "string") throw new Error(`moon-map: source "${id}" needs a type`);
+  if (hasSource(style, id)) throw new Error(`mbt-map: the style already has a source "${id}"`);
+  if (typeof (source as { type?: unknown })?.type !== "string") throw new Error(`mbt-map: source "${id}" needs a type`);
   return { ...style, sources: { ...style.sources, [id]: copy(source) } };
 }
 
 /** Removes source `id`; throws while a layer or the terrain uses it, as MapLibre refuses to. */
 export function removeSource(style: StyleSpecification, id: string): StyleSpecification {
-  if (!hasSource(style, id)) throw new Error(`moon-map: the style has no source "${id}"`);
+  if (!hasSource(style, id)) throw new Error(`mbt-map: the style has no source "${id}"`);
   const user = layers(style).find((l) => l.source === id);
-  if (user) throw new Error(`moon-map: source "${id}" is used by layer "${user.id}"`);
-  if ((style.terrain as { source?: unknown } | undefined)?.source === id) throw new Error(`moon-map: source "${id}" is used by the terrain`);
+  if (user) throw new Error(`mbt-map: source "${id}" is used by layer "${user.id}"`);
+  if ((style.terrain as { source?: unknown } | undefined)?.source === id) throw new Error(`mbt-map: source "${id}" is used by the terrain`);
   const { [id]: _, ...sources } = style.sources;
   return { ...style, sources };
 }
@@ -194,7 +194,7 @@ export function removeSource(style: StyleSpecification, id: string): StyleSpecif
 /** Replaces the GeoJSON `data` of source `id`. */
 export function setSourceData(style: StyleSpecification, id: string, data: unknown): StyleSpecification {
   const source = sourceOf(style, id) as { type?: unknown } | undefined;
-  if (source?.type !== "geojson") throw new Error(`moon-map: source "${id}" is not a GeoJSON source`);
+  if (source?.type !== "geojson") throw new Error(`mbt-map: source "${id}" is not a GeoJSON source`);
   return { ...style, sources: { ...style.sources, [id]: { ...source, data: copy(data) } } };
 }
 

@@ -1,7 +1,7 @@
 import {
-  "t-ujiie-g/moonmap",
-  "t-ujiie-g/moonmap/expr",
-  "t-ujiie-g/moonmap/style",
+  "t-ujiie-g/mbtmap",
+  "t-ujiie-g/mbtmap/expr",
+  "t-ujiie-g/mbtmap/style",
 }
 
 supported_targets = "js"

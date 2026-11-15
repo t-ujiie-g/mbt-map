@@ -9,7 +9,7 @@
     "gdal": "GDAL 3.13.3 \"Iowa City\", released 2026/08/13",
     "runs": 5,
     "statistic": "median of runs after one warm-up run each",
-    "columns": "js: GDAL net, the GTiff run's wall clock minus the 2 x 2 run's (baseline); gdalWall / gdalCpu: the GTiff run's wall clock and user + sys; gdalMemWall: wall clock writing to the MEM driver; moonmap: the window of cells the viewshed reads, those cells out of analysis.wasm, into viewshed.wasm, the call and its output read (one thread); exportOnly: the cells copied into viewshed.wasm and the call, its output not read",
+    "columns": "js: GDAL net, the GTiff run's wall clock minus the 2 x 2 run's (baseline); gdalWall / gdalCpu: the GTiff run's wall clock and user + sys; gdalMemWall: wall clock writing to the MEM driver; mbtmap: the window of cells the viewshed reads, those cells out of analysis.wasm, into viewshed.wasm, the call and its output read (one thread); exportOnly: the cells copied into viewshed.wasm and the call, its output not read",
     "baseline": {
       "wall": 133.8799160000001,
       "cpu": 120
@@ -18,7 +18,7 @@
   "rows": {
     "viewshed 1024 x 1024, no range (450429 visible cells)": {
       "js": 20.5,
-      "moon-map": 45.6,
+      "mbt-map": 45.6,
       "exportOnly": 42.2,
       "gdalWall": 154.4,
       "gdalCpu": 160,
@@ -27,7 +27,7 @@
     },
     "viewshed 1024 x 1024, 5000 m range (8031 visible cells)": {
       "js": 2.53,
-      "moon-map": 3.38,
+      "mbt-map": 3.38,
       "exportOnly": 3.25,
       "gdalWall": 136.4,
       "gdalCpu": 130,
@@ -36,7 +36,7 @@
     },
     "viewshed 4096 x 4096, no range (3854904 visible cells)": {
       "js": 342.5,
-      "moon-map": 650.4,
+      "mbt-map": 650.4,
       "exportOnly": 651.9,
       "gdalWall": 476.4,
       "gdalCpu": 500,
@@ -45,7 +45,7 @@
     },
     "viewshed 4096 x 4096, 5000 m range (8031 visible cells)": {
       "js": 4.03,
-      "moon-map": 3.59,
+      "mbt-map": 3.59,
       "exportOnly": 3.25,
       "gdalWall": 137.9,
       "gdalCpu": 130,

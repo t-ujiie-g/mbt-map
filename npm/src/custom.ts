@@ -18,10 +18,10 @@ export interface CustomRenderMethodInput {
   projectionMatrix: Float64Array;
   shaderData: { variantName: string; vertexShaderPrelude: string; define: string };
   defaultProjectionData: ProjectionData;
-  /** moonmap's: the style's `lights`, colors times intensities and the direction toward the directional light (east, north, up). */
+  /** mbtmap's: the style's `lights`, colors times intensities and the direction toward the directional light (east, north, up). */
   lights?: { ambient: Float64Array; directional: Float64Array; direction: Float64Array };
   /**
-   * moonmap's: the lights' shadows or a viewshed: the shadow map (texture unit 7, a depth texture to compare with) is
+   * mbtmap's: the lights' shadows or a viewshed: the shadow map (texture unit 7, a depth texture to compare with) is
    * the light's clip space from Mercator 0 to 1 (`mercator`, z as `mainMatrix`'s; `mode` 1, or 3 for a viewshed's
    * perspective) or from the unit sphere (`sphere`, mode 2); `intensity` how dark (a viewshed's tint), `texel` one texel's depth.
    */
@@ -52,7 +52,7 @@ export interface CustomLayerInterface {
   prerender?(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void;
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void;
   /**
-   * moonmap's: draws the layer's shadow casters into the bound shadow map (depth only), `options`' matrices being the
+   * mbtmap's: draws the layer's shadow casters into the bound shadow map (depth only), `options`' matrices being the
    * light's; on the globe use those matrices, not `shaderData`'s prelude, which projects for the camera.
    */
   renderShadow?(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void;

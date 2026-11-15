@@ -10,7 +10,7 @@ const put = (e, bytes) => {
 
 // The style as the main thread hands it to display workers (docs/FORMATS.md "Compiled style").
 async function compiledStyle(fetchBytes) {
-  const { instance } = await WebAssembly.instantiate(await fetchBytes("_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/bench/worker/compile_entry/compile_entry.wasm"), {});
+  const { instance } = await WebAssembly.instantiate(await fetchBytes("_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/bench/worker/compile_entry/compile_entry.wasm"), {});
   const c = instance.exports;
   put(c, await fetchBytes("bench/maplibre/style.json"));
   const n = c.compile_style();
@@ -19,7 +19,7 @@ async function compiledStyle(fetchBytes) {
 }
 
 export async function loadWorker(fetchBytes) {
-  const { instance } = await WebAssembly.instantiate(await fetchBytes("_build/wasm-gc/release/build/t-ujiie-g/moonmap_engine/worker/worker.wasm"), { host: hostText(), Math });
+  const { instance } = await WebAssembly.instantiate(await fetchBytes("_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/worker/worker.wasm"), { host: hostText(), Math });
   const e = instance.exports;
   put(e, await compiledStyle(fetchBytes));
   if (e.init_style() !== 0) throw new Error("style failed");
