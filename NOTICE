@@ -645,6 +645,32 @@ under the Apache License 2.0 are under the terms in LICENSE.
     All rights reserved.
     License: BSD 2-Clause License (text in section 2).
 
+- npm/src/services/gml.ts, wms.ts and common.ts: written to read capabilities, GML
+  and feature info as OpenLayers 10.11.0 does (ol/format/GMLBase, WMSCapabilities,
+  WMTSCapabilities, source/TileWMS, ImageWMS)
+  https://github.com/openlayers/openlayers — BSD 2-Clause License:
+
+    Copyright 2005-present, OpenLayers Contributors
+    All rights reserved.
+
+    License: BSD 2-Clause License (text in section 2).
+
+- npm/src/draw/shapes.ts, edit.ts and controller.ts: the drawing modes' behaviour
+  and thresholds follow terra-draw 1.37.0
+  https://github.com/JamesLMilner/terra-draw — MIT License:
+
+    Copyright 2022 James Milner
+
+    License: MIT License (text in section 2).
+
+- core/matrix.mbt, globe/vec.mbt and npm/src/i3s/scene.ts: matrix and vector
+  operations computed as gl-matrix 3.4 does (mat4, vec3, quat)
+  https://github.com/toji/gl-matrix — MIT License:
+
+    Copyright (c) 2015-2025, Brandon Jones, Colin MacKenzie IV.
+
+    License: MIT License (text in section 2).
+
 ================================================================================
 2. License texts
 ================================================================================
