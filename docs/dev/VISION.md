@@ -142,8 +142,8 @@ MapLibre GL JS の API に**名前と形を寄せる**（移行しやすくす�
 
 | 段階 | 内容 | 完了条件 |
 |---|---|---|
-| 0.1.0 | 最初の公開：npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap` と `t-ujiie-g/mbtmap_rabbita` を同じ版で出す | [RELEASING.md](RELEASING.md) の「初めての公開」 |
-| 公開のあと | 単独で使える移植（`mvt`、geojson-vt の移植 `tiler`、`proj` など）を mooncakes のパッケージとして出す | 範囲は始めるときに決める |
+| 0.1.0 | 最初の公開：npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap` と `t-ujiie-g/mbtmap_rabbita` を同じ版で出す | 済（2026-11-15） |
+| 次 | 単独で使える移植（`mvt`、geojson-vt の移植 `tiler`、`proj` など）を mooncakes のパッケージとして出す | 範囲は始めるときに決める |
 | Phase 21 | 時間・比較・印刷：時刻つきデータの絞り込み（タイムスライダーのコントローラ）、2 つの地図の比較（スワイプ、並べて同期）、概観図、ブックマーク、印刷（ヘッドレスな印刷のコントローラ：用紙・縮尺・解像度を指定し、タイトル・凡例・縮尺・方位記号・出典を配置して、Wasm で PDF を作る。地図は画像で貼るか、線と面をベクトルのまま書く。ベクトルのラベルは使う文字だけのフォントを埋め込む） | A3・300dpi の PDF を作る example。PDF の生成に MoonBit のライブラリを使うなら、§7 と AGENTS.md §8.1 の確認をしてから |
 | 以降 | §5 の「後回し」 | 需要を見て判断 |
 
