@@ -27,3 +27,10 @@ Where things stand, decisions and open issues. The development history before th
 - 大きくなる理由：MoonBit が生成する JS は構造が長い（ラベル付きのブロックと一時変数、`Map` の反復ごとのイテレーターのオブジェクト、`Map` のリテラルの包み、`Option` と `raise` の `Result` の分岐）。最小化しても名前が縮むだけ。ジェネリックな `Map` の値の型を増やすとその型の写しが入る（3 つやめて −1.3KB）。`@json.parse`・`stringify` を使うと +28KB（エンジンは JS の `JSON.parse` から組み立て用の関数で `Json` を作り、MoonBit の JSON の読み書きを持たない）。
 - 大きさ重視の書き方を試した（#4 の後）：文字列の埋め込みを `+` の連結に −0.13KB、一番大きい関数（`engine`、`web` の 2 割）をイテレーターや `Map` のリテラルを使わない形に −0.47KB。全体でも −2KB 前後の見込みで、TS の約 3.5 倍にとどまる。
 - 判断（ユーザー）：中身は TS のまま、MoonBit には型付きの API。#4 を戻し（revert）、表示（メイン）の予算を 163KB に戻した。MoonBit で書いた処理をメインの束に入れるのは、MoonBit でしか書けない重い処理（描画のエンジンなど）に限るのがよい。
+
+## M2：MoonBit の API の土台（2026-11-15、Mac）
+
+- npm に `moon-map/moonbit`（`createMap`、0.1KB。MoonBit の `#module` の import は関数として呼ぶので、コンストラクタを関数で渡す）。
+- `t-ujiie-g/moonmap`（`moonbit/moonmap/`、js 専用）：`Map::new(container, style=Url(..) | Spec(json), center?, zoom?, bearing?, pitch?, 範囲, interactive?, attribution?)`、カメラ（`center`・`zoom`・`bearing`・`pitch`、`jump_to`・`ease_to`・`fly_to`・`fit_bounds`、`project`・`unproject`）、スタイル（`set_style`・`style`、ソースと層の追加・削除・移動、`layer_ids`、`set_paint`・`set_layout`・`set_filter`、`set_data`、`set_feature_state`）、イベント（`EventType` の enum、型付きの `Event` と `Feature`、`on`・`on_layer` が返す `Listener::off`）、`query_rendered_features`（Promise をコールバックに）。JS のメソッドは汎用の `js_call` 1 つを通す。パッケージの中では使う人向けの `Map` が標準の `Map` を隠すので、標準のは `@builtin.Map` と書く。
+- 確かめ：`bench/moonbit/app`（モジュール `t-ujiie-g/moonmap_check`）が MoonBit だけで地図を作り、読み込みでソースと層を足し、落ち着いたら中心の地物を問い合わせ、`paint` とカメラを変え、イベントの受け取りを外す。pack test の `moonbit` が結果を確かめる（20 項目）。`Idle` は `Load` の直後にも来る（MapLibre と同じ）ので、足した層を問い合わせるのはその次の `Idle`（`EventType` の説明に書いた）。
+- `moon info` は js 専用のパッケージに `.mbti` を書かない（mooncakes に出すときに扱う）。

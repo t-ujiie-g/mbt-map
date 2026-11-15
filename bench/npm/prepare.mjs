@@ -21,7 +21,9 @@ export async function prepareExamples() {
     await mkdir(modules, { recursive: true });
     run("tar", ["xzf", path.join(out, filename), "--strip-components=1", "-C", modules], ROOT);
   };
-  for (const page of ["npm", "element", "geojson", "analysis", "data", "media", "custom", "model", "tiles", "pointcloud", "i3s", "globe", "services"]) await install(`bench/npm/pages/${page}`);
+  for (const page of ["npm", "element", "geojson", "analysis", "data", "media", "custom", "model", "tiles", "pointcloud", "i3s", "globe", "services", "moonbit"]) await install(`bench/npm/pages/${page}`);
+  // The MoonBit app the moonbit page runs, on the MoonBit API (moonbit/moonmap).
+  run("moon", ["build", "--target", "js", "--release", "bench/moonbit/app"], ROOT);
   await install("examples/html");
   await install("examples/element");
   await install("examples/plateau");

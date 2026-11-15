@@ -1,0 +1,11 @@
+import {
+  "t-ujiie-g/moonmap",
+}
+
+supported_targets = "js"
+
+pkgtype(kind: "executable")
+
+options(
+  link: { "js": { "format": "esm" } },
+)

@@ -60,6 +60,11 @@
       "budget": 5000
     },
     {
+      "name": "moon-map/moonbit (the MoonBit API's entry, on top of moonmap)",
+      "bytes": 100,
+      "budget": 500
+    },
+    {
       "name": "moon-map/ui (every controller)",
       "bytes": 9347,
       "budget": 10000
