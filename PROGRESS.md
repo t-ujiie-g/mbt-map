@@ -96,3 +96,8 @@ Where things stand, decisions and open issues. The development history before th
 - 日本語のまま残したもの（データだから）：地名・駅名、地点の `kind`（駅・名所・山）、国土地理院のベクトルタイルと PLATEAU の属性の値と鍵、サンプルの CSV、同梱した WMTS の文書の名前（地理院タイル、淡色地図）、平面直角座標系の系の名前（`第IX系`。`mbt-map/search` が読む書き方で、検索のプロバイダの出力とも同じ）、出典の文言（国土地理院と PLATEAU の求める書き方）。PLATEAU の属性の表示名は英語（Name、Usage、Measured height など）。例が作る列は英語の名前にした（`area`、`area_km2`、印は `Marker N`）。
 - rabbita の例（MoonBit）は対象の外で、日本語のまま。
 - pack test の画面の文字を見る確かめ（`pack-test.mjs`、`checks/` の analyze、geo-tools、plateau、search、table、showcase-data、showcase-services）を英語の文言に合わせた。
+
+## 出典の HTML（2026-11-15、Mac）
+
+- サンプルを書くエージェントが見つけた：OpenFreeMap のように出典を HTML（`<a href>`）で書くスタイルでは、出典の欄にタグがそのまま文字で出た（安全のため `textContent` で入れていた）。
+- 直し：`attributionParts`（`npm/src/attribution.ts`、DOM を使わない小さな読み取り）が文字と http(s) のリンクだけを取り出し、ほかのタグは落とし、文字参照を戻す。地図の出典の欄はそれを文字とリンク（`target="_blank"`、`rel="noopener noreferrer"`）で組み立てる。HTML としては一切解釈しない。`mbt-map/ui` の `createAttribution` の `items` はタグを落とした文字にした。

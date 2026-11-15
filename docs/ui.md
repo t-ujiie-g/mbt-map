@@ -108,7 +108,7 @@ The sources' attribution texts, for drawing them yourself. Turn the map's own at
 
 | State | Description |
 |---|---|
-| `items` | The attribution texts as plain text, `customAttribution` first. |
+| `items` | The attribution texts as plain text (tags of attributions written as HTML dropped), `customAttribution` first. |
 | `text` | `items` joined with `" | "`. |
 
 ## Geolocation: `createGeolocation(map, options)`
