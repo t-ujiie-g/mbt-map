@@ -25,7 +25,10 @@
   #feature tr + tr > * { border-top: 1px solid var(--line); }
   #feature details { margin-top: 8px; font-size: 12.5px; }
   .credit { position: absolute; right: 0; bottom: 0; max-width: 70%; padding: 2px 8px; font-size: 11px; color: var(--muted); background: rgb(255 255 255 / 0.85); }
-  @media (max-width: 600px) { .panel { top: auto; bottom: 40px; left: 8px; right: 8px; width: auto; max-height: 45%; } }
+  @media (max-width: 600px) {
+    .panel { top: auto; bottom: 8px; left: 8px; right: 8px; width: auto; max-height: 45%; }
+    .credit { top: 0; bottom: auto; left: 0; max-width: none; }
+  }
 </style>
 <!-- `npm --prefix bench run examples` installs the packed package into ./node_modules. -->
 <script type="importmap">

@@ -10,6 +10,12 @@ export const TABS = [["explore", "Explore"], ["layers", "Layers"], ["draw", "Dra
 /** The three ways the showcase is written as [path, label]. */
 export const VARIANTS = [["html", "HTML"], ["element", "Element"], ["react", "React"]];
 
+/** The variants to link: all of them, or those the page's `data-variants` names (the site publishes fewer). */
+export function variants() {
+  const published = document.documentElement.dataset.variants?.split(",");
+  return published ? VARIANTS.filter(([path]) => published.includes(path)) : VARIANTS;
+}
+
 const TAB_BODIES = {
   explore: `
     <h2>Go to</h2><div id="destinations" class="chips"></div>
@@ -56,19 +62,19 @@ export function mountShell(current) {
   const brand = document.createElement("header");
   brand.className = "brand";
   const logo = Object.assign(document.createElement("a"), { className: "logo", href: "../", textContent: "mbt-map" });
-  const variants = document.createElement("nav");
-  variants.className = "variants";
-  variants.setAttribute("aria-label", "Variants");
-  for (const [path, label] of VARIANTS) {
+  const links = document.createElement("nav");
+  links.className = "variants";
+  links.setAttribute("aria-label", "Variants");
+  for (const [path, label] of variants()) {
     const a = Object.assign(document.createElement("a"), { href: `../${path}/`, textContent: label });
     if (path === current) a.setAttribute("aria-current", "page");
-    variants.append(a);
+    links.append(a);
   }
   const collapse = Object.assign(document.createElement("button"), { className: "collapse", title: "Collapse the panel" });
   collapse.setAttribute("aria-label", "Collapse the panel");
   collapse.append(icon("chevron"));
   collapse.addEventListener("click", () => card.classList.toggle("collapsed"));
-  brand.append(logo, variants, collapse);
+  brand.append(logo, links, collapse);
 
   const search = Object.assign(document.createElement("div"), { id: "search" });
   const tabs = document.createElement("div");

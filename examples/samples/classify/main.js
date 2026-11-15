@@ -26,6 +26,7 @@ const map = new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院",
       },
@@ -50,6 +51,9 @@ map.getSource("cells").setData(data);
 const legend = document.getElementById("legend");
 const method = document.getElementById("method");
 
+/** A break as the legend shows it: one decimal at most. */
+const round = (v) => Number(v.toFixed(1));
+
 function classify() {
   const breaks = classBreaks(count, COLORS.length, method.value);
   map.setPaintProperty("cells", "fill-color", classStep(["get", "count"], breaks, COLORS));
@@ -58,7 +62,7 @@ function classify() {
       const swatch = document.createElement("i");
       swatch.style.background = color;
       const label = document.createElement("span");
-      label.textContent = `${breaks[i]} – ${breaks[i + 1]}`;
+      label.textContent = `${round(breaks[i])} – ${round(breaks[i + 1])}`;
       return [swatch, label];
     }),
   );

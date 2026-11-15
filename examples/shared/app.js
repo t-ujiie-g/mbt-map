@@ -27,6 +27,7 @@ export function mountApp(map, status, applyStyle) {
   let places = PLACES;
   let plane = null;
   let pending = 0;
+  let beforeGlobe = null;
 
   // The features under a click (from the workers that hold the geometry) unless it measures or draws.
   let draw = null;
@@ -74,9 +75,11 @@ export function mountApp(map, status, applyStyle) {
   document.getElementById("modes").addEventListener("click", (e) => {
     const next = e.target.dataset?.mode;
     if (!next || next === mode) return;
+    if (next === "globe") beforeGlobe = { center: map.getCenter(), zoom: map.getZoom() };
+    const back = mode === "globe" ? beforeGlobe : null;
     mode = next;
     applyStyle(createStyle(mode, panel.hidden(), places, panel.basemaps.state.active ?? "map"));
-    map.easeTo(modeEase(mode, map.getZoom()));
+    map.easeTo(modeEase(mode, map.getZoom(), back));
     showButtons();
   });
   document.getElementById("destinations").replaceChildren(

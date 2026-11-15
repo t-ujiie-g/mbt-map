@@ -35,6 +35,7 @@ new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院",
       },

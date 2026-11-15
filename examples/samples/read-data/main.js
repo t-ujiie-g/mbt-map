@@ -20,6 +20,7 @@ const map = new Map({
         type: "raster",
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
+        minzoom: 2,
         maxzoom: 18,
         attribution: "国土地理院",
       },
@@ -61,7 +62,7 @@ async function show(reading, name) {
     map.getSource("data").setData(data);
     const box = bounds(data);
     if (box) map.fitBounds(box, { padding: 60, maxZoom: 15 });
-    status.textContent = `${name}: ${table.length} rows (${table.format})\ncolumns: ${table.columns.join(", ")}`;
+    status.textContent = `${name}: ${table.length} row${table.length === 1 ? "" : "s"} (${table.format})\ncolumns: ${table.columns.join(", ")}`;
   } catch (e) {
     status.textContent = `${name}: ${e.message}`;
   }
