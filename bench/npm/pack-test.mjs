@@ -15,6 +15,7 @@ import { customChecks } from "./checks/custom.mjs";
 import { modelChecks } from "./checks/model.mjs";
 import { moonbitChecks } from "./checks/moonbit.mjs";
 import { rabbitaChecks } from "./checks/rabbita.mjs";
+import { samplesChecks } from "./checks/samples.mjs";
 import { tilesChecks } from "./checks/tiles.mjs";
 import { plateauChecks } from "./checks/plateau.mjs";
 import { pointCloudChecks } from "./checks/pointcloud.mjs";
@@ -68,6 +69,7 @@ const PAGES = {
   "showcase-react": "examples/react/?local=1",
   plateau: "examples/plateau/?local=1",
   rabbita: "examples/rabbita/?local=1",
+  samples: "examples/samples/",
 };
 
 // Each check runs in a fresh page and returns [name, ok, details].
@@ -503,6 +505,10 @@ const checks = {
 
   async rabbita(page) {
     return rabbitaChecks(page);
+  },
+
+  async samples(page) {
+    return samplesChecks(page);
   },
 
   async services(page, requests) {
