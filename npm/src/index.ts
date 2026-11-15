@@ -717,7 +717,7 @@ export class Map {
   }
 
   /**
-   * Sets the style's `lights` (mbtmap's, with Mapbox's names): an `ambient` and a `directional` light,
+   * Sets the style's `lights` (mbt-map's, with Mapbox's names): an `ambient` and a `directional` light,
    * `{id, type, properties: {color, intensity, direction?: [azimuthal, polar]}}`, which light extrusions
    * and mbt-map/3d's layers in place of `light`; null removes them. `timeOfDayLights` gives them for a moment and place.
    */
@@ -993,7 +993,7 @@ export class Map {
   /**
    * The features drawn at a point or in a box (`[[x0, y0], [x1, y1]]`, CSS pixels; the whole map
    * when left out), topmost first, as MapLibre's `queryRenderedFeatures` finds them. A Promise:
-   * the workers hold the geometry. Rejects on a filter mbtmap cannot evaluate.
+   * the workers hold the geometry. Rejects on a filter mbt-map cannot evaluate.
    */
   queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): Promise<MapGeoJSONFeature[]> {
     const { geometry, options: o } = queryArgs(geometryOrOptions, options);
@@ -1384,7 +1384,7 @@ export class Map {
   }
 
   /**
-   * mbtmap's: the longitude, latitude and height (meters) of what is drawn under `point`: extrusions, 3D
+   * mbt-map's: the longitude, latitude and height (meters) of what is drawn under `point`: extrusions, 3D
    * layers, terrain, else sea level (on the globe, its ground); null if nothing. From the last frame's tiles.
    */
   pickPosition(point: PointLike): [number, number, number] | null {
@@ -1394,7 +1394,7 @@ export class Map {
   }
 
   /**
-   * mbtmap's: where the segment from `from` to `to` ([longitude, latitude, meters]) first meets what is drawn
+   * mbt-map's: where the segment from `from` to `to` ([longitude, latitude, meters]) first meets what is drawn
    * (as `pickPosition` sees it), stopping `margin` meters (default 0.1) short of `to`; null if nothing is in the way.
    */
   castRay(from: [number, number, number], to: [number, number, number], margin = 0.1): [number, number, number] | null {
@@ -1404,7 +1404,7 @@ export class Map {
   }
 
   /**
-   * mbtmap's: tints what is seen (green) and hidden (red) from `position` ([lng, lat, m]) toward `heading`
+   * mbt-map's: tints what is seen (green) and hidden (red) from `position` ([lng, lat, m]) toward `heading`
    * and `pitch`, `horizontalFov` by `verticalFov` (degrees; 0, 0, 90, 60) and `distance` m (500), instead of shadows.
    */
   setViewshed(v: { position: [number, number, number]; heading?: number; pitch?: number; horizontalFov?: number; verticalFov?: number; distance?: number } | null): this {
@@ -1418,7 +1418,7 @@ export class Map {
   }
 
   /**
-   * mbtmap's, as CesiumJS's clipping planes and polygons, on extrusions and mbt-map/3d's layers (`Clipping` in clipping.ts
+   * mbt-map's, as CesiumJS's clipping planes and polygons, on extrusions and mbt-map/3d's layers (`Clipping` in clipping.ts
    * says what it keeps); null clears it.
    */
   setClipping(c: Clipping | null): this {

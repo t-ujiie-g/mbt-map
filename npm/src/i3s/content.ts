@@ -103,7 +103,7 @@ export function nodeResources(layer: I3sLayer, node: I3sNode): { geometry?: stri
   };
 }
 
-/** A material definition as mbtmap draws it (I3S colors are 0 to 1, alpha modes lowercase; alphaCutoff 0.25 by default as loaders.gl). */
+/** A material definition as mbt-map draws it (I3S colors are 0 to 1, alpha modes lowercase; alphaCutoff 0.25 by default as loaders.gl). */
 export function materialOf(layer: I3sLayer, definition: number | undefined, textured: boolean): Material {
   const md = (definition === undefined ? undefined : layer.materialDefinitions?.[definition]) ?? {};
   const f = md.pbrMetallicRoughness?.baseColorFactor;

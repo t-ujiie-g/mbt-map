@@ -1,0 +1,69 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/mbtmap/style"
+
+import {
+  "moonbitlang/core/json",
+  "t-ujiie-g/mbtmap/expr",
+}
+
+// Values
+pub fn background(String, minzoom? : Double, maxzoom? : Double, background_color? : @expr.Expr, background_pattern? : @expr.Expr, background_opacity? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn circle(String, source~ : String, source_layer? : String, filter? : @expr.Expr, minzoom? : Double, maxzoom? : Double, circle_radius? : @expr.Expr, circle_color? : @expr.Expr, circle_blur? : @expr.Expr, circle_opacity? : @expr.Expr, circle_translate? : @expr.Expr, circle_translate_anchor? : @expr.Expr, circle_pitch_scale? : @expr.Expr, circle_pitch_alignment? : @expr.Expr, circle_stroke_width? : @expr.Expr, circle_stroke_color? : @expr.Expr, circle_stroke_opacity? : @expr.Expr, circle_sort_key? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn color_relief(String, source~ : String, minzoom? : Double, maxzoom? : Double, color_relief_opacity? : @expr.Expr, color_relief_color? : @expr.Expr, resampling? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn fill(String, source~ : String, source_layer? : String, filter? : @expr.Expr, minzoom? : Double, maxzoom? : Double, fill_antialias? : @expr.Expr, fill_opacity? : @expr.Expr, fill_layer_opacity? : @expr.Expr, fill_layer_blend? : @expr.Expr, fill_color? : @expr.Expr, fill_outline_color? : @expr.Expr, fill_translate? : @expr.Expr, fill_translate_anchor? : @expr.Expr, fill_pattern? : @expr.Expr, fill_sort_key? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn fill_extrusion(String, source~ : String, source_layer? : String, filter? : @expr.Expr, minzoom? : Double, maxzoom? : Double, fill_extrusion_opacity? : @expr.Expr, fill_extrusion_color? : @expr.Expr, fill_extrusion_translate? : @expr.Expr, fill_extrusion_translate_anchor? : @expr.Expr, fill_extrusion_pattern? : @expr.Expr, fill_extrusion_height? : @expr.Expr, fill_extrusion_base? : @expr.Expr, fill_extrusion_vertical_gradient? : @expr.Expr, visibility? : @expr.Expr, fill_extrusion_rounded_corner_distance? : @expr.Expr) -> Layer
+
+pub fn geojson_source(data~ : @json.Json, maxzoom? : Double, attribution? : String, buffer? : Double, filter? : @json.Json, tolerance? : Double, cluster? : Bool, cluster_radius? : Double, cluster_max_zoom? : Double, cluster_min_points? : Double, cluster_properties? : @json.Json, line_metrics? : Bool, generate_id? : Bool, promote_id? : @json.Json) -> Source
+
+pub fn heatmap(String, source~ : String, source_layer? : String, filter? : @expr.Expr, minzoom? : Double, maxzoom? : Double, heatmap_radius? : @expr.Expr, heatmap_weight? : @expr.Expr, heatmap_intensity? : @expr.Expr, heatmap_color? : @expr.Expr, heatmap_opacity? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn hillshade(String, source~ : String, minzoom? : Double, maxzoom? : Double, hillshade_illumination_direction? : @expr.Expr, hillshade_illumination_altitude? : @expr.Expr, hillshade_illumination_anchor? : @expr.Expr, hillshade_exaggeration? : @expr.Expr, hillshade_shadow_color? : @expr.Expr, hillshade_highlight_color? : @expr.Expr, hillshade_accent_color? : @expr.Expr, hillshade_method? : @expr.Expr, resampling? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn image_source(coordinates~ : @json.Json, url? : String) -> Source
+
+pub fn line(String, source~ : String, source_layer? : String, filter? : @expr.Expr, minzoom? : Double, maxzoom? : Double, line_opacity? : @expr.Expr, line_layer_opacity? : @expr.Expr, line_layer_blend? : @expr.Expr, line_color? : @expr.Expr, line_translate? : @expr.Expr, line_translate_anchor? : @expr.Expr, line_width? : @expr.Expr, line_gap_width? : @expr.Expr, line_offset? : @expr.Expr, line_blur? : @expr.Expr, line_dasharray? : @expr.Expr, line_pattern? : @expr.Expr, line_gradient? : @expr.Expr, line_cap? : @expr.Expr, line_join? : @expr.Expr, line_miter_limit? : @expr.Expr, line_round_limit? : @expr.Expr, line_sort_key? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn raster(String, source~ : String, minzoom? : Double, maxzoom? : Double, raster_opacity? : @expr.Expr, raster_hue_rotate? : @expr.Expr, raster_brightness_min? : @expr.Expr, raster_brightness_max? : @expr.Expr, raster_saturation? : @expr.Expr, raster_contrast? : @expr.Expr, resampling? : @expr.Expr, raster_resampling? : @expr.Expr, raster_fade_duration? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn raster_dem_source(url? : String, tiles? : Array[String], bounds? : Array[Double], minzoom? : Double, maxzoom? : Double, tile_size? : Double, attribution? : String, encoding? : String, red_factor? : Double, blue_factor? : Double, green_factor? : Double, base_shift? : Double, volatile_? : Bool) -> Source
+
+pub fn raster_source(url? : String, tiles? : Array[String], bounds? : Array[Double], minzoom? : Double, maxzoom? : Double, tile_size? : Double, scheme? : String, attribution? : String, volatile_? : Bool) -> Source
+
+pub fn symbol(String, source~ : String, source_layer? : String, filter? : @expr.Expr, minzoom? : Double, maxzoom? : Double, icon_opacity? : @expr.Expr, icon_color? : @expr.Expr, icon_halo_color? : @expr.Expr, icon_halo_width? : @expr.Expr, icon_halo_blur? : @expr.Expr, icon_translate? : @expr.Expr, icon_translate_anchor? : @expr.Expr, text_opacity? : @expr.Expr, text_color? : @expr.Expr, text_halo_color? : @expr.Expr, text_halo_width? : @expr.Expr, text_halo_blur? : @expr.Expr, text_translate? : @expr.Expr, text_translate_anchor? : @expr.Expr, symbol_placement? : @expr.Expr, symbol_spacing? : @expr.Expr, symbol_avoid_edges? : @expr.Expr, symbol_sort_key? : @expr.Expr, symbol_z_order? : @expr.Expr, icon_allow_overlap? : @expr.Expr, icon_overlap? : @expr.Expr, icon_ignore_placement? : @expr.Expr, icon_optional? : @expr.Expr, icon_rotation_alignment? : @expr.Expr, icon_size? : @expr.Expr, icon_text_fit? : @expr.Expr, icon_text_fit_padding? : @expr.Expr, icon_image? : @expr.Expr, icon_rotate? : @expr.Expr, icon_padding? : @expr.Expr, icon_keep_upright? : @expr.Expr, icon_offset? : @expr.Expr, icon_anchor? : @expr.Expr, icon_pitch_alignment? : @expr.Expr, text_pitch_alignment? : @expr.Expr, text_rotation_alignment? : @expr.Expr, text_field? : @expr.Expr, text_font? : @expr.Expr, text_size? : @expr.Expr, text_max_width? : @expr.Expr, text_line_height? : @expr.Expr, text_letter_spacing? : @expr.Expr, text_justify? : @expr.Expr, text_radial_offset? : @expr.Expr, text_variable_anchor? : @expr.Expr, text_variable_anchor_offset? : @expr.Expr, text_anchor? : @expr.Expr, text_max_angle? : @expr.Expr, text_writing_mode? : @expr.Expr, text_rotate? : @expr.Expr, text_padding? : @expr.Expr, text_keep_upright? : @expr.Expr, text_transform? : @expr.Expr, text_offset? : @expr.Expr, text_allow_overlap? : @expr.Expr, text_overlap? : @expr.Expr, text_ignore_placement? : @expr.Expr, text_optional? : @expr.Expr, symbol_height_offset? : @expr.Expr, symbol_height_anchor? : @expr.Expr, visibility? : @expr.Expr) -> Layer
+
+pub fn vector_source(url? : String, tiles? : Array[String], bounds? : Array[Double], scheme? : String, minzoom? : Double, maxzoom? : Double, attribution? : String, promote_id? : @json.Json, volatile_? : Bool, encoding? : String) -> Source
+
+pub fn video_source(urls~ : Array[String], coordinates~ : @json.Json) -> Source
+
+// Errors
+
+// Types and methods
+pub struct Layer {
+  // private fields
+}
+pub fn Layer::id(Self) -> String
+pub fn Layer::json(@json.Json) -> Self
+pub fn Layer::to_json(Self) -> @json.Json
+
+pub struct Source {
+  // private fields
+}
+pub fn Source::json(@json.Json) -> Self
+pub fn Source::to_json(Self) -> @json.Json
+
+pub struct Style {
+  // private fields
+}
+pub fn Style::json(@json.Json) -> Self
+pub fn Style::new(sources~ : Array[(String, Source)], layers~ : Array[Layer], name? : String, sprite? : String, glyphs? : String, center? : (Double, Double), zoom? : Double, bearing? : Double, pitch? : Double, terrain? : @json.Json, sky? : @json.Json, projection? : @json.Json, light? : @json.Json) -> Self
+pub fn Style::to_json(Self) -> @json.Json
+pub fn Style::to_url(Self) -> String?
+pub fn Style::url(String) -> Self
+
+// Type aliases
+
+// Traits

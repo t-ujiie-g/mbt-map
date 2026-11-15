@@ -37,17 +37,50 @@ test "camera_of gives NaN for what the detail lacks" {
 
 ///|
 test "handle answers only the event types with a handler" {
-  let h = {
-    load: Some(@cmd.none),
-    idle: None,
-    move_: None,
-    moveend: Some(@cmd.Emit(_ => @cmd.none)),
-    click: None,
-    error: None,
+  let hs = handlers(
+    Some(@cmd.none),
+    None,
+    None,
+    Some(@cmd.Emit(_ => @cmd.none)),
+    None,
+    None,
+  )
+  assert_eq(hs.map(h => h.0), ["mbt-map-load", "mbt-map-moveend"])
+  assert_true(handle(hs, "mbt-map-load", detail()) is Some(_))
+  assert_true(handle(hs, "mbt-map-moveend", detail()) is Some(_))
+  assert_true(handle(hs, "mbt-map-idle", detail()) is None)
+  assert_true(handle(hs, "mbt-map-click", detail()) is None)
+  assert_true(handle(hs, "click", detail()) is None)
+}
+
+///|
+test "handlers read the camera, the click and the error from the detail" {
+  let got : Array[String] = []
+  let hs = handlers(
+    None,
+    None,
+    Some(
+      @cmd.Emit(c => {
+        got.push("move \{c.zoom}")
+        @cmd.none
+      }),
+    ),
+    None,
+    Some(
+      @cmd.Emit(c => {
+        got.push("click \{c.point.x}")
+        @cmd.none
+      }),
+    ),
+    Some(
+      @cmd.Emit(m => {
+        got.push(m)
+        @cmd.none
+      }),
+    ),
+  )
+  for kind in ["mbt-map-move", "mbt-map-click", "mbt-map-error"] {
+    ignore(handle(hs, kind, detail()))
   }
-  assert_true(handle(h, "mbt-map-load", detail()) is Some(_))
-  assert_true(handle(h, "mbt-map-moveend", detail()) is Some(_))
-  assert_true(handle(h, "mbt-map-idle", detail()) is None)
-  assert_true(handle(h, "mbt-map-click", detail()) is None)
-  assert_true(handle(h, "click", detail()) is None)
+  assert_eq(got, ["move 15", "click 400", "mbt-map: invalid zoom"])
 }

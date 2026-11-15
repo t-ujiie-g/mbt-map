@@ -39,7 +39,7 @@ const map = new Map({
         tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
         tileSize: 256,
         maxzoom: 18,
-        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',
+        attribution: "国土地理院",
       },
     },
     layers: [{ id: "gsi", type: "raster", source: "gsi" }],

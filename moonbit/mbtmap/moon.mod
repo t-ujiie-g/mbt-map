@@ -15,3 +15,5 @@ keywords = [ "map", "gis", "webgis", "maplibre", "rabbita" ]
 description = "Maps and WebGIS for MoonBit web apps: a typed API over the mbt-map npm package"
 
 supported_targets = "js"
+
+preferred_target = "js"

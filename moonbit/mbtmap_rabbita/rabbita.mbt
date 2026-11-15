@@ -139,18 +139,12 @@ pub fn query_features(
 }
 
 ///|
-priv struct Handlers {
-  load : Cmd?
-  idle : Cmd?
-  move_ : Emit[Camera]?
-  moveend : Emit[Camera]?
-  click : Emit[Click]?
-  error : Emit[String]?
-}
+/// What to do with an element event: its type and the command its `detail` makes.
+type Handler = (String, (@mbtmap.JsValue) -> Cmd)
 
 ///|
 priv suberror Listen {
-  Listen(String, Handlers)
+  Listen(String, Array[Handler])
 }
 
 ///|
@@ -205,49 +199,53 @@ fn click_of(detail : @mbtmap.JsValue) -> Click {
 }
 
 ///|
-fn handle(h : Handlers, kind : String, detail : @mbtmap.JsValue) -> Cmd? {
-  match kind {
-    "mbt-map-load" => h.load
-    "mbt-map-idle" => h.idle
-    "mbt-map-move" => h.move_.map(e => (e.0)(camera_of(detail)))
-    "mbt-map-moveend" => h.moveend.map(e => (e.0)(camera_of(detail)))
-    "mbt-map-click" => h.click.map(e => (e.0)(click_of(detail)))
-    "mbt-map-error" => h.error.map(e => (e.0)(detail_error(detail)))
-    _ => None
+/// The handlers `events` was given, in a fixed order (which its subscription key spells).
+fn handlers(
+  on_load : Cmd?,
+  on_idle : Cmd?,
+  on_move : Emit[Camera]?,
+  on_moveend : Emit[Camera]?,
+  on_click : Emit[Click]?,
+  on_error : Emit[String]?,
+) -> Array[Handler] {
+  let out : Array[Handler] = []
+  fn add(kind : String, f : ((@mbtmap.JsValue) -> Cmd)?) {
+    if f is Some(f) {
+      out.push((kind, f))
+    }
   }
+  add("mbt-map-load", on_load.map(cmd => _ => cmd))
+  add("mbt-map-idle", on_idle.map(cmd => _ => cmd))
+  add("mbt-map-move", on_move.map(e => d => (e.0)(camera_of(d))))
+  add("mbt-map-moveend", on_moveend.map(e => d => (e.0)(camera_of(d))))
+  add("mbt-map-click", on_click.map(e => d => (e.0)(click_of(d))))
+  add("mbt-map-error", on_error.map(e => d => (e.0)(detail_error(d))))
+  out
+}
+
+///|
+fn handle(hs : Array[Handler], kind : String, detail : @mbtmap.JsValue) -> Cmd? {
+  for h in hs {
+    if h.0 == kind {
+      return Some((h.1)(detail))
+    }
+  }
+  None
 }
 
 ///|
 fn sub_loader(payload : Error, scheduler : &@cmd.Scheduler) -> @sub.RunningSub? {
-  guard payload is Listen(id, handlers) else { None }
-  let current = Ref(handlers)
-  let types = []
-  if handlers.load is Some(_) {
-    types.push("mbt-map-load")
-  }
-  if handlers.idle is Some(_) {
-    types.push("mbt-map-idle")
-  }
-  if handlers.move_ is Some(_) {
-    types.push("mbt-map-move")
-  }
-  if handlers.moveend is Some(_) {
-    types.push("mbt-map-moveend")
-  }
-  if handlers.click is Some(_) {
-    types.push("mbt-map-click")
-  }
-  if handlers.error is Some(_) {
-    types.push("mbt-map-error")
-  }
-  let stop = listen(id, FixedArray::from_array(types), (kind, detail) => {
+  guard payload is Listen(id, hs) else { None }
+  let current = Ref(hs)
+  let types = FixedArray::from_iter(hs.iter().map(h => h.0))
+  let stop = listen(id, types, (kind, detail) => {
     if handle(current.val, kind, detail) is Some(cmd) {
       scheduler.add(cmd)
     }
   })
   Some({
     unload: _ => stop(),
-    update_tagger: p => if p is Listen(_, h) { current.val = h },
+    update_tagger: p => if p is Listen(_, hs) { current.val = hs },
   })
 }
 
@@ -264,27 +262,12 @@ pub fn events(
   on_click? : Emit[Click],
   on_error? : Emit[String],
 ) -> @sub.Sub {
-  let handlers = {
-    load: on_load,
-    idle: on_idle,
-    move_: on_move,
-    moveend: on_moveend,
-    click: on_click,
-    error: on_error,
-  }
-  let flags = [
-    on_load is Some(_),
-    on_idle is Some(_),
-    on_move is Some(_),
-    on_moveend is Some(_),
-    on_click is Some(_),
-    on_error is Some(_),
-  ]
-  let key = "mbt-map.events(\{id},\{flags.map(f => if f { "1" } else { "0" }).join("")})"
+  let hs = handlers(on_load, on_idle, on_move, on_moveend, on_click, on_error)
+  let key = "mbt-map.events(\{id},\{hs.map(h => h.0).join(",")})"
   @sub.custom_sub(
     key,
     @sub.Scope::Local,
-    Listen(id, handlers),
+    Listen(id, hs),
     @sub.SubLoader(sub_loader),
   )
 }

@@ -1,66 +1,66 @@
 {
   "env": {
-    "package": "mbtmap@0.1.0",
+    "package": "mbt-map@0.1.0",
     "compression": "gzip -9"
   },
   "rows": [
     {
-      "name": "mbtmap",
+      "name": "mbt-map",
       "bytes": 161842,
       "budget": 163000
     },
     {
-      "name": "GeoJSON sources (loaded by mbtmap when a style has one)",
+      "name": "GeoJSON sources (loaded by mbt-map when a style has one)",
       "bytes": 4493,
       "budget": 5000
     },
     {
-      "name": "PMTiles headers (loaded by mbtmap when a style has a pmtiles:// source)",
+      "name": "PMTiles headers (loaded by mbt-map when a style has a pmtiles:// source)",
       "bytes": 791,
       "budget": 2000
     },
     {
-      "name": "GeoTIFF sources (loaded by mbtmap with the first one; tiles by mbt-map/data)",
+      "name": "GeoTIFF sources (loaded by mbt-map with the first one; tiles by mbt-map/data)",
       "bytes": 301,
       "budget": 1000
     },
     {
-      "name": "legacy filters and functions (loaded by mbtmap when a style has them)",
+      "name": "legacy filters and functions (loaded by mbt-map when a style has them)",
       "bytes": 3605,
       "budget": 5000
     },
     {
-      "name": "sprite sheets (loaded by mbtmap when a style has a sprite)",
+      "name": "sprite sheets (loaded by mbt-map when a style has a sprite)",
       "bytes": 1831,
       "budget": 2000
     },
     {
-      "name": "image, video and canvas sources (loaded by mbtmap when a style has one)",
+      "name": "image, video and canvas sources (loaded by mbt-map when a style has one)",
       "bytes": 2601,
       "budget": 3000
     },
     {
-      "name": "custom layers (loaded by mbtmap with the first one)",
+      "name": "custom layers (loaded by mbt-map with the first one)",
       "bytes": 2983,
       "budget": 3000
     },
     {
-      "name": "image export (loaded by mbtmap with the first toBlob)",
+      "name": "image export (loaded by mbt-map with the first toBlob)",
       "bytes": 370,
       "budget": 1000
     },
     {
-      "name": "TileJSON merging (loaded by mbtmap with the first source given by url)",
+      "name": "TileJSON merging (loaded by mbt-map with the first source given by url)",
       "bytes": 462,
       "budget": 1000
     },
     {
-      "name": "mbt-map/element (on top of mbtmap)",
+      "name": "mbt-map/element (on top of mbt-map)",
       "bytes": 1694,
       "budget": 5000
     },
     {
-      "name": "mbt-map/moonbit (the MoonBit API's entry, on top of mbtmap)",
+      "name": "mbt-map/moonbit (the MoonBit API's entry, on top of mbt-map)",
       "bytes": 100,
       "budget": 500
     },
