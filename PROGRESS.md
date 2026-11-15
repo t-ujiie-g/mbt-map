@@ -173,3 +173,9 @@ Where things stand, decisions and open issues. The development history before th
 - ファサード：`renderWorldCopies` オプション、`setRenderWorldCopies` / `getRenderWorldCopies`（undefined は true、null は false）。`map_set_limits` の 9 番目の数。
 - 確かめ：`raster:golden` に世界のコピーの場面 5 つ（z0、z1、180 度、回転、`renderWorldCopies: false`）を足し、すべて MapLibre と画素まで同じ。傾けた場面は外した（遠くのタイルのズームの選び方が MapLibre と違うのは以前から）。`style:golden` に `copies-antimeridian`、`copies-wide`（各タイルが 2 つのコピーに出る、ヒートマップ込み）。`labels:golden` に `copies-points`、`copies-line`（69 場面すべて同じ）。`query:golden` に `copies`、`copies-wide`（750 問すべて同じ）。`style:golden` は全場面が限度内。`camera:golden` に `renderWorldCopies: false` の 3 場面（制約、easeTo、flyTo など）。core のテスト（`core/copies_test.mbt`）。
 - 大きさ：mbt-map（index.js）は gzip 165.0KB → 166.4KB（+1.4KB、予算 168KB。main を取り込んだあとの数）。被覆の並べ替えはタイルの型で整列を実体化せず `stable_order` で並べる（UnwrappedTile 用の整列が約 10KB の生コードを足していた）。
+
+## トップの地図：端末の時刻の東京、軽い版とテクスチャ（2026-11-15、Mac）
+
+- 判断（ユーザー）：トップの 3D を端末の時刻で変える（実際の太陽の影、地図はライトグレーとダークグレー）。建物はテクスチャ付きの LOD2 も見せたいが、重さとの兼ね合いで「軽い版で始め、ボタンでテクスチャ」。
+- `site/hero.js`：端末の時計の時刻を東京の時刻として、`sunPosition` と `timeOfDayLights` で太陽の向きと影（日が出ている間）を置き、太陽の高さ −6°〜+6° で地理院の淡色地図をダークグレーからライトグレーへ移す。夜は青みのある環境光を明るめに保つ（建物が見分けられるように）。1 分ごとに更新、`?time=18:30` で確かめられる。
+- 測った通信量（読み込みが落ち着くまで、1280×900、昼）：これまでのトップ（テクスチャなし、ズーム 15.25・傾き 60°）は 89MB・16 秒で、トップページには重すぎた。視点を寄せて（ズーム 16.2・傾き 45°）、`maximumScreenSpaceError: 16` にして 25MB・4 秒。テクスチャ付き（WebP、Draco、1 タイル約 1MB）は同じ視点で約 64MB なので、「Textures」ボタンを押したときだけ読む。
