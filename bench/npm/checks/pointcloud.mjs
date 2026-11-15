@@ -2,10 +2,10 @@
 // (EPSG:6677) is read, taken to longitude and latitude, drawn by its colors and recolored by class and
 // height; `crs` given by hand reads the same, and a missing file rejects `ready`.
 import { decodePng } from "../../lib/png.mjs";
-import { commonestShare } from "./pixels.mjs";
+import { commonestShare, screenshot } from "./pixels.mjs";
 
 /** The screen's pixels, to tell two colorings apart. */
-const shot = async (page) => decodePng(await page.screenshot()).rgba;
+const shot = async (page) => decodePng(await screenshot(page)).rgba;
 const differing = (a, b) => {
   let n = 0;
   for (let i = 0; i < a.length; i += 4) if (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2]) n++;

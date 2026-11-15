@@ -5,9 +5,10 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { decodePng } from "../../lib/png.mjs";
 import { ROOT } from "../../lib/root.mjs";
+import { screenshot } from "./pixels.mjs";
 
 export async function servicesChecks(page, requests) {
-  const shot = async () => decodePng(await page.screenshot({ clip: { x: 0, y: 0, width: 600, height: 400 } })).rgba;
+  const shot = async () => decodePng(await screenshot(page, { clip: { x: 0, y: 0, width: 600, height: 400 } })).rgba;
   const before = await shot();
   const r = await page.evaluate(async () => {
     const services = await import("mbt-map/services");
@@ -58,7 +59,7 @@ export async function servicesChecks(page, requests) {
   });
   // An ArcGIS VectorTileServer (bench/npm/pages/services/arcgis/..., its tiles the GSI vector
   // fixtures): its style made absolute, and its root.json read as is, draw what a plain source does.
-  const top = async () => decodePng(await page.screenshot({ clip: { x: 0, y: 0, width: 600, height: 360 } })).rgba;
+  const top = async () => decodePng(await screenshot(page, { clip: { x: 0, y: 0, width: 600, height: 360 } })).rgba;
   const restyle = (style) => page.evaluate(async (s) => {
     const map = window.__map;
     const services = await import("mbt-map/services");
@@ -108,7 +109,7 @@ export async function servicesChecks(page, requests) {
     const at = map.project([139.7709, 35.6918]);
     return { stop: (window.__stopFollow = stop) && true, features: data?.features?.map((f) => f.id), bounds: bounds.length, first: bounds[0], at };
   });
-  const kanda = await page.screenshot({ clip: { x: Math.round(followed.at.x), y: Math.round(followed.at.y), width: 1, height: 1 } }).then((b) => [...decodePng(b).rgba.slice(0, 3)]);
+  const kanda = await screenshot(page, { clip: { x: Math.round(followed.at.x), y: Math.round(followed.at.y), width: 1, height: 1 } }).then((b) => [...decodePng(b).rgba.slice(0, 3)]);
   const askedBefore = asked();
   await page.evaluate(async () => {
     const map = window.__map;
@@ -188,7 +189,7 @@ export async function servicesChecks(page, requests) {
     await map.once("idle");
     return { type: source.type, crs: source.crs, template: source.grid?.template, west: map.project([-60, 0]), east: map.project([60, 0]) };
   });
-  const pixel = async ({ x, y }) => [...decodePng(await page.screenshot({ clip: { x: Math.round(x), y: Math.round(y), width: 1, height: 1 } })).rgba.slice(0, 3)];
+  const pixel = async ({ x, y }) => [...decodePng(await screenshot(page, { clip: { x: Math.round(x), y: Math.round(y), width: 1, height: 1 } })).rgba.slice(0, 3)];
   geo.colors = [await pixel(geo.west), await pixel(geo.east)];
   const geoOk = geo.type === "reprojected" && geo.crs === 4326 && /\/geo\/\{TileMatrix\}\/\{TileRow\}\/\{TileCol\}\.png$/.test(geo.template) &&
     JSON.stringify(geo.colors) === JSON.stringify([[0, 0, 255], [0, 255, 0]]);

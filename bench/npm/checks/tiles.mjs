@@ -3,11 +3,11 @@
 // PLATEAU's Draco-compressed buildings around Tokyo Station are refined and drawn; a click picks a
 // feature with its batch table's properties; a pnts and a glTF of points (tiles/points) are drawn and picked.
 import { decodePng } from "../../lib/png.mjs";
-import { commonestShare } from "./pixels.mjs";
+import { commonestShare, screenshot } from "./pixels.mjs";
 
 /** The shares of the screen's pixels near the points' red, blue and green. */
 async function pointPixels(page) {
-  const { rgba } = decodePng(await page.screenshot());
+  const { rgba } = decodePng(await screenshot(page));
   const count = { red: 0, blue: 0, green: 0, yellow: 0 };
   const near = (i, c) => Math.abs(rgba[i] - c[0]) < 40 && Math.abs(rgba[i + 1] - c[1]) < 40 && Math.abs(rgba[i + 2] - c[2]) < 40;
   for (let i = 0; i < rgba.length; i += 4) {

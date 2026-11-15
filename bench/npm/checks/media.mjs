@@ -16,10 +16,22 @@ export async function mediaChecks(page, requests) {
     const v = window.__map.getSource("clip").getVideo?.();
     return v && v.readyState >= 2 && !v.paused;
   }, null, { timeout: 30000 });
+  // WebKit on Linux (Playwright's build, without a GPU) gives no video frames to canvases, 2D or WebGL; there the
+  // clip is not required on screen.
+  const videoFrames = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 4;
+    const g = c.getContext("2d");
+    g.drawImage(window.__map.getSource("clip").getVideo(), 0, 0, 4, 4);
+    return g.getImageData(1, 1, 1, 1).data[3] > 0;
+  });
   await frames(3);
   const at = await page.evaluate(() => {
     const map = window.__map;
     const idle = Promise.race([map.once("idle").then(() => true), new Promise((r) => setTimeout(() => r(false), 5000))]);
+    // A change made while the video plays, after which idle must come again: the video's own events cannot be
+    // waited for (WebKit seeks only at the first loop).
+    map.setPaintProperty("background", "background-color", "white");
     return Promise.all([idle, ...[-20, 0, 20].map((lng) => map.project([lng, 0]))]).then(([idle, ...p]) => ({ idle, p }));
   });
   const [picture, clip, paint] = at.p;
@@ -75,11 +87,11 @@ export async function mediaChecks(page, requests) {
   const back = await pixel(page, moved.north.x, moved.north.y);
 
   const loaded = requests.map((u) => u.split("/").pop());
-  const r = { idle: at.idle, shown, playing, paused, resumed, video, moved, left, north, hidden, reshown, back, loaded: loaded.filter((n) => /media|clip|sketch/.test(n)) };
+  const r = { idle: at.idle, videoFrames, shown, playing, paused, resumed, video, moved, left, north, hidden, reshown, back, loaded: loaded.filter((n) => /media|clip|sketch/.test(n)) };
   const ok =
     at.idle &&
     !near(shown.picture, white, 30) &&
-    (near(shown.clip, [255, 0, 0], 60) || near(shown.clip, [0, 0, 255], 60)) &&
+    (!videoFrames || near(shown.clip, [255, 0, 0], 60) || near(shown.clip, [0, 0, 255], 60)) &&
     near(shown.paint, [255, 0, 0]) && near(playing, [0, 0, 255]) && near(paused, [0, 0, 255]) && near(resumed, [0, 255, 0]) &&
     video.paused && video.playing && video.canvas === "paint" &&
     near(left, white) && near(north, [0, 255, 0]) && near(hidden, white) && reshown === true && near(back, [0, 255, 0]) &&
