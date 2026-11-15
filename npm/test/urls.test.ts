@@ -38,8 +38,18 @@ test("workers load only from same-origin http(s) URLs", () => {
   assert.equal(workerScriptUrl("./worker.js", base, origin), "https://example.com/styles/worker.js");
   assert.equal(workerScriptUrl(new URL("https://example.com/w.js"), base, origin), "https://example.com/w.js");
   for (const bad of ["data:text/javascript,1", "blob:https://example.com/x", "https://evil.test/w.js", "javascript:1"]) {
-    assert.throws(() => workerScriptUrl(bad, base, origin), /same-origin http\(s\)/);
+    assert.throws(() => workerScriptUrl(bad, base, origin, "https://cdn.test"), /on the page's origin or the library's/);
   }
+});
+
+test("a worker on the library's own origin (a CDN) starts through a same-origin blob that imports it", async () => {
+  const origin = "https://example.com";
+  const cdn = "https://cdn.test/npm/mbt-map@0.1.0/dist/worker.js";
+  const url = workerScriptUrl(cdn, base, origin, "https://cdn.test");
+  assert.match(url, /^blob:/);
+  assert.equal(await (await fetch(url)).text(), `import "${cdn}";`);
+  assert.equal(workerScriptUrl(cdn, base, origin, "https://cdn.test"), url);
+  assert.throws(() => workerScriptUrl("https://other.test/worker.js", base, origin, "https://cdn.test"), /library's/);
 });
 
 test("wasm loads only from http(s) URLs", () => {

@@ -152,6 +152,7 @@ a.card:hover { border-color: var(--accent); }
 .sample-head p { margin: 4px 0 0; color: var(--muted); }
 .sample-links { display: flex; gap: 14px; font-size: 14px; }
 .sample-frame { display: block; width: 100%; height: min(560px, 70vh); border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); }
+.sample-note { margin: 18px 0 0; color: var(--muted); font-size: 14px; }
 .sample-code h2 { margin: 28px 0 8px; font-size: 15px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .crumbs { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
 .crumbs a { color: var(--muted); }

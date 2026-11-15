@@ -1,55 +1,55 @@
 # Getting started
 
-This page puts a map on a page, adds data to it, and explains how mbt-map's files are loaded, so that it works served as is, from a bundler, or under a Content Security Policy.
+This page puts a map on a page, from a CDN or from npm, adds data to it, and explains how mbt-map's files are loaded, so that it works from a CDN, served as is, from a bundler, or under a Content Security Policy.
 
-## Install
+## A first map, from a CDN
+
+The quickest start is one HTML file that loads mbt-map from a CDN through an import map. A map draws into an element that has a size; the style is a URL or a style object in the [MapLibre style specification](https://maplibre.org/maplibre-style-spec/). This one shows the pale map of the Geospatial Information Authority of Japan (国土地理院).
+
+```html
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>A map</title>
+<style>html, body, #map { height: 100%; margin: 0; }</style>
+<script type="importmap">
+  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.0/dist/index.js" } }
+</script>
+<div id="map"></div>
+<script type="module">
+  import { Map } from "mbt-map";
+
+  const map = new Map({
+    container: "map",
+    style: {
+      version: 8,
+      sources: {
+        gsi: {
+          type: "raster",
+          tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          maxzoom: 18,
+          attribution: "国土地理院",
+        },
+      },
+      layers: [{ id: "gsi", type: "raster", source: "gsi" }],
+    },
+    center: [139.7671, 35.6812],
+    zoom: 14,
+  });
+</script>
+</html>
+```
+
+Open it from any http server (module scripts and workers do not load from `file:` URLs), for example with `npx serve`. Other entry points go into the import map the same way, one line each: `"mbt-map/analysis": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.0/dist/analysis.js"`. Pin the version in the URL; every file the modules load next (workers, wasm, parts) comes from the same folder of the CDN. Each [example](https://t-ujiie-g.github.io/mbt-map/examples/) shows its page in this form.
+
+## Install from npm
 
 ```sh
 npm install mbt-map
 ```
 
-The package is ES modules with TypeScript types. Besides the entry modules, `dist/` holds module workers and WebAssembly files, which the modules load from beside themselves when they are first needed.
-
-## A first map
-
-A map draws into an element that has a size. The style is a URL or a style object in the [MapLibre style specification](https://maplibre.org/maplibre-style-spec/); this one shows the pale map of the Geospatial Information Authority of Japan (国土地理院).
-
-```html
-<!doctype html>
-<meta charset="utf-8">
-<style>#map { height: 480px; }</style>
-<script type="importmap">
-  { "imports": { "mbt-map": "./node_modules/mbt-map/dist/index.js" } }
-</script>
-<div id="map"></div>
-<script type="module" src="./main.js"></script>
-```
-
-```js
-// main.js
-import { Map } from "mbt-map";
-
-const map = new Map({
-  container: "map",
-  style: {
-    version: 8,
-    sources: {
-      gsi: {
-        type: "raster",
-        tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        maxzoom: 18,
-        attribution: "国土地理院",
-      },
-    },
-    layers: [{ id: "gsi", type: "raster", source: "gsi" }],
-  },
-  center: [139.7671, 35.6812],
-  zoom: 14,
-});
-```
-
-Serve the folder over http (module workers do not load from `file:` URLs), for example with `npx serve`.
+The package is ES modules with TypeScript types. Besides the entry modules, `dist/` holds module workers and WebAssembly files, which the modules load from beside themselves when they are first needed. Served as they are, the import map points at `./node_modules/mbt-map/dist/index.js` instead of the CDN; with a bundler, see [Bundlers](#bundlers).
 
 ## Adding data
 
@@ -103,7 +103,7 @@ Every module loads its workers and wasm with `new URL("./worker.js", import.meta
 | `geodesic-worker.js`, `geodesic.wasm` | the first `mbt-map/geodesic` call |
 | `3d-worker.js`, `3d.wasm`, `3d-tiles.js`, `3d-i3s.js` | the first `mbt-map/3d` layer of each kind |
 
-So the rule is: **keep the files of `dist/` together**. Serving `dist/` as it is (an import map, a CDN, a static copy) needs no configuration.
+So the rule is: **keep the files of `dist/` together**. Serving `dist/` as it is (an import map, a CDN, a static copy) needs no configuration. Browsers start no worker script from another origin, so when the library itself comes from another origin (a CDN), its workers start through a small same-origin `blob:` script that imports them from there.
 
 ### Bundlers
 
@@ -112,11 +112,11 @@ Bundlers differ in how they treat `new URL(…, import.meta.url)`. esbuild leave
 - `new Map({ workerUrl, wasmUrl, geojsonWorkerUrl, geojsonWasmUrl, geojsonPropertiesWasmUrl })` for the map's workers.
 - The last argument of `mbt-map/analysis`, `mbt-map/data` and `mbt-map/geodesic` functions takes `workerUrl`, `wasmUrl` and the URLs of the extra wasm files (`geometryWasmUrl`, `projWasmUrl`, `xmlUrl`, …); the worker starts with the options of the first call.
 
-Workers must come from the page's origin over http(s), and wasm from an http(s) URL; `data:` and `blob:` URLs are refused.
+Workers must come over http(s) from the page's origin or from the origin the library was loaded from, and wasm from an http(s) URL; `data:` and `blob:` URLs given as options are refused.
 
 ### Content Security Policy
 
-Compiling wasm needs `script-src 'wasm-unsafe-eval'`, and the workers need `worker-src 'self'` (or `script-src 'self'`). mbt-map uses no `eval` or `new Function`.
+Compiling wasm needs `script-src 'wasm-unsafe-eval'`, and the workers need `worker-src 'self'` (or `script-src 'self'`). Loaded from a CDN, the library also needs the CDN in `script-src` and `connect-src`, and `worker-src blob:` for the workers' bootstrap scripts. mbt-map uses no `eval` or `new Function`.
 
 ### Requests and credentials
 
