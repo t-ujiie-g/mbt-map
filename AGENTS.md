@@ -121,6 +121,7 @@ npm run render            # moon-map vs MapLibre: first render, frame CPU, bundl
 npm run cesium            # moon-map/3d's tilesLayer vs CesiumJS 1.146.0 on PLATEAU (plateau-chiyoda), same viewport and cameras: tiles selected, tile requests and bytes, time until settled, screenshots side by side (bench/results/cesium/, gitignored), frame CPU over an orbit, code gzip; requests leaving 127.0.0.1 fail it; `-- --gpu` on the M2 (frame numbers count only there)
 npm run example           # serve the repo on 127.0.0.1:8080 (the dev pages bench/pages/{basic,terrain} need only this)
 npm run examples          # also pack npm/ into examples/{html,element,react} and bench/npm/pages/ (bench/npm/prepare.mjs), then serve /examples/
+npm run moonbit:style     # regenerate the MoonBit API's typed layer and source functions (moonbit/moonmap/style/*.g.mbt) from the pinned style-spec's v8.json, then `moon fmt`; `npm test` fails while they are stale
 npm run npm:pack          # build + npm pack npm/, install it there, check examples and test pages in Chromium (CI runs this; `-- --only=a,b` / `--except=a,b` pick checks by name)
 ```
 

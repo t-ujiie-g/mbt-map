@@ -11,21 +11,36 @@ npm install moon-map   # bundled by your app's bundler (Vite, esbuild, …)
 let tokyo = @moonmap.lnglat(139.7671, 35.6812)
 let map = @moonmap.Map::new(
   "map",
-  style=Url("https://example.com/style.json"),
+  style=@style.Style::url("https://example.com/style.json"),
   center=tokyo,
   zoom=14.0,
 )
 map.on(Load, _ => {
-  map.add_source("places", {
-    "type": "geojson",
-    "data": { "type": "Point", "coordinates": [tokyo.lng, tokyo.lat] },
-  })
-  map.add_layer({ "id": "places", "type": "circle", "source": "places" })
+  map.add_source(
+    "places",
+    @style.geojson_source(data={
+      "type": "Feature",
+      "properties": { "kind": "station" },
+      "geometry": { "type": "Point", "coordinates": [tokyo.lng, tokyo.lat] },
+    }),
+  )
+  map.add_layer(
+    @style.circle(
+      "places",
+      source="places",
+      circle_radius=@expr.num(8.0),
+      circle_color=@expr.match_(
+        @expr.get("kind"),
+        [("station", @expr.color("#2166ac"))],
+        default=@expr.color("#d6604d"),
+      ),
+    ),
+  )
 })
 |> ignore
 map.on_layer(Click, ["places"], e => map.fly_to(center?=e.lnglat, zoom=16.0)) |> ignore
 ```
 
-Styles, sources and layers follow MapLibre's style specification, written as MoonBit JSON for now.
+Packages: `t-ujiie-g/moonmap` (the map, camera, events, queries), `t-ujiie-g/moonmap/style` (styles, sources and one function per layer type with its paint and layout properties as labelled arguments, generated from MapLibre's style specification; `Layer::json`, `Source::json` and `Style::json` take JSON as written) and `t-ujiie-g/moonmap/expr` (expressions).
 
 Licensed under the Apache License 2.0.

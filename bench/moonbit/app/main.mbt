@@ -13,17 +13,9 @@ fn main {
   let tokyo = @moonmap.lnglat(139.7671, 35.6812)
   let map = @moonmap.Map::new(
     "map",
-    style=Spec({
-      "version": 8,
-      "sources": {},
-      "layers": [
-        {
-          "id": "background",
-          "type": "background",
-          "paint": { "background-color": "#ffffff" },
-        },
-      ],
-    }),
+    style=@style.Style::new(sources=[], layers=[
+      @style.background("background", background_color=@expr.color("#ffffff")),
+    ]),
     center=tokyo,
     zoom=14.0,
     attribution=false,
@@ -32,20 +24,26 @@ fn main {
   let counting = map.on(Move, _ => moves.val += 1)
   let stage = Ref(0)
   map.on(Load, _ => {
-    map.add_source("places", {
-      "type": "geojson",
-      "data": {
+    map.add_source(
+      "places",
+      @style.geojson_source(data={
         "type": "Feature",
-        "properties": { "name": "東京駅" },
+        "properties": { "name": "東京駅", "kind": "駅" },
         "geometry": { "type": "Point", "coordinates": [tokyo.lng, tokyo.lat] },
-      },
-    })
-    map.add_layer({
-      "id": "places",
-      "type": "circle",
-      "source": "places",
-      "paint": { "circle-radius": 20, "circle-color": "#ff0000" },
-    })
+      }),
+    )
+    map.add_layer(
+      @style.circle(
+        "places",
+        source="places",
+        circle_radius=@expr.num(20.0),
+        circle_color=@expr.match_(
+          @expr.get("kind"),
+          [("駅", @expr.color("#ff0000"))],
+          default=@expr.color("#000000"),
+        ),
+      ),
+    )
     stage.val = 1
     mark_loaded()
   })
@@ -57,7 +55,7 @@ fn main {
     guard stage.val == 3 else { return }
     let at = map.project(tokyo)
     map.query_rendered_features(point=at, layers=["places"], fn(features) {
-      map.set_paint("places", "circle-color", Some("#0000ff"))
+      map.set_paint("places", "circle-color", Some(@expr.color("#0000ff")))
       map.jump_to(zoom=15.0, bearing=10.0)
       let moved = moves.val
       counting.off()

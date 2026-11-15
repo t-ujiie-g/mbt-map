@@ -12,18 +12,10 @@ extern "js" fn Map::js(self : Map) -> JsValue =
   #|(m) => m
 
 ///|
-/// A style: `Url` of a style document (fetched without credentials), or a `Spec` written as JSON
-/// (MapLibre's style specification; `@style` builds one with types).
-pub(all) enum Style {
-  Url(String)
-  Spec(Json)
-}
-
-///|
-fn Style::to_js(self : Style) -> JsValue {
-  match self {
-    Url(url) => js_string(url)
-    Spec(json) => json_to_js(json)
+fn style_js(style : @style.Style) -> JsValue {
+  match style.to_url() {
+    Some(url) => js_string(url)
+    None => json_to_js(style.to_json())
   }
 }
 
@@ -93,13 +85,12 @@ fn put_bool(o : @builtin.Map[String, Json], key : String, v : Bool?) -> Unit {
 }
 
 ///|
-/// A map in the element with id `container`, drawing `style` (MapLibre's `new Map(options)`).
-/// The camera starts at `center` (default 0, 0), `zoom` (0), `bearing` (0) and `pitch` (0);
-/// `min_zoom` .. `max_zoom` and `min_pitch` .. `max_pitch` bound it. Without `interactive` the
-/// mouse and keyboard leave it alone; `attribution` shows the sources' attributions (default true).
+/// A map in the element with id `container` drawing `style` (MapLibre's `new Map`): the camera at `center`,
+/// `zoom`, `bearing`, `pitch` (all 0 by default) within the min/max ranges; `interactive` false leaves the
+/// mouse and keyboard out, `attribution` false the sources' attributions.
 pub fn Map::new(
   container : String,
-  style~ : Style,
+  style~ : @style.Style,
   center? : LngLat,
   zoom? : Double,
   bearing? : Double,
@@ -120,7 +111,7 @@ pub fn Map::new(
   put_bool(o, "interactive", interactive)
   put_bool(o, "attributionControl", attribution)
   let options = json_to_js(Json::object(o))
-  create_map(js_with(options, "style", style.to_js()))
+  create_map(js_with(options, "style", style_js(style)))
 }
 
 ///|
@@ -239,8 +230,8 @@ pub fn Map::unproject(self : Map, p : Point) -> LngLat {
 
 ///|
 /// Draws `style` from now on; sources and layers that stay alike keep their tiles.
-pub fn Map::set_style(self : Map, style : Style) -> Unit {
-  self.call("setStyle", [style.to_js()]) |> ignore
+pub fn Map::set_style(self : Map, style : @style.Style) -> Unit {
+  self.call("setStyle", [style_js(style)]) |> ignore
 }
 
 ///|
@@ -255,9 +246,10 @@ pub fn Map::style(self : Map) -> Json? {
 }
 
 ///|
-/// Adds source `id` (MapLibre's source specification as JSON).
-pub fn Map::add_source(self : Map, id : String, source : Json) -> Unit {
-  self.call("addSource", [js_string(id), json_to_js(source)]) |> ignore
+/// Adds source `id` (`@style.geojson_source`, … or `@style.Source::json`).
+pub fn Map::add_source(self : Map, id : String, source : @style.Source) -> Unit {
+  self.call("addSource", [js_string(id), json_to_js(source.to_json())])
+  |> ignore
 }
 
 ///|
@@ -275,13 +267,17 @@ pub fn Map::set_data(self : Map, id : String, data : Json) -> Unit {
 }
 
 ///|
-/// Adds `layer` (MapLibre's layer specification as JSON) below layer `before`, or on top.
-pub fn Map::add_layer(self : Map, layer : Json, before? : String) -> Unit {
+/// Adds `layer` (`@style.circle`, … or `@style.Layer::json`) below layer `before`, or on top.
+pub fn Map::add_layer(
+  self : Map,
+  layer : @style.Layer,
+  before? : String,
+) -> Unit {
   let at = match before {
     Some(b) => js_string(b)
     None => js_undefined()
   }
-  self.call("addLayer", [json_to_js(layer), at]) |> ignore
+  self.call("addLayer", [json_to_js(layer.to_json()), at]) |> ignore
 }
 
 ///|
@@ -311,9 +307,9 @@ pub fn Map::set_paint(
   self : Map,
   id : String,
   name : String,
-  value : Json?,
+  value : @expr.Expr?,
 ) -> Unit {
-  let v = value.map(json_to_js).unwrap_or(js_null())
+  let v = value.map(e => json_to_js(e.to_json())).unwrap_or(js_null())
   self.call("setPaintProperty", [js_string(id), js_string(name), v]) |> ignore
 }
 
@@ -323,16 +319,16 @@ pub fn Map::set_layout(
   self : Map,
   id : String,
   name : String,
-  value : Json?,
+  value : @expr.Expr?,
 ) -> Unit {
-  let v = value.map(json_to_js).unwrap_or(js_null())
+  let v = value.map(e => json_to_js(e.to_json())).unwrap_or(js_null())
   self.call("setLayoutProperty", [js_string(id), js_string(name), v]) |> ignore
 }
 
 ///|
 /// Sets the filter of layer `id`; None removes it.
-pub fn Map::set_filter(self : Map, id : String, filter : Json?) -> Unit {
-  let v = filter.map(json_to_js).unwrap_or(js_null())
+pub fn Map::set_filter(self : Map, id : String, filter : @expr.Expr?) -> Unit {
+  let v = filter.map(e => json_to_js(e.to_json())).unwrap_or(js_null())
   self.call("setFilter", [js_string(id), v]) |> ignore
 }
 

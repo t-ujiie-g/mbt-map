@@ -1,8 +1,7 @@
 ///|
-/// What a map fires (MapLibre's events): the mouse events (also on a layer's features with
-/// `Map::on_layer`; `MouseEnter` and `MouseLeave` only there), `Load` at the first drawn view,
-/// `Render` after each frame, `Idle` when it settles (also right after `Load`), `Error`, `StyleData` and `SourceData` when the
-/// style or a source changed, and the camera's start, move and end of moving, zooming, rotating, pitching.
+/// MapLibre's events: mouse events (on a layer's features with `Map::on_layer`, where alone `MouseEnter`
+/// and `MouseLeave` come), `Load` (first view drawn), `Render` (each frame), `Idle` (settled, also right
+/// after `Load`), `Error`, `StyleData`, `SourceData`, and the camera's moving, zooming, rotating, pitching.
 pub(all) enum EventType {
   MouseDown
   MouseUp
