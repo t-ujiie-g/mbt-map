@@ -49,7 +49,7 @@ const SETS = [
   },
   {
     name: "protomaps", ext: "pbf", ...TILES,
-    pmtiles: "https://build.protomaps.com/20261103.pmtiles",
+    pmtiles: "https://build.protomaps.com/20261115.pmtiles",
     attribution: "Protomaps © OpenStreetMap contributors",
   },
   { name: "sprites", files: sprites(), attribution: "OpenMapTiles styles (CC-BY 4.0), OpenFreeMap sprites (MIT)" },

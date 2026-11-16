@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 167101,
+      "bytes": 167118,
       "budget": 168000
     },
     {
@@ -66,12 +66,12 @@
     },
     {
       "name": "mbt-map/ui (every controller)",
-      "bytes": 9811,
+      "bytes": 9906,
       "budget": 10000
     },
     {
       "name": "mbt-map/search",
-      "bytes": 2849,
+      "bytes": 2911,
       "budget": 5000
     },
     {
@@ -316,7 +316,7 @@
     },
     {
       "name": "mbt-map/ui createAttributeTable alone",
-      "bytes": 2037,
+      "bytes": 2146,
       "budget": 2200
     },
     {

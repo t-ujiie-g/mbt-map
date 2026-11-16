@@ -64,4 +64,4 @@ for (const flavor of FLAVORS) {
 }
 const only = arg("scene");
 const results = await compareScenes(scenes, { only, shots: arg("shots"), dir: "bench/dist/style-public" });
-if (!only) await writeFile(path.join(ROOT, "bench/results/style-public.json"), `${JSON.stringify({ env: { maplibre: "6.16.0", browser: "chromium", viewport: "800x600", tiles: "openfreemap 20261101_080013_pt, protomaps 20261103" }, results }, null, 2)}\n`);
+if (!only) await writeFile(path.join(ROOT, "bench/results/style-public.json"), `${JSON.stringify({ env: { maplibre: "6.16.0", browser: "chromium", viewport: "800x600", tiles: "openfreemap 20261101_080013_pt, protomaps 20261115" }, results }, null, 2)}\n`);

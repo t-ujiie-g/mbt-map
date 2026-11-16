@@ -15,8 +15,7 @@ Where things stand, decisions and open issues. The development history before th
 - **次**：単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
-  - `protomaps` のフィクスチャの版（`build.protomaps.com/20261103.pmtiles`）が消えた（404）。新しい日付にする。
-  - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。
+  - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
   - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
   - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
   - Linux の WebKit で `antialias: false` のキャンバスの最後のフレームが出ない件が headless だけのことか。Linux の headless Firefox に WebGL2 がない（pack test は飛ばす）。
@@ -101,6 +100,7 @@ Where things stand, decisions and open issues. The development history before th
 - 原因：`maximumLoadedTiles`（既定 256）を超えると、描いているタイル以外を古い順に解放していた。REPLACE のタイルの子は兄弟が全部そろうまで描かれないので、読み終えた子が解放され、また読まれ、を続けていた（引いた視点で要るタイルが 256 を超えると止まらない）。
 - 直し：解放するのは、そのフレームが使わなかったタイル（`lastUsed` がそのフレームでないもの）だけ（`evictable`、`npm/src/tiles/tileset.ts`。loaders.gl のキャッシュも同じ考え）。そのフレームが上限より多く要るときは、上限を超えて持つ。
 - 確かめ：PLATEAU の例をズーム 14.6、傾き 55° にして 40 秒見た。直す前は要求が 789 まで増え続け、描くタイルは 23〜170 を行き来した。直した後は 22 秒で 527 要求、354 タイルで止まった。`tiles:golden`、`i3s:golden`、pack test の 3D の 5 項目、単体テスト（`evictable`）。
+
 ## GitHub Pages（2026-11-15、Mac）
 
 - 判断（ユーザー）：公開はリリースのタグ（`v*`）を打ったときだけ（手動でも流せる）。トップページは英語と日本語の 2 枚で作ったが、日本語が機械翻訳のようなので、日本語のトップと `README.ja.md` は外した（同日）。トップの地図は 3D に（PLATEAU の東京駅まわり）。
@@ -148,6 +148,7 @@ Where things stand, decisions and open issues. The development history before th
 - 版：npm と MoonBit の 2 モジュールは同じ版（0.1.0）。`bench/lib/release.mjs` が版と CHANGELOG のそろいを見る（`release.test.mjs` が今の版でも確かめる）。npm の `package.json` は `private` を外し、説明、キーワード、ホームページ（Pages）、`publishConfig.access: public`。`npm pack` は 167 ファイル、0.91MB（展開 2.51MB）。`moon publish --dry-run` は通る。
 - npm の信頼された公開はパッケージが npm にないと設定できないので、0.1.0 は手元から一度出し、その後に信頼された公開（段階公開だけ）を設定する。手順は docs/dev/RELEASING.md。
 - Pages を手動で一度公開した（https://t-ujiie-g.github.io/mbt-map/ ）。
+
 ## 地形で手前の低い土地が描かれない（2026-11-15、Mac）
 
 - 症状：3D 地形（地理院の DEM、`"encoding": "gsi"`）で中心を富士山頂（3776 m、誇張 1.5 倍で 5664 m）に置き、ズーム 12・傾き 70° にすると、画面の下（カメラの近くの低い土地）が待っても空いたまま。富士吉田のように低い所を中心にすると出ない。
@@ -164,6 +165,7 @@ Where things stand, decisions and open issues. The development history before th
 - 直し：`workerScriptUrl`（`npm/src/urls.ts`）が、ライブラリ自身のフォルダ（CDN の `dist/`）にある Worker を、それを import するだけの同じオリジンの `blob:` から起こす（URL ごとに 1 つ作って使い回す）。オリジンでなくフォルダで判定する（CDN は誰のパッケージも同じオリジンから配るので、オリジンで許すと別のパッケージのスクリプトも通る。自動のセキュリティレビューの指摘）。ページのオリジンとライブラリのフォルダ以外は今までどおり拒むので、`<mbt-map worker-url>` などのマークアップから別のコードは起こせない。CSP を使うページが CDN から読むときは `worker-src blob:` が要る（Getting started に書いた）。wasm と動的 import は別のオリジンからでも読める。
 - 確かめ：pack test の `cdn`（`bench/npm/pages/cdn`、パッケージを CORS 付きの別のポートから読む。地図のタイルの Worker、GeoJSON の Worker、解析の Worker がそれぞれ動き、問い合わせと解析の結果が合う）。単体テスト（blob の中身、使い回し、別のオリジンを拒む）。
 - 見せ方：Getting started の最初を「CDN から HTML 1 枚」にし、npm は次の節に。README と npm の README に CDN の書き方。サイトのサンプルのページは、表示するコードの import map を jsDelivr の版つきの URL（今の版、`mbt-map@0.1.0`）に、CSS をサイトの絶対 URL にして、コピーしてそのまま動く形にした（サイトで動かすのは今どおり同じオリジンの `lib/`）。
+
 ## グリフのアトラスがあふれる問題（2026-11-15、Mac）
 
 - 症状：漢字の多い地図（OpenFreeMap の Liberty に中文・日本語のラベル）で都市を何か所も回ると「the glyph atlas is full; some labels miss characters」が出て、以後のラベルの文字が欠けたままになる。
@@ -198,6 +200,7 @@ Where things stand, decisions and open issues. The development history before th
 - `site/hero.js`：端末の時計の時刻を東京の時刻として、`sunPosition` と `timeOfDayLights` で太陽の向きと影（日が出ている間）を置き、太陽の高さ −6°〜+6° で地理院の淡色地図をダークグレーからライトグレーへ移す。夜は青みのある環境光を明るめに保つ（建物が見分けられるように）。1 分ごとに更新、`?time=18:30` で確かめられる。
 - 測った通信量（読み込みが落ち着くまで、1280×900、昼）：これまでのトップ（テクスチャなし、ズーム 15.25・傾き 60°）は 89MB・16 秒で、トップページには重すぎた。視点を寄せて（ズーム 16.2・傾き 45°）、`maximumScreenSpaceError: 16` にして 25MB・4 秒。テクスチャ付き（WebP、Draco、1 タイル約 1MB）は同じ視点で約 64MB なので、「Textures」ボタンを押したときだけ読む。
 - 追加の直し（同日、ユーザーの指摘）：傾けると地平線の上が暗い背景色のままだった（空を描いていなかった）ので、スタイルの `sky` と背景色も時刻で変える（昼は水色と明るい灰色、夜は濃紺）。夜は太陽の光がなく面に明暗が付かず、建物が一色のかたまりに見えたので、夜は影なしの弱い月明かり（南西から）を当て、環境光の紫を抑えた。
+
 ## Firefox と WebKit での pack test（2026-11-15、Mac）
 
 - `bench/npm/pack-test.mjs` に `--browser=chromium|firefox|webkit`（既定 chromium。Metal の GPU フラグは macOS の Chromium だけ）と `--no-prepare`（前の pack を使い回す）を足した。WebGL2 か WebAssembly GC のないブラウザのビルドでは全項目を落とさず、理由を書いて飛ばす（CI では `::warning::`）。
@@ -223,6 +226,7 @@ Where things stand, decisions and open issues. The development history before th
   - 振る舞いを合わせているが NOTICE にないもの：OpenLayers（`npm/src/services/` の GML の属性の読みと要求の形）、terra-draw（`npm/src/draw/` の既定のしきい値）、gl-matrix（`core/matrix.mbt` などの行列の演算）。コードを写したものなら項目を足す。
 - VISION.md（44.8KB）を、いまも効いているものだけにした：ゴールと柱、性能目標とサイズ予算（`npm/scripts/size.mjs` に合わせた。メインは 168KB）、アーキテクチャの原則、設計原則、後回し・やらない、API 方針（MoonBit は npm の上の型付きの API と rabbita の部品）、作業ルール、これからの計画（0.1.0、単独の移植、Phase 21）。Phase 0〜20 の表、最初の指示（§9）、ほかのライブラリとの突き合わせ（§10）、パッケージの一覧、予算を上げた経緯は外した（mbmap にある）。節の番号（§1〜§8、§4 の 1〜10）は変えていないので、コードや文書の「VISION §n」はそのまま通る。
 - 追加（本線）：MoonBit の 2 モジュールに `LICENSE` を置き、`mbtmap` には生成したスタイルの関数の出どころ（style-spec、BSD-3）を書いた `NOTICE` を置いた（mooncakes に出るのはモジュールのディレクトリだけなので）。ふるまいを合わせて書いた部分にも念のため記載を足した：OpenLayers（GML・WMS・WMTS の読み、BSD-2）、terra-draw（作図のモードとしきい値、MIT）、gl-matrix（行列とベクトル、MIT）。
+
 ## テストの見直し（2026-11-15、Mac）
 
 - 依頼：意味の薄いテスト、ほかで保証されているテストを消すか作り直す。全テストの名前と、機械的に拾った弱い形（表明なし、`let _ =`、`is Some(_)` だけ、定数を定数と比べる、数行だけ）を読んだ。
@@ -241,6 +245,7 @@ Where things stand, decisions and open issues. The development history before th
 - 数（前 → 後）：`moon test --target all` は wasm 929、wasm-gc 941、js 987、native 929 で変わらず（3 つ減り 3 つ増えた）。npm は 446 → 449、bench は 20 のまま。js の行カバレッジは全体で 28467/39101（72.8%）→ 29664/39101（75.9%）。
 - 残した候補（判断待ち）：`core` の「Trig's methods call its functions」（委譲を 12 個なぞる）、`proj` の「Trig::moonbit is what a CRS computes with by default」、`raster` の「LOG2_WORLD_WIDTH is the log written out」（手書きの定数を式と比べる）、`globe` の「copy leaves the original alone」、`bench/backend/kernel` の 2 つ。
 - 残る穴：`clipper` の本体（`sweep.mbt` 62%、`horizontal.mbt` 54% など。`clipper:golden` は手元だけ）、`worker/query_geometry.mbt` 27%、`style/distance.mbt` 55%、`draco/edgebreaker_traversal.mbt` 38%。ほかの golden にも「比べた点が 0 の行」を失敗にする確かめが要るかは見ていない。
+
 ## バンドラでの動作（2026-11-15、Mac）
 
 - 調べたこと：公開する配置のままでは、既定の設定で動くのは Vite の dev サーバだけだった。
@@ -270,6 +275,7 @@ Where things stand, decisions and open issues. The development history before th
 - 大きさ（gzip）：mbt-map（index.js）166.4KB → 166.7KB（+0.3KB、予算 168KB）。GeoJSON ソース 4.65 → 4.85KB（予算 5KB）、mbt-map/analysis 8.50 → 8.74KB（9KB）、mbt-map/data 4.87 → 5.14KB（6KB）、mbt-map/geodesic 1.41 → 1.61KB（2KB）、mbt-map/3d 9.26 → 9.46KB（10KB）、mbt-map/services 11.49 → 11.66KB（12KB）。`urls.ts` が各エントリに入るため。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`、npm のテストと大きさ、pack test（Chromium 23/23、WebKit の npm・cdn・geojson・analysis・data）、`npm run bundlers`。
 - 残り：AGENTS.md §8.3 の「例外は 1 つ」の文は、ライブラリ自身の既定のワーカー（バンドラが置いた場所、`data:` の埋め込み）をまだ書いていない。`bundlers` はバンドラを npm から取るので CI には入れていない。Rollup でプラグインなしにファイルをコピーする形と、Firefox・WebKit でのバンドラの出力は確かめていない。
+
 ## 公開前の整理：使っていないものを外す（2026-11-15）
 
 監査で見つかったもののうち、ユーザーが認めた分を外した。追跡しているファイルは 1530 個・11.5MB から 1492 個・9.2MB になった。外した実験（バックエンドの比較、モジュール分割の計測）のスクリプトと結果は、前のリポジトリ `t-ujiie-g/mbmap` に残っている。
@@ -289,7 +295,6 @@ Where things stand, decisions and open issues. The development history before th
 
 - ユーザーの依頼で、GitHub Pages に Google タグ マネージャー（`GTM-MWGLDWNP`）を入れた。`site/analytics.js` を、サイトの各ページ（トップ、文書、例の目次、サンプルの解説ページ、4 つのアプリ）が読む。解説ページに埋め込んで動かすサンプル本体には入れない（閲覧の二重計上と、見せるコードへの混入を避ける）。
 - 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに入れた「Google Analytics で訪問を数えている」の一文は、一般的でないので外した（ユーザー判断）。
-- 公開先（`t-ujiie-g.github.io`）で開いたときだけ読み込む（ローカルの確認や CI を計測に混ぜない）。もらったスニペットに、GTM の「全ページ」のトリガーが動くよう公式の `gtm.start` の合図を足した。フッターに「Google Analytics で訪問を数えている」と書いた。
 
 ## 公開前の QA の直し：タッチ操作、`idle`、`<mbt-map>`、キャンバスの名前、バッファ（2026-11-15）
 
@@ -349,6 +354,7 @@ Where things stand, decisions and open issues. The development history before th
   - ショーケースのコロプレスの区切りの最後が重なる（`… / 24.91 / 24.91`）のは `classBreaks` の jenks が simple-statistics と同じく各クラスの下限と最大値を返すためで、いちばん上のクラスが 1 つの値だけのときに起きる。
   - OpenFreeMap のスタイルの `symbol-placement` の式の警告、Firefox の WebGL の性能の警告、GSI のデータの質。
 - 確かめ：`npm --prefix bench test`（20 → 21）、`node site/build.mjs`（切れたリンクなし）、pack test の `samples,showcase-html,showcase-element,showcase-react,plateau,rabbita,globe`（Chromium）と `samples,showcase-html`（WebKit）、`node bench/lib/long-comments.mjs`（46 のまま）。
+
 ## 公開前のライブラリの直し：`updateData`、背景の描く順、地形で固まる件（2026-11-15、Mac）
 
 公開直前に見つかった 3 件。ブランチ `fix/update-data-and-draw-order`。
@@ -420,3 +426,17 @@ Where things stand, decisions and open issues. The development history before th
 - **タグ `v0.1.0`**：`release.yml` の `verify`・`npm`（もうあるので飛ばす）・`github-release` と `pages.yml` が成功。
 - **公開後の確かめ**：jsDelivr の `mbt-map@0.1.0` だけを指す HTML 1 枚を Chromium で開き、ラスタと GeoJSON の点が描かれ `queryRenderedFeatures` が答えること（別オリジンからのワーカーと wasm）。サイトのトップとサンプルが開き、コード欄の import map が jsDelivr の 0.1.0 を指すこと。
 - **気をつけること**：信頼された公開は設定から 2 日以内に最初の公開がないと期限が切れる。次の版のタグの前に npm の設定を見る。
+
+## 公開後の小さい直し（2026-11-16、Mac）
+
+0.1.0 の前に見送ったもののうち、小さいもの（ユーザーが範囲を決めた）。ブランチ `fix/small-leftovers`。描画（世界のコピーごとのラベル、地形の上の `background-pattern`）と 3D の半径は見送りのまま。3D モデルの半球光と、バッファを日付変更線・極で切る件は別の PR。
+
+- **`interactive: false` のキャンバス**：`tabindex="-1"` にした（MapLibre と同じ。`npm/src/index.ts`。エンジンの `set_tab_index` は付いている値を変えない）。pack test の `touch`。
+- **属性テーブルの `zoomTo` が経度 180° をまたぐ国で世界全体に合わせる**：`boxOf`（`npm/src/search/dataset.ts`）が、負の経度に 360 を足した並びの方が狭ければその箱（東が 180 を超える）を返す。`fit_box` は東が 180 を超える箱をそのまま扱う。データセット検索の結果の箱も同じ関数なので同じく変わる。テストは `npm/test/ui-table.test.ts`（またぐもの、西半球だけのもの、点）。
+- **表の行のページを id から知る**：`AttributeTable.reveal(id)` を足した。その行のあるページへ移り、絞り込みで外れていれば false。pack test の `table`（最後のページの行で 3、ない id で false）。サンプル（`attribute-table`）は 1 ページに全行を入れる形のまま（サイトのコード欄は公開済みの 0.1.0 を指すので、次の版まで使えない）。
+- **jenks の最後の区切りが重なって見える**：`classBreaks` は simple-statistics と同じ値のまま。見せる側で、値が 1 つのクラスはその値だけを書く（ショーケースの「Breaks」は同じ境界を 1 回だけ、`classify` と `attribute-table` の凡例は「24.91」）。pack test の `analyze` が境界の重なりがないことを見る。
+- **`protomaps` のフィクスチャ**：日ごとのビルドを `20261115` にして取り直した（35 タイル、4,037,021 バイト）。`style:public` は 24 場面とも限度内で、限度は変えていない（protomaps の 10 場面は平均 0.002〜0.009、p99 0）。
+- **`showcase-element` がときどき落ちる件**：直していない。単独で 8 回（どれも 45〜47 s で通過）、全項目で 1 回回しても再現しなかった（並行して別の worktree のビルドとテストが動いている状態）。
+- **PROGRESS.md**：「サイトの計測タグ」の重なっていた行（古い方）を消し、見出しの前の空行をそろえた。
+- 大きさ（gzip）：mbt-map（index.js）167,101 → 167,118 バイト（予算 168KB）、mbt-map/ui 9,811 → 9,906 バイト（予算 10KB。残り 94 バイト）、mbt-map/search 2,849 → 2,911 バイト（予算 5KB）。
+- 確かめ：`moon check --target all`、`moon test --target all`（wasm 930、wasm-gc 940、js 989、native 930）、npm のテスト（458）と大きさ、bench のテスト（21）、pack test（Chromium、24/24）、`style:public`、`long-comments`（47 のまま）。Firefox と WebKit の pack test は回していない（CI の `pack-browsers` が見る）。

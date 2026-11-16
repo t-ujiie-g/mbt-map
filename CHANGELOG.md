@@ -2,6 +2,11 @@
 
 All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujiie-g/mbtmap` and `t-ujiie-g/mbtmap_rabbita`. They share one version.
 
+## Unreleased
+
+- `mbt-map`: a map with `interactive: false` is no longer a tab stop (its canvas gets `tabindex="-1"`, as MapLibre's).
+- `mbt-map/ui`: the attribute table's `reveal(id)` goes to the page with a feature's row; `zoomTo` fits a feature split at the antimeridian across it, not to the whole world (so do the dataset search's result boxes).
+
 ## 0.1.0
 
 The first release.

@@ -108,7 +108,7 @@ A map that fills a scrolling page therefore traps one-finger scrolling; turn `dr
 
 ### Accessibility
 
-The canvas is focusable (`tabindex="0"`, for the keyboard handler) and is a `role="region"` named `Map`, as MapLibre's. To name it yourself, give the container an `aria-label` before creating the map, or set it on the canvas: `map.getCanvas().setAttribute("aria-label", "Route to the venue")`. `<mbt-map>` passes its own `aria-label` on.
+The canvas is focusable (`tabindex="0"`, for the keyboard handler; `-1` with `interactive: false`) and is a `role="region"` named `Map`, as MapLibre's. To name it yourself, give the container an `aria-label` before creating the map, or set it on the canvas: `map.getCanvas().setAttribute("aria-label", "Route to the venue")`. `<mbt-map>` passes its own `aria-label` on.
 
 ## Camera
 

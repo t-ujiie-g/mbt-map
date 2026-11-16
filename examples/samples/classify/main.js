@@ -62,7 +62,9 @@ function classify() {
       const swatch = document.createElement("i");
       swatch.style.background = color;
       const label = document.createElement("span");
-      label.textContent = `${round(breaks[i])} – ${round(breaks[i + 1])}`;
+      const [from, to] = [round(breaks[i]), round(breaks[i + 1])];
+      // A class of one value (jenks' top class is often the maximum alone) reads as that value.
+      label.textContent = from === to ? `${from}` : `${from} – ${to}`;
       return [swatch, label];
     }),
   );

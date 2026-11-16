@@ -84,6 +84,7 @@ export async function touchChecks(page, browserName) {
       await fixed.once("load");
       out.fixed = action(fixed);
       out.fixedLabel = fixed.getCanvas().getAttribute("aria-label");
+      out.fixedTab = fixed.getCanvas().tabIndex;
       fixed.remove();
       div.remove();
       return out;
@@ -119,7 +120,7 @@ export async function touchChecks(page, browserName) {
     const touched = browserName === "chromium" ? await touches(phone) : { ok: true, skipped: `no CDP touch input (Input.dispatchTouchEvent) in ${browserName}` };
     const ok =
       actions.both === "none" && actions.element === "none" && actions.zoomOnly === "pan-x pan-y" && actions.pitchOnly === "pan-x pan-y" &&
-      actions.neither === "auto" && actions.panOnly === "pinch-zoom" && actions.fixed === "auto" && actions.fixedLabel === "Overview" &&
+      actions.neither === "auto" && actions.panOnly === "pinch-zoom" && actions.fixed === "auto" && actions.fixedLabel === "Overview" && actions.fixedTab === -1 &&
       JSON.stringify(named) === JSON.stringify({ map: ["region", "Map", 0], element: ["region", "Tokyo Station", 0], unnamed: "Map" }) &&
       copies.attribute === false && copies.property === false && copies.changed === true && copies.kept === true && copies.set === false &&
       copies.errors.length === 2 && copies.errors.every((e) => e.includes("invalid render-world-copies")) &&
