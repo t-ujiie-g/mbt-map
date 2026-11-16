@@ -120,7 +120,7 @@ These are a port of Clipper2 2.0.1, with results identical to the C++ library. T
 | `arcTolerance` | How far round edges may stray from a true arc, in meters | distance / 500 |
 | `crs` | The CRS a planar buffer is measured in | EPSG:3857 |
 
-Distances: `meters` must be a finite number. A geodesic buffer takes at most 10,000 km (`10_000_000`, a quarter of a meridian); a larger one rejects with `a geodesic buffer takes at most 10,000 km`. A point's circle is within millimeters of the distance at 1 km, 2 m at 50 km, 0.1% at 1,000 km and 0.6% at 10,000 km (measured with GeographicLib). Wide buffers are not cut at the antimeridian or the poles: longitudes may pass ±180, and a buffer that reaches over a pole is a ring around it, which planar tools misread. A planar buffer takes up to 1e9 of the CRS's units.
+Distances: `meters` must be a finite number. A geodesic buffer takes at most 10,000 km (`10_000_000`, a quarter of a meridian); a larger one rejects with `a geodesic buffer takes at most 10,000 km`. A point's circle is within millimeters of the distance at 1 km, 2 m at 50 km, 0.1% at 1,000 km and 0.6% at 10,000 km (measured with GeographicLib). A geodesic buffer's longitudes stay within ±180: one that crosses the antimeridian is cut there into the parts of a MultiPolygon (RFC 7946 §3.1.9), and one that holds a pole runs along ±180 up to the pole's latitude and across it, so planar tools fill the cap. The cut parts are on a 1e-7° grid (about 1 cm); buffers that are not cut are unchanged. A planar buffer takes up to 1e9 of the CRS's units.
 
 ```js
 const roads = await load(roadsGeoJSON);

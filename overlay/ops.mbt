@@ -107,7 +107,7 @@ fn tree_of(paths : Array[Array[@clipper.Point64]]) -> @clipper.PolyPath64 {
 ///|
 /// Every feature of `t` grown by `meters` as polygons with its properties, shaped by `join`, `cap`
 /// and `arc_tolerance` (meters, 0 for distance / 500). A negative distance shrinks polygons and
-/// empties lines and points (as Turf's `buffer`); vanished features keep their row.
+/// empties lines and points (as Turf's `buffer`); vanished features keep their row (`cut_to_world`).
 pub fn buffer(
   t : @geom.Table,
   meters : Double,
@@ -118,10 +118,11 @@ pub fn buffer(
 ) -> @geom.Table {
   let b = @geom.TableBuilder::new()
   for f in 0..<t.length() {
-    let (fwd, inv, densify) : (
+    let (fwd, inv, densify, wrap) : (
       (Double, Double) -> (Double, Double),
       (Double, Double) -> (Double, Double),
       Double,
+      Double?,
     ) = match (mode, bbox_of(t, f)) {
       (Geodesic, Some((w, s, e, n))) => {
         let plane = LocalPlane::new((w + e) / 2.0, (s + n) / 2.0)
@@ -129,9 +130,14 @@ pub fn buffer(
           (x, y) => plane.forward(x, y),
           (x, y) => plane.inverse(x, y),
           BUFFER_DENSIFY,
+          if may_wrap(w, s, e, n, meters) {
+            Some(plane.lon0)
+          } else {
+            None
+          },
         )
       }
-      _ => ((x, y) => (x, y), (x, y) => (x, y), 0.0)
+      _ => ((x, y) => (x, y), (x, y) => (x, y), 0.0, None)
     }
     let to_int = (lon : Double, lat : Double) => {
       let (x, y) = fwd(lon, lat)
@@ -154,7 +160,15 @@ pub fn buffer(
       o.add_paths(shape.lines, join, cap)
       o.add_paths(shape.points.map(p => [p]), join, Polygon)
     }
-    let parts = add_tree(b, tree_of(o.execute(meters * METER_SCALE)), to_xy)
+    let tree = tree_of(o.execute(meters * METER_SCALE))
+    let cut = match wrap {
+      Some(lon0) => cut_to_world(tree, to_xy, to_int(lon0, 90.0))
+      None => None
+    }
+    let parts = match cut {
+      Some(cut) => add_tree(b, cut, degree_xy)
+      None => add_tree(b, tree, to_xy)
+    }
     copy_props(b, t, f)
     b.end_feature(polygon_kind(parts), id=t.ids[f])
   }

@@ -127,7 +127,7 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run classify:golden`: mbt-map/analysis's classBreaks / statistics (npm/src/classify.ts) vs simple-statistics 8.0.0 and geostats 2.1.0 on random numbers and GSI attributes (must stay all identical).
 - `npm run classify:node`: classify.ts vs simple-statistics and geostats on random numbers and GSI attributes.
 - `npm run clipper:golden`: clipper vs Clipper2 (clipper2-wasm 0.4.0): boolean ops, trees, offsets (must stay all identical).
-- `npm run buffer:check`: geodesic buffers measured on WGS84 with GeographicLib.
+- `npm run buffer:check`: geodesic buffers measured on WGS84 with GeographicLib. Buffers across the antimeridian and over a pole must come out within ±180° in the expected parts, with their circle's vertices within 0.01% of the distance.
 - `npm run geometry:node`: dissolve / buffer / clip on GSI buildings vs Turf.js.
 - `npm run proj:golden`: proj vs proj4js 2.22.0: every EPSG code it knows and PROJ strings for each projection, both ways (must stay within 1 mm / 1e-8°); a row that compares no point fails). `node proj/unit-cases.mjs` regenerates `proj/projections_test.mbt` (one point per PROJ string, for `moon test`).
 - `npm run proj:node`: proj.wasm vs proj4js speed, 1M points per CRS.
