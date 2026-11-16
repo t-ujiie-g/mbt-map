@@ -314,6 +314,14 @@ const checks = {
       // A negative distance leaves a point without geometry; a geodesic buffer past 10,000 km is refused.
       const shrunkPoint = (await (await pt.buffer(-100)).toGeoJSON()).features[0].geometry;
       const wideBuffer = await pt.buffer(1.5e7).then(() => "", (e) => e.message);
+      // Buffers of 100 km across the antimeridian (two parts within ±180°) and over the north pole (one ring along ±180° to 90°), with their areas.
+      const far = await (await load(fc([179.9, 0].map((x, i) => ({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [x, i ? 89.5 : 35] } }))))).buffer(100000);
+      const farAreas = await far.areas();
+      const cutBuffers = (await far.toGeoJSON()).features.map((f, i) => {
+        const rings = f.geometry.type === "Polygon" ? [f.geometry.coordinates[0]] : f.geometry.coordinates.map((p) => p[0]);
+        const lons = rings.flat().map((c) => c[0]), lats = rings.flat().map((c) => c[1]);
+        return [f.geometry.type, rings.length, Math.min(...lons), Math.max(...lons), Math.max(...lats) === 90, Math.abs(farAreas[i] / (Math.PI * 1e10) - 1) < 0.01];
+      });
       // Spatial relations (relate.wasm, loaded now): a overlaps c, b equals it.
       const third = await load(fc([sq(0.5, "c")]));
       const relations = {
@@ -404,6 +412,7 @@ const checks = {
         badBuffer,
         shrunkPoint,
         wideBuffer,
+        cutBuffers,
         relations,
         shapes,
         classes,
@@ -453,6 +462,7 @@ const checks = {
       JSON.stringify(r.geometry.overlaid) === JSON.stringify(["a/c", "b/c"]) &&
       /invalid buffer options/.test(r.geometry.badBuffer) &&
       r.geometry.shrunkPoint === null && /at most 10,000 km/.test(r.geometry.wideBuffer) &&
+      JSON.stringify(r.geometry.cutBuffers) === JSON.stringify([["MultiPolygon", 2, -180, 180, false, true], ["Polygon", 1, -180, 180, true, true]]) &&
       JSON.stringify(r.geometry.relations.overlaps) === "[0,0]" && JSON.stringify(r.geometry.relations.equals) === "[1,0]" &&
       r.geometry.relations.matrix === "212111212" && /disjoint features match/.test(r.geometry.relations.disjoint) &&
       JSON.stringify(r.geometry.shapes.convex) === "[5]" && r.geometry.shapes.triangles === 4 &&

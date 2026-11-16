@@ -70,6 +70,19 @@ test "a geodesic buffer puts a point's circle at the distance in its local plane
 }
 
 ///|
+test "a geodesic buffer of a MultiPoint is a circle for each point, not the way between them" {
+  let apart = table([(MultiPoint, [[(139.0, 35.0), (140.0, 35.0)]], "m")])
+  let out = buffer(apart, 1000.0)
+  let (p0, p1) = out.parts(0)
+  assert_eq((out.kinds[0], p1 - p0), (MultiPolygon, 2))
+  let (w, _, e, _) = bbox_of(out, 0).unwrap()
+  assert_true(w < 138.99 && e > 140.01)
+  let one = buffer(table([(Point, [[(139.0, 35.0)]], "p")]), 1000.0)
+  let rel = area_of(out, 0) / (2.0 * area_of(one, 0)) - 1.0
+  assert_true(rel.abs() < 1.0e-3)
+}
+
+///|
 test "a planar buffer is round in the coordinates' own plane" {
   let t = table([(Point, [[(-5995.0, -35367.0)]], "a")])
   let out = buffer(t, 1000.0, mode=Planar)

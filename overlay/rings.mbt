@@ -25,6 +25,8 @@ fn shape_of(
   densify~ : Double = 0.0,
 ) -> Shape {
   let shape = { polygons: [], lines: [], points: [], }
+  // The points of a MultiPoint share a ring without being joined by edges.
+  let densify = if t.kinds[f] is (Point | MultiPoint) { 0.0 } else { densify }
   let (p0, p1) = t.parts(f)
   for p in p0..<p1 {
     let (r0, r1) = t.rings(p)

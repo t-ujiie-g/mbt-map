@@ -1,5 +1,5 @@
 // Geodesic buffers through the analysis and geometry wasm, every outer vertex measured to the
-// input with GeographicLib on WGS84, at several latitudes and distances.
+// input with GeographicLib on WGS84, at several latitudes and distances, and buffers cut at ±180° and the poles.
 // Usage: node clipper/buffer-check.mjs; writes bench/results/buffer-geodesic.json.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -67,5 +67,25 @@ for (const lat of [0, 35.68, 60, 80]) {
     }
   }
 }
+// Buffers cut at the antimeridian and over a pole: every vertex off ±180° and ±90° measured the same way.
+const cut = [];
+for (const [name, coordinates, meters, type, parts] of [
+  ["across 180°", [179.9, 35.68], 50000, "MultiPolygon", 2],
+  ["across -180°", [-179.99, -60], 50000, "MultiPolygon", 2],
+  ["over the north pole", [139.77, 89.9], 50000, "Polygon", 1],
+  ["over the south pole", [-70, -89.8], 50000, "Polygon", 1],
+]) {
+  const result = buffer({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates } }, meters);
+  const rings = result.type === "Polygon" ? [result.coordinates[0]] : result.coordinates.map((p) => p[0]);
+  const all = rings.flat();
+  const onCircle = all.filter(([x, y]) => Math.abs(x) < 180 && Math.abs(y) < 90);
+  let worst = 0;
+  for (const v of onCircle) worst = Math.max(worst, Math.abs(distanceTo([coordinates], v) - meters));
+  const within = all.every(([x, y]) => Math.abs(x) <= 180 && Math.abs(y) <= 90);
+  const ok = result.type === type && rings.length === parts && within && onCircle.length > 40 && worst < meters * 1e-4;
+  cut.push({ name, meters, type: result.type, parts: rings.length, vertices: onCircle.length, maxErrorMeters: worst, ok });
+  console.log(`${name.padEnd(20)} ${result.type} of ${rings.length}: ${onCircle.length} vertices on the circle, max error ${worst.toFixed(4)} m${ok ? "" : "  FAILED"}`);
+}
 for (const r of results) console.log(`${r.kind.padEnd(7)} lat ${String(r.lat).padStart(5)} ${String(r.meters).padStart(6)} m: ${r.vertices} vertices, max error ${r.maxErrorMeters.toFixed(4)} m (${(r.maxRelativeError * 100).toFixed(4)}%)`);
-await writeFile(path.join(ROOT, "bench/results/buffer-geodesic.json"), JSON.stringify({ reference: "GeographicLib 2.2.0 (WGS84 geodesics)", results }, null, 2) + "\n");
+await writeFile(path.join(ROOT, "bench/results/buffer-geodesic.json"), JSON.stringify({ reference: "GeographicLib 2.2.0 (WGS84 geodesics)", results, cut }, null, 2) + "\n");
+if (cut.some((c) => !c.ok)) process.exit(1);

@@ -289,5 +289,43 @@
       "maxErrorMeters": 2.0286584208370186,
       "maxRelativeError": 0.00004057316841674037
     }
+  ],
+  "cut": [
+    {
+      "name": "across 180°",
+      "meters": 50000,
+      "type": "MultiPolygon",
+      "parts": 2,
+      "vertices": 51,
+      "maxErrorMeters": 1.8765934199400363,
+      "ok": true
+    },
+    {
+      "name": "across -180°",
+      "meters": 50000,
+      "type": "MultiPolygon",
+      "parts": 2,
+      "vertices": 51,
+      "maxErrorMeters": 1.7182102320439299,
+      "ok": true
+    },
+    {
+      "name": "over the north pole",
+      "meters": 50000,
+      "type": "Polygon",
+      "parts": 1,
+      "vertices": 51,
+      "maxErrorMeters": 0.019645606829726603,
+      "ok": true
+    },
+    {
+      "name": "over the south pole",
+      "meters": 50000,
+      "type": "Polygon",
+      "parts": 1,
+      "vertices": 50,
+      "maxErrorMeters": 0.02568207737931516,
+      "ok": true
+    }
   ]
 }
