@@ -75,6 +75,7 @@ uniform vec3 u_light;
 uniform bool u_lights;
 uniform vec3 u_ambient;
 uniform vec3 u_sun;
+uniform vec3 u_shade;
 uniform vec2 u_pick;
 uniform bool u_picking;
 uniform float u_point;
@@ -144,9 +145,12 @@ void main() {
   // An I3S atlas: the texture's part for this vertex is its uvRegion, which the uvs repeat in.
   if (u_textured) c *= texture(u_image, u_atlas ? v_region.xy + fract(v_uv) * (v_region.zw - v_region.xy) : v_uv);
   if (u_cutoff >= 0.0) { if (c.a < u_cutoff) discard; c.a = 1.0; }
-  float d = u_shading == 1 ? max(dot(normalize(v_normal), u_light), 0.0) : abs(dot(normalize(cross(dFdx(v_enu), dFdy(v_enu))), u_light));
+  float w = dot(normalize(u_shading == 1 ? v_normal : cross(dFdx(v_enu), dFdy(v_enu))), u_light);
+  float d = u_shading == 1 ? max(w, 0.0) : abs(w);
+  // The layer's hemisphere: u_shade is what a face turned straight away from the light loses.
+  vec3 hemi = u_shade == vec3(0.0) ? vec3(1.0) : 1.0 - u_shade * (0.5 - 0.5 * w);
   // The style's lights (ambient plus a directional one), else a fixed light from Mapbox's default direction.
-  vec3 lit = u_shading == 0 ? vec3(1.0) : u_lights ? u_ambient + u_sun * d * sunlit() : vec3(0.55 + 0.45 * d);
+  vec3 lit = u_shading == 0 ? vec3(1.0) : u_lights ? u_ambient * hemi + u_sun * d * sunlit() : 0.55 * hemi + 0.45 * d;
   float a = c.a * u_opacity;
   o = vec4(c.rgb * lit * a, a);
   float s = u_shadow_k.z > 2.5 ? seen() : -1.0;
@@ -154,7 +158,7 @@ void main() {
   if (edge.a > 0.0) o = edge;
 }`;
 
-const UNIFORMS = ["u_model", "u_flat", "u_globe", "u_t", "u_normal", "u_uv", "u_uv_set", "u_color", "u_image", "u_textured", "u_shading", "u_cutoff", "u_opacity", "u_light", "u_pick", "u_picking", "u_point", "u_atlas", "u_lights", "u_ambient", "u_sun", "u_shadow", "u_shadow_map", "u_shadow_k", "u_cut_frame", "u_cut_count", "u_cut_union", "u_cut_planes", "u_cut_edge", "u_cut_mpp", "u_cut_rings", "u_cut_ring_count", "u_cut_poly", "u_cut_inverse"] as const;
+const UNIFORMS = ["u_model", "u_flat", "u_globe", "u_t", "u_normal", "u_uv", "u_uv_set", "u_color", "u_image", "u_textured", "u_shading", "u_cutoff", "u_opacity", "u_light", "u_pick", "u_picking", "u_point", "u_atlas", "u_lights", "u_ambient", "u_sun", "u_shade","u_shadow", "u_shadow_map", "u_shadow_k", "u_cut_frame", "u_cut_count", "u_cut_union", "u_cut_planes", "u_cut_edge", "u_cut_mpp", "u_cut_rings", "u_cut_ring_count", "u_cut_poly", "u_cut_inverse"] as const;
 type Uniforms = Record<(typeof UNIFORMS)[number], WebGLUniformLocation | null>;
 
 /** A primitive on the GPU: its vertex array, how to draw it, and what it is drawn with. */
@@ -247,11 +251,14 @@ export class ModelProgram {
   #program: WebGLProgram;
   #u: Uniforms;
   #pointSize = 2;
+  #shade: number[];
   #input: CustomRenderMethodInput | null = null;
   #casting = false;
   #cutFrame: Float64Array | null = null;
 
-  constructor(gl: WebGL2RenderingContext) {
+  /** `shade` is the layer's `hemisphere` as `hemisphereShade` gives it. */
+  constructor(gl: WebGL2RenderingContext, shade = [0, 0, 0]) {
+    this.#shade = shade;
     const shader = (type: number, source: string) => {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, source);
@@ -303,6 +310,7 @@ export class ModelProgram {
     this.#clip(gl, clip);
     gl.uniform3fv(u.u_light, lights ? Array.from(lights.direction) : LIGHT);
     gl.uniform1i(u.u_lights, lights ? 1 : 0);
+    gl.uniform3fv(u.u_shade, this.#shade);
     if (lights) {
       gl.uniform3fv(u.u_ambient, Array.from(lights.ambient));
       gl.uniform3fv(u.u_sun, Array.from(lights.directional));

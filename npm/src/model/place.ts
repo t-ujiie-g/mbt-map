@@ -77,6 +77,15 @@ export function triple(v: unknown, props: Record<string, unknown>, fallback: num
   return numbers.every(Number.isFinite) ? numbers : fallback;
 }
 
+/**
+ * What the ambient light loses on a face turned straight away from the light, per channel, for a layer's
+ * `hemisphere` (the share from 0 to 1 such a face keeps, or three for red, green and blue): none unless it is one.
+ */
+export function hemisphereShade(v: unknown): number[] {
+  const kept = typeof v === "number" ? [v, v, v] : Array.isArray(v) && v.length === 3 ? v : [];
+  return kept.length === 3 && kept.every((k) => typeof k === "number" && k >= 0 && k <= 1) ? kept.map((k) => 1 - k) : [0, 0, 0];
+}
+
 /** The points of `data` with their properties. */
 export function points(data: unknown): { coords: number[]; props: Record<string, unknown> }[] {
   const out: { coords: number[]; props: Record<string, unknown> }[] = [];

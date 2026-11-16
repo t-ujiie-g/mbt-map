@@ -440,3 +440,16 @@ Where things stand, decisions and open issues. The development history before th
 - **PROGRESS.md**：「サイトの計測タグ」の重なっていた行（古い方）を消し、見出しの前の空行をそろえた。
 - 大きさ（gzip）：mbt-map（index.js）167,101 → 167,118 バイト（予算 168KB）、mbt-map/ui 9,811 → 9,906 バイト（予算 10KB。残り 94 バイト）、mbt-map/search 2,849 → 2,911 バイト（予算 5KB）。
 - 確かめ：`moon check --target all`、`moon test --target all`（wasm 930、wasm-gc 940、js 989、native 930）、npm のテスト（458）と大きさ、bench のテスト（21）、pack test（Chromium、24/24）、`style:public`、`long-comments`（47 のまま）。Firefox と WebKit の pack test は回していない（CI の `pack-browsers` が見る）。
+
+## 3D レイヤーの半球光：`hemisphere`（2026-11-16、Mac）
+
+「直していないもの」の 1 件目（光に背を向けた面がどれも環境光だけの同じ色になる）の直し。ブランチ `feat/model-hemisphere-light`。
+
+- **足したもの**：`mbt-map/3d` の `modelLayer`・`tilesLayer`・`i3sLayer` のオプション `hemisphere`（型 `Hemisphere`：0〜1 の数、または色をつける `[r, g, b]`）。平行光に真っすぐ背を向けた面に残る環境光の割合で、光を向いた面は全部を保ち、その間は法線と光の向きの角度でならす：`ambient * (1 - (1 - hemisphere) * (0.5 - 0.5 * dot(n, l)))`。既定の 1 は今までと同じ式（シェーダーは `u_shade` が 0 のとき係数を `vec3(1.0)` にするので、既定の描画は変わらない）。範囲の外や形の違う値は無視する。スタイルの `lights` がないときの固定の光（0.55 + 0.45 × Lambert）の 0.55 にも同じようにかかる。
+- **半球の軸を「上」ではなく「光の向き」にした理由**：建物の壁は法線の上向きの成分がどれも 0 なので、上向きの軸（空と地面の色を `n.up` で混ぜる普通の半球光）では、太陽の反対側から見える 2 枚の壁が同じ色のままで、屋根と壁の差しか出ない（屋根は今も日が当たって違う色）。光の向きを軸にすると、壁の向きごとに環境光が変わり、太陽が真上のときは普通の半球光と同じになる。
+- **スタイルの `lights` ではなくレイヤーのオプションにした理由**：`lights` はエンジン（メインのバンドル、167.1KB / 168KB）が読んで `custom_numbers` で渡すので、そこに足すとメインのバンドルが増える。今回は 3D のエントリだけにとどめた。そのため押し出し（fill-extrusion）にはかからない。押し出しにも要るなら、`lights` の ambient に同じ意味のプロパティを足し、`render_webgl2` の押し出しのシェーダーに同じ 1 行を入れる形になる（メインのバンドルを測ってから）。
+- **サイトのトップ**（`site/hero.js`）：`hemisphere: 0.6`。`?time=10:00`、方位 150°（太陽の反対側から）、傾き 62° のスクリーンショットで、一様な灰色だった壁に面ごとの明るさの差と稜線が出ることを見た。太陽の側（方位 -30°）の見た目はほとんど変わらない。`buildings-shadows` のサンプルは押し出しなので対象外。
+- **サイズ**（gzip、`npm --prefix npm run size`）：`mbt-map/3d` 9463 → 9671 B（予算 10000）。`mbt-map` 167101 B、3D Tiles 10487 B、I3S 8323 B、3d worker 44086 B は変わらず。
+- **確かめ**：`npm --prefix npm test`（458、`hemisphereShade` の値と無視する値）、pack test の `model` に 1 件追加（下からの光 `[0, 180]` で、箱の上面は環境光だけの色のまま、`hemisphere: 0.5` のレイヤーの箱はその半分：`[229, 26, 26]` と `[115, 13, 13]`）。pack test は Chromium で `model,tiles,pointcloud,plateau,custom,samples`、WebKit と Firefox で `model,tiles`。`npm --prefix bench test`（21）、`node bench/lib/long-comments.mjs`（触ったファイルに増えた塊なし）。MoonBit は触っていない（`moonbit/mbtmap` は 3D のレイヤーを写していない）。
+- **法線のないモデル**（画面の微分から作る法線）：`hemisphere` には符号つきで使う（見ている側を向く）。pack test のモデルはどれも法線を持つので、その場かぎりのスクリプトで確かめた：法線のない水平な四角形を真上から見て、環境光 0.5・平行光 0.25・`hemisphere: 0.5` で、真上からの光は `[191, 191, 191]`（0.75）、真下からの光は `[128, 128, 128]`（0.25 + 0.25）。三角形の巻き方を逆にしても同じで、Chromium・Firefox・WebKit で同じ値。
+- **確かめていないこと**：性能の計測はしていない（フラグメントごとに掛け算と足し算が数回増えるだけ）。I3S のレイヤーでの見た目（3D Tiles と同じプログラムを通る）。
