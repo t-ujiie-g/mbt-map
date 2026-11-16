@@ -22,7 +22,7 @@ pbf ← formats ← services_worker
 core/geom ← xml ← kml ← xml_worker                    (kml also takes geom)
 tiff ← geotiff_worker
 geom ← analysis ← analysis_worker
-geom/clipper ← overlay ← geometry_worker               (clipper is its own module, ports/clipper)
+geom/clipper ← overlay ← geometry_worker
 geom ← relate ← relate_worker                         (which also takes @analysis.Index)
 geom ← robust ← (hull, delaunay)
 geom ← (simplify, hull, delaunay, lineops) ← shapes_worker
@@ -37,6 +37,7 @@ core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← 
 wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 ```
 
+- `clipper`, `draco`, `lepcc`, `meshopt`, `robust` and `tiff` are modules of their own under `ports/` (`t-ujiie-g/<name>` on mooncakes): they import no engine package, and the engine imports them through the workspace.
 - Nothing under `map/` may depend on a UI framework.
 - `map` must not import `worker` (it would pull mvt/tess into the main bundle); shared constants live in `core` or are mirrored with a pointer to the original.
 - `core`, `pbf`, `mvt`, `tess`, `style` are pure MoonBit and must pass tests on every backend.

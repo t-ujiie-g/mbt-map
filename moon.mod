@@ -17,4 +17,9 @@ description = "A lightweight WebGIS library for the web: maps, analysis, data fo
 
 import {
   "t-ujiie-g/clipper@0.1.0",
+  "t-ujiie-g/draco@0.1.0",
+  "t-ujiie-g/lepcc@0.1.0",
+  "t-ujiie-g/meshopt@0.1.0",
+  "t-ujiie-g/robust@0.1.0",
+  "t-ujiie-g/tiff@0.1.0",
 }

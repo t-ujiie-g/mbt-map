@@ -3,7 +3,7 @@
 
 import {
   "t-ujiie-g/mbtmap_engine/core",
-  "t-ujiie-g/mbtmap_engine/tiff",
+  "t-ujiie-g/tiff",
   "t-ujiie-g/mbtmap_engine/wasmio",
 }
 

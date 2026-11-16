@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/mbtmap_engine/meshopt"
+package "t-ujiie-g/meshopt"
 
 // Values
 pub fn decode_gltf_buffer(FixedArray[Byte], Int32, Int32, FixedArray[Byte], Int32, Int32, Mode, Filter) -> Bool

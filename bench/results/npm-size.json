@@ -206,7 +206,7 @@
     },
     {
       "name": "3d worker",
-      "bytes": 44086,
+      "bytes": 44150,
       "budget": 50000
     },
     {
@@ -251,7 +251,7 @@
     },
     {
       "name": "GeoTIFF (loaded by the data worker on the first raster read)",
-      "bytes": 19834,
+      "bytes": 19807,
       "budget": 20000
     },
     {
