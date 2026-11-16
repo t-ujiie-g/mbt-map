@@ -1,6 +1,6 @@
 {
   "env": {
-    "package": "mbt-map@0.1.0",
+    "package": "mbt-map@0.1.1",
     "compression": "gzip -9"
   },
   "rows": [
@@ -141,7 +141,7 @@
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 43044,
+      "bytes": 43066,
       "budget": 50000
     },
     {

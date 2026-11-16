@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：0.1.0 を公開した（2026-11-15）。npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita`、タグ `v0.1.0`（GitHub のリリースとサイト）。次の版からはタグで npm に段階公開される（docs/dev/RELEASING.md）。
+- **いま**：0.1.1 の版上げまで済んだ（2026-11-16）。公開（mooncakes への `moon publish`、タグ `v0.1.1`、npm の段階公開の承認）はユーザーが行う（docs/dev/RELEASING.md）。0.1.0 は 2026-11-15 に公開済み（npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita`）。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -12,6 +12,7 @@ Where things stand, decisions and open issues. The development history before th
   - GitHub Pages：手書きのトップ、docs の HTML、動く例。サンプル集とテーマの切り替え、例の画面の英語化。
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
+  - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
 - **次**：単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
@@ -473,3 +474,15 @@ Where things stand, decisions and open issues. The development history before th
   - 出力の辺は分割していない。長いまっすぐな辺（長い線のバッファの側面、マイター結合の大きな四角）は前からの挙動どおり 2 頂点のままで、経緯度では端を結ぶ直線になる。極の近くではずれが大きい。
   - 中心から半球を越える形（投影がもともと正しくない範囲）は、有限の結果になることだけを確かめた。
   - 性能の計測（`geometry:node`）はしていない。届かない地物は `may_wrap` の計算が増えるだけ。
+
+## 0.1.1 の前の点検と版上げ（2026-11-16、Mac M2）
+
+0.1.0 のあとに入った分（#42〜#45）を AGENTS §7・§8 で見て、版を 0.1.1 にした。ブランチ `chore/release-0.1.1`。
+
+- **点検で直したもの**：`@overlay.buffer` の説明の文（`cut_to_world` への参照が「行は残る」の側に付いていた）。ほかに直すものは見つからなかった：定数は名前つき（`TURN`・`HALF_TURN`・`POLE`・`MAX_COPIES`）、新しい `pub` はなし（`.mbti` の差分なし）、ホットパス（デコード、テッセレーション、フレーム）には触れていない、`long-comments` は 47 のまま。
+- **試して戻したもの**（大きくなった）：`cut_to_world` と `buffer` の `match` を `Option::map`・`bind` にする → geometry.wasm 43,044 → 43,281 バイト（クロージャの分）。属性テーブルの `zoomTo` と `reveal` の同じ述語を関数にまとめる → mbt-map/ui 9,906 → 9,911 バイト（予算まで 94 バイトしかない）。
+- **計測**（`geometry:node`、単独で。GSI の建物 17,764 件、5 回の中央値）：バッファ 10 m は 388.7 ms（Turf 1246.8 ms）。前の記録は 490.8 ms（Turf 1176.9 ms）で、切る処理（`may_wrap` の判定）を足しても遅くなっていない。dissolve 170.3 ms（前 192.8）、clip 59 ms（前 74.3）も同じ向きに動いており、差は計測した時期の違いと見る。
+- **セキュリティ**：`npm audit`（npm、bench、examples/react）0 件、Dependabot の開いている警告 0 件。依存は足していない。新しい入力の経路は測地バッファの切り分けだけで、写しは左右 2 つまで、2 回以上回るリングは切らずに返し、繰り返しはリングと頂点の数で止まる。`hemisphere` は 0〜1 の数か 3 つ組のほかは無視する。
+- **版**：`npm/package.json`（とロックファイル）、`moonbit/mbtmap`、`moonbit/mbtmap_rabbita`（import する `mbtmap` も）、`bench/moonbit`、`examples/rabbita` を 0.1.1 に。README・docs/getting-started.md・npm/README.md の CDN の URL も 0.1.1（npm に出るまでは開けない）。CHANGELOG の `## Unreleased` を `## 0.1.1` にした。
+- **README のバッジ**（ユーザーの依頼）：README.md と npm/README.md の先頭に npm の版・月間ダウンロード・CI・ライセンス・型（shields.io と GitHub Actions のバッジ）と mooncakes へのリンク。mooncakes の版を出す動的なバッジは見当たらず、パッケージ名だけの静的なバッジにした。CI は PR でだけ走るので、バッジは直近の実行の結果を出す。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 942、wasm-gc 952、js 1001、native 942）、npm のテスト（459）と大きさ、bench のテスト（22）、`node bench/lib/release.mjs v0.1.1`、pack test（Chromium、24/24）、`long-comments`（47 のまま）。
