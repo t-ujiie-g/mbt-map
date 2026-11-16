@@ -61,6 +61,8 @@ export interface AttributeTable extends Controller<AttributeTableState> {
   goTo(page: number): void;
   next(): void;
   previous(): void;
+  /** Goes to the page with feature `id`'s row; false when the query or filter leaves it out. */
+  reveal(id: FeatureId): boolean;
   /** Selects the feature `id`, alone or with `add` added to the selection (or taken out if it was in). */
   select(id: FeatureId, options?: { add?: boolean }): void;
   clear(): void;
@@ -171,6 +173,12 @@ class AttributeTableStore extends Store<AttributeTableState> implements Attribut
 
   previous(): void {
     this.goTo(this.state.page - 1);
+  }
+
+  reveal(id: FeatureId): boolean {
+    const at = this.#view.findIndex((r) => r.id !== null && String(r.id) === String(id));
+    if (at >= 0) this.goTo(Math.floor(at / this.state.pageSize));
+    return at >= 0;
   }
 
   select(id: FeatureId, options: { add?: boolean } = {}): void {

@@ -45,7 +45,7 @@ an entry says otherwise.
   © OpenMapTiles, Data © OpenStreetMap contributors (ODbL 1.0,
   https://www.openstreetmap.org/copyright). Served by https://openfreemap.org.
 - bench/fixtures/protomaps/ (downloaded, not committed): Protomaps vector tiles
-  (Protomaps basemap schema, daily build 20261103) of the GSI fixtures' area.
+  (Protomaps basemap schema, daily build 20261115) of the GSI fixtures' area.
   Data © OpenStreetMap contributors (ODbL 1.0, https://www.openstreetmap.org/copyright).
   Served by https://build.protomaps.com.
 - bench/fixtures/plateau-chiyoda/ (downloaded, not committed): PLATEAU 3D Tiles

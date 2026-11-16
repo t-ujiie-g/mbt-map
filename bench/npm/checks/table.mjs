@@ -46,7 +46,13 @@ export async function tableChecks(page) {
     t.goTo(99);
     const last = { page: t.state.page, pages: t.state.pages, rows: t.state.rows.length };
     t.previous();
-    return { second, last, back: t.state.page };
+    const back = t.state.page;
+    t.goTo(99);
+    const id = t.state.rows[0].id;
+    t.goTo(0);
+    const revealed = [t.reveal(id), t.state.page, t.reveal("no such place"), t.state.page];
+    t.goTo(back);
+    return { second, last, back, revealed };
   });
   await query.fill("上野");
   await page.waitForFunction(() => window.__table.state.rows.length === 1);
@@ -119,6 +125,7 @@ export async function tableChecks(page) {
     JSON.stringify(folded.names) === JSON.stringify(["東京タワー"]) &&
     JSON.stringify(paged.second) === JSON.stringify(expected.names.slice(NAMES_PER_PAGE, 2 * NAMES_PER_PAGE)) &&
     paged.last.page === initial.pages - 1 && paged.last.rows === initial.total - NAMES_PER_PAGE * (initial.pages - 1) && paged.back === initial.pages - 2 &&
+    JSON.stringify(paged.revealed) === JSON.stringify([true, initial.pages - 1, false, initial.pages - 1]) &&
     JSON.stringify(chosen.selected) === JSON.stringify(["上野駅"]) && JSON.stringify(chosen.selectedRows) === JSON.stringify(["上野駅"]) &&
     picked.ueno.selected === true && near(picked.at, 139.7774, 35.7141) &&
     JSON.stringify(picked.both) === JSON.stringify({ selected: ["上野駅", "品川駅"], shinagawa: true }) && JSON.stringify(picked.cleared) === JSON.stringify([false, false]) &&

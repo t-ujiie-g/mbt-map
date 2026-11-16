@@ -389,7 +389,8 @@ Operations:
 - `setQuery(text)`: keeps rows whose search columns contain the text, ignoring full and half width, case, and katakana versus hiragana (as `mbt-map/search` does).
 - `setFilter(predicate)`, `setPageSize(n)`, `goTo(page)`, `next()`, `previous()`.
 - `select(id, { add })`: select alone, or with `add` toggle in the selection; `clear()` empties it.
-- `zoomTo(id, options?)`: fits the map to the feature; false when it has no geometry.
+- `reveal(id)`: goes to the page with the feature's row (to scroll to it after a pick on the map); false when the query or filter leaves it out.
+- `zoomTo(id, options?)`: fits the map to the feature; false when it has no geometry. A feature split at the antimeridian (Russia, Fiji) is fitted across it.
 - `refresh()`, `setColumns(columns)` (null for every key), `passing(rows)` (those rows that pass the query and filter).
 
 `cellText(value)` writes a cell: empty for null and undefined, JSON for objects and arrays.

@@ -65,6 +65,8 @@ export async function analyzeChecks(page) {
     routed && clipped.ok &&
     sight?.visible > 0 && sight.visible <= 1 && viewshed.layer === "raster" && viewshed.source === "canvas" &&
     typeof target?.visible === "boolean" && rows.every((r) => r.length > 0) &&
+    // Each bound is listed once, also when a class holds one value.
+    rows[0].split("Breaks")[1] === [...new Set(cells.breaks.map((b) => b.toFixed(2)))].join(" / ") &&
     JSON.stringify(cleared.layers) === JSON.stringify([false, false]) && cleared.state.cells === null && cleared.state.route === null && cleared.state.sight === null;
   return { ok, fixtures, cells, route, routeLine, clipped, sight, viewshed, target, rows, picked, cleared: cleared.layers };
 }
