@@ -5,6 +5,7 @@ All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujii
 ## Unreleased
 
 - `mbt-map/analysis`: geodesic `buffer` results stay within ±180° of longitude. A buffer across the antimeridian is cut there into a MultiPolygon, and one that holds a pole runs along ±180° to the pole's latitude, so it fills as a cap in planar tools. Before, longitudes passed ±180° and a buffer over a pole was a ring around it. Buffers that reach neither are unchanged.
+- `mbt-map/analysis`: a geodesic `buffer` of a MultiPoint is a circle around each point. Before, points far apart were buffered as the line through them.
 
 ## 0.1.0
 

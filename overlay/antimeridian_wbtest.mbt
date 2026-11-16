@@ -254,8 +254,7 @@ test "a buffer that is not cut keeps the plane's vertices as they are" {
 
 ///|
 test "a band around a pole and a buffer over both poles come out as one ring" {
-  // Twelve circles of 20 km, 29 km apart on the parallel of 89.5°, a ring
-  // each: `shape_of` splits the way between the points of one ring.
+  // Twelve circles of 20 km, 29 km apart on the parallel of 89.5°.
   let around = Array::makei(12, i => [(i.to_double() * 30.0 - 170.0, 89.5)])
   let band = buffer(table([(MultiPoint, around, "m")]), 20000.0)
   assert_eq((band.kinds[0], part_count(band, 0)), (Polygon, 1))
