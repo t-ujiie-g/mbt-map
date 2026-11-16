@@ -213,7 +213,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
     SUCH DAMAGE.
 
-- clipper/*.mbt: port of Clipper2 2.0.1 (CPP/Clipper2Lib, commit 642390d:
+- ports/clipper/*.mbt: port of Clipper2 2.0.1 (CPP/Clipper2Lib, commit 642390d:
   clipper.core.h, clipper.engine.h/.cpp, clipper.offset.h/.cpp and the boolean
   and offset helpers of clipper.h; without rectangle clipping, triangulation,
   Minkowski and Z values)
@@ -222,7 +222,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright (c) Angus Johnson 2010-2026
     License: Boost Software License 1.0 (text in section 2).
 
-- clipper/libcxx_sort.mbt: follows libc++'s std::sort (LLVM 21,
+- ports/clipper/libcxx_sort.mbt: follows libc++'s std::sort (LLVM 21,
   libcxx/include/__algorithm/sort.h), so that Clipper2's intersection order
   matches the C++ library's
   https://github.com/llvm/llvm-project — Apache License v2.0 with LLVM

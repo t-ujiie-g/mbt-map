@@ -1,5 +1,6 @@
 members = [
   ".",
+  "./ports/clipper",
   "./moonbit/mbtmap",
   "./moonbit/mbtmap_rabbita",
   "./bench/moonbit",

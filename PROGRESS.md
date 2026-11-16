@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：0.1.1 の版上げまで済んだ（2026-11-16）。公開（mooncakes への `moon publish`、タグ `v0.1.1`、npm の段階公開の承認）はユーザーが行う（docs/dev/RELEASING.md）。0.1.0 は 2026-11-15 に公開済み（npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita`）。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper` を `ports/clipper`（`t-ujiie-g/clipper` 0.1.0）に切り出した。0.1.1 は 2026-11-16 に公開済み（npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita`）。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：単独で使える移植（`mvt`、geojson-vt、`proj` など）を mooncakes に。Phase 21（VISION §8）。
+- **次**：単独の移植の (2)〜(5)（`draco`・`meshopt`・`lepcc`・`tiff`・`robust`、`pbf`・`mvt`、`proj`・`geodesic`、点検）。その後 Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -486,3 +486,12 @@ Where things stand, decisions and open issues. The development history before th
 - **版**：`npm/package.json`（とロックファイル）、`moonbit/mbtmap`、`moonbit/mbtmap_rabbita`（import する `mbtmap` も）、`bench/moonbit`、`examples/rabbita` を 0.1.1 に。README・docs/getting-started.md・npm/README.md の CDN の URL も 0.1.1（npm に出るまでは開けない）。CHANGELOG の `## Unreleased` を `## 0.1.1` にした。
 - **README のバッジ**（ユーザーの依頼）：README.md と npm/README.md の先頭に npm の版・月間ダウンロード・CI・ライセンス・型（shields.io と GitHub Actions のバッジ）と mooncakes へのリンク。mooncakes の版を出す動的なバッジは見当たらず、パッケージ名だけの静的なバッジにした。CI は PR でだけ走るので、バッジは直近の実行の結果を出す。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 942、wasm-gc 952、js 1001、native 942）、npm のテスト（459）と大きさ、bench のテスト（22）、`node bench/lib/release.mjs v0.1.1`、pack test（Chromium、24/24）、`long-comments`（47 のまま）。
+
+## 単独の移植 (1)：形の決めと `clipper`（2026-11-17、Mac）
+
+- **決めたこと**（ユーザー判断）：移植ごとに 1 つのモジュールにする（1 つのまとめモジュールや、エンジンを丸ごと出す形は取らない）。最初の範囲は 10 個（`clipper`、`draco`、`meshopt`、`lepcc`、`tiff`、`robust`、`pbf`、`mvt`、`proj`、`geodesic`）。版は移植ごとに独立で 0.1.0 から。
+- **調べたこと**：エンジンのパッケージの依存を見ると、`clipper`・`draco`・`meshopt`・`lepcc`・`tiff`・`robust` はエンジンのほかのパッケージを import しない。`pbf` は `@core` の UTF-8 の補助を 1 か所、`proj` と `geodesic` は `@core.Trig` だけを使う。`tiler`・`relate`・`delaunay`・`hull`・`simplify`・`isolines`・`tess` などは `@core` の定数や `@geom.Table` に依存するので、今回の範囲の外。
+- **分ける前の計測**（AGENTS §2：パッケージの分割は計測してから）：`clipper` を別モジュールにした実験で、全ターゲットの `moon check`、wasm-gc のテスト（952）、npm のビルドが通り、geometry.wasm は 43,066 → 43,051 バイト（gzip）。モジュールの境界は出力の大きさに効かない。
+- **形**：`ports/<名前>/` に `moon.mod`（`t-ujiie-g/<名前>`）と、パッケージのファイル、README（使い方の例）、LICENSE、NOTICE（移植元の著作権とライセンスの本文）。`moon.work` のメンバーにし、ルートの `moon.mod` が同じ版を import する。エンジンのパッケージは `"t-ujiie-g/<名前>"` を import する（別名は前と同じ `@clipper` なので、使う側のコードは変わらない）。`bench/lib/ports.test.mjs` が、版・ワークスペース・3 つのファイル・エンジンを import していないことを見る。出し方は docs/dev/RELEASING.md。
+- **`clipper`**：`t-ujiie-g/clipper` 0.1.0。ライセンスの欄は `Apache-2.0 AND BSL-1.0`（移植は Apache-2.0、Clipper2 は BSL-1.0）。`moon package --list` はその 15 個の `.mbt` と `moon.mod`・`moon.pkg`・`.mbti`・README・LICENSE・NOTICE だけ。README の例は一度テストとしてコンパイルして通した（リポジトリには残していない）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 942、wasm-gc 952、js 1001、native 942：前と同じ数）、npm のテスト（459）と大きさ、bench のテスト（23）、`clipper:golden`（10720 + 4500 すべて一致）、`buffer:check`（結果のファイルは変わらない）、`long-comments`（47 のまま）、pack test の `analysis,showcase-html`（Chromium）。

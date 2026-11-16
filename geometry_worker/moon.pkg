@@ -2,7 +2,7 @@
 // boolean operations and offsetting over tables (`@overlay`).
 
 import {
-  "t-ujiie-g/mbtmap_engine/clipper",
+  "t-ujiie-g/clipper",
   "t-ujiie-g/mbtmap_engine/geom",
   "t-ujiie-g/mbtmap_engine/overlay",
   "t-ujiie-g/mbtmap_engine/wasmio",

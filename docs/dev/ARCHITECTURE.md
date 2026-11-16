@@ -22,7 +22,7 @@ pbf ← formats ← services_worker
 core/geom ← xml ← kml ← xml_worker                    (kml also takes geom)
 tiff ← geotiff_worker
 geom ← analysis ← analysis_worker
-geom/clipper ← overlay ← geometry_worker
+geom/clipper ← overlay ← geometry_worker               (clipper is its own module, ports/clipper)
 geom ← relate ← relate_worker                         (which also takes @analysis.Index)
 geom ← robust ← (hull, delaunay)
 geom ← (simplify, hull, delaunay, lineops) ← shapes_worker

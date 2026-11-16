@@ -14,3 +14,7 @@ license = "Apache-2.0"
 keywords = [ "map", "gis", "webgis", "vector-tile", "webgl2", "3d-tiles" ]
 
 description = "A lightweight WebGIS library for the web: maps, analysis, data formats, GIS services and 3D"
+
+import {
+  "t-ujiie-g/clipper@0.1.0",
+}

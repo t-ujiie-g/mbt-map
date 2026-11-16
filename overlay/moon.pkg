@@ -1,5 +1,5 @@
 import {
-  "t-ujiie-g/mbtmap_engine/clipper",
+  "t-ujiie-g/clipper",
   "t-ujiie-g/mbtmap_engine/geom",
   "moonbitlang/core/cmp",
   "moonbitlang/core/int64",
