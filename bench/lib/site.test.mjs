@@ -86,3 +86,16 @@ test("deadLinks lists a built site's links to missing files, folders without an 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("each sample's import map lists the entries the sample imports, no others", () => {
+  const samples = path.join(ROOT, "examples/samples");
+  for (const id of readdirSync(samples)) {
+    const page = path.join(samples, id, "index.html");
+    if (id === "node_modules" || !existsSync(page)) continue;
+    const html = readFileSync(page, "utf8");
+    const code = readdirSync(path.join(samples, id)).filter((f) => f.endsWith(".js")).map((f) => readFileSync(path.join(samples, id, f), "utf8")).join("\n");
+    const imported = [...new Set([...`${code}\n${html}`.matchAll(/(?:from|import)\s*\(?"(mbt-map[^"]*)"/g)].map((m) => m[1]))].sort();
+    const mapped = Object.keys(JSON.parse(html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]).imports).sort();
+    assert.deepEqual(mapped, imported, id);
+  }
+});
