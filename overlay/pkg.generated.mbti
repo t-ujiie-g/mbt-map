@@ -2,7 +2,7 @@
 package "t-ujiie-g/mbtmap_engine/overlay"
 
 import {
-  "t-ujiie-g/mbtmap_engine/clipper",
+  "t-ujiie-g/clipper",
   "t-ujiie-g/mbtmap_engine/geom",
 }
 

@@ -1,7 +1,7 @@
 // Export surface for the mvt and tess benches and golden tests; names come from `#export_name`.
 
 import {
-  "t-ujiie-g/mbtmap_engine/clipper",
+  "t-ujiie-g/clipper",
   "t-ujiie-g/mbtmap_engine/cluster_props",
   "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/draco",

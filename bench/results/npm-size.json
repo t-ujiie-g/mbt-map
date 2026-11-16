@@ -141,7 +141,7 @@
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 43066,
+      "bytes": 43051,
       "budget": 50000
     },
     {
