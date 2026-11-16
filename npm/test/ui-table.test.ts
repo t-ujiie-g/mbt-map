@@ -47,6 +47,14 @@ test("rowsOf: many pieces of one id stay one level deep, also after a collection
   assert.deepEqual(row.geometry, { type: "GeometryCollection", geometries: [point(1, 1), point(2, 2)] });
 });
 
+test("boxOf: a geometry split at the antimeridian gets the box across it; others keep theirs", () => {
+  const ring = (w: number, e: number) => [[[w, 50], [e, 50], [e, 70], [w, 70], [w, 50]]];
+  assert.deepEqual(boxOf({ type: "MultiPolygon", coordinates: [ring(30, 180), ring(-180, -169)] }), [30, 50, 191, 70]);
+  assert.deepEqual(boxOf({ type: "Polygon", coordinates: ring(-170.1, -160.3) }), [-170.1, 50, -160.3, 70]);
+  assert.deepEqual(boxOf({ type: "Polygon", coordinates: ring(-10, 20) }), [-10, 50, 20, 70]);
+  assert.deepEqual(boxOf(point(-170, 5)), [-170, 5, -170, 5]);
+});
+
 test("columnsOf: every key in the order first seen", () => {
   assert.deepEqual(columnsOf([row(1, { b: 1, a: 2 }), row(2, { c: 3, a: 4 }), row(3, {})]), ["b", "a", "c"]);
 });

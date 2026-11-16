@@ -246,6 +246,8 @@ export function createAnalysis(map, beforePick = () => {}) {
 }
 
 const km2 = (v) => `${v.toFixed(2)} km²`;
+// The bounds once each: a class of one value (jenks' top class is often the maximum alone) repeats its bound.
+const breakList = (breaks) => breaks.map((b) => b.toFixed(2)).filter((b, i, all) => b !== all[i - 1]).join(" / ");
 const meters = (v) => (v >= 1000 ? `${(v / 1000).toFixed(2)} km` : `${Math.round(v)} m`);
 
 /** A legend label for the cells' classes, or undefined for other layers. */
@@ -277,7 +279,7 @@ export function analysisActions(a, s, center) {
 /** Each tool's readout as [term, description] rows. */
 export function analysisRows(s) {
   const cells =
-    s.cells === "loading" ? [["", "Computing…"]] : s.cells ? [["Places", `${s.cells.count}`], ["Breaks", s.cells.breaks.map((b) => b.toFixed(2)).join(" / ")]] : [["—", "Colors the places' Voronoi cells by area in 5 classes (natural breaks)"]];
+    s.cells === "loading" ? [["", "Computing…"]] : s.cells ? [["Places", `${s.cells.count}`], ["Breaks", breakList(s.cells.breaks)]] : [["—", "Colors the places' Voronoi cells by area in 5 classes (natural breaks)"]];
   const route =
     s.route === "loading" ? [["", "Computing…"]]
     : s.route?.error ? [["—", s.route.error]]

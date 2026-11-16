@@ -207,7 +207,9 @@ function drawLegend(column, breaks) {
   PALETTE.forEach((color, i) => {
     const swatch = el("i");
     swatch.style.background = color;
-    entries.append(swatch, el("span", { textContent: `${compact.format(breaks[i])} – ${compact.format(breaks[i + 1])}` }));
+    const [from, to] = [compact.format(breaks[i]), compact.format(breaks[i + 1])];
+    // A class of one value (jenks' top class is often the maximum alone) reads as that value.
+    entries.append(swatch, el("span", { textContent: from === to ? from : `${from} – ${to}` }));
   });
   $("legend").replaceChildren(el("b", { textContent: HEADINGS[column] ?? column }), entries);
 }
