@@ -119,7 +119,8 @@ map.on("load", () => {
   light();
   setInterval(light, 60_000);
   // A view this close needs no finer tiles than 16 px of error, which keeps the download small.
-  const buildings = (url) => map.addLayer(tilesLayer({ id: "plateau", url, height: GEOID, maximumScreenSpaceError: 16 }));
+  // The hemisphere gives the walls the sun does not reach their shape.
+  const buildings = (url) => map.addLayer(tilesLayer({ id: "plateau", url, height: GEOID, maximumScreenSpaceError: 16, hemisphere: 0.6 }));
   buildings(PLAIN);
   const textures = document.querySelector(".map-card .map-toggle");
   textures?.addEventListener("click", () => {

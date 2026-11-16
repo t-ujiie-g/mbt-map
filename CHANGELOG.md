@@ -2,6 +2,10 @@
 
 All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujiie-g/mbtmap` and `t-ujiie-g/mbtmap_rabbita`. They share one version.
 
+## Unreleased
+
+- `mbt-map/3d`: `hemisphere`, an option of `modelLayer`, `tilesLayer` and `i3sLayer` that shades the ambient light on faces turned away from the directional light, so the side of a model the light does not reach keeps its shape. The default draws as before.
+
 ## 0.1.0
 
 The first release.
