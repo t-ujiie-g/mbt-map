@@ -4,7 +4,7 @@ import { mercatorMeters, type Clipping } from "./clipping";
 import type { CustomLayerInterface, CustomRenderMethodInput } from "./custom";
 import type { Material, Primitive } from "./model/gltf";
 import { ModelProgram, releaseModel, uploadModel, type GpuModel } from "./model/draw";
-import { Y_UP, triple, mercatorFrame, placement, points, sphereFrame, value, type Value } from "./model/place";
+import { Y_UP, hemisphereShade, triple, mercatorFrame, placement, points, sphereFrame, value, type Value } from "./model/place";
 import type { Tile } from "./tiles/tileset";
 import { IDENTITY } from "./tiles/geo";
 import type { TilesEngine } from "./3d-tiles";
@@ -46,6 +46,13 @@ export interface LoadedModel {
 
 export type { Value } from "./model/place";
 
+/**
+ * A hemisphere light for a layer's lit surfaces: the share of the ambient light (0 to 1, or [r, g, b] for a
+ * tinted one) a face turned straight away from the directional light keeps; a face turned to it keeps all, and
+ * those between are eased by the angle. It gives the sides the light does not reach their shape. Default 1 (none).
+ */
+export type Hemisphere = number | [number, number, number];
+
 /** Three numbers, the whole or each one a constant or `["get", key]`. */
 export type Triple = Value<[Value<number>, Value<number>, Value<number>]>;
 
@@ -55,7 +62,7 @@ export type Triple = Value<[Value<number>, Value<number>, Value<number>]>;
  * `scale` [x, y, z], `rotation` [x, y, z] in degrees about the east, north and up axes (z turns the
  * model clockwise seen from above) and `translation` [east, north, up] in meters, as Mapbox's
  * `model-scale`, `model-rotation` and `model-translation`; `opacity` 0 to 1. Each may read the feature's
- * properties with `["get", key]`, as a whole or per number.
+ * properties with `["get", key]`, as a whole or per number. `hemisphere` shades the ambient light (`Hemisphere`).
  */
 export interface ModelLayerOptions extends ModelOptions {
   id: string;
@@ -65,6 +72,7 @@ export interface ModelLayerOptions extends ModelOptions {
   rotation?: Triple;
   translation?: Triple;
   opacity?: Value<number>;
+  hemisphere?: Hemisphere;
 }
 
 const client = new WorkerClient("3d");
@@ -146,7 +154,7 @@ export class ModelLayer implements CustomLayerInterface {
   onAdd(map: unknown, gl: WebGL2RenderingContext): void {
     this.#map = map as MapLike;
     this.#gl = gl;
-    this.#program = new ModelProgram(gl);
+    this.#program = new ModelProgram(gl, hemisphereShade(this.#options.hemisphere));
     if (this.#model) this.#upload(gl);
   }
 
@@ -320,7 +328,7 @@ export function pointCloudLayer(options: PointCloudLayerOptions): PointCloudLaye
  * external tilesets, implicit tiling), refined while a tile's screen-space error exceeds
  * `maximumScreenSpaceError` (default 8, as loaders.gl), `height` meters added to every tile (to set
  * ellipsoidal heights on the map's ground), at most `maximumLoadedTiles` contents kept (default 256),
- * points drawn `pointSize` CSS pixels across (default 2).
+ * points drawn `pointSize` CSS pixels across (default 2), the ambient light shaded by `hemisphere` (`Hemisphere`).
  */
 export interface TilesLayerOptions extends ModelOptions {
   id: string;
@@ -329,6 +337,7 @@ export interface TilesLayerOptions extends ModelOptions {
   height?: number;
   maximumLoadedTiles?: number;
   pointSize?: number;
+  hemisphere?: Hemisphere;
 }
 
 /** A feature of a 3D tile: its tile's `path`, its `id` in the tile and its `properties`. */
@@ -348,10 +357,12 @@ export class TilesLayer implements CustomLayerInterface {
   #engine: TilesEngine | null = null;
   #map: MapLike | null = null;
   #program: ModelProgram | null = null;
+  #shade: number[];
 
   /** `i3s` reads `url` as an I3S scene layer (`i3sLayer`) instead of a 3D Tiles tileset. */
   constructor(options: TilesLayerOptions, i3s = false) {
     this.id = options.id;
+    this.#shade = hemisphereShade(options.hemisphere);
     const url = new URL(options.url, document.baseURI).href;
     const call = <T>(op: string, args: object) => {
       start(options);
@@ -395,7 +406,7 @@ export class TilesLayer implements CustomLayerInterface {
 
   onAdd(map: unknown, gl: WebGL2RenderingContext): void {
     this.#map = map as MapLike;
-    this.#program = new ModelProgram(gl);
+    this.#program = new ModelProgram(gl, this.#shade);
   }
 
   onRemove(_map: unknown, gl: WebGL2RenderingContext): void {

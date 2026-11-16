@@ -28,6 +28,19 @@ export async function modelChecks(page) {
   const light = (type, intensity, direction) => ({ id: type, type, properties: { color: "#ffffff", intensity, ...(direction ? { direction } : {}) } });
   const ambient = await lit([light("ambient", 1)]);
   const halved = await lit([light("ambient", 0.25), light("directional", 0.5, [0, 60])]);
+  // A light from below reaches no top, which keeps its ambient light; a layer with `hemisphere: 0.5` keeps half of it.
+  const hemisphere = await page.evaluate(async (lights) => {
+    const { modelLayer } = await import("mbt-map/3d");
+    const map = window.__map;
+    const shaded = modelLayer({ id: "shaded", model: new URL("./box.glb", location.href).href, data: { type: "Point", coordinates: [139.7661, 35.6812] }, hemisphere: 0.5 });
+    map.addLayer(shaded);
+    await shaded.ready;
+    map.setLights(lights);
+    await window.__settled();
+    return map.project([139.7661, 35.6812]);
+  }, [light("ambient", 1), light("directional", 0.5, [0, 180])]);
+  const below = [await pixel(page, at[0].x, at[0].y), await pixel(page, hemisphere.x, hemisphere.y)];
+  await page.evaluate(() => window.__map.removeLayer("shaded"));
   // Noon in Tokyo by timeOfDayLights: lit, not black or white.
   const noon = await page.evaluate(async () => {
     const { timeOfDayLights } = await import("mbt-map");
@@ -109,6 +122,7 @@ export async function modelChecks(page) {
     ["3d.js", "3d-worker.js"].every((f) => loaded.includes(f)) &&
     red(globe) && near(space, white) &&
     near(ambient[1], [32, 128, 192]) && red(ambient[0]) && half(ambient[0], halved[0]) && half(ambient[1], halved[1]) &&
+    near(below[0], ambient[0]) && half(below[0], below[1]) &&
     noon.length === 2 && red(noonPixel) &&
     near(shaded[0], [ground, ground, ground]) && near(shaded[1], white) && near(shaded[2], [ground, ground, ground]) && near(shaded[3], white) &&
     near(shaded[4], [16, 64, 96]) && near(shaded[5], [27, 109, 164]) &&
@@ -116,5 +130,5 @@ export async function modelChecks(page) {
     Math.abs(sight.roof[2] - 20) < 0.05 && !sight.blocked.visible && Math.abs(sight.blocked.obstruction[0] - 139.7674) < 1e-6 &&
     sight.clear.visible && Math.abs(sight.height - 20) < 0.05 && before[1] > before[0] + 30 && behind[0] > behind[1] + 30 &&
     kept[2] > 150 && kept[0] < 60 && near(cutAway, white) && near(boxGone, white) && edges > 20;
-  return [ok, { square, turned, loaded, globe, space, ambient, halved, noon, noonPixel, shaded, globeShaded, sight, before, behind, kept, cutAway, boxGone, edges }];
+  return [ok, { square, turned, loaded, globe, space, ambient, halved, below, noon, noonPixel, shaded, globeShaded, sight, before, behind, kept, cutAway, boxGone, edges }];
 }

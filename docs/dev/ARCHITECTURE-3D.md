@@ -88,6 +88,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). `mbt-map/3d` (its
 - The style's `lights` (`@style.Lights`: an `ambient` and a `directional` light, `color`, `intensity`, `direction` [azimuthal, polar]; other types reported as Unsupported) is set by `setLights` / `getLights`.
 - With it, extrusions are lit as `color * (ambient + sun * lambert)` instead of MapLibre's light (`u_ambient.a` set, patterns too), custom layers get the colors times intensities and the direction after their numbers (`Map::custom_numbers`, read by `renderInput` as `lights`), and mbt-map/3d's layers pass them to the model program (`begin` takes the render input), which uses the same formula.
 - Without `lights` both keep their old lighting.
+- A layer's `hemisphere` (`modelLayer`, `tilesLayer`, `i3sLayer`; `hemisphereShade` in `model/place.ts`, `u_shade`) shades the model program's ambient term by the normal's angle to the light, `1 - u_shade * (0.5 - 0.5 * dot(n, l))`, with or without `lights`. It is a layer option because the style's `lights` are parsed in the engine (the main bundle); extrusions are not shaded by it.
 - The direction is east, north, up from Mapbox's azimuth (`Map::lights`; MapLibre's `light_direction` runs west and north, as its extrusion normals do).
 
 ### Shadows
