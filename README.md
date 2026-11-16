@@ -1,5 +1,12 @@
 # mbt-map
 
+[![npm](https://img.shields.io/npm/v/mbt-map)](https://www.npmjs.com/package/mbt-map)
+[![downloads](https://img.shields.io/npm/dm/mbt-map)](https://www.npmjs.com/package/mbt-map)
+[![CI](https://github.com/t-ujiie-g/mbt-map/actions/workflows/ci.yml/badge.svg)](https://github.com/t-ujiie-g/mbt-map/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/mbt-map)](https://github.com/t-ujiie-g/mbt-map/blob/main/LICENSE)
+[![types](https://img.shields.io/npm/types/mbt-map)](https://www.npmjs.com/package/mbt-map)
+[![mooncakes](https://img.shields.io/badge/mooncakes-t--ujiie--g%2Fmbtmap-8a2be2)](https://mooncakes.io/docs/t-ujiie-g/mbtmap)
+
 A lightweight WebGIS library for the browser, written in [MoonBit](https://www.moonbitlang.com/). Vector and raster maps, GIS data formats, spatial analysis, GIS web services and 3D city models come together in one toolkit, and each part loads only when a page first uses it.
 
 ```js
@@ -38,7 +45,7 @@ Or without installing, from a CDN in one HTML file:
 
 ```html
 <script type="importmap">
-  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.0/dist/index.js" } }
+  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.1/dist/index.js" } }
 </script>
 <script type="module">
   import { Map } from "mbt-map";

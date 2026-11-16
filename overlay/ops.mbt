@@ -105,9 +105,9 @@ fn tree_of(paths : Array[Array[@clipper.Point64]]) -> @clipper.PolyPath64 {
 }
 
 ///|
-/// Every feature of `t` grown by `meters` as polygons with its properties, shaped by `join`, `cap`
-/// and `arc_tolerance` (meters, 0 for distance / 500). A negative distance shrinks polygons and
-/// empties lines and points (as Turf's `buffer`); vanished features keep their row (`cut_to_world`).
+/// Every feature of `t` grown by `meters` as polygons with its properties (`arc_tolerance` in meters, 0
+/// for distance / 500). A negative distance shrinks polygons and empties lines and points (as Turf's
+/// `buffer`); vanished features keep their row. Geodesic results stay within ±180° (`cut_to_world`).
 pub fn buffer(
   t : @geom.Table,
   meters : Double,

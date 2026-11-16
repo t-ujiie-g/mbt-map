@@ -1,6 +1,6 @@
 {
   "name": "mbt-map",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A lightweight WebGIS library for the browser, written in MoonBit: maps, GIS data formats, spatial analysis, web services and 3D city models",
   "keywords": [
     "map",

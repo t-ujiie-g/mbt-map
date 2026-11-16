@@ -6,8 +6,8 @@ version = "0.0.1"
 
 import {
   "moonbit-community/rabbita@0.16.7",
-  "t-ujiie-g/mbtmap@0.1.0",
-  "t-ujiie-g/mbtmap_rabbita@0.1.0",
+  "t-ujiie-g/mbtmap@0.1.1",
+  "t-ujiie-g/mbtmap_rabbita@0.1.1",
 }
 
 supported_targets = "js"
