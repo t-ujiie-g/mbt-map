@@ -3,13 +3,13 @@
     "maplibre": "6.16.0",
     "browser": "chromium",
     "viewport": "800x600",
-    "tiles": "openfreemap 20261101_080013_pt, protomaps 20261103"
+    "tiles": "openfreemap 20261101_080013_pt, protomaps 20261115"
   },
   "results": [
     {
       "scene": "osm-bright-tokyo",
       "ok": true,
-      "mean": 0.072,
+      "mean": 0.071,
       "p99": 1,
       "limits": {
         "mean": 0.08,
@@ -20,7 +20,7 @@
     {
       "scene": "osm-bright-turned",
       "ok": true,
-      "mean": 0.037,
+      "mean": 0.035,
       "p99": 1,
       "limits": {
         "mean": 0.05,
@@ -30,7 +30,7 @@
     {
       "scene": "positron-tokyo",
       "ok": true,
-      "mean": 0.007,
+      "mean": 0.003,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -40,7 +40,7 @@
     {
       "scene": "positron-turned",
       "ok": true,
-      "mean": 0.006,
+      "mean": 0.003,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -50,7 +50,7 @@
     {
       "scene": "dark-matter-tokyo",
       "ok": true,
-      "mean": 0.04,
+      "mean": 0.034,
       "p99": 1,
       "limits": {
         "mean": 0.05,
@@ -60,7 +60,7 @@
     {
       "scene": "dark-matter-turned",
       "ok": true,
-      "mean": 0.036,
+      "mean": 0.032,
       "p99": 1,
       "limits": {
         "mean": 0.05,
@@ -71,7 +71,7 @@
       "scene": "maptiler-basic-tokyo",
       "ok": true,
       "mean": 0.114,
-      "p99": 4,
+      "p99": 3,
       "limits": {
         "mean": 0.13,
         "p99": 4
@@ -81,7 +81,7 @@
     {
       "scene": "maptiler-basic-turned",
       "ok": true,
-      "mean": 0.064,
+      "mean": 0.063,
       "p99": 2,
       "limits": {
         "mean": 0.08,
@@ -92,7 +92,7 @@
     {
       "scene": "ofm-liberty-tokyo",
       "ok": true,
-      "mean": 0.102,
+      "mean": 0.096,
       "p99": 2,
       "limits": {
         "mean": 0.12,
@@ -103,7 +103,7 @@
     {
       "scene": "ofm-liberty-turned",
       "ok": true,
-      "mean": 0.108,
+      "mean": 0.1,
       "p99": 2,
       "limits": {
         "mean": 0.12,
@@ -114,7 +114,7 @@
     {
       "scene": "ofm-bright-tokyo",
       "ok": true,
-      "mean": 0.04,
+      "mean": 0.038,
       "p99": 1,
       "limits": {
         "mean": 0.05,
@@ -124,7 +124,7 @@
     {
       "scene": "ofm-bright-turned",
       "ok": true,
-      "mean": 0.01,
+      "mean": 0.008,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -134,7 +134,7 @@
     {
       "scene": "ofm-positron-tokyo",
       "ok": true,
-      "mean": 0.007,
+      "mean": 0.003,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -144,7 +144,7 @@
     {
       "scene": "ofm-positron-turned",
       "ok": true,
-      "mean": 0.006,
+      "mean": 0.003,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -154,8 +154,8 @@
     {
       "scene": "protomaps-light-tokyo",
       "ok": true,
-      "mean": 0.012,
-      "p99": 1,
+      "mean": 0.006,
+      "p99": 0,
       "limits": {
         "mean": 0.05,
         "p99": 1
@@ -164,7 +164,7 @@
     {
       "scene": "protomaps-light-turned",
       "ok": true,
-      "mean": 0.006,
+      "mean": 0.002,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -174,8 +174,8 @@
     {
       "scene": "protomaps-dark-tokyo",
       "ok": true,
-      "mean": 0.022,
-      "p99": 1,
+      "mean": 0.009,
+      "p99": 0,
       "limits": {
         "mean": 0.05,
         "p99": 1
@@ -184,7 +184,7 @@
     {
       "scene": "protomaps-dark-turned",
       "ok": true,
-      "mean": 0.011,
+      "mean": 0.003,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -194,7 +194,7 @@
     {
       "scene": "protomaps-white-tokyo",
       "ok": true,
-      "mean": 0.007,
+      "mean": 0.005,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -204,7 +204,7 @@
     {
       "scene": "protomaps-white-turned",
       "ok": true,
-      "mean": 0.004,
+      "mean": 0.002,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -214,7 +214,7 @@
     {
       "scene": "protomaps-grayscale-tokyo",
       "ok": true,
-      "mean": 0.01,
+      "mean": 0.009,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -224,7 +224,7 @@
     {
       "scene": "protomaps-grayscale-turned",
       "ok": true,
-      "mean": 0.005,
+      "mean": 0.003,
       "p99": 0,
       "limits": {
         "mean": 0.05,
@@ -234,8 +234,8 @@
     {
       "scene": "protomaps-black-tokyo",
       "ok": true,
-      "mean": 0.051,
-      "p99": 1,
+      "mean": 0.006,
+      "p99": 0,
       "limits": {
         "mean": 0.06,
         "p99": 1
@@ -244,8 +244,8 @@
     {
       "scene": "protomaps-black-turned",
       "ok": true,
-      "mean": 0.025,
-      "p99": 1,
+      "mean": 0.002,
+      "p99": 0,
       "limits": {
         "mean": 0.05,
         "p99": 1

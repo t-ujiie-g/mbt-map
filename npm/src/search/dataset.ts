@@ -32,9 +32,14 @@ interface Feature {
   geometry?: Geometry | null;
 }
 
-/** The bounding box of a GeoJSON geometry's coordinates (collections' included, nested too), or null without any. */
+/**
+ * The bounding box of a GeoJSON geometry's coordinates (collections' included, nested too), or null
+ * without any. One split at the antimeridian gets the narrower box across it, its east beyond 180.
+ */
 export function boxOf(g: Geometry | null | undefined): [number, number, number, number] | null {
   const box: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
+  let west = Infinity;
+  let east = -Infinity;
   const walk = (c: unknown): void => {
     if (!Array.isArray(c)) return;
     if (typeof c[0] === "number" && typeof c[1] === "number") {
@@ -42,6 +47,9 @@ export function boxOf(g: Geometry | null | undefined): [number, number, number, 
       box[1] = Math.min(box[1], c[1]);
       box[2] = Math.max(box[2], c[0]);
       box[3] = Math.max(box[3], c[1]);
+      const turned = c[0] < 0 ? c[0] + 360 : c[0];
+      west = Math.min(west, turned);
+      east = Math.max(east, turned);
     } else c.forEach(walk);
   };
   const geometry = (x: Geometry | null | undefined): void => {
@@ -49,7 +57,8 @@ export function boxOf(g: Geometry | null | undefined): [number, number, number, 
     x?.geometries?.forEach(geometry);
   };
   geometry(g);
-  return Number.isFinite(box[0]) ? box : null;
+  if (!Number.isFinite(box[0])) return null;
+  return east - west < box[2] - box[0] - 1e-9 ? [west, box[1], east, box[3]] : box;
 }
 
 /**

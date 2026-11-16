@@ -272,6 +272,8 @@ export class Map {
     // MapLibre's canvas: a region named "Map", here by the container's own `aria-label` when it has one.
     this.#canvas.setAttribute("role", "region");
     this.#canvas.setAttribute("aria-label", container.getAttribute("aria-label") ?? "Map");
+    // As MapLibre: a map that takes no input is not a tab stop (the engine leaves a set `tabindex` alone).
+    if (!interactive) this.#canvas.setAttribute("tabindex", "-1");
     container.append(this.#canvas);
 
     try {

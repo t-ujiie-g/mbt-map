@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readGltf, splitGlb, textureTransform } from "../src/model/gltf.ts";
-import { mercatorFrame, normalMatrix, placement, points, sphereFrame, triple, value } from "../src/model/place.ts";
+import { hemisphereShade, mercatorFrame, normalMatrix, placement, points, sphereFrame, triple, value } from "../src/model/place.ts";
 
 const b64 = (bytes: Uint8Array) => Buffer.from(bytes).toString("base64");
 const uri = (...arrays: ArrayBufferView[]) =>
@@ -157,6 +157,12 @@ test("triple reads three numbers, as a whole or each by ['get', key], else its f
   assert.deepEqual(triple([0, ["get", "bad"], 0], props, [1, 1, 1]), [1, 1, 1]);
   assert.deepEqual(triple([1, 2], props, [1, 1, 1]), [1, 1, 1]);
   assert.deepEqual(triple(undefined, props, [1, 1, 1]), [1, 1, 1]);
+});
+
+test("hemisphereShade is what a share or three take off the ambient light, and nothing for anything else", () => {
+  assert.deepEqual(hemisphereShade(0.25), [0.75, 0.75, 0.75]);
+  assert.deepEqual(hemisphereShade([1, 0.5, 0]), [0, 0.5, 1]);
+  for (const v of [undefined, null, 1, "0.5", -0.1, 1.5, NaN, [0.5, 0.5], [0.5, "0.5", 0.5], [0.5, 2, 0.5], [0.5, NaN, 0.5]]) assert.deepEqual(hemisphereShade(v), [0, 0, 0]);
 });
 
 test("normalMatrix is the inverse transpose of the upper 3x3; points skips MultiPoint members that are not positions", () => {

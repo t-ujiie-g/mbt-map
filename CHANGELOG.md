@@ -4,6 +4,9 @@ All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujii
 
 ## Unreleased
 
+- `mbt-map`: a map with `interactive: false` is no longer a tab stop (its canvas gets `tabindex="-1"`, as MapLibre's).
+- `mbt-map/ui`: the attribute table's `reveal(id)` goes to the page with a feature's row; `zoomTo` fits a feature split at the antimeridian across it, not to the whole world (so do the dataset search's result boxes).
+- `mbt-map/3d`: `hemisphere`, an option of `modelLayer`, `tilesLayer` and `i3sLayer` that shades the ambient light on faces turned away from the directional light, so the side of a model the light does not reach keeps its shape. The default draws as before.
 - `mbt-map/analysis`: geodesic `buffer` results stay within ±180° of longitude. A buffer across the antimeridian is cut there into a MultiPolygon, and one that holds a pole runs along ±180° to the pole's latitude, so it fills as a cap in planar tools. Before, longitudes passed ±180° and a buffer over a pole was a ring around it. Buffers that reach neither are unchanged.
 - `mbt-map/analysis`: a geodesic `buffer` of a MultiPoint is a circle around each point. Before, points far apart were buffered as the line through them.
 

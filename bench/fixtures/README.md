@@ -38,7 +38,7 @@
 `npm run style:public`（`bench/style/public.mjs`）が、公開スタイル（OpenMapTiles 系と Protomaps）を MapLibre と画素で比べるのに使う。
 
 - `ofm-planet/`：OpenFreeMap のベクトルタイル（OpenMapTiles スキーマ、ビルド `20261101_080013_pt`）の z14、GSI と同じ東京駅周辺 7×5 タイル（約 20MB）。© OpenMapTiles、Data © OpenStreetMap contributors（ODbL 1.0）。
-- `protomaps/`：Protomaps のベクトルタイル（Protomaps スキーマ、日ごとのビルド `20261103.pmtiles` から範囲リクエストで取る）の z14、同じ 35 タイル（約 4MB）。© OpenStreetMap contributors（ODbL 1.0）。日ごとのビルドはしばらくしか置かれないので、消えたら新しいビルドを `fetch-tiles.mjs` に書いて `--update` で取り直し、`style:public` の限度を測り直す。
+- `protomaps/`：Protomaps のベクトルタイル（Protomaps スキーマ、日ごとのビルド `20261115.pmtiles` から範囲リクエストで取る）の z14、同じ 35 タイル（約 4MB）。© OpenStreetMap contributors（ODbL 1.0）。日ごとのビルドはしばらくしか置かれないので、消えたら新しいビルドを `fetch-tiles.mjs` に書いて `--update` で取り直し、`style:public` の限度を測り直す。
 - `sprites/`：公開スタイルのスプライト（OpenMapTiles のスタイルの gh-pages、CC-BY 4.0。OpenFreeMap の `ofm_f384`、MIT）。1x と 2x。
 - 取得と照合は gsi-bvmap と同じ（マニフェストは `ofm-planet.manifest.json`、`protomaps.manifest.json`、`sprites.manifest.json`）。クラウドのセッションでは Node の `fetch` がプロキシを通るよう `NODE_USE_ENV_PROXY=1` を付ける（`scripts/setup.sh` は付けている）。
 
