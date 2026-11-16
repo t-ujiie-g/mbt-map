@@ -86,7 +86,7 @@
     },
     {
       "name": "services worker (ArcGIS f=json and f=pbf; loaded by mbt-map/services on the first such read)",
-      "bytes": 20281,
+      "bytes": 20312,
       "budget": 21000
     },
     {
@@ -96,7 +96,7 @@
     },
     {
       "name": "display worker",
-      "bytes": 85095,
+      "bytes": 85381,
       "budget": 100000
     },
     {

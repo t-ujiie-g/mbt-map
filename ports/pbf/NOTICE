@@ -1,0 +1,8 @@
+pbf (MoonBit module t-ujiie-g/pbf)
+Copyright 2026 t-ujiie-g
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This module implements the Protocol Buffers wire format from its documentation
+(https://protobuf.dev/programming-guides/encoding/). It contains no third-party
+code.

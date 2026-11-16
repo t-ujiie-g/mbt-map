@@ -202,3 +202,17 @@ test "read_len_start skips a length-delimited field and gives its start" {
   ignore(bad.read_len_start())
   assert_true(bad.failed() && bad.at_end())
 }
+
+///|
+test "read_string replaces each malformed subpart as @utf8.decode_lossy does" {
+  let cases : Array[Bytes] = [
+    b"", b"\xef\xbb\xbfa", b"\xe6\x9d", b"\xe6\x41", b"\xed\xa0\x80", b"\xf4\x90\x80\x80",
+    b"\xf0\x9f\x9a\x89z", b"\xc0\xaf", b"\xff",
+  ]
+  for bytes in cases {
+    let w = @pbf.Writer::new()
+    w.write_bytes(bytes[:])
+    let r = @pbf.Reader::new(w.to_bytes()[:])
+    assert_eq(r.read_string(), @utf8.decode_lossy(bytes[:]))
+  }
+}

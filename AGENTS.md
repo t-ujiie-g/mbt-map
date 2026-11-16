@@ -73,8 +73,8 @@ Parallel work. Use parallel agents wherever the work splits: the user prefers st
 Where things live (the reference is `docs/dev/ARCHITECTURE.md` and its companions):
 
 - Engine, MoonBit packages at the root (module `t-ujiie-g/mbtmap_engine`, internal):
-  - Pure, tested on every backend: `core` (camera math, tile covering, byte readers and writers, shared constants), `pbf`, `mvt`, `tess`, `style`, `globe`, `geom`, `formats`, `tiler` and the ports the modules run (`analysis`, `proj`, `geodesic`, …).
-  - `ports/`: ports published on mooncakes on their own, one module each (`ports/clipper` is `t-ujiie-g/clipper`; also `draco`, `lepcc`, `meshopt`, `robust`, `tiff`). They import nothing of the engine; the engine imports them through the workspace. Versions and publishing: `docs/dev/RELEASING.md`.
+  - Pure, tested on every backend: `core` (camera math, tile covering, byte readers and writers, shared constants), `tess`, `style`, `globe`, `geom`, `formats`, `tiler` and the ports the modules run (`analysis`, `proj`, `geodesic`, …).
+  - `ports/`: ports published on mooncakes on their own, one module each (`ports/clipper` is `t-ujiie-g/clipper`; also `draco`, `lepcc`, `meshopt`, `mvt`, `pbf`, `robust`, `tiff`). They import nothing of the engine; the engine imports them through the workspace. Versions and publishing: `docs/dev/RELEASING.md`.
   - js only: `render_webgl2`, `map` (DOM events, workers, the frame loop), `bundle/main` (the engine's exports).
   - wasm-gc entries, one wasm each in its own worker: `worker` (the display worker: decode, tessellate, pack tiles) and the `*_worker` packages; `wasmio` is their linear-memory I/O.
 - `npm/`: the package. `npm/src/index.ts` is the facade over `bundle/main` (keep `npm/src/engine.d.ts` and the pages that call the exports directly in sync with `bundle/main/main.mbt`); the other entries are `npm/src/{ui,search,draw,geodesic,services,data,analysis,3d}.ts`; `npm/scripts/size.mjs` holds the gzip budgets. Worker glue is in `<package>/js/`.
@@ -82,7 +82,7 @@ Where things live (the reference is `docs/dev/ARCHITECTURE.md` and its companion
 - `examples/`: one showcase written three ways (`html/`, `element/`, `react/`) over `examples/shared/` (each phase adds its features to all three), `plateau/`, `rabbita/`, `samples/`. `site/` and `bench/site/`: the GitHub Pages site.
 - `bench/`: goldens, benchmarks, the pack test (`bench/npm/`), dev pages (`bench/pages/`), tooling (`bench/lib/`). `scripts/`: setup and the pinned toolchain.
 
-Dependency direction, never reversed (every chain is in `docs/dev/ARCHITECTURE.md`): `core ← pbf ← mvt ← tess/style ← worker`; `core ← geom ← formats/tiler ← … ← *_worker`; `core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← moonbit/mbtmap ← moonbit/mbtmap_rabbita`; `wasmio ← wasm-gc entries` only.
+Dependency direction, never reversed (every chain is in `docs/dev/ARCHITECTURE.md`): `pbf ← mvt ← tess/style ← worker` (`core` under `tess` and `style`); `core ← geom ← formats/tiler ← … ← *_worker`; `core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← moonbit/mbtmap ← moonbit/mbtmap_rabbita`; `wasmio ← wasm-gc entries` only.
 
 Invariants that prevent expensive mistakes:
 

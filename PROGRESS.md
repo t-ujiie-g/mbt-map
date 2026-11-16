@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff` を `ports/` に切り出した（どれも 0.1.0、未公開。公開は点検のあとにまとめて：ユーザー判断）。0.1.1 は 2026-11-16 に公開済み。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt` を `ports/` に切り出した（どれも 0.1.0、未公開。公開は点検のあとにまとめて：ユーザー判断）。0.1.1 は 2026-11-16 に公開済み。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：単独の移植の (3)〜(5)（`pbf`・`mvt`、`proj`・`geodesic`、点検）。その後 Phase 21（VISION §8）。
+- **次**：単独の移植の (4)〜(5)（`proj`・`geodesic`、点検）。その後 Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -503,3 +503,11 @@ Where things stand, decisions and open issues. The development history before th
 - import する側：`model_worker`（draco・lepcc・meshopt）、`geotiff_worker`（tiff）、`hull`・`delaunay`・`isolines`（robust）、`bench/entry`。別名は前と同じ。`worker/js/mirror.test.mjs` が読む `draco/decode.mbt` の場所を直した（npm のテストが 1 件落ちて気づいた）。
 - 大きさ（gzip）：3d worker 44,086 → 44,150 バイト（+64、予算 50KB）、GeoTIFF 19,834 → 19,807 バイト（-27、予算 20KB）。ほかは変わらない。コードは同じなので、モジュール名が変わったことによる並びの違いと見る。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 942、wasm-gc 952、js 1001、native 942：前と同じ数）、npm のテスト（459）と大きさ、bench のテスト（23）、`draco:golden`（12,515 件、0 differ）、`meshopt:golden`（12,040 件すべて一致）、`lepcc:golden`（2,237 件、0 differ）、`geotiff:golden`（304 件、0 differ）、`shapes:golden`（all identical）、pack test の `model,tiles,i3s,pointcloud,data,analysis`（Chromium）、`moon package --list`（各モジュールともその移植のファイルだけ）、`long-comments`（47 のまま）。
+
+## 単独の移植 (3)：`pbf`・`mvt`（2026-11-17、Mac）
+
+- `pbf` と `mvt` を `ports/` に移した。どちらも `t-ujiie-g/<名前>` 0.1.0、`Apache-2.0`。移植元のコードは無い（仕様から書いたもの）ので、NOTICE はその旨だけ。`mvt` のモジュールは `t-ujiie-g/pbf@0.1.0` を import する（公開は `pbf` が先：RELEASING）。
+- `pbf` が `core` を使っていたのは `read_string` の `@core.utf8_lossy` の 1 か所。移植はエンジンを import できないので、1 パスの復号（`core/utf8_nonjs.mbt`、js では `@utf8.decode_lossy`）の写しを `ports/pbf` に持たせた。`@utf8.decode_lossy` をそのまま使う案は、検証と復号の 2 つを wasm に入れる（モジュールごとに約 2.7KB gzip：ARCHITECTURE）ので取らなかった。壊れた並びごとに `@utf8.decode_lossy` と同じになるテストを `pbf` に足した。
+- 依存の向きの書き方：`core ← pbf ← …` を `pbf ← mvt ← tess/style ← worker`（`core` は `tess`・`style` の下）に直した（AGENTS、ARCHITECTURE）。
+- 大きさ（gzip）：表示ワーカー 85,095 → 85,381 バイト（+286、予算 100KB）、サービスのワーカー 20,281 → 20,312 バイト（+31、予算 21KB）。復号の写しの分。ほかは変わらない。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 943、wasm-gc 953、js 1002、native 943：足したテスト 1 件の分だけ増えた）、npm のテスト（459）と大きさ、bench のテスト（23）、`mvt:golden`（35/35）、`tess:golden`（35/35）、`esri:golden`（19 of 19 ok）、pack test の `showcase-html,services,data,tiles`（Chromium）、`moon package --list`（各モジュールともその移植のファイルだけ）、`long-comments`（47 のまま）。README の例は一度テストとしてコンパイル・実行して通した。

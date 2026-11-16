@@ -4,7 +4,7 @@
 
 import {
   "t-ujiie-g/mbtmap_engine/core",
-  "t-ujiie-g/mbtmap_engine/mvt",
+  "t-ujiie-g/mvt",
   "t-ujiie-g/mbtmap_engine/raster",
   "t-ujiie-g/mbtmap_engine/style",
   "t-ujiie-g/mbtmap_engine/tess",
@@ -29,7 +29,7 @@ options(
 
 import {
   "t-ujiie-g/mbtmap_engine/geom",
-  "t-ujiie-g/mbtmap_engine/pbf",
+  "t-ujiie-g/pbf",
   "t-ujiie-g/mbtmap_engine/tiler",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/json",
