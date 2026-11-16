@@ -1,0 +1,16 @@
+draco (MoonBit module t-ujiie-g/draco)
+Copyright 2026 t-ujiie-g
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This module is a port of Draco 1.5.7's mesh and point cloud decoder
+(src/draco/compression/decode.cc, point_cloud/ (sequential and kd-tree
+decoders, algorithms/ with the dynamic integer and float kd-trees), mesh/
+(edgebreaker with its standard, predictive and valence traversals, sequential),
+attributes/ (sequential and kd-tree attribute decoders, prediction schemes and
+their transforms), entropy/ (rANS), bit_coders/, core/ (DecoderBuffer, varints),
+attributes/ (quantization and octahedron transforms), mesh/ (corner tables and
+traversers), metadata/metadata_decoder.cc and
+javascript/emscripten/decoder_webidl_wrapper.cc)
+https://github.com/google/draco
+Copyright 2016 The Draco Authors. Apache License 2.0 (the text in LICENSE).

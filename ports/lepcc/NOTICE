@@ -1,0 +1,11 @@
+lepcc (MoonBit module t-ujiie-g/lepcc)
+Copyright 2026 t-ujiie-g
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This module is a port of Esri's LEPCC decoders (src/LEPCC.cpp,
+src/ClusterRGB.cpp, src/Intensity.cpp, src/BitStuffer2.cpp, src/Common.cpp and
+src/lepcc_c_api_impl.cpp's lepcc_getBlobInfo, at commit
+63a30e2a07cabadbad09e205e7189fb034e3431a)
+https://github.com/Esri/lepcc
+Copyright 2016 Esri. Apache License 2.0 (the text in LICENSE).

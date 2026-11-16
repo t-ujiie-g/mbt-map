@@ -5,7 +5,7 @@
 import {
   "t-ujiie-g/mbtmap_engine/geom",
   "t-ujiie-g/mbtmap_engine/core",
-  "t-ujiie-g/mbtmap_engine/robust",
+  "t-ujiie-g/robust",
   "moonbitlang/core/double",
 }
 

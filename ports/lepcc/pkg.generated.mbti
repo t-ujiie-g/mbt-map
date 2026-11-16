@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/mbtmap_engine/lepcc"
+package "t-ujiie-g/lepcc"
 
 // Values
 pub const MAX_POINTS : Int32 = 0x400000

@@ -636,7 +636,7 @@ Out: `{type: "result", id, value: {primitives, materials, images}}` (`Model` of 
 image as an ImageBitmap, not premultiplied; typed arrays and bitmaps transferred), or
 `{type: "result", id, error}`.
 
-## Draco output (`draco/output.mbt`, written by `model_worker`'s `draco_decode`)
+## Draco output (`ports/draco/output.mbt`, written by `model_worker`'s `draco_decode`)
 
 A Draco mesh (KHR_draco_mesh_compression) or point cloud (face count 0, no indices) decoded by
 `@draco.decode`; all little-endian:
@@ -653,7 +653,7 @@ data draco3d 1.5.7 refuses (and bitstreams before 2.0, or meshes and point cloud
 `@draco.MAX_FACES`, `MAX_POINTS`, `MAX_ATTRIBUTES`, `MAX_ATTRIBUTE_BYTES`, `MAX_KD_DIMENSIONS`), -2
 without memory or for output past `@draco.MAX_OUTPUT_BYTES`.
 
-## LEPCC output (`lepcc/output.mbt`, written by `model_worker`'s `lepcc_decode`)
+## LEPCC output (`ports/lepcc/output.mbt`, written by `model_worker`'s `lepcc_decode`)
 
 An I3S point cloud's LEPCC blob (`lepcc-xyz` geometry, `lepcc-rgb` or `lepcc-intensity` attribute)
 decoded by `@lepcc.decode` as Esri's LEPCC C API does; all little-endian:

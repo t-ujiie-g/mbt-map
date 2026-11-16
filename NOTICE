@@ -286,7 +286,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright (c) 2024 Calvin Metcalf and other shapefile-js contributors
     License: MIT License (text in section 2).
 
-- tiff/, data_worker/js/geotiff-read.mjs and geotiff.mjs: geotiff 3.0.5's reading of TIFF images
+- ports/tiff/, data_worker/js/geotiff-read.mjs and geotiff.mjs: geotiff 3.0.5's reading of TIFF images
   (geotiffimage.js `readRasters`, `getTileOrStrip`, `getOrigin`, `getResolution`,
   `getBoundingBox`; geotiff.js `readRasters`' choice of an image; predictor.js,
   compression/lzw.js, resample.js, normalizeArray) https://github.com/geotiffjs/geotiff.js
@@ -363,7 +363,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
   Copyright Rowan Winsemius) does: Apache License 2.0
   (https://www.apache.org/licenses/LICENSE-2.0).
 
-- meshopt/: meshoptimizer 1.3.0's decoders (src/vertexcodec.cpp
+- ports/meshopt/: meshoptimizer 1.3.0's decoders (src/vertexcodec.cpp
   `meshopt_decodeVertexBuffer`, src/indexcodec.cpp `meshopt_decodeIndexBuffer` and
   `meshopt_decodeIndexSequence`, src/vertexfilter.cpp's Wasm SIMD filters) and
   js/meshopt_decoder.mjs `decodeGltfBuffer`
@@ -372,7 +372,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright (c) 2016-2026 Arseny Kapoulkine
     License: MIT License (text in section 2).
 
-- draco/: Draco 1.5.7's mesh and point cloud decoder (src/draco/compression/decode.cc,
+- ports/draco/: Draco 1.5.7's mesh and point cloud decoder (src/draco/compression/decode.cc,
   point_cloud/ (sequential and kd-tree decoders, algorithms/ with the dynamic integer and float
   kd-trees), mesh/ (edgebreaker with its standard, predictive and valence traversals, sequential),
   attributes/ (sequential and kd-tree attribute decoders, prediction schemes and their transforms),
@@ -382,7 +382,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
   Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0), Copyright 2016 The Draco
   Authors.
 
-- lepcc/: Esri's LEPCC decoders (src/LEPCC.cpp, src/ClusterRGB.cpp, src/Intensity.cpp,
+- ports/lepcc/: Esri's LEPCC decoders (src/LEPCC.cpp, src/ClusterRGB.cpp, src/Intensity.cpp,
   src/BitStuffer2.cpp, src/Common.cpp and src/lepcc_c_api_impl.cpp's lepcc_getBlobInfo, at commit
   63a30e2a07cabadbad09e205e7189fb034e3431a) https://github.com/Esri/lepcc — Apache License 2.0
   (https://www.apache.org/licenses/LICENSE-2.0), Copyright 2016 Esri.
@@ -443,7 +443,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright (c) 2021 Rowan Winsemius
     License: MIT License (text in section 2).
 
-  and robust-predicates 3.0.3 (orient2d; also robust/orient2d.mbt, with util.js)
+  and robust-predicates 3.0.3 (orient2d; also ports/robust/orient2d.mbt, with util.js)
   https://github.com/mourner/robust-predicates — the Unlicense:
 
     License: The Unlicense (text in section 2).

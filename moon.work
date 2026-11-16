@@ -1,6 +1,11 @@
 members = [
   ".",
   "./ports/clipper",
+  "./ports/draco",
+  "./ports/lepcc",
+  "./ports/meshopt",
+  "./ports/robust",
+  "./ports/tiff",
   "./moonbit/mbtmap",
   "./moonbit/mbtmap_rabbita",
   "./bench/moonbit",

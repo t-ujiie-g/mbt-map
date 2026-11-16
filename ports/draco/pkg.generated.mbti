@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/mbtmap_engine/draco"
+package "t-ujiie-g/draco"
 
 // Values
 pub const MAX_KD_DIMENSIONS : Int32 = 1024

@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper` を `ports/clipper`（`t-ujiie-g/clipper` 0.1.0）に切り出した。0.1.1 は 2026-11-16 に公開済み（npm の `mbt-map`、mooncakes の `t-ujiie-g/mbtmap`・`t-ujiie-g/mbtmap_rabbita`）。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff` を `ports/` に切り出した（どれも 0.1.0、未公開。公開は点検のあとにまとめて：ユーザー判断）。0.1.1 は 2026-11-16 に公開済み。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：単独の移植の (2)〜(5)（`draco`・`meshopt`・`lepcc`・`tiff`・`robust`、`pbf`・`mvt`、`proj`・`geodesic`、点検）。その後 Phase 21（VISION §8）。
+- **次**：単独の移植の (3)〜(5)（`pbf`・`mvt`、`proj`・`geodesic`、点検）。その後 Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -495,3 +495,11 @@ Where things stand, decisions and open issues. The development history before th
 - **形**：`ports/<名前>/` に `moon.mod`（`t-ujiie-g/<名前>`）と、パッケージのファイル、README（使い方の例）、LICENSE、NOTICE（移植元の著作権とライセンスの本文）。`moon.work` のメンバーにし、ルートの `moon.mod` が同じ版を import する。エンジンのパッケージは `"t-ujiie-g/<名前>"` を import する（別名は前と同じ `@clipper` なので、使う側のコードは変わらない）。`bench/lib/ports.test.mjs` が、版・ワークスペース・3 つのファイル・エンジンを import していないことを見る。出し方は docs/dev/RELEASING.md。
 - **`clipper`**：`t-ujiie-g/clipper` 0.1.0。ライセンスの欄は `Apache-2.0 AND BSL-1.0`（移植は Apache-2.0、Clipper2 は BSL-1.0）。`moon package --list` はその 15 個の `.mbt` と `moon.mod`・`moon.pkg`・`.mbti`・README・LICENSE・NOTICE だけ。README の例は一度テストとしてコンパイルして通した（リポジトリには残していない）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 942、wasm-gc 952、js 1001、native 942：前と同じ数）、npm のテスト（459）と大きさ、bench のテスト（23）、`clipper:golden`（10720 + 4500 すべて一致）、`buffer:check`（結果のファイルは変わらない）、`long-comments`（47 のまま）、pack test の `analysis,showcase-html`（Chromium）。
+
+## 単独の移植 (2)：`draco`・`lepcc`・`meshopt`・`robust`・`tiff`（2026-11-17、Mac）
+
+- エンジンのほかのパッケージを import しない 5 つを、(1) と同じ形で `ports/` に移した（コードは変えていない）。どれも `t-ujiie-g/<名前>` 0.1.0。ライセンスの欄：`draco` と `lepcc` は `Apache-2.0`（移植元も Apache-2.0）、`meshopt` と `tiff` は `Apache-2.0 AND MIT`、`robust` は `Apache-2.0 AND Unlicense`。NOTICE に移植元の著作権とライセンスの本文。
+- README：何を読めるか、公開 API、出力の並び（`draco` の `to_bytes`、`lepcc` の表）、移植していないもの（エンコーダ、`robust` の `orient2d` 以外、`tiff` の Deflate・JPEG は呼ぶ側で展開）、どのゴールデンで元の実装と比べているか。例は一度コンパイルして通した（`robust` はテストとして実行）。
+- import する側：`model_worker`（draco・lepcc・meshopt）、`geotiff_worker`（tiff）、`hull`・`delaunay`・`isolines`（robust）、`bench/entry`。別名は前と同じ。`worker/js/mirror.test.mjs` が読む `draco/decode.mbt` の場所を直した（npm のテストが 1 件落ちて気づいた）。
+- 大きさ（gzip）：3d worker 44,086 → 44,150 バイト（+64、予算 50KB）、GeoTIFF 19,834 → 19,807 バイト（-27、予算 20KB）。ほかは変わらない。コードは同じなので、モジュール名が変わったことによる並びの違いと見る。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 942、wasm-gc 952、js 1001、native 942：前と同じ数）、npm のテスト（459）と大きさ、bench のテスト（23）、`draco:golden`（12,515 件、0 differ）、`meshopt:golden`（12,040 件すべて一致）、`lepcc:golden`（2,237 件、0 differ）、`geotiff:golden`（304 件、0 differ）、`shapes:golden`（all identical）、pack test の `model,tiles,i3s,pointcloud,data,analysis`（Chromium）、`moon package --list`（各モジュールともその移植のファイルだけ）、`long-comments`（47 のまま）。

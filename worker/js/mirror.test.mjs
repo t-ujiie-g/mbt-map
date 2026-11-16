@@ -132,8 +132,8 @@ test("model_worker's decode.mjs numbers meshopt's modes and filters and LEPCC's 
   assert.deepEqual(jsTable(decode, "LEPCC_KINDS"), index(moonList("../../model_worker/lepcc.mbt", "lepcc_kinds"), (name) => name.toLowerCase()));
 });
 
-test("model_worker's decode.mjs reads Draco's data types by draco/decode.mbt's DT_* numbers", () => {
-  const types = moonConsts("../../draco/decode.mbt");
+test("model_worker's decode.mjs reads Draco's data types by ports/draco/decode.mbt's DT_* numbers", () => {
+  const types = moonConsts("../../ports/draco/decode.mbt");
   const js = source("../../model_worker/js/decode.mjs").match(/^const DRACO_TYPES = \{([^\n]*)\};/m);
   assert.ok(js, "DRACO_TYPES not found");
   const pairs = [...js[1].matchAll(/(\d+): \[(\w+)Array/g)];
