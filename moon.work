@@ -4,6 +4,8 @@ members = [
   "./ports/draco",
   "./ports/lepcc",
   "./ports/meshopt",
+  "./ports/mvt",
+  "./ports/pbf",
   "./ports/robust",
   "./ports/tiff",
   "./moonbit/mbtmap",

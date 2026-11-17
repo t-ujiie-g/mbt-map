@@ -1,7 +1,7 @@
 ///|
-/// Zero-copy protobuf cursor. Reads never raise (see AGENTS.md §4): a failed read
-/// records the first error, returns 0 and jumps to the end so `at_end` loops stop.
-/// Check `error` once at a boundary.
+/// Zero-copy protobuf cursor. Reads never raise (in wasm-gc a call that may raise
+/// allocates): a failed read records the first error, returns 0 and jumps to the end
+/// so `at_end` loops stop. Check `error` once at a boundary.
 pub struct Reader {
   priv data : Bytes
   priv mut pos : Int32
@@ -287,7 +287,7 @@ pub fn Reader::read_bytes(self : Reader) -> BytesView {
 ///|
 /// Reads a UTF-8 string; invalid sequences become U+FFFD, like `TextDecoder`.
 pub fn Reader::read_string(self : Reader) -> String {
-  @core.utf8_lossy(self.read_bytes())
+  decode_lossy(self.read_bytes())
 }
 
 ///|

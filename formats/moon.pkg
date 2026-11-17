@@ -4,7 +4,7 @@
 import {
   "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
-  "t-ujiie-g/mbtmap_engine/pbf",
+  "t-ujiie-g/pbf",
   "moonbitlang/core/cmp",
   "moonbitlang/core/debug",
   "moonbitlang/core/double",
@@ -13,7 +13,7 @@ import {
 import {
   "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
-  "t-ujiie-g/mbtmap_engine/pbf",
+  "t-ujiie-g/pbf",
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
 } for "test"
