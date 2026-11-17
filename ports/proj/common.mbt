@@ -378,6 +378,6 @@ fn authlat(m : Trig, beta : Double, apa : FixedArray[Double]) -> Double {
 }
 
 ///|
-/// The elementary functions the projections use (`@core.Trig`): a wasm build
+/// The elementary functions the projections use (`@trig.Trig`): a wasm build
 /// passes the host's `Math`, as proj4js computes.
-pub using @core {type Trig}
+pub using @trig {type Trig}

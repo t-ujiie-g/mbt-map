@@ -2,8 +2,8 @@
 package "t-ujiie-g/mbtmap_engine/isolines"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -17,7 +17,7 @@ pub const MAX_NESTING_TESTS : Int64 = 100_000_000
 
 pub const MAX_SEGMENTS : Int32 = 4_000_000
 
-pub fn isobands(@geom.Table, Array[Double], String, trig? : @core.Trig, number_text? : (Double) -> String) -> @geom.Table?
+pub fn isobands(@geom.Table, Array[Double], String, trig? : @trig.Trig, number_text? : (Double) -> String) -> @geom.Table?
 
 pub fn isolines(@geom.Table, Array[Double], String) -> @geom.Table?
 

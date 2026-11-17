@@ -2,11 +2,11 @@
 package "t-ujiie-g/mbtmap_engine/density"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/trig",
 }
 
 // Values
-pub fn contour_density(FixedArray[Double], FixedArray[Double], FixedArray[Double]?, Int32, Int32, Int32, Double, Int32, trig? : @core.Trig) -> Array[Contour]?
+pub fn contour_density(FixedArray[Double], FixedArray[Double], FixedArray[Double]?, Int32, Int32, Int32, Double, Int32, trig? : @trig.Trig) -> Array[Contour]?
 
 pub fn contours(FixedArray[Double], Int32, Int32, Array[Double], Bool) -> Array[Contour]?
 

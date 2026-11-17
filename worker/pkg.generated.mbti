@@ -2,8 +2,8 @@
 package "t-ujiie-g/mbtmap_engine/worker"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/style",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -80,7 +80,7 @@ pub fn TileProcessor::dem_tile(Self, Int32, BytesView, Int32, Int32) -> Bytes?
 pub fn TileProcessor::error(Self) -> String
 pub fn TileProcessor::error_utf8(Self) -> Bytes
 pub fn TileProcessor::feature_ranges(Self) -> Bytes
-pub fn TileProcessor::from_utf8(BytesView, text_number? : (String) -> Double, number_text? : (Double) -> String, trig? : @core.Trig, intl? : @style.Intl) -> Self raise @style.StyleError
+pub fn TileProcessor::from_utf8(BytesView, text_number? : (String) -> Double, number_text? : (Double) -> String, trig? : @trig.Trig, intl? : @style.Intl) -> Self raise @style.StyleError
 pub fn TileProcessor::process(Self, String, BytesView, Int32, x? : Int32, y? : Int32, globe? : Bool) -> Bool
 pub fn TileProcessor::query(Self, String, BytesView, Int32, BytesView, x? : Int32, y? : Int32) -> Bytes?
 pub fn TileProcessor::source_features(Self, String, BytesView, Int32, String, @style.Expr?, x? : Int32, y? : Int32) -> Bytes?

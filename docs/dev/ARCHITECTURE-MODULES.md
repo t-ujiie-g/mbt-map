@@ -225,4 +225,4 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). The entry points 
 - Projections give NaN out of reach and `transform` turns that into `None`.
 - Computing goes through `Trig` (call-site default `Trig::moonbit()`): `proj_worker` (proj.wasm, its own size row, loaded by the analysis and data workers on first CRS use) passes the host's `Math`, which leaves core math out of it, computes as proj4js does and is faster than `@math` in wasm-gc (PROGRESS.md).
 - Datasets in the analysis worker are always in 4326; the worker takes coordinates through proj.wasm as f64 pairs (`coords_out` / `with_coords`, `@geom.Table::map_coords`), never Table bytes.
-- PROJ strings are parsed on the TS side (`npm/src/projstring.ts`, its own lazily imported file) into docs/dev/FORMATS.md "CRS definition"; `proj/encoding.mbt` reads them.
+- PROJ strings are parsed on the TS side (`npm/src/projstring.ts`, its own lazily imported file) into docs/dev/FORMATS.md "CRS definition"; `ports/proj/encoding.mbt` reads them.

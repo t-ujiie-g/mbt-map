@@ -2,14 +2,14 @@
 package "t-ujiie-g/mbtmap_engine/hull"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/trig",
 }
 
 // Values
-pub fn concave(@geom.Table, Double, Double, trig? : @core.Trig) -> @geom.Table?
+pub fn concave(@geom.Table, Double, Double, trig? : @trig.Trig) -> @geom.Table?
 
-pub fn convex(@geom.Table, trig? : @core.Trig) -> @geom.Table?
+pub fn convex(@geom.Table, trig? : @trig.Trig) -> @geom.Table?
 
 // Errors
 

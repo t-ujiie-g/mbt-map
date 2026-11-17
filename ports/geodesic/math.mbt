@@ -2,9 +2,9 @@
 // License, Copyright (c) Charles Karney (2011-2022). See NOTICE.
 
 ///|
-/// The trigonometry geodesics use (`@core.Trig`): a wasm build passes the
+/// The trigonometry geodesics use (`@trig.Trig`): a wasm build passes the
 /// host's `Math` to match the JavaScript library bit for bit.
-pub using @core {type Trig}
+pub using @trig {type Trig}
 
 ///|
 const DEGREE : Double = 0.017453292519943295

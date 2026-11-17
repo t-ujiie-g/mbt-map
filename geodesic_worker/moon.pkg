@@ -2,7 +2,7 @@
 // with the host's `Math`.
 
 import {
-  "t-ujiie-g/mbtmap_engine/geodesic",
+  "t-ujiie-g/geodesic",
   "t-ujiie-g/mbtmap_engine/wasmio",
 }
 

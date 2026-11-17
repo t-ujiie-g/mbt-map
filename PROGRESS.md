@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt` を `ports/` に切り出した（どれも 0.1.0、未公開。公開は点検のあとにまとめて：ユーザー判断）。0.1.1 は 2026-11-16 に公開済み。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した（どれも 0.1.0、未公開。公開は点検のあとにまとめて：ユーザー判断）。0.1.1 は 2026-11-16 に公開済み。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：単独の移植の (4)〜(5)（`proj`・`geodesic`、点検）。その後 Phase 21（VISION §8）。
+- **次**：単独の移植の (5) 点検。そのあとユーザーが 11 個を公開。その後 Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -511,3 +511,12 @@ Where things stand, decisions and open issues. The development history before th
 - 依存の向きの書き方：`core ← pbf ← …` を `pbf ← mvt ← tess/style ← worker`（`core` は `tess`・`style` の下）に直した（AGENTS、ARCHITECTURE）。
 - 大きさ（gzip）：表示ワーカー 85,095 → 85,381 バイト（+286、予算 100KB）、サービスのワーカー 20,281 → 20,312 バイト（+31、予算 21KB）。復号の写しの分。ほかは変わらない。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 943、wasm-gc 953、js 1002、native 943：足したテスト 1 件の分だけ増えた）、npm のテスト（459）と大きさ、bench のテスト（23）、`mvt:golden`（35/35）、`tess:golden`（35/35）、`esri:golden`（19 of 19 ok）、pack test の `showcase-html,services,data,tiles`（Chromium）、`moon package --list`（各モジュールともその移植のファイルだけ）、`long-comments`（47 のまま）。README の例は一度テストとしてコンパイル・実行して通した。
+
+## 単独の移植 (4)：`proj`・`geodesic` と共有の `trig`（2026-11-17、Mac）
+
+- `Trig` の置き場（ユーザー判断）：小さい共有モジュール `ports/trig`（`t-ujiie-g/trig`）。`core/trig.mbt` の定義とテストをそのまま移し、`core` は `pub using @trig {type Trig}` で `@core.Trig` として出し直す。エンジンのほかのコードは変えていない（`.mbti` の `@core.Trig` が `@trig.Trig` になっただけ）。ほかの案（移植ごとに自分の `Trig`、`geodesic` が持って `proj` が借りる）は取らなかった。モジュールは 11 個になった。
+- `proj` と `geodesic` を `ports/` に移した（コードは `Trig` の import 元だけ変えた）。どちらも 0.1.0、`Apache-2.0 AND MIT`、`t-ujiie-g/trig@0.1.0` を import する。`trig` は `Apache-2.0`。公開は `trig` が先（RELEASING）。
+- README：`proj` は PROJ 文字列や WKT の解析を持たない（mbt-map では TS 側）ので、EPSG のコードで作る例と `Definition` を手で組む例（Lambert 93）を載せた。`geodesic` は緯度が先の関数（GeographicLib と同じ）と経度が先の補助 3 つの違いを書いた。例は一度テストとして実行して通した。
+- `proj/encoding.mbt` を指していたコメントと `worker/js/mirror.test.mjs` の読む場所、NOTICE のパスを `ports/proj/…` に直した。
+- 大きさ（gzip）：どれも ±31 バイト以内（座標系 21,628 → 21,650、測地ワーカー 12,039 → 12,070、`mbt-map` 本体 167,118 → 167,113 など）。コードは同じなので並びの違いと見る。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 943、wasm-gc 953、js 1002、native 943：前と同じ数）、npm のテスト（459）と大きさ、bench のテスト（23）、`proj:golden`（240 CRS、97,200 点、最大の差 4.66e-9 m）、`geodesic:golden`（19 組すべて一致）、`geojson:golden`（8,148 タイル、0 differ）、`buffer:check`、`tess:golden`（35/35）、pack test の `showcase-html,analysis,geojson,data`（Chromium）、`moon package --list`（3 つともその移植のファイルだけ）、`long-comments`（47 のまま）。

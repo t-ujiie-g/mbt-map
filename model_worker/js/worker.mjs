@@ -142,7 +142,7 @@ async function tile({ url }) {
   };
 }
 
-// `@proj.DEFINITION_SLOTS` (proj/encoding.mbt), as data_worker/js/read.mjs's `isCrs`.
+// `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt), as data_worker/js/read.mjs's `isCrs`.
 const DEFINITION_SLOTS = 34;
 const isCrs = (c) => (Number.isInteger(c) && c > 0) || (c instanceof Float64Array && c.length === DEFINITION_SLOTS);
 const isLonLat = (crs) => crs === 4326 || crs === 4979 || crs?.code === 4326 || crs?.code === 4979;

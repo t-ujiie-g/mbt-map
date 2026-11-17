@@ -27,7 +27,7 @@ const lonLat = (crs) => crs === undefined || crs === 4326;
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
-// `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
+// `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
 
 /** An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it. */

@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 167118,
+      "bytes": 167113,
       "budget": 168000
     },
     {
@@ -96,7 +96,7 @@
     },
     {
       "name": "display worker",
-      "bytes": 85381,
+      "bytes": 85382,
       "budget": 100000
     },
     {
@@ -116,12 +116,12 @@
     },
     {
       "name": "GeoJSON worker",
-      "bytes": 36996,
+      "bytes": 36994,
       "budget": 37000
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 56493,
+      "bytes": 56491,
       "budget": 57000
     },
     {
@@ -136,7 +136,7 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 30347,
+      "bytes": 30351,
       "budget": 31000
     },
     {
@@ -151,7 +151,7 @@
     },
     {
       "name": "shapes (simplify, hulls, Delaunay, Voronoi, line slices; loaded by the analysis worker on first use)",
-      "bytes": 27957,
+      "bytes": 27963,
       "budget": 30000
     },
     {
@@ -161,17 +161,17 @@
     },
     {
       "name": "viewshed (GDAL's; loaded by the analysis worker on first use)",
-      "bytes": 10742,
+      "bytes": 10747,
       "budget": 12000
     },
     {
       "name": "routing (geojson-path-finder; loaded by the analysis worker on first use)",
-      "bytes": 16059,
+      "bytes": 16061,
       "budget": 17000
     },
     {
       "name": "coordinate systems (loaded by the analysis and data workers on first use)",
-      "bytes": 21628,
+      "bytes": 21650,
       "budget": 25000
     },
     {
@@ -181,7 +181,7 @@
     },
     {
       "name": "geodesic worker",
-      "bytes": 12039,
+      "bytes": 12070,
       "budget": 15000
     },
     {
@@ -246,7 +246,7 @@
     },
     {
       "name": "KML and GPX (loaded by the data worker on the first such read)",
-      "bytes": 26775,
+      "bytes": 26777,
       "budget": 27000
     },
     {

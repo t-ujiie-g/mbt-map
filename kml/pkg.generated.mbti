@@ -2,9 +2,9 @@
 package "t-ujiie-g/mbtmap_engine/kml"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
   "t-ujiie-g/mbtmap_engine/xml",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -14,7 +14,7 @@ pub fn parse_float(String, (String) -> Double) -> Double
 
 pub fn read_gpx(Bytes, number~ : (String) -> Double, number_text~ : (Double) -> String) -> @geom.Table raise @xml.XmlError
 
-pub fn read_kml(Bytes, number~ : (String) -> Double, number_text~ : (Double) -> String, trig~ : @core.Trig) -> @geom.Table raise @xml.XmlError
+pub fn read_kml(Bytes, number~ : (String) -> Double, number_text~ : (Double) -> String, trig~ : @trig.Trig) -> @geom.Table raise @xml.XmlError
 
 pub fn write_kml(@geom.Table, number_text~ : (Double) -> String) -> String
 

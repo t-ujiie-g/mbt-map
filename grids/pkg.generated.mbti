@@ -2,8 +2,8 @@
 package "t-ujiie-g/mbtmap_engine/grids"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -11,15 +11,15 @@ pub const MAX_GRID_CELLS : Int32 = 1_000_000
 
 pub const MAX_INTERPOLATE_PAIRS : Int32 = 100_000_000
 
-pub fn hex_grid(Double, Double, Double, Double, Double, triangles? : Bool, trig? : @core.Trig) -> @geom.Table?
+pub fn hex_grid(Double, Double, Double, Double, Double, triangles? : Bool, trig? : @trig.Trig) -> @geom.Table?
 
-pub fn interpolate(@geom.Table, Double, Int32, String, Double, trig? : @core.Trig) -> @geom.Table?
+pub fn interpolate(@geom.Table, Double, Int32, String, Double, trig? : @trig.Trig) -> @geom.Table?
 
-pub fn point_grid(Double, Double, Double, Double, Double, trig? : @core.Trig) -> @geom.Table?
+pub fn point_grid(Double, Double, Double, Double, Double, trig? : @trig.Trig) -> @geom.Table?
 
-pub fn square_grid(Double, Double, Double, Double, Double, trig? : @core.Trig) -> @geom.Table?
+pub fn square_grid(Double, Double, Double, Double, Double, trig? : @trig.Trig) -> @geom.Table?
 
-pub fn triangle_grid(Double, Double, Double, Double, Double, trig? : @core.Trig) -> @geom.Table?
+pub fn triangle_grid(Double, Double, Double, Double, Double, trig? : @trig.Trig) -> @geom.Table?
 
 // Errors
 
