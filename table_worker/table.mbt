@@ -221,3 +221,84 @@ pub fn kinds() -> Int32 {
   @wasmio.clear_input()
   @wasmio.write_i32s(@tableops.column_kinds(t)[:])
 }
+
+///|
+/// A value an operation takes of each row: a string names a column of `t` (which must have it,
+/// unless it has no row), anything else is an expression.
+fn value_of(json : Json, t : @geom.Table) -> Result[@style.Expr, String] {
+  let json = match json {
+    String(name) => {
+      guard t.length() == 0 || t.column(name) is Some(_) else {
+        return Err("no column \{name}")
+      }
+      Json::array([Json::string("get"), json])
+    }
+    _ => json
+  }
+  let e = @style.compile(json) catch { err => return Err(err.message()) }
+  Ok(e)
+}
+
+///|
+/// `@tableops.rollup`: the arguments are a u32 count and per key its name and value, then a u32
+/// count and per output its name, aggregate (its place in `@tableops.Aggregate`), f64 fraction
+/// (`quantile`'s) and value; values are packed JSON as `value_of` takes them.
+#export_name("rollup")
+pub fn rollup(len_table : Int32) -> Int32 {
+  run(len_table, (t, r) => {
+    let value = (name : String) => {
+      guard read_json(r, 0) is Some(json) && r.ok() else {
+        return Err("malformed rollup")
+      }
+      value_of(json, t).map_err(message => "\{name}: \{message}")
+    }
+    let keys = []
+    for _ in 0..<r.u32().min(r.remaining()) {
+      let name = r.utf8()
+      match value(name) {
+        Ok(e) => keys.push((name, e))
+        Err(message) => return Err(message)
+      }
+    }
+    let outputs = []
+    for _ in 0..<r.u32().min(r.remaining()) {
+      let name = r.utf8()
+      let how = @tableops.Aggregate::coded(r.u8(), r.f64())
+      match value(name) {
+        Ok(e) => outputs.push((name, how, e))
+        Err(message) => return Err(message)
+      }
+    }
+    guard r.ok() else { return Err("malformed rollup") }
+    Ok(@tableops.rollup(t, keys, outputs, hooks~))
+  })
+}
+
+///|
+/// `@tableops.join` of the input's two tables (`len_left` bytes, then `len_right`) with the
+/// arguments after them (docs/dev/FORMATS.md "Table operations"). A table at `output_addr`: its
+/// length, or minus an error message's.
+#export_name("join")
+pub fn join(len_left : Int32, len_right : Int32) -> Int32 {
+  let rest = @wasmio.input_length() - len_left - len_right
+  guard @wasmio.input_table(0, len_left) is Some(left) &&
+    @wasmio.input_table(len_left, len_right) is Some(right) else {
+    return @wasmio.fail_with("malformed table")
+  }
+  let r = @core.ByteReader::new(
+    @wasmio.input_slice(len_left + len_right, rest)[:],
+  )
+  @wasmio.clear_input()
+  let keep_left = r.u8() == 1
+  let suffix = (r.utf8(), r.utf8())
+  let n = r.u32()
+  guard n >= 0 && n <= r.remaining() else {
+    return @wasmio.fail_with("malformed join")
+  }
+  let on = Array::makei(n, _ => (r.utf8(), r.utf8()))
+  guard r.ok() else { return @wasmio.fail_with("malformed join") }
+  match @tableops.join(left, right, on, keep_left~, suffix~) {
+    Ok(out) => @wasmio.write_table(out)
+    Err(message) => @wasmio.fail_with(message)
+  }
+}

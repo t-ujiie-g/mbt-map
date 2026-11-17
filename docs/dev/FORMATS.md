@@ -535,7 +535,7 @@ In:
     given, decoded into a FeatureCollection (`wasmio/js/table.mjs`);
   - `table` (`dataset`): its Table bytes, for the data worker's `write`;
   - `rows` (`dataset`, `fn` an export of table_worker giving a table, `args` an ArrayBuffer and
-    `numbers` integers, "Table operations"): a new dataset; `column` (`dataset`, `name`): the
+    `numbers` integers, "Table operations"; `other`, a second dataset, for `join`): a new dataset; `column` (`dataset`, `name`): the
     column's values as an array (undefined where a row lacks the key); `columnKinds`
     (`dataset`): five i32 counts per column;
   - `transform` (`coords` an ArrayBuffer of f64 x, y pairs, `from`, `to`): the
@@ -575,6 +575,13 @@ is "Table" bytes unless said otherwise.
 - `derive`: a u32 count, then per column its name and a u8: 0 and a packed expression, or 1, a
   u32 count and that many "Property values".
 - `orderby`: a u32 count, then per key a u8 (1 if it descends) and a packed expression.
+- `rollup`: a u32 count, then per key its name and value; a u32 count, then per output its name,
+  a u8 aggregate (0 count, 1 valid, 2 distinct, 3 sum, 4 mean, 5 min, 6 max, 7 median, 8 any,
+  9 variance, 10 stdev, 11 quantile, 12 mode, 13 product), an f64 (the quantile's fraction) and
+  a value. A value is packed JSON: a string names a column, anything else is an expression.
+- `join(len_left, len_right)`: the input holds two tables; after them a u8 (1 to keep the left
+  rows without a match), the two suffixes, a u32 count and that many pairs of column names
+  (left, right).
 - `column`: the name as UTF-8 to the end of the input; the output is a "Property value" per row.
 - `kinds()`: the input is the table alone; the output is five i32s per column (cells holding a
   number, a string, a boolean, null, and rows without the key).
