@@ -23,7 +23,7 @@ cd ../mbtmap_rabbita && moon update && moon publish   # mbtmap の新しい版�
 `ports/<名前>/` は 1 つずつが mooncakes のモジュール（`t-ujiie-g/<名前>`）で、エンジンはワークスペース経由で import する。版は移植ごとに独立で、mbt-map の版とはそろえない。その移植のコードか公開 API が変わったときだけ上げる。
 
 1. `ports/<名前>/moon.mod` の `version` と、ルートの `moon.mod` が import する `t-ujiie-g/<名前>@…` を同じ版にする（`npm --prefix bench test` の `ports.test.mjs` が見る。README・LICENSE・NOTICE があることも）。PR でマージする。
-2. 手元で `cd ports/<名前> && moon package --list` で入るファイルを確かめ、`moon publish`。ほかの移植に依存するもの（`mvt` は `pbf`、`proj` と `geodesic` は `trig`）は、依存される側を先に出す。
+2. 手元で `cd ports/<名前> && moon package --list` で入るファイルを確かめ、`moon publish`。ほかの移植に依存するもの（`mvt` は `pbf`、`proj` と `geodesic` は `trig`）は、依存される側を先に出す。梱包したものがリポジトリの外で通るかは、`moon package` の zip を 1 つの空のフォルダに展開し、それらを並べた `moon.work` を置いて `moon check --target all` と `moon test --target all` で確かめられる。
 
 ## タグを打つ
 

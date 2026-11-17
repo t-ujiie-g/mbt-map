@@ -45,6 +45,8 @@ fn app() -> @rabbita.Val[@html.Html] {
 }
 ```
 
+Documentation, examples and a live demo: **<https://t-ujiie-g.github.io/mbt-map/>** (the MoonBit guide is [there](https://t-ujiie-g.github.io/mbt-map/docs/moonbit.html)).
+
 - `view(id, css?, class?)`: the `<mbt-map>` element.
 - `setup(id, style, center?, zoom?, bearing?, pitch?)`: a command that gives the map its style (`@style.Style`) and camera after the view renders; run it again to change the style.
 - `events(id, on_load?, on_idle?, on_move?, on_moveend?, on_click?, on_error?)`: a subscription.

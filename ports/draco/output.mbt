@@ -3,7 +3,7 @@
 const MAX_OUTPUT_BYTES : Int32 = 0x40000000
 
 ///|
-/// The mesh as docs/dev/FORMATS.md "Draco output" lays it out: a header of u32s, the indices, then
+/// The mesh as mbt-map's FORMATS.md "Draco output" lays it out: a header of u32s, the indices, then
 /// each attribute's data padded to four bytes; None past `max_bytes`.
 pub fn DracoMesh::to_bytes(
   self : DracoMesh,

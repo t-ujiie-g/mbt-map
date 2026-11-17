@@ -1,4 +1,4 @@
-// Prints the hashes clipper/libcxx_sort_wbtest.mbt expects: libc++'s std::sort on keys with ties, the order of
+// Prints the hashes ports/clipper/libcxx_sort_wbtest.mbt expects: libc++'s std::sort on keys with ties, the order of
 // the equal ones hashed. Usage: clang++ -std=c++17 -stdlib=libc++ -O1 libcxx-sort-cases.cpp -o cases && ./cases
 #include <algorithm>
 #include <cstdint>

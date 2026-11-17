@@ -141,7 +141,7 @@ test "decode_intensity reads bit-stuffed, 8-bit, 16-bit and upscaled values" {
 }
 
 ///|
-test "decode lays the values out as docs/dev/FORMATS.md LEPCC output" {
+test "decode lays the values out as mbt-map's FORMATS.md LEPCC output" {
   let b = hex(xyz_blob)
   guard decode(Xyz, b, 0, b.length()) is Some(out) else { fail("refused") }
   assert_eq(out.length(), 8 + 72)

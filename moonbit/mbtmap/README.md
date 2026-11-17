@@ -41,6 +41,8 @@ map.on(Load, _ => {
 map.on_layer(Click, ["places"], e => map.fly_to(center?=e.lnglat, zoom=16.0)) |> ignore
 ```
 
+Documentation, examples and a live demo: **<https://t-ujiie-g.github.io/mbt-map/>** (the MoonBit guide is [there](https://t-ujiie-g.github.io/mbt-map/docs/moonbit.html)).
+
 Packages: `t-ujiie-g/mbtmap` (the map, camera, events, queries), `t-ujiie-g/mbtmap/style` (styles, sources and one function per layer type with its paint and layout properties as labelled arguments, generated from MapLibre's style specification; `Layer::json`, `Source::json` and `Style::json` take JSON as written) and `t-ujiie-g/mbtmap/expr` (expressions).
 
 Licensed under the Apache License 2.0.

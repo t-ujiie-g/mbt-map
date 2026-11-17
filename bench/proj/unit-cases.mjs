@@ -1,4 +1,4 @@
-// Writes proj/projections_test.mbt: proj4js 2.22.0's result at one point of each PROJ string of golden.mjs,
+// Writes ports/proj/projections_test.mbt: proj4js 2.22.0's result at one point of each PROJ string of golden.mjs,
 // so `moon test` (and CI) checks every projection. Usage: node proj/unit-cases.mjs, then `moon fmt`.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -48,5 +48,5 @@ test "every projection matches proj4js on a point, and comes back" {
   }
 }
 `;
-await writeFile(path.join(ROOT, "proj/projections_test.mbt"), text);
+await writeFile(path.join(ROOT, "ports/proj/projections_test.mbt"), text);
 console.log(`${cases.length} cases`);

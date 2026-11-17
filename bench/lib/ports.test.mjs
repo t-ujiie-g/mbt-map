@@ -16,6 +16,9 @@ test("each port is a workspace module the engine imports at its version, with a 
     assert.ok(read("moon.mod").includes(`"t-ujiie-g/${name}@${version}"`), `moon.mod imports ${name}@${version}`);
     assert.ok(read("moon.work").includes(`"./ports/${name}"`), `moon.work lists ${name}`);
     for (const f of ["README.md", "LICENSE", "NOTICE"]) assert.ok(existsSync(path.join(ROOT, "ports", name, f)), `${name}/${f}`);
+    for (const [, other, wanted] of mod.matchAll(/"t-ujiie-g\/([a-z_]+)@([^"]+)"/g)) {
+      assert.ok(read("ports", other, "moon.mod").includes(`version = "${wanted}"`), `${name} imports ${other} at its version`);
+    }
     assert.doesNotMatch(mod + read("ports", name, "moon.pkg"), /mbtmap_engine/, `${name} imports nothing of the engine`);
   }
 });
