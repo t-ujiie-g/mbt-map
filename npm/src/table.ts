@@ -1,11 +1,11 @@
-// `mbt-map/table`: features in tables. Read from CSV, WKT, WKB, shapefiles, TopoJSON, KML/KMZ, GPX,
-// FlatGeobuf and GeoJSON in the data worker, analysed in the analysis worker (matching Turf.js, flatbush,
-// Clipper2, JTS, concaveman, d3 and GDAL, each module loaded on its first use), written out, and given to
-// a map as GeoJSON. Both workers start on their first use.
+// `mbt-map/table`: features in tables, read and written in the data worker (CSV, WKT, WKB, shapefiles,
+// TopoJSON, KML/KMZ, GPX, FlatGeobuf, GeoJSON) and analysed in the analysis worker (matching Turf.js, flatbush,
+// Clipper2, JTS, concaveman, d3, GDAL and Arquero); each worker and module loads on its first use.
 import { tableInfo, tableToGeoJSON, withIds } from "../../wasmio/js/table.mjs";
 import { analysisCall, analysisClient, dataClient, free, live, named, startAnalysis, startData, type AnalysisOptions, type DataOptions } from "./clients";
 import { crsArg as crsArgOf, type Crs } from "./crs";
 import { bboxArg, csvArgs, csvWriteArgs, formatOf, shapefileParts, type CsvOptions, type CsvWriteOptions, type DataFormat, type ShapefileParts, type WriteFormat } from "./data-format";
+import { Packer } from "./pack";
 import { packPattern } from "./relate-pattern";
 import { httpUrl, type TransformedRequest } from "./urls";
 
@@ -36,6 +36,22 @@ export interface BufferOptions {
   arcTolerance?: number;
   crs?: Crs;
 }
+
+/**
+ * A style expression (`["==", ["get", "kind"], "park"]`, as a map's layers take), or a literal. In a
+ * table it reads a row: `["get", name]` its properties, `["geometry-type"]` its geometry's GeoJSON type
+ * (`"Unknown"` without one) and `["id"]` nothing; `["zoom"]` is 0.
+ */
+export type Expression = string | number | boolean | null | readonly unknown[];
+
+/** A column for `Table.derive`: an expression computed per row, or a value per row as given. */
+export type Derived = Expression | ArrayBufferView | { values: ArrayLike<unknown> };
+
+/** A key for `Table.orderby`: a column's name or an expression, ascending unless `descending`. */
+export type OrderKey = string | readonly unknown[] | { by: string | readonly unknown[]; descending?: boolean };
+
+/** What a column's cells hold: one kind, `"mixed"`, or `"null"` when none holds a value. */
+export type ColumnType = "number" | "string" | "boolean" | "mixed" | "null";
 
 /** `crs`: the CRS of the data's coordinates (default EPSG:4326); they are kept as longitude and latitude. */
 export interface LoadOptions extends AnalysisOptions {
@@ -175,10 +191,9 @@ async function tableOf(r: Promise<WorkerTable>): Promise<Table> {
 }
 
 /**
- * Features in columns: `length` rows (a geometry collection makes one per member) and `columns`, the
- * property keys. A table that was read has its `format`, the `layer` read (a shapefile of a .zip, a
- * TopoJSON object) and the input's `layers`. Its rows stay on the page until its first operation, which
- * moves them into the analysis worker (started then), where the results stay too; `dispose` frees them.
+ * Features in columns: `length` rows and `columns`, the property keys; a table that was read has its `format`,
+ * `layer` and the input's `layers`. The rows stay on the page until the first operation moves them into the
+ * analysis worker, where results stay too (docs/data.md); `dispose` frees them.
  */
 export class Table {
   readonly length: number;
@@ -499,6 +514,93 @@ export class Table {
    */
   async merge(): Promise<Table> {
     return tableOf(analysisCall("merge", { dataset: await this.#worker("merged ") }));
+  }
+
+  async #rows(fn: string, args: ArrayBuffer, numbers: number[] = []): Promise<Table> {
+    return tableOf(analysisCall("rows", { dataset: await this.#worker(), fn, args, numbers }, [args]));
+  }
+
+  /** The table with only `columns`, in that order (Arquero's `select`); rejects for a name that is not a column. */
+  async select(columns: readonly string[]): Promise<Table> {
+    if (!Array.isArray(columns) || !columns.every((c) => typeof c === "string")) throw new Error("mbt-map: analysis: select takes column names");
+    const p = new Packer().u32(columns.length);
+    for (const name of columns) p.utf8(name);
+    return this.#rows("select", p.finish());
+  }
+
+  /**
+   * The rows for which `criteria` is true (Arquero's `filter`; an error or another value drops the
+   * row), or the rows numbered by an integer array such as `search` and `nearest` give, in its order.
+   */
+  async filter(criteria: Expression | ArrayBufferView): Promise<Table> {
+    if (ArrayBuffer.isView(criteria)) {
+      const rows = Uint32Array.from(criteria as unknown as ArrayLike<number>);
+      if (!rows.every((r, i) => r === (criteria as unknown as ArrayLike<number>)[i])) throw new Error("mbt-map: analysis: rows must be whole numbers from 0");
+      return this.#rows("take", rows.buffer);
+    }
+    return this.#rows("filter", new Packer().json(criteria).finish());
+  }
+
+  /** Rows `start` up to `end` (not included), counted from the end when negative, as `Array.prototype.slice`. */
+  async slice(start = 0, end = Infinity): Promise<Table> {
+    const at = (i: number) => {
+      const n = Math.trunc(Number(i)) || 0;
+      return Math.max(0, Math.min(this.length, n < 0 ? this.length + n : n));
+    };
+    return this.#rows("slice", new ArrayBuffer(0), [at(start), at(end)]);
+  }
+
+  /**
+   * The table with `columns` (Arquero's `derive`): each an expression computed per row (a result that is not a
+   * boolean, number or string is null) or a value per row (a typed array, or `{ values }`; `undefined` leaves the
+   * row without the key). One named as an existing column replaces it; the others follow.
+   */
+  async derive(columns: Record<string, Derived>): Promise<Table> {
+    const entries = Object.entries(columns ?? {});
+    const p = new Packer().u32(entries.length);
+    for (const [name, how] of entries) {
+      p.utf8(name);
+      const given = ArrayBuffer.isView(how) ? (how as unknown as ArrayLike<unknown>) : how !== null && typeof how === "object" && !Array.isArray(how) ? (how as { values: ArrayLike<unknown> }).values : null;
+      if (given === null) {
+        p.u8(0).json(how);
+        continue;
+      }
+      if (typeof given?.length !== "number") throw new Error(`mbt-map: analysis: ${name}: values must be an array`);
+      p.u8(1).u32(given.length);
+      for (let i = 0; i < given.length; i++) p.value(given[i]);
+    }
+    return this.#rows("derive", p.finish());
+  }
+
+  /**
+   * The rows ordered by `keys`, the first key first (Arquero's `orderby`): null first, then numbers
+   * and strings as JavaScript's `<` orders them, the other way for a `descending` key; rows equal on
+   * every key keep their order.
+   */
+  async orderby(...keys: OrderKey[]): Promise<Table> {
+    const p = new Packer().u32(keys.length);
+    for (const key of keys) {
+      const { by, descending = false } = typeof key === "object" && key !== null && !Array.isArray(key) ? (key as { by: string | readonly unknown[]; descending?: boolean }) : { by: key as string | readonly unknown[] };
+      if (typeof by !== "string" && !Array.isArray(by)) throw new Error("mbt-map: analysis: an order key is a column name or an expression");
+      p.u8(descending ? 1 : 0).json(typeof by === "string" ? ["get", by] : by);
+    }
+    return this.#rows("orderby", p.finish());
+  }
+
+  /** The values of column `name`, one per row (Arquero's `array`): `undefined` where the row lacks the key. */
+  async array(name: string): Promise<(string | number | boolean | null | undefined)[]> {
+    if (typeof name !== "string") throw new Error("mbt-map: analysis: array takes a column name");
+    return this.#call("column", { name });
+  }
+
+  /** What each column's cells hold. */
+  async columnTypes(): Promise<Record<string, ColumnType>> {
+    const counts = await this.#call<Int32Array>("columnKinds");
+    const types: [string, ColumnType][] = this.columns.map((name, i) => {
+      const held = (["number", "string", "boolean"] as const).filter((_, k) => counts[i * 5 + k] > 0);
+      return [name, held.length === 0 ? "null" : held.length === 1 ? held[0] : "mixed"];
+    });
+    return Object.fromEntries(types);
   }
 
   /**

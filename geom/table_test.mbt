@@ -395,3 +395,58 @@ test "push_row appends a row without geometry, padding and adding columns" {
   assert_eq(t.column("b").unwrap().values, [None, Some(Null), None])
   assert_eq(t.column("c").unwrap().values, [None, None, None])
 }
+
+///|
+fn three_rows() -> @geom.Table {
+  let b = @geom.TableBuilder::new()
+  for p in [(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 0.0)] {
+    b.point(p.0, p.1)
+  }
+  b.end_ring()
+  b.end_part()
+  b.prop("name", Str("a"))
+  b.end_feature(Polygon, id=Some(Num(7.0)))
+  b.prop("n", Num(2.0))
+  b.end_feature(NoGeometry)
+  b.point(5.0, 6.0)
+  b.end_ring()
+  b.end_part()
+  b.prop("name", Str("c"))
+  b.end_feature(Point)
+  b.finish()
+}
+
+///|
+test "take gives the rows asked for in their order, with geometry, ids and properties" {
+  let t = three_rows().take([2, 0, 2]).unwrap()
+  assert_eq(t.kinds, [Point, Polygon, Point])
+  assert_eq(t.ids, [None, Some(Num(7.0)), None])
+  assert_eq(t.coords, [
+    5.0, 6.0, 0.0, 0.0, 4.0, 0.0, 4.0, 4.0, 0.0, 0.0, 5.0, 6.0,
+  ])
+  assert_eq((t.parts(1), t.rings(1), t.points(1)), ((1, 2), (1, 2), (1, 5)))
+  assert_eq(t.column("name").unwrap().values, [
+    Some(Str("c")),
+    Some(Str("a")),
+    Some(Str("c")),
+  ])
+  assert_eq(t.column("n").unwrap().values, [None, None, None])
+  assert_eq(three_rows().take([]).unwrap().length(), 0)
+  assert_true(three_rows().take([3]) is None)
+  assert_true(three_rows().take([-1]) is None)
+}
+
+///|
+test "with_columns replaces the properties and keeps the geometry" {
+  let t = three_rows()
+  let u = t.with_columns([("x", [Some(Num(1.0)), None, Some(Null)])]).unwrap()
+  assert_eq(u.columns.map(c => c.name), ["x"])
+  assert_eq(u.column("x").unwrap().values, [Some(Num(1.0)), None, Some(Null)])
+  assert_true(u.column("name") is None)
+  assert_eq((u.kinds, u.coords), (t.kinds, t.coords))
+  assert_true(t.with_columns([("x", [None])]) is None)
+  assert_true(
+    t.with_columns([("x", [None, None, None]), ("x", [None, None, None])])
+    is None,
+  )
+}

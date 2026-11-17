@@ -5,6 +5,7 @@ import { hostNumber, hostText, MAX_INPUT_BYTES, writeInput } from "../../wasmio/
 import { readCapped } from "../../worker/js/body.mjs";
 import { checkImageSize, decodeImage } from "../../worker/js/imagesize.mjs";
 import { stringList, tableToGeoJSON } from "../../wasmio/js/table.mjs";
+import { readValue } from "../../worker/js/values.mjs";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -19,6 +20,7 @@ const modules = {
   viewshed: { url: null, exports: null, imports: { Math } },
   route: { url: null, exports: null, imports: { Math } },
   proj: { url: null, exports: null, imports: { Math } },
+  table: { url: null, exports: null, imports: { Math, host: hostText() } },
 };
 // The datasets [a, b] whose tables relate.wasm keeps from the last call.
 let relateKept = null;
@@ -64,6 +66,8 @@ const SHAPE_OPS = ["simplify", "convex", "concave", "delaunay", "voronoi", "line
 // The exports of surface_worker: those giving a table, then those giving f64s.
 const SURFACE_TABLES = ["point_grid", "square_grid", "hex_grid", "triangle_grid", "interpolate", "isolines", "isobands", "density"];
 const SURFACE_VALUES = ["dbscan", "kmeans"];
+// The exports of table_worker that give a table.
+const TABLE_OPS = ["select", "filter", "take", "slice", "derive", "orderby"];
 // `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
 // An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it.
@@ -366,6 +370,33 @@ const OPS = {
   overlay({ a, b, kind }) {
     check(isId(a) && isId(b) && [0, 1, 2, 3].includes(kind));
     return geometryOp([a, b], (g, lenA) => g.overlay(lenA, kind));
+  },
+  // A table_worker export `fn` over `dataset` with `args` (bytes after the table, docs/dev/FORMATS.md
+  // "Table operations") and `numbers` (integers after the table's length): a new dataset.
+  async rows({ dataset, fn, args, numbers = [] }) {
+    check(isId(dataset) && TABLE_OPS.includes(fn) && args instanceof ArrayBuffer && Array.isArray(numbers) && numbers.every(Number.isInteger));
+    const { exports, tables } = await withTables("table", [dataset], [new Uint8Array(args)]);
+    return stored(outputOf(exports, checked(exports, exports[fn](tables[0].length, ...numbers))));
+  },
+  // The values of column `name`, one per row (undefined where the row lacks the key).
+  async column({ dataset, name }) {
+    check(isId(dataset) && typeof name === "string");
+    const { exports, tables } = await withTables("table", [dataset], [encoder.encode(name)]);
+    const bytes = outputOf(exports, checked(exports, exports.column(tables[0].length)));
+    const view = new DataView(bytes.buffer);
+    const values = [];
+    for (let at = 0; at < bytes.length; ) {
+      let v;
+      [v, at] = readValue(view, bytes, at);
+      values.push(v);
+    }
+    return values;
+  },
+  // Per column, how many cells hold a number, a string, a boolean, null and nothing.
+  async columnKinds({ dataset }) {
+    check(isId(dataset));
+    const { exports } = await withTables("table", [dataset]);
+    return i32sOf(exports, exports.kinds());
   },
   // The dataset's Table bytes, for the data worker to write.
   table({ dataset }) {

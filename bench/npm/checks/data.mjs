@@ -66,6 +66,7 @@ export async function dataChecks(page, requests) {
   });
   const loaded = names().filter((n) => /^(data|stations|lines|wards|proj|prjwkt)/.test(n));
   const station = r.features[0];
+  const o = r.operations;
   const near = (a, b) => Math.abs(a - b) < 1e-7;
   const sameRings = (got, want) => got.length === want.length && got.every((ring, i) => ring.length === want[i].length && ring.every((p, j) => near(p[0], want[i][j][0]) && near(p[1], want[i][j][1])));
   const wardFeatures = z.wards.features;
@@ -82,6 +83,20 @@ export async function dataChecks(page, requests) {
     r.area === "Polygon" &&
     JSON.stringify(r.datasets) === JSON.stringify([5, 1]) &&
     r.moved === true &&
+    names().includes("table.wasm") &&
+    JSON.stringify(o.busy) === JSON.stringify(["東京", "有楽町"]) &&
+    JSON.stringify(o.top) === JSON.stringify([["Point", { 名前: "東京" }], ["Point", { 名前: "有楽町" }]]) &&
+    JSON.stringify(o.columns) === JSON.stringify(["名前", "緯度", "経度", "乗降客数", "備考", "area", "half", "tag"]) &&
+    JSON.stringify(o.types) === JSON.stringify({ 名前: "string", 緯度: "number", 経度: "number", 乗降客数: "number", 備考: "string", area: "number", half: "number", tag: "mixed" }) &&
+    o.area.slice(0, 4).every((v) => v > 300 && v < 320) && o.area[4] === 0 &&
+    JSON.stringify(o.half) === JSON.stringify([231294.5, 84775, 49280, null, 5]) &&
+    JSON.stringify(o.tag) === JSON.stringify(["a", null, "absent", 1, true]) &&
+    JSON.stringify(o.notes) === JSON.stringify(["丸の内, 八重洲", "-", "-", "地下", "座標なし"]) &&
+    JSON.stringify(o.nearest) === JSON.stringify(["東京", "大手町"]) &&
+    JSON.stringify(o.last) === JSON.stringify(["大手町", "不明"]) &&
+    JSON.stringify(o.points) === JSON.stringify(["東京", "有楽町", "神田", "大手町"]) &&
+    o.noColumn === "mbt-map: analysis: no column x" && o.noRow === "mbt-map: analysis: a row out of the table" &&
+    /whole numbers/.test(o.halfRow) && /^mbt-map: analysis: .*nope/.test(o.badExpression) &&
     JSON.stringify(r.derived) === JSON.stringify([5, ["名前", "緯度", "経度", "乗降客数", "備考"], null]) &&
     JSON.stringify(r.inside) === JSON.stringify([0, 1, 3]) &&
     r.drawn === 4 &&

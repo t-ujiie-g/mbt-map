@@ -126,12 +126,12 @@
     },
     {
       "name": "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)",
-      "bytes": 1749,
+      "bytes": 1762,
       "budget": 2000
     },
     {
       "name": "mbt-map/table",
-      "bytes": 6234,
+      "bytes": 7235,
       "budget": 9000
     },
     {
@@ -146,7 +146,7 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 30637,
+      "bytes": 30842,
       "budget": 31000
     },
     {
@@ -178,6 +178,11 @@
       "name": "routing (geojson-path-finder; loaded by the analysis worker on first use)",
       "bytes": 16061,
       "budget": 17000
+    },
+    {
+      "name": "table operations (select, filter, derive, orderby; loaded by the analysis worker on first use)",
+      "bytes": 40653,
+      "budget": 45000
     },
     {
       "name": "coordinate systems (loaded by the analysis and data workers on first use)",

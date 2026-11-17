@@ -73,7 +73,9 @@ pub fn Table::points(Self, Int32) -> (Int32, Int32)
 pub fn Table::push_row(Self, Prop?, ArrayView[(String, Prop?)]) -> Int32
 pub fn[S : TableSource] Table::read_from(S, Int32) -> Self?
 pub fn Table::rings(Self, Int32) -> (Int32, Int32)
+pub fn Table::take(Self, ArrayView[Int32]) -> Self?
 pub fn Table::to_bytes(Self) -> Bytes
+pub fn Table::with_columns(Self, ArrayView[(String, Array[Prop?])]) -> Self?
 pub fn[S : TableSink] Table::write_to(Self, S) -> Int32
 
 pub struct TableBuilder {

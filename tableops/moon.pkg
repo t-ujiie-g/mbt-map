@@ -1,0 +1,13 @@
+// Attribute operations on tables as Arquero's verbs do them (select, filter, derive, orderby,
+// slice), with rows tested and values computed by style expressions. Pure MoonBit.
+
+import {
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/style",
+}
+
+import {
+  "moonbitlang/core/double",
+  "moonbitlang/core/json",
+} for "test"

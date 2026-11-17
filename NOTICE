@@ -520,6 +520,12 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright (c) 2011-2022, Charles Karney
     License: MIT License (text in section 2).
 
+- tableops/orderby.mbt: the order of two values follows Arquero 8.0.3's comparator
+  (src/expression/compare.js) https://github.com/uwdata/arquero — BSD 3-Clause License:
+
+    Copyright (c) 2020-2024, UW Interactive Data Lab
+    License: BSD 3-Clause License (text in section 2).
+
 - relate/*.mbt: port of JTS's DE-9IM relate operation as JSTS 2.12.1 ships it
   (org/locationtech/jts: operation/relate/, the geomgraph/ and geomgraph/index/
   classes RelateOp reaches, algorithm/RobustLineIntersector, LineIntersector,

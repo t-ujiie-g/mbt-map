@@ -1,0 +1,19 @@
+// The module the analysis worker loads on a table's first attribute operation (table.wasm): rows
+// filtered, ordered and sliced and columns selected and derived by `@tableops`, their expressions
+// compiled here, computing with the host's Math, Number, String and Intl.
+
+import {
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/mbtmap_engine/style",
+  "t-ujiie-g/mbtmap_engine/tableops",
+  "t-ujiie-g/mbtmap_engine/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

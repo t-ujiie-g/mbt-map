@@ -534,6 +534,10 @@ In:
   - `toGeoJSON` (`dataset`, `crs`): its Table bytes, transformed to `crs` when
     given, decoded into a FeatureCollection (`wasmio/js/table.mjs`);
   - `table` (`dataset`): its Table bytes, for the data worker's `write`;
+  - `rows` (`dataset`, `fn` an export of table_worker giving a table, `args` an ArrayBuffer and
+    `numbers` integers, "Table operations"): a new dataset; `column` (`dataset`, `name`): the
+    column's values as an array (undefined where a row lacks the key); `columnKinds`
+    (`dataset`): five i32 counts per column;
   - `transform` (`coords` an ArrayBuffer of f64 x, y pairs, `from`, `to`): the
     pairs in `to`, NaN where a point is out of the projection's reach.
 
@@ -554,6 +558,26 @@ makes a new dataset from the result (a feature with a NaN keeps its row with no
 geometry). proj.wasm names a CRS by EPSG code, or by -1 - the handle
 `define_crs` returns for a definition; `crs_kind(id)` is 1 for a geographic CRS,
 0 for a projected one.
+
+## Table operations (`table_worker/table.mbt`, written by `npm/src/pack.ts`)
+
+The input of a table_worker export is a table's "Table" bytes (their length is the export's first
+argument), then its arguments, little-endian; a string is a u32 byte length and UTF-8. The output
+is "Table" bytes unless said otherwise.
+
+- Packed JSON (an expression): a u8 tag, 0 null, 1 false, 2 true, 3 and an f64, 4 and a string,
+  5 and a u32 count and that many values, 6 and a u32 count and that many key strings each with
+  its value. Nesting past 64 levels is refused; the wasm compiles it with `@style.compile`.
+- `select`: a u32 count and that many names.
+- `filter`: a packed expression.
+- `take`: the rows as u32s.
+- `slice(len, start, end)`: no arguments after the table.
+- `derive`: a u32 count, then per column its name and a u8: 0 and a packed expression, or 1, a
+  u32 count and that many "Property values".
+- `orderby`: a u32 count, then per key a u8 (1 if it descends) and a packed expression.
+- `column`: the name as UTF-8 to the end of the input; the output is a "Property value" per row.
+- `kinds()`: the input is the table alone; the output is five i32s per column (cells holding a
+  number, a string, a boolean, null, and rows without the key).
 
 ## Geodesic worker messages (`geodesic_worker/js/worker.mjs`)
 
