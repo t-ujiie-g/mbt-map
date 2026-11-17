@@ -71,6 +71,20 @@ export function withIds(fc, ids) {
   return fc;
 }
 
+// Strings as `columns_out` of analysis_worker writes them: a u32 count, then each as table bytes hold one.
+export function stringList(buffer) {
+  const v = new DataView(buffer.buffer ?? buffer, buffer.byteOffset ?? 0, buffer.byteLength);
+  const bytes = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+  const out = [];
+  let at = 4;
+  for (let i = v.getUint32(0, true); i > 0; i--) {
+    const [s, next] = readString(v, bytes, at);
+    out.push(s);
+    at = next;
+  }
+  return out;
+}
+
 // The feature count and the property keys of table bytes, read without the rest.
 export function tableInfo(buffer) {
   const v = new DataView(buffer.buffer ?? buffer, buffer.byteOffset ?? 0, buffer.byteLength);

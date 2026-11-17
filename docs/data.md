@@ -1,14 +1,13 @@
-# Reading and writing data: `mbt-map/data`
+# Reading and writing data: `mbt-map/table` and `mbt-map/data`
 
-`mbt-map/data` reads vector GIS files in a Web Worker of its own. It handles CSV, WKT/EWKT, WKB/EWKB, Shapefile (loose files or a zip), TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoJSON. Each read returns a `DataTable` in longitude and latitude, which you can pass straight to a GeoJSON source or load into [mbt-map/analysis](./analysis.md). The entry point also writes GeoJSON, CSV and KML, and reads GeoTIFF and Cloud Optimized GeoTIFF (COG) pixels. The worker starts on the first call. Coordinate conversion, KML/GPX and GeoTIFF each ship as a separate module, fetched only the first time they're needed.
+`mbt-map/table` reads vector GIS files in a Web Worker of its own. It handles CSV, WKT/EWKT, WKB/EWKB, Shapefile (loose files or a zip), TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoJSON. Each read returns a `Table` in longitude and latitude, which gives a GeoJSON source its data and has the analysis of [analysis.md](./analysis.md) as methods. The entry point also writes GeoJSON, CSV and KML. `mbt-map/data` reads GeoTIFF and Cloud Optimized GeoTIFF (COG) pixels in the same worker. The worker starts on the first call. Coordinate conversion, KML/GPX and GeoTIFF each ship as a separate module, fetched only the first time they're needed.
 
 ```js
-import { read, parse, write } from "mbt-map/data";
-import { load } from "mbt-map/analysis";
+import { read, parse, write } from "mbt-map/table";
 
 const stations = await read("/data/stations.csv");    // points from the latitude and longitude columns
-map.addSource("stations", { type: "geojson", data: stations.toGeoJSON() });
-const dataset = await load(stations);                  // also an mbt-map/analysis Dataset
+map.addSource("stations", { type: "geojson", data: await stations.toGeoJSON() });
+const nearest = await stations.nearest(139.767, 35.681); // the table has the analysis as methods
 
 const area = await parse("SRID=4326;POLYGON ((139.76 35.67, 139.775 35.67, 139.775 35.688, 139.76 35.688, 139.76 35.67))", { format: "wkt" });
 const wards = await read("/data/wards.zip");           // a zipped Shapefile, reprojected from its .prj
@@ -23,7 +22,7 @@ const csv = await write(stations, { format: "csv" });
 ## Contents
 
 - [Reading](#reading)
-- [`DataTable`](#datatable)
+- [`Table`](#table)
 - [Coordinate systems](#coordinate-systems)
 - [Formats](#formats): [CSV](#csv), [WKT and EWKT](#wkt-and-ewkt), [WKB and EWKB](#wkb-and-ewkb), [Shapefile](#shapefile), [TopoJSON](#topojson), [KML and KMZ](#kml-and-kmz), [GPX](#gpx), [FlatGeobuf](#flatgeobuf), [GeoJSON](#geojson)
 - [Writing](#writing)
@@ -35,8 +34,8 @@ const csv = await write(stations, { format: "csv" });
 ## Reading
 
 ```ts
-read(input, options?: ReadOptions): Promise<DataTable>
-parse(text: string, options: ReadOptions & { format: DataFormat }): Promise<DataTable>
+read(input, options?: ReadOptions): Promise<Table>
+parse(text: string, options: ReadOptions & { format: DataFormat }): Promise<Table>
 ```
 
 `read` accepts:
@@ -79,23 +78,25 @@ To read data you already hold as text, pass it to `parse` with an explicit `form
 
 TopoJSON in a `.json` file needs `format: "topojson"`.
 
-## `DataTable`
+## `Table`
 
 | Member | Meaning |
 |---|---|
-| `format` | The format it was read as. |
+| `format` | The format it was read as (`null` for a table an operation made). |
 | `length` | The number of rows. A GeometryCollection makes one row per member. |
 | `columns` | The property names. |
 | `layer` | The Shapefile or TopoJSON object read, or `null` for formats without layers. |
 | `layers` | Every layer in the input: the Shapefiles of a zip or the TopoJSON objects. Empty for formats without layers. |
-| `toGeoJSON()` | A new FeatureCollection on every call. You can pass it as a GeoJSON source's `data`. Rows without geometry have `geometry: null`. TopoJSON ids, KML `Placemark` ids and FlatGeobuf feature indices (0-based order in the file) become the features' `id`. |
-| `tableBytes()` | A copy of the rows in the binary table form that `mbt-map/analysis`'s `load` takes. Ids are not included. |
+| `toGeoJSON()` | A Promise of a new FeatureCollection on every call. You can pass it as a GeoJSON source's `data`. Rows without geometry have `geometry: null`. TopoJSON ids, KML `Placemark` ids and FlatGeobuf feature indices (0-based order in the file) become the features' `id`. |
+| `dispose()` | Frees the rows. |
+
+The rows stay on the page until the table's first operation (a method of [analysis.md](./analysis.md), or `toGeoJSON` with a `crs`), which moves them into the analysis worker without copying and starts that worker (`ReadOptions.analysis` says where it is served). Reading a file and drawing it never loads the analysis worker.
 
 ```js
 const zip = await read("/data/city.zip");
 console.log(zip.layers);                           // e.g. ["roads", "buildings"]
 const buildings = await read("/data/city.zip", { layer: "buildings" });
-map.addSource("buildings", { type: "geojson", data: buildings.toGeoJSON() });
+map.addSource("buildings", { type: "geojson", data: await buildings.toGeoJSON() });
 ```
 
 ## Coordinate systems
@@ -162,7 +163,7 @@ Input can be bytes or a hexadecimal string (PostGIS output; whitespace is ignore
 // Files picked together in <input type="file" multiple>.
 input.addEventListener("change", async () => {
   const table = await read(input.files, { encoding: "shift_jis" });
-  map.getSource("upload").setData(table.toGeoJSON());
+  map.getSource("upload").setData(await table.toGeoJSON());
 });
 ```
 
@@ -216,14 +217,14 @@ Read by the same reader as GeoJSON map sources. A GeometryCollection gives one r
 ## Writing
 
 ```ts
-write(input: DataTable | object, options: WriteOptions): Promise<string>
+write(input: Table | object, options: WriteOptions): Promise<string>
 ```
 
-`input` is a `DataTable`, or a GeoJSON Feature or FeatureCollection object (read as GeoJSON first). `format` is `"geojson"`, `"csv"` or `"kml"`. The result is a string. To save it, wrap it in `new Blob([text])`.
+`input` is a `Table`, or a GeoJSON Feature or FeatureCollection object (read as GeoJSON first). `format` is `"geojson"`, `"csv"` or `"kml"`. The result is a string. To save it, wrap it in `new Blob([text])`.
 
 | Format | Output |
 |---|---|
-| `geojson` | `JSON.stringify(table.toGeoJSON())`, or `JSON.stringify` of the object you passed. |
+| `geojson` | `JSON.stringify(await table.toGeoJSON())`, or `JSON.stringify` of the object you passed. |
 | `csv` | As papaparse 5.7.0's `unparse`: CRLF line ends. Values containing quotes, the delimiter, line breaks or a BOM, and values with leading or trailing spaces, are quoted. Property columns come first, then the geometry column(s). Numbers are written as JavaScript's `String(x)`. |
 | `kml` | As @placemarkio/tokml 0.4.0's `toKML`: one Placemark per feature with its `id`. The `name`, `description` and `visibility` properties become elements, the rest goes in `ExtendedData`, and Multi geometries become `MultiGeometry`. |
 
@@ -240,7 +241,7 @@ The output matches those libraries byte for byte. CSV options (`CsvWriteOptions`
 If a property column has the same name as a geometry column, the geometry is written in its place. `"lonlat"` fails for rows that aren't points.
 
 ```js
-import { write } from "mbt-map/data";
+import { write } from "mbt-map/table";
 
 const kml = await write(drawnFeatures, { format: "kml" });   // e.g. shapes from mbt-map/draw
 const url = URL.createObjectURL(new Blob([kml], { type: "application/vnd.google-earth.kml+xml" }));

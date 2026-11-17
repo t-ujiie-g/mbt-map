@@ -57,7 +57,8 @@ const DATA_PARTS = { "../../npm/src/zip.ts": "./data-zip.js", "./crs.mjs": "./da
 // Loaded on the first PROJ string.
 const PROJSTRING = separate(same(["projstring"]));
 
-// Output file, source and what stays out of it: data.js for GeoTIFF sources (mbt-map/data's worker draws
+// Output file, source and what stays out of it: clients.js (one data and one analysis worker for
+// mbt-map/table, mbt-map/data and mbt-map/analysis), data.js for GeoTIFF sources (mbt-map/data's worker draws
 // their tiles), the main entry for the element and the controllers (they take a `Map`), 3d-tiles.js's
 // engine for I3S.
 const ENTRIES = [
@@ -73,7 +74,9 @@ const ENTRIES = [
   ["geojson-worker.js", "geojson_worker/js/worker.mjs"],
   ["worker.js", "worker/js/worker.mjs", { plugins: [separate(WORKER_PARTS)] }],
   ...Object.entries(WORKER_PARTS).map(([source, file]) => [file.slice(2), path.join("worker/js", source)]),
-  ["analysis.js", "npm/src/analysis.ts", { plugins: [PROJSTRING] }],
+  ["clients.js", "npm/src/clients.ts"],
+  ["table.js", "npm/src/table.ts", { plugins: [separate({ "./clients": "./clients.js" }), PROJSTRING] }],
+  ["analysis.js", "npm/src/analysis.ts", { plugins: [separate({ "./clients": "./clients.js", "./table": "./table.js" }), PROJSTRING] }],
   ["projstring.js", "npm/src/projstring.ts"],
   ["analysis-worker.js", "analysis_worker/js/worker.mjs", { plugins: [separate({ "./viewshed.mjs": "./analysis-viewshed.js" })] }],
   ["analysis-viewshed.js", "analysis_worker/js/viewshed.mjs"],
@@ -84,7 +87,7 @@ const ENTRIES = [
   ["3d-i3s.js", "npm/src/3d-i3s.ts", { plugins: [separate({ ...same(["3d-tiles"]), "./i3s/slpk.js": "./3d-slpk.js" })] }],
   ["3d-slpk.js", "npm/src/i3s/slpk.ts"],
   ["3d-worker.js", "model_worker/js/worker.mjs"],
-  ["data.js", "npm/src/data.ts", { plugins: [PROJSTRING] }],
+  ["data.js", "npm/src/data.ts", { plugins: [separate({ "./clients": "./clients.js" })] }],
   ["data-worker.js", "data_worker/js/worker.mjs", { plugins: [separate(DATA_PARTS)] }],
   ...Object.entries(DATA_PARTS).map(([source, file]) => [file.slice(2), path.join("data_worker/js", source)]),
   ["prjwkt.js", "npm/src/prjwkt.ts"],

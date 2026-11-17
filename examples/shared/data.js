@@ -1,6 +1,6 @@
-// Files read with mbt-map/data and drawn as GeoJSON sources: CSV, Shapefile (zip), KML, GPX, TopoJSON,
+// Files read with mbt-map/table and drawn as GeoJSON sources: CSV, Shapefile (zip), KML, GPX, TopoJSON,
 // FlatGeobuf or GeoJSON. Each dataset stays in `datasets` (style.js), so that it survives a new style.
-import { read, write } from "mbt-map/data";
+import { read, write } from "mbt-map/table";
 import { datasetLayers, datasetSource, datasets } from "./style.js";
 
 export const WRITE_FORMATS = [["geojson", "GeoJSON", "application/geo+json"], ["csv", "CSV", "text/csv"], ["kml", "KML", "application/vnd.google-earth.kml+xml"]];
@@ -32,7 +32,7 @@ export function createDataLoader(map) {
       set({ loading: true, error: null });
       try {
         const table = await read(input);
-        const data = table.toGeoJSON();
+        const data = await table.toGeoJSON();
         const id = `data-${++serial}`;
         datasets.set(id, { name, data });
         map.addSource(id, datasetSource(data));

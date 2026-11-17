@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { tableInfo, tableToGeoJSON, withIds } from "../../wasmio/js/table.mjs";
+import { stringList, tableInfo, tableToGeoJSON, withIds } from "../../wasmio/js/table.mjs";
 
 // A table in @geom.Table's byte form (docs/dev/FORMATS.md, "Table"), written by hand.
 function tableBytes(): Uint8Array {
@@ -51,4 +51,11 @@ test("withIds gives features the ids it is given, unless absent or null", () => 
   assert.deepEqual(fc.features.map((f) => f.id), ["a", undefined, 7]);
   assert.deepEqual(Object.keys(fc.features[0]), ["type", "id", "geometry", "properties"]);
   assert.equal("id" in fc.features[1], false);
+});
+
+test("stringList reads a count and that many strings", () => {
+  const name = new TextEncoder().encode("名前");
+  const bytes = Uint8Array.of(2, 0, 0, 0, name.length, 0, 0, 0, ...name, 0, 0, 0, 0);
+  assert.deepEqual(stringList(bytes), ["名前", ""]);
+  assert.deepEqual(stringList(Uint8Array.of(0, 0, 0, 0).buffer), []);
 });

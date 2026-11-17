@@ -1,5 +1,5 @@
 import { Map } from "mbt-map";
-import { write } from "mbt-map/data";
+import { write } from "mbt-map/table";
 
 const features = {
   type: "FeatureCollection",

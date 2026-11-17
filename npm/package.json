@@ -43,6 +43,10 @@
       "types": "./dist/moonbit.d.ts",
       "default": "./dist/moonbit.js"
     },
+    "./table": {
+      "types": "./dist/table.d.ts",
+      "default": "./dist/table.js"
+    },
     "./analysis": {
       "types": "./dist/analysis.d.ts",
       "default": "./dist/analysis.js"
