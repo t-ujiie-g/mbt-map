@@ -72,7 +72,7 @@ const EDGEBREAKER_ENCODING : Int32 = 1
 const KD_TREE_ENCODING : Int32 = 1
 
 ///|
-/// One attribute of a decoded mesh, its fields as docs/dev/FORMATS.md "Draco output" numbers them:
+/// One attribute of a decoded mesh, its fields as mbt-map's FORMATS.md "Draco output" numbers them:
 /// `unique_id` (uint32 bits) what KHR_draco_mesh_compression's `attributes` name, Draco's
 /// `attribute_type` and `data_type`, and `data` (draco3d's `GetAttributeDataArrayForAllPoints`).
 pub struct DracoAttribute {
@@ -428,7 +428,7 @@ fn Decoder::output(self : Decoder, a : Attribute) -> DracoAttribute? {
 ///|
 /// Decodes the Draco mesh or point cloud (no faces) in `src[offset, offset + length)` as its header
 /// says, as draco3d 1.5.7's `DecodeArrayToMesh` / `DecodeArrayToPointCloud` do; None where draco3d
-/// fails, before bitstream 2.0 and past the `MAX_*` caps (docs/dev/FORMATS.md "Draco output").
+/// fails, before bitstream 2.0 and past the `MAX_*` caps (mbt-map's FORMATS.md "Draco output").
 pub fn decode(
   src : FixedArray[Byte],
   offset : Int32,

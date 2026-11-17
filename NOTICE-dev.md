@@ -12,11 +12,11 @@ an entry says otherwise.
 
 - bench/fixtures/draco/ (downloaded by bench/draco/golden.mjs, not committed): files of Draco
   1.5.7's testdata/ (https://github.com/google/draco), Apache License 2.0, Copyright 2016 The
-  Draco Authors. draco/decode_test.mbt and point_cloud_test.mbt embed small meshes and point
+  Draco Authors. ports/draco/decode_test.mbt and point_cloud_test.mbt embed small meshes and point
   clouds encoded by draco3d 1.5.7.
 - bench/dist/lepcc/ (downloaded and built by bench/lepcc/upstream.mjs, not committed): Esri's LEPCC
   sources (https://github.com/Esri/lepcc), Apache License 2.0, Copyright 2016 Esri.
-  lepcc/decode_test.mbt embeds small blobs, and bench/npm/pages/i3s/pcsl/ synthetic point clouds,
+  ports/lepcc/decode_test.mbt embeds small blobs, and bench/npm/pages/i3s/pcsl/ synthetic point clouds,
   encoded by its encoder.
 - bench/fixtures/pdal-las/ (downloaded by bench/las/golden.mjs, not committed): LAS files of PDAL
   2.8.0's test/data/las/ (https://github.com/PDAL/PDAL), BSD license, Copyright (c) Hobu, Inc.

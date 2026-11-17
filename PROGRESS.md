@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した（どれも 0.1.0、未公開。公開は点検のあとにまとめて：ユーザー判断）。0.1.1 は 2026-11-16 に公開済み。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済んだ（どれも 0.1.0、未公開。公開はユーザーがまとめて：順は RELEASING）。0.1.1 は 2026-11-16 に公開済み。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：単独の移植の (5) 点検。そのあとユーザーが 11 個を公開。その後 Phase 21（VISION §8）。
+- **次**：ユーザーが単独の移植 11 個を公開（`trig`・`pbf` が先）。その後 Phase 21（VISION §8）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -520,3 +520,16 @@ Where things stand, decisions and open issues. The development history before th
 - `proj/encoding.mbt` を指していたコメントと `worker/js/mirror.test.mjs` の読む場所、NOTICE のパスを `ports/proj/…` に直した。
 - 大きさ（gzip）：どれも ±31 バイト以内（座標系 21,628 → 21,650、測地ワーカー 12,039 → 12,070、`mbt-map` 本体 167,118 → 167,113 など）。コードは同じなので並びの違いと見る。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 943、wasm-gc 953、js 1002、native 943：前と同じ数）、npm のテスト（459）と大きさ、bench のテスト（23）、`proj:golden`（240 CRS、97,200 点、最大の差 4.66e-9 m）、`geodesic:golden`（19 組すべて一致）、`geojson:golden`（8,148 タイル、0 differ）、`buffer:check`、`tess:golden`（35/35）、pack test の `showcase-html,analysis,geojson,data`（Chromium）、`moon package --list`（3 つともその移植のファイルだけ）、`long-comments`（47 のまま）。
+
+## 単独の移植 (5)：点検（2026-11-17、Mac）
+
+- 梱包したものをリポジトリの外で確かめた：11 個の `moon package` の zip を空のフォルダに展開し、それらだけの `moon.work` で `moon check --target all --deny-warn` と `moon test --target all`（各ターゲット 160 件）が通る。エンジンにも、リポジトリのほかのファイルにも頼っていない。手順は RELEASING に書いた。
+- 見つけて直したもの：
+  - `bench/proj/unit-cases.mjs` が `proj/projections_test.mbt`（移す前の場所）に書いていた。`ports/proj/…` に直し、作り直して差が出ないことを確かめた。
+  - 古いパスの残り：`NOTICE-dev.md`（draco・lepcc のテスト）、`bench/clipper/libcxx-sort-cases.cpp`、COMMANDS。
+  - 移植の文書コメントが `docs/dev/FORMATS.md` とだけ書いていた（mooncakes の API 文書では何の文書か分からない）ので `mbt-map's FORMATS.md` にした。
+  - `ports.test.mjs`：移植どうしの import（`mvt` → `pbf`、`proj`・`geodesic` → `trig`）の版が相手の `moon.mod` と同じことも見る。
+- 直さなかったもの：UTF-8 の復号の写し（`core` と `ports/pbf`：(3) に書いた理由）。移植元のコードを含まないファイル（`extends.mbt`、出力の並び、`mvt`・`pbf`・`trig`）にライセンスのヘッダが無いのはそのまま（NOTICE が言う）。
+- セキュリティ：`npm audit`（`npm/`・`bench/`・`examples/react/`）は 0 件、Dependabot の未対応は 0 件。依存は増えていない。信頼できない入力を読む移植（`pbf`・`mvt`・`draco`・`lepcc`・`meshopt`・`tiff`）は、コードを変えていないので上限と範囲の検査も前のまま（各 README に書いた）。
+- `moonbit/mbtmap` と `moonbit/mbtmap_rabbita` の README に、サイト（文書・例・デモ）と MoonBit のガイドへの案内を足した（ユーザーの希望）。mooncakes に出るのは次にこの 2 つを公開したとき。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（前と同じ数）、npm のテスト（459）と大きさ（変わらない）、bench のテスト（23）、`long-comments`（47 のまま）。
