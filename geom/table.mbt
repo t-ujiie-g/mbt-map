@@ -367,3 +367,63 @@ pub fn Table::map_coords(
   }
   b.finish()
 }
+
+///|
+/// The rows `rows` of the table, in that order (a row may come more than once), with their
+/// geometry, ids and properties; None if one is not a row.
+pub fn Table::take(self : Table, rows : ArrayView[Int32]) -> Table? {
+  let t = Table::new()
+  for c in self.columns {
+    t.column_index[c.name] = t.columns.length()
+    t.columns.push({ name: c.name, values: Array(capacity=rows.length()), })
+  }
+  for f in rows {
+    guard f >= 0 && f < self.length() else { return None }
+    t.kinds.push(self.kinds[f])
+    t.ids.push(self.ids[f])
+    let (p0, p1) = self.parts(f)
+    for p in p0..<p1 {
+      let (r0, r1) = self.rings(p)
+      for r in r0..<r1 {
+        let (a, b) = self.points(r)
+        for i in (a * 2)..<(b * 2) {
+          t.coords.push(self.coords[i])
+        }
+        t.point_ends.push(t.coords.length() / 2)
+      }
+      t.ring_ends.push(t.point_ends.length())
+    }
+    t.part_ends.push(t.ring_ends.length())
+    for j, c in self.columns {
+      t.columns[j].values.push(c.values[f])
+    }
+  }
+  Some(t)
+}
+
+///|
+/// The table's features with `columns` (name and a value per row) as their properties, sharing
+/// the geometry; None if a name repeats or a column is not as long as the table.
+pub fn Table::with_columns(
+  self : Table,
+  columns : ArrayView[(String, Array[Prop?])],
+) -> Table? {
+  let t = {
+    kinds: self.kinds,
+    ids: self.ids,
+    part_ends: self.part_ends,
+    ring_ends: self.ring_ends,
+    point_ends: self.point_ends,
+    coords: self.coords,
+    columns: [],
+    column_index: {},
+  }
+  for c in columns {
+    guard c.1.length() == self.length() && !t.column_index.contains(c.0) else {
+      return None
+    }
+    t.column_index[c.0] = t.columns.length()
+    t.columns.push({ name: c.0, values: c.1, })
+  }
+  Some(t)
+}

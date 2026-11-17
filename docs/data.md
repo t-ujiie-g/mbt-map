@@ -92,6 +92,33 @@ TopoJSON in a `.json` file needs `format: "topojson"`.
 
 The rows stay on the page until the table's first operation (a method of [analysis.md](./analysis.md), or `toGeoJSON` with a `crs`), which moves them into the analysis worker without copying and starts that worker (`ReadOptions.analysis` says where it is served). Reading a file and drawing it never loads the analysis worker.
 
+### Columns and rows
+
+A table's attribute operations follow [Arquero](https://idl.uw.edu/arquero/)'s verbs. Each returns a Promise of a new table and leaves the one it was called on as it is. Conditions and computed values are [style expressions](./style-support.md), the ones a map's layers take, evaluated in the worker.
+
+| Method | Result |
+|---|---|
+| `select(columns)` | Only the named columns, in that order. Rejects for a name that is not a column. |
+| `filter(expression)` | The rows for which the expression is `true`. A row where it gives an error or another value is dropped. |
+| `filter(rows)` | The rows numbered by an integer typed array (what `search`, `nearest` and `pointsWithin` give), in its order. |
+| `derive({ name: expression })` | The table with that column computed per row. A name that exists replaces its column in place; new ones follow. A result that is not a boolean, number or string (an error, NaN, a color) is `null`. |
+| `derive({ name: values })` | The same, with a value per row: a typed array (`areas()`, a `dbscan` result) or `{ values: [...] }` holding `null`, booleans, numbers and strings (`undefined` leaves the row without the key). |
+| `orderby(...keys)` | The rows sorted by the keys, the first key first. A key is a column's name, an expression, or `{ by, descending: true }`. `null` and missing values come first, then numbers and strings as JavaScript's `<` orders them; rows equal on every key keep their order. |
+| `slice(start?, end?)` | Rows `start` up to `end`, counted from the end when negative, as `Array.prototype.slice`. |
+| `array(name)` | A Promise of the column's values, `undefined` where a row lacks the key. |
+| `columnTypes()` | A Promise of each column's type: `"number"`, `"string"`, `"boolean"`, `"mixed"`, or `"null"` when no cell holds a value. |
+
+In an expression, `["get", name]` reads the row's property, `["geometry-type"]` gives its geometry's GeoJSON type (`"Unknown"` without one) and `["zoom"]` is 0.
+
+```js
+const parks = await table.filter(["==", ["get", "kind"], "park"]);
+const sized = await parks.derive({ area: await parks.areas() });   // square meters, as a column
+const largest = await (await sized.orderby({ by: "area", descending: true })).slice(0, 10);
+map.addSource("largest", { type: "geojson", data: await (await largest.select(["name", "area"])).toGeoJSON() });
+```
+
+The first of these loads `table.wasm` (`AnalysisOptions.tableWasmUrl`). Their results match Arquero 8.0.3 on the same rows, with one difference: selecting no columns keeps the rows (for their geometry), where Arquero's table without columns has none. Tables made by an operation carry no feature ids.
+
 ```js
 const zip = await read("/data/city.zip");
 console.log(zip.layers);                           // e.g. ["roads", "buildings"]

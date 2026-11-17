@@ -1,0 +1,38 @@
+{
+  "arquero": "8.0.3",
+  "tables": 60,
+  "results": {
+    "select": {
+      "cases": 90,
+      "differ": 0
+    },
+    "filter": {
+      "cases": 896,
+      "differ": 0
+    },
+    "derive": {
+      "cases": 172,
+      "differ": 0
+    },
+    "orderby": {
+      "cases": 484,
+      "differ": 0
+    },
+    "slice": {
+      "cases": 448,
+      "differ": 0
+    },
+    "rows by number": {
+      "cases": 104,
+      "differ": 0
+    },
+    "array": {
+      "cases": 227,
+      "differ": 0
+    },
+    "refused": {
+      "cases": 9,
+      "differ": 0
+    }
+  }
+}

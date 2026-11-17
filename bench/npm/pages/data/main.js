@@ -12,6 +12,28 @@ const before = JSON.stringify(await stations.toGeoJSON());
 const csv = await write(stations, { format: "csv" });
 const inside = await stations.pointsWithin(area);
 const grown = await stations.buffer(10);
+// Attribute operations (table.wasm), on the table that was read and on their own results.
+const fail = (p) => Promise.resolve(p).then(() => "", (e) => e.message);
+const ordered = await stations.orderby({ by: "乗降客数", descending: true });
+const top = await (await ordered.slice(0, 2)).select(["名前"]);
+const derived = await stations.derive({ area: await grown.areas(), half: ["/", ["get", "乗降客数"], 2], tag: { values: ["a", null, undefined, 1, true] }, 備考: ["coalesce", ["get", "備考"], "-"] });
+const operations = {
+  busy: await (await stations.filter([">", ["get", "乗降客数"], 100000])).array("名前"),
+  top: (await top.toGeoJSON()).features.map((f) => [f.geometry.type, f.properties]),
+  columns: derived.columns,
+  types: await derived.columnTypes(),
+  area: Array.from(await derived.array("area"), (v) => Math.round(v)),
+  half: await derived.array("half"),
+  tag: (await derived.array("tag")).map((v) => (v === undefined ? "absent" : v)),
+  notes: await derived.array("備考"),
+  nearest: await (await stations.filter(await stations.nearest(139.7671, 35.6812, { k: 2 }))).array("名前"),
+  last: await (await stations.slice(-2)).array("名前"),
+  points: await (await stations.filter(["==", ["geometry-type"], "Point"])).array("名前"),
+  noColumn: await fail(stations.select(["x"])),
+  noRow: await fail(stations.filter(Uint32Array.of(9))),
+  halfRow: await fail(stations.filter(Float64Array.of(0.5))),
+  badExpression: await fail(stations.filter(["nope"])),
+};
 
 const map = new Map({
   container: "map",
@@ -44,6 +66,7 @@ map.once("load").then(async () => {
     datasets: [stations.length, area.length],
     moved: JSON.stringify(await stations.toGeoJSON()) === before && (await write(stations, { format: "csv" })) === csv,
     derived: [grown.length, grown.columns, grown.format],
+    operations,
     inside: Array.from(inside),
     lines: { layer: lines.layer, layers: lines.layers, features: (await lines.toGeoJSON()).features },
   };

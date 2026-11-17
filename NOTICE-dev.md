@@ -76,6 +76,8 @@ The libraries mbt-map is compared with (the `devDependencies` of `bench/package.
 `npm/package.json` and `examples/react/package.json`) are installed from npm under their own
 licenses and are not redistributed. Those whose terms ask for a notice where they are used:
 
+- Arquero 8.0.3 (bench devDependency `arquero`, not shipped): the tables bench/table/golden.mjs
+  compares table.wasm with. BSD-3-Clause, © 2020-2024 UW Interactive Data Lab.
 - @protomaps/basemaps 5.7.2 (bench devDependency, not shipped): builds the Protomaps
   styles compared by bench/style/public.mjs and compat.mjs. BSD-3-Clause,
   © The Protomaps Authors.

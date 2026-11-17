@@ -22,6 +22,7 @@ pbf ← formats ← services_worker
 core/geom ← xml ← kml ← xml_worker                    (kml also takes geom)
 tiff ← geotiff_worker
 geom ← analysis ← analysis_worker
+geom/style ← tableops ← table_worker                  (table.wasm, loaded by the analysis worker)
 geom/clipper ← overlay ← geometry_worker
 geom ← relate ← relate_worker                         (which also takes @analysis.Index)
 geom ← robust ← (hull, delaunay)

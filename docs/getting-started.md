@@ -98,7 +98,7 @@ Every module names its workers, their wasm and the parts the workers import late
 | `worker.js`, `mbt-map.wasm` | a map is created (the tile workers) |
 | `geojson.js`, `geojson-worker.js`, `geojson.wasm` | a style first has a GeoJSON source |
 | `sprite.js`, `pmtiles.js`, `media.js`, `custom.js`, `export.js` | a style has a sprite, a `pmtiles://` source, an image or video source; the first custom layer; the first `toBlob` |
-| `analysis-worker.js`, `analysis.wasm`, then `geometry.wasm`, `relate.wasm`, `shapes.wasm`, `surface.wasm`, `route.wasm`, `viewshed.wasm`, `proj.wasm` | the first operation on a table or `mbt-map/analysis` call, then the first call of each group |
+| `analysis-worker.js`, `analysis.wasm`, then `geometry.wasm`, `relate.wasm`, `shapes.wasm`, `surface.wasm`, `route.wasm`, `viewshed.wasm`, `proj.wasm`, `table.wasm` | the first operation on a table or `mbt-map/analysis` call, then the first call of each group |
 | `data-worker.js`, `data.wasm`, then `xml.wasm`, `geotiff.wasm`, `proj.wasm` | the first `mbt-map/table` read or `mbt-map/data` call, then the first KML/GPX, raster or reprojection |
 | `geodesic-worker.js`, `geodesic.wasm` | the first `mbt-map/geodesic` call |
 | `3d-worker.js`, `3d.wasm`, `3d-tiles.js`, `3d-i3s.js` | the first `mbt-map/3d` layer of each kind |

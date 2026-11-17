@@ -73,7 +73,7 @@ Parallel work. Use parallel agents wherever the work splits: the user prefers st
 Where things live (the reference is `docs/dev/ARCHITECTURE.md` and its companions):
 
 - Engine, MoonBit packages at the root (module `t-ujiie-g/mbtmap_engine`, internal):
-  - Pure, tested on every backend: `core` (camera math, tile covering, byte readers and writers, shared constants), `tess`, `style`, `globe`, `geom`, `formats`, `tiler` and the ports the modules run (`analysis`, `relate`, …).
+  - Pure, tested on every backend: `core` (camera math, tile covering, byte readers and writers, shared constants), `tess`, `style`, `globe`, `geom`, `formats`, `tiler`, `tableops` and the ports the modules run (`analysis`, `relate`, …).
   - `ports/`: ports published on mooncakes on their own, one module each (`ports/clipper` is `t-ujiie-g/clipper`; also `draco`, `geodesic`, `lepcc`, `meshopt`, `mvt`, `pbf`, `proj`, `robust`, `tiff`, and `trig`, the `Trig` they and `core` share). They import nothing of the engine; the engine imports them through the workspace. Versions and publishing: `docs/dev/RELEASING.md`.
   - js only: `render_webgl2`, `map` (DOM events, workers, the frame loop), `bundle/main` (the engine's exports).
   - wasm-gc entries, one wasm each in its own worker: `worker` (the display worker: decode, tessellate, pack tiles) and the `*_worker` packages; `wasmio` is their linear-memory I/O.

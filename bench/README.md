@@ -145,6 +145,6 @@ fixture がなくてもタイルが 404 になるだけで地図は読み込ま�
 `raster/`、`pmtiles/`、`query/`、`track/`、`export/`、`ui/`、`labels/`、`style/`（`style:golden`・`style:public`・`style:compat`・
 `expression:golden`・`color:golden`。場面は `style/scenes.mjs`、公開のスタイルは `style/public-styles.mjs`）、`camera/`、`terrain/`、
 `proj/`、`clipper/`（`ports/clipper` の黄金テスト。`clipper:golden`・`buffer:check`・`geometry:node`）、`geodesic/`、`draw/`（`draw:golden`・`draw:many`・
-`draw:setdata`）、`data/`（`data:golden`、`fgb:golden`、`xml:golden`、`write:golden`、`geotiff:golden`：`mbt-map/data` の読み書きを
+`draw:setdata`）、`table/`（`table:golden`：`table.wasm` の属性の操作を Arquero と比べる。0 differ のまま）、`data/`（`data:golden`、`fgb:golden`、`xml:golden`、`write:golden`、`geotiff:golden`：`mbt-map/table` の読み書きと `mbt-map/data` のラスタを
 papaparse、betterknown、wkx、shpjs、topojson-client、flatgeobuf、togeojson、tokml、geotiff と比べる。すべて 0 differ のまま。共通の部品は `data/common.mjs`）、
 `geotiff/`（`geotiff:tiles`：`geotiff` ソースのタイルを元の画素と比べる。すべて ok のまま）。開発用のページは `pages/`（basic、terrain）にあり、`npm run example` で配信する。

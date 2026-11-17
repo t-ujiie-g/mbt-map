@@ -17,8 +17,8 @@ export interface DataOptions {
  * Where the analysis worker and its wasm (`workerUrl`, `wasmUrl`), the geometry module
  * (`geometryWasmUrl`), the spatial relation module (`relateWasmUrl`), the shape module
  * (`shapesWasmUrl`), the surface module (`surfaceWasmUrl`), the viewshed module (`viewshedWasmUrl`), the
- * routing module (`routeWasmUrl`) and the coordinate system module (`projWasmUrl`) are served; by default
- * next to this module.
+ * routing module (`routeWasmUrl`), the coordinate system module (`projWasmUrl`) and the table operations
+ * (`tableWasmUrl`) are served; by default next to this module.
  */
 export interface AnalysisOptions {
   workerUrl?: string | URL;
@@ -30,6 +30,7 @@ export interface AnalysisOptions {
   viewshedWasmUrl?: string | URL;
   routeWasmUrl?: string | URL;
   projWasmUrl?: string | URL;
+  tableWasmUrl?: string | URL;
 }
 
 export const dataClient = new WorkerClient("data");
@@ -63,6 +64,7 @@ export function startAnalysis(options: AnalysisOptions): void {
     viewshed: wasmUrl(options.viewshedWasmUrl ?? new URL("./viewshed.wasm", import.meta.url), page),
     route: wasmUrl(options.routeWasmUrl ?? new URL("./route.wasm", import.meta.url), page),
     proj: wasmUrl(options.projWasmUrl ?? new URL("./proj.wasm", import.meta.url), page),
+    table: wasmUrl(options.tableWasmUrl ?? new URL("./table.wasm", import.meta.url), page),
     parts: workerParts(options.workerUrl, { viewshed: new URL("./analysis-viewshed.js", import.meta.url) }),
   }));
 }

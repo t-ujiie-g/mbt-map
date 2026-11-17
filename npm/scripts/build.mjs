@@ -26,6 +26,7 @@ const WASM = {
   viewshed_worker: "viewshed.wasm",
   route_worker: "route.wasm",
   proj_worker: "proj.wasm",
+  table_worker: "table.wasm",
   geodesic_worker: "geodesic.wasm",
   model_worker: "3d.wasm",
   data_worker: "data.wasm",
@@ -57,10 +58,9 @@ const DATA_PARTS = { "../../npm/src/zip.ts": "./data-zip.js", "./crs.mjs": "./da
 // Loaded on the first PROJ string.
 const PROJSTRING = separate(same(["projstring"]));
 
-// Output file, source and what stays out of it: clients.js (one data and one analysis worker for
-// mbt-map/table, mbt-map/data and mbt-map/analysis), data.js for GeoTIFF sources (mbt-map/data's worker draws
-// their tiles), the main entry for the element and the controllers (they take a `Map`), 3d-tiles.js's
-// engine for I3S.
+// Output file, source and what stays out of it: clients.js (the workers of mbt-map/table, data and analysis),
+// data.js for GeoTIFF sources (its worker draws their tiles), the main entry for the element and the
+// controllers (they take a `Map`), 3d-tiles.js's engine for I3S.
 const ENTRIES = [
   ["index.js", "npm/src/index.ts", { alias: { "mbt-map-engine": path.join(ROOT, "_build/js/release/build/t-ujiie-g/mbtmap_engine/bundle/main/main.js") }, plugins: [separate(MAP_PARTS)] }],
   ...Object.keys(MAP_PARTS).filter((file) => file !== "./geotiff-source.js").map((file) => [file.slice(2), `npm/src/${file.slice(2, -3)}.ts`]),

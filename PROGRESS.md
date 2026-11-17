@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.2（属性の操作：VISION §8「テーブルの段階」）。その後 T.3〜T.8、Phase 21。
+- **次**：テーブルの段階の T.3（グループごとの集計と属性での結合：VISION §8「テーブルの段階」）。その後 T.4〜T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -555,3 +555,18 @@ Where things stand, decisions and open issues. The development history before th
 - 文書：`docs/data.md`・`docs/analysis.md` の入口と例、README の入口の表、FORMATS（結果の `columns`、`table`）、ARCHITECTURE-MODULES、VISION §8 に面の対応表（T.4 で確定）。`docs/analysis.md` の本文は `Dataset`・`load` のまま（別名で動く。T.7 で書き直す）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（前と同じ数）、npm のテスト（460：`stringList` の 1 件を足した）と大きさ、bench のテスト（23）、pack test（Chromium、全 24 件）、`long-comments`（46）。
 - 残り：解析ワーカーの余裕が 363 バイトしかない。T.2 以降の wasm は別のモジュールにする（計画どおり）。
+
+## テーブルの段階 T.2：属性の操作（2026-11-18、Mac）
+
+- 決めたこと（ユーザー判断）：名前は Arquero にそろえる。`table.wasm` の予算は 45KB。
+- 式をどこでコンパイルするか（計測で決めた）：ページ側の JS でコンパイルすると、エンジンの式のコンパイラを JS に出した 41.8KB（gzip）と、評価だけの wasm 25.5KB が要る。wasm の中でコンパイルすれば 36.6KB の 1 つで済む。JSON のパーサ（core の `@json` は 24〜27KB）を wasm に入れないよう、ページ側で式を小さいバイト列に詰める（`npm/src/pack.ts`、FORMATS「Table operations」）。
+- 作り：
+  - `tableops`（純粋な MoonBit、全ターゲットでテスト）：`select`・`filter`・`derive_columns`・`orderby`・`slice`・`column_kinds`。行は `@style.FeatureContext` として式に見せる（`["get"]` は列、`["geometry-type"]` は行のジオメトリの型）。`@geom.Table` に `take`（行を番号で取る）と `with_columns`（ジオメトリを共有して列を差し替える）を足した。
+  - 並べ替えは Arquero の比較（`compare.js`）のとおり：null が先、次に NaN、あとは JavaScript の `<`（文字列どうしは UTF-16 の符号単位、ほかは数にして比べる。文字列を数にするのはホストの `Number()`）。安定なマージソートを自前で持つ（core の `sort_by` は安定とは決まっていない）。NOTICE に Arquero（BSD-3-Clause）を足した。
+  - `table_worker`（`table.wasm`）：解析ワーカーが最初の属性の操作で読む。式のコンパイル、ホストの `Math`・`Number`・`String`・`Intl`。入力は上限つきで読む（JSON の深さ 64、数はどれも残りのバイト数まで、行の番号は範囲を検査）。
+  - `Table` のメソッド：`select`・`filter`（式、または番号の型付き配列）・`derive`（式、または行ごとの値）・`orderby`・`slice`・`array`・`columnTypes`。
+- 計測（gzip）：`table.wasm` 40,653 バイト（予算 45KB）。`mbt-map/table` 6,234 → 7,235（9KB）、解析ワーカー 30,637 → 30,842（31KB、残り 158 バイト：ワーカーの JS に操作の受け口を足した分）、共有の接続 1,749 → 1,762。
+- ゴールデン（`table:golden`、Arquero 8.0.3、種を固定した表 60 個）：select 90、filter 896、derive 172、orderby 484、slice 448、番号での行の取り出し 104、列の値 227、断るもの 9：0 differ。表 400 個でも 0 differ。違いは 1 つだけ：列を 1 つも選ばないとき、こちらは行を残す（ジオメトリがあるため）。Arquero は行も無くなる。
+- 途中で直したもの：`Packer` が、バッファを伸ばすときに古い `DataView` へ書いていた（テストで見つけた）。wasm の公開名 `derive` と MoonBit の関数名（`derive` は予約語なので `derive_columns`）の取り違え。
+- 分かっていること：操作の結果のテーブルは地物の id を持たない（T.1 と同じ）。`Hooks`（式が使うホストの関数の束）が `cluster_props` と `tableops` の 2 か所にある（T.8 の点検で `style` に寄せるかを見る）。解析ワーカーの残りが 158 バイトなので、T.3 と T.4 でワーカーの JS に足す分は、別ファイルに分けるか予算を伺う。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 953、wasm-gc 963、js 1012、native 953：`geom` 2 件と `tableops` 8 件を足した）、npm のテスト（464：`pack` 4 件）と大きさ、bench のテスト（23）、`npm audit`（bench、0 件）、pack test の `data,analysis,samples,showcase-html,cdn`（Chromium。data のページで各メソッドと断り方を見る）。

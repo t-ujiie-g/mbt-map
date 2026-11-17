@@ -188,13 +188,20 @@ T.1 で決めたこと（2026-11-17、ユーザー判断）：
 | `load(geojson)` | `fromGeoJSON(geojson)` | T.1。`mbt-map/analysis` の `load`・`Dataset` は T.7 まで別名として残す |
 | `load(dataTable)` | 要らない（`read` の結果がそのままテーブル） | T.1 |
 | `grid`・`defineCrs`・`Network` | `mbt-map/table`（`mbt-map/analysis` からも出す） | T.1 |
-| `areas`・`lengths`・`centroids`・`bboxes`（配列を返す） | 列を足す操作にするか、そのまま残すか | T.2 で決める |
-| `search`・`nearest`・`pointsWithin`・`relate`（番号の配列） | 絞り込み・空間結合の引数や結果にする | T.4 |
+| `areas`・`lengths`・`centroids`・`bboxes`（配列を返す） | そのまま。`derive({ area: await t.areas() })` で列にできる | T.2 |
+| （なし） | `select`・`filter`・`derive`・`orderby`・`slice`・`array`・`columnTypes`（Arquero の名前） | T.2 |
+| `search`・`nearest`・`pointsWithin`（番号の配列） | `filter(番号の配列)` に渡せる | T.2 |
+| `relate`（番号の組の配列） | 空間結合の結果にする | T.4 |
 | `collect` | 空間結合と集計で書けるようにする | T.4 |
 | `dbscan`・`kmeans`（番号の配列） | クラスタの列を足したテーブル | T.4 |
 | `splitFeatures`・`mergeFeatures`（Feature の配列） | テーブルの `split`・`merge` に寄せる（`mbt-map/draw` が使う形を見直す） | T.4 |
 | `simplify`・`buffer`・`clip` などテーブルを返すもの | そのまま | – |
 | `DemGrid`・`loadDem`・`loadGrid`・`sampleDem`・`transform`・クラス分け | `mbt-map/analysis` のまま | – |
+
+T.2 で決めたこと（2026-11-18）：
+- 名前は Arquero にそろえる（ユーザー判断）：`select`・`filter`・`derive`・`orderby`・`slice`、T.3 で `groupby`・`rollup`・`join`。
+- 属性の操作の wasm（`table.wasm`）の予算は 45KB（ユーザー判断）。式は wasm の中でコンパイルする（計測：ページの JS でコンパイルすると 41.8KB + 評価だけの wasm 25.5KB、wasm の中なら 36.6KB の 1 つ）。
+- `derive` は式のほかに、行ごとの値（型付き配列か `{ values }`）も受ける。番号や値の配列を返す既存のメソッドの結果を、そのまま列にできる。
 
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。
