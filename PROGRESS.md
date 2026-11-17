@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済んだ（どれも 0.1.0、未公開。公開はユーザーがまとめて：順は RELEASING）。0.1.1 は 2026-11-16 に公開済み。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、計画を書いたところ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：ユーザーが単独の移植 11 個を公開（`trig`・`pbf` が先）。その後 Phase 21（VISION §8）。
+- **次**：テーブルの段階の T.1（面の設計と型の一本化：VISION §8「テーブルの段階」）。その後 Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -533,3 +533,10 @@ Where things stand, decisions and open issues. The development history before th
 - セキュリティ：`npm audit`（`npm/`・`bench/`・`examples/react/`）は 0 件、Dependabot の未対応は 0 件。依存は増えていない。信頼できない入力を読む移植（`pbf`・`mvt`・`draco`・`lepcc`・`meshopt`・`tiff`）は、コードを変えていないので上限と範囲の検査も前のまま（各 README に書いた）。
 - `moonbit/mbtmap` と `moonbit/mbtmap_rabbita` の README に、サイト（文書・例・デモ）と MoonBit のガイドへの案内を足した（ユーザーの希望）。mooncakes に出るのは次にこの 2 つを公開したとき。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（前と同じ数）、npm のテスト（459）と大きさ（変わらない）、bench のテスト（23）、`long-comments`（47 のまま）。
+
+## 単独の移植の公開と、テーブルの段階の計画（2026-11-17）
+
+- 単独の移植 11 個（`trig`・`pbf` を先に、続けて `mvt`・`proj`・`geodesic`・`clipper`・`draco`・`lepcc`・`meshopt`・`robust`・`tiff`）を、ユーザーが 0.1.0 で mooncakes に公開した。公開の前に確かめたこと：`trig` と `pbf` の公開後、`mvt`・`proj`・`geodesic` の梱包物を単独でリポジトリの外に展開し、依存をレジストリから取って全ターゲットのチェックとテストが通る。残り 9 個の `moon publish --dry-run` はどれも `202 Accepted`（`moon update` は要らなかった）。
+- 振り返り（ユーザーの問い：解析を geopandas のようなデータフレームにそろえられたか）：データの持ち方はすでに列指向の 1 つの形で、フォーマットの違いは読み書きの層で終わっている。足りないのは属性の操作（選択、絞り込み、計算、集計、結合）と、面のそろい方（番号の配列を返すもの、`DataTable` と `Dataset` が別の型）。移植した計算は変えずに、その上の面を直せる。
+- 決めたこと（ユーザー判断）：Phase 21 の前に「テーブルの段階」を置き、0.2.0 とする。範囲は属性の操作、空間結合、型の一本化、Arrow と GeoParquet の入出力。条件と計算はスタイルの式。既存の面は揃え直す（壊れる変更、移行の案内つき）。段階 T.1〜T.8 と、各段階の初めに決めることは VISION §8「テーブルの段階」。
+- 分かっている制約：解析ワーカーは 30.3/31KB で余裕がなく、式の評価器は約 20KB（GeoJSON ワーカーの式つき 56.5KB と式なし 37.0KB の差）なので、属性の操作は別の wasm にする。GeoParquet は圧縮の展開が要る（§5 で後回しにしていた理由）。
