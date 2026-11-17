@@ -4,6 +4,7 @@ package "t-ujiie-g/mbtmap_engine/core"
 import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -81,7 +82,7 @@ pub let exact_powers : FixedArray[Double]
 
 pub fn fit_box(LngLatBounds, Double, Double, Double, bearing~ : Double, padding~ : Padding, offset~ : (Double, Double), max_zoom~ : Double) -> (LngLat, Double)?
 
-pub fn haversine(Trig, Double, Double, Double, Double) -> Double
+pub fn haversine(@trig.Trig, Double, Double, Double, Double) -> Double
 
 pub fn js_hypot(Double, Double) -> Double
 
@@ -127,7 +128,7 @@ pub fn tile_containing(MercatorCoord, Int32) -> TileId?
 
 pub fn turf_radians(Double) -> Double
 
-pub fn turf_ring_area(Trig, Array[Double], Int32, Int32) -> Double
+pub fn turf_ring_area(@trig.Trig, Array[Double], Int32, Int32) -> Double
 
 pub fn utf8_lossy(BytesView) -> String
 
@@ -379,34 +380,6 @@ pub fn Transform::world_size(Self) -> Double
 pub fn Transform::wraps(Self) -> (Int32, Int32)
 pub fn Transform::zoomed_around(Self, Double, Double, Double) -> Camera
 
-pub(all) struct Trig {
-  sin : (Double) -> Double
-  cos : (Double) -> Double
-  tan : (Double) -> Double
-  asin : (Double) -> Double
-  acos : (Double) -> Double
-  atan : (Double) -> Double
-  atan2 : (Double, Double) -> Double
-  exp : (Double) -> Double
-  ln : (Double) -> Double
-  pow : (Double, Double) -> Double
-  cbrt : (Double) -> Double
-  atanh : (Double) -> Double
-}
-pub fn Trig::acos(Self, Double) -> Double
-pub fn Trig::asin(Self, Double) -> Double
-pub fn Trig::atan(Self, Double) -> Double
-pub fn Trig::atan2(Self, Double, Double) -> Double
-pub fn Trig::atanh(Self, Double) -> Double
-pub fn Trig::cbrt(Self, Double) -> Double
-pub fn Trig::cos(Self, Double) -> Double
-pub fn Trig::exp(Self, Double) -> Double
-pub fn Trig::ln(Self, Double) -> Double
-pub fn Trig::moonbit() -> Self
-pub fn Trig::pow(Self, Double, Double) -> Double
-pub fn Trig::sin(Self, Double) -> Double
-pub fn Trig::tan(Self, Double) -> Double
-
 #derive(Eq, @debug.Debug)
 pub(all) struct UnwrappedTile {
   id : TileId
@@ -420,5 +393,7 @@ pub fn UnwrappedTile::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 pub type Line = Array[(Double, Double)]
+
+pub using @trig {type Trig}
 
 // Traits

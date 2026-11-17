@@ -37,7 +37,7 @@ core ← globe ← render_webgl2 ← map ← bundle/main ← (npm, element) ← 
 wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 ```
 
-- `clipper`, `draco`, `lepcc`, `meshopt`, `mvt`, `pbf`, `robust` and `tiff` are modules of their own under `ports/` (`t-ujiie-g/<name>` on mooncakes): they import no engine package, and the engine imports them through the workspace.
+- `clipper`, `draco`, `geodesic`, `lepcc`, `meshopt`, `mvt`, `pbf`, `proj`, `robust`, `tiff` and `trig` (the `Trig` struct, which `core` re-exports as `@core.Trig`) are modules of their own under `ports/` (`t-ujiie-g/<name>` on mooncakes): they import no engine package, and the engine imports them through the workspace.
 - Nothing under `map/` may depend on a UI framework.
 - `map` must not import `worker` (it would pull mvt/tess into the main bundle); shared constants live in `core` or are mirrored with a pointer to the original.
 - `core`, `pbf`, `mvt`, `tess`, `style` are pure MoonBit and must pass tests on every backend.
@@ -82,7 +82,7 @@ wasmio ← (geojson_tiles, *_worker entries)            (wasm-gc only)
 
 ### Elementary functions and text
 
-- `@core.Trig` (sin … pow, cbrt, atanh) is the one seam for the host's `Math`.
+- `@core.Trig` (sin … pow, cbrt, atanh; defined in `ports/trig`) is the one seam for the host's `Math`.
 - `@wasmio.host_trig` gives it to the wasm-gc-only entries and `worker/host_math.mbt` to the display worker (style's math and interpolation through `FeatureContext::trig`, DEM slopes, round line joins), which keeps core `@math` (about 5KB gzip) out of it and computes as MapLibre does.
 - The clipper port keeps `@math`, since it must match the C++ library's libm.
 - Small JS and Turf helpers that ports share (`EARTH_RADIUS`, `PI`, `turf_radians`, `haversine`, `turf_ring_area`, `js_round`, `js_min`/`js_max`, `stable_sort`) live in `core` (`core/jsmath.mbt`); priority queues stay per port, since their tie rules differ.

@@ -774,7 +774,7 @@ arrays (u32 count, values) ModelPixelScale, ModelTiepoint, ModelTransformation, 
 byte counts; u8 1, a u32 length and UTF-8 for GDAL_NODATA's text, else u8 0; i32 JPEGTables
 length (-1 absent) and its bytes; padding to 4.
 
-## CRS definition (`proj/encoding.mbt`, written by `npm/src/projstring.ts` and `npm/src/prjwkt.ts`)
+## CRS definition (`ports/proj/encoding.mbt`, written by `npm/src/projstring.ts` and `npm/src/prjwkt.ts`)
 
 A parsed PROJ string as 34 f64s; angles in radians, NaN where a parameter was
 not given.

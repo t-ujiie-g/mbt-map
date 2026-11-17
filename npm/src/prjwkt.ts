@@ -4,13 +4,13 @@
 import { DATUMS, lookup } from "./projstring.ts";
 
 const D2R = 0.01745329251994329577;
-// `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
+// `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const SLOTS = 34;
 // Longest WKT read and most items in one of its nodes: EPSG's definitions take a few KB and some 20 items.
 const MAX_TEXT = 65536;
 const MAX_ITEMS = 1024;
 
-// proj4js's projection names (each module's `names`), by `proj/encoding.mbt` `methods` index.
+// proj4js's projection names (each module's `names`), by `ports/proj/encoding.mbt` `methods` index.
 const NAMES = [
   "longlat,identity,lonlat,latlon,latlong", "mercator,popular visualisation pseudo mercator,mercator_1sp,mercator_auxiliary_sphere,mercator_variant_a,merc",
   "extended_transverse_mercator,extended transverse mercator,etmerc,transverse_mercator,transverse mercator,gauss kruger,gauss_kruger,tmerc",

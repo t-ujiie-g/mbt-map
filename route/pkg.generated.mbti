@@ -2,14 +2,14 @@
 package "t-ujiie-g/mbtmap_engine/route"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/trig",
 }
 
 // Values
 pub const MAX_ROUTE_VERTICES : Int32 = 2_000_000
 
-pub fn snap_lines(Array[Double], Array[(Int32, Int32)], Double, trig? : @core.Trig) -> (Array[Double], Array[(Int32, Int32)])?
+pub fn snap_lines(Array[Double], Array[(Int32, Int32)], Double, trig? : @trig.Trig) -> (Array[Double], Array[(Int32, Int32)])?
 
 // Errors
 
@@ -19,7 +19,7 @@ pub struct Network {
 }
 pub fn Network::compacted_vertices(Self) -> Int32
 pub fn Network::find_path(Self, Double, Double, Double, Double) -> (Array[(Double, Double)], Double)?
-pub fn Network::new(@geom.Table, tolerance? : Double, snap? : Double, trig? : @core.Trig) -> Self?
+pub fn Network::new(@geom.Table, tolerance? : Double, snap? : Double, trig? : @trig.Trig) -> Self?
 pub fn Network::vertices(Self) -> Int32
 
 // Type aliases

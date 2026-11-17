@@ -11,7 +11,7 @@ import {
   "t-ujiie-g/mbtmap_engine/globe",
   "t-ujiie-g/meshopt",
   "t-ujiie-g/mvt",
-  "t-ujiie-g/mbtmap_engine/proj",
+  "t-ujiie-g/proj",
   "t-ujiie-g/mbtmap_engine/route",
   "t-ujiie-g/mbtmap_engine/style",
   "t-ujiie-g/mbtmap_engine/tess",

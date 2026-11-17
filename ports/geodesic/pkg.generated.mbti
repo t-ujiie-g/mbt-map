@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "t-ujiie-g/mbtmap_engine/geodesic"
+package "t-ujiie-g/geodesic"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -25,9 +25,9 @@ pub fn Geodesic::inverse(Self, Double, Double, Double, Double, area? : Bool) -> 
 pub fn Geodesic::inverse_line(Self, Double, Double, Double, Double) -> GeodesicLine
 pub fn Geodesic::line(Self, Double, Double, Double) -> GeodesicLine
 pub fn Geodesic::measure_path(Self, ArrayView[Double], Bool) -> FixedArray[Double]
-pub fn Geodesic::new(Double, Double, trig? : @core.Trig) -> Self?
+pub fn Geodesic::new(Double, Double, trig? : @trig.Trig) -> Self?
 pub fn Geodesic::polygon(Self, polyline? : Bool) -> PolygonArea
-pub fn Geodesic::wgs84(trig? : @core.Trig) -> Self
+pub fn Geodesic::wgs84(trig? : @trig.Trig) -> Self
 
 pub struct GeodesicLine {
   lat1 : Double
@@ -64,6 +64,6 @@ pub(all) struct Position {
 }
 
 // Type aliases
-pub using @core {type Trig}
+pub using @trig {type Trig}
 
 // Traits

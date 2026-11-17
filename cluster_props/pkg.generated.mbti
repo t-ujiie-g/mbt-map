@@ -2,10 +2,10 @@
 package "t-ujiie-g/mbtmap_engine/cluster_props"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
   "t-ujiie-g/mbtmap_engine/style",
   "t-ujiie-g/mbtmap_engine/tiler",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -15,7 +15,7 @@ pub fn cluster_properties(@geom.Table, Array[(String, @style.Expr, @style.Expr)]
 
 // Types and methods
 pub(all) struct Hooks {
-  trig : @core.Trig
+  trig : @trig.Trig
   number_text : (Double) -> String
   text_number : (String) -> Double
   intl : @style.Intl

@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "t-ujiie-g/trig"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Trig {
+  sin : (Double) -> Double
+  cos : (Double) -> Double
+  tan : (Double) -> Double
+  asin : (Double) -> Double
+  acos : (Double) -> Double
+  atan : (Double) -> Double
+  atan2 : (Double, Double) -> Double
+  exp : (Double) -> Double
+  ln : (Double) -> Double
+  pow : (Double, Double) -> Double
+  cbrt : (Double) -> Double
+  atanh : (Double) -> Double
+}
+pub fn Trig::acos(Self, Double) -> Double
+pub fn Trig::asin(Self, Double) -> Double
+pub fn Trig::atan(Self, Double) -> Double
+pub fn Trig::atan2(Self, Double, Double) -> Double
+pub fn Trig::atanh(Self, Double) -> Double
+pub fn Trig::cbrt(Self, Double) -> Double
+pub fn Trig::cos(Self, Double) -> Double
+pub fn Trig::exp(Self, Double) -> Double
+pub fn Trig::ln(Self, Double) -> Double
+pub fn Trig::moonbit() -> Self
+pub fn Trig::pow(Self, Double, Double) -> Double
+pub fn Trig::sin(Self, Double) -> Double
+pub fn Trig::tan(Self, Double) -> Double
+
+// Type aliases
+
+// Traits

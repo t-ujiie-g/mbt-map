@@ -73,8 +73,8 @@ Parallel work. Use parallel agents wherever the work splits: the user prefers st
 Where things live (the reference is `docs/dev/ARCHITECTURE.md` and its companions):
 
 - Engine, MoonBit packages at the root (module `t-ujiie-g/mbtmap_engine`, internal):
-  - Pure, tested on every backend: `core` (camera math, tile covering, byte readers and writers, shared constants), `tess`, `style`, `globe`, `geom`, `formats`, `tiler` and the ports the modules run (`analysis`, `proj`, `geodesic`, …).
-  - `ports/`: ports published on mooncakes on their own, one module each (`ports/clipper` is `t-ujiie-g/clipper`; also `draco`, `lepcc`, `meshopt`, `mvt`, `pbf`, `robust`, `tiff`). They import nothing of the engine; the engine imports them through the workspace. Versions and publishing: `docs/dev/RELEASING.md`.
+  - Pure, tested on every backend: `core` (camera math, tile covering, byte readers and writers, shared constants), `tess`, `style`, `globe`, `geom`, `formats`, `tiler` and the ports the modules run (`analysis`, `relate`, …).
+  - `ports/`: ports published on mooncakes on their own, one module each (`ports/clipper` is `t-ujiie-g/clipper`; also `draco`, `geodesic`, `lepcc`, `meshopt`, `mvt`, `pbf`, `proj`, `robust`, `tiff`, and `trig`, the `Trig` they and `core` share). They import nothing of the engine; the engine imports them through the workspace. Versions and publishing: `docs/dev/RELEASING.md`.
   - js only: `render_webgl2`, `map` (DOM events, workers, the frame loop), `bundle/main` (the engine's exports).
   - wasm-gc entries, one wasm each in its own worker: `worker` (the display worker: decode, tessellate, pack tiles) and the `*_worker` packages; `wasmio` is their linear-memory I/O.
 - `npm/`: the package. `npm/src/index.ts` is the facade over `bundle/main` (keep `npm/src/engine.d.ts` and the pages that call the exports directly in sync with `bundle/main/main.mbt`); the other entries are `npm/src/{ui,search,draw,geodesic,services,data,analysis,3d}.ts`; `npm/scripts/size.mjs` holds the gzip budgets. Worker glue is in `<package>/js/`.
@@ -91,7 +91,7 @@ Invariants that prevent expensive mistakes:
 - One wasm module per entry, run in its own lazily started worker; a feature group gets its own module once its code exceeds ~20KB gzip. `map` and the facade never import the data, analysis, services or 3D entries, which exchange data with the display only through columnar buffers; never link analysis into the display worker. A new entry or module needs a row in `npm/scripts/size.mjs`; bundle sizes are budgets (VISION §2).
 - In wasm-gc every call to a `raise` function allocates, even on success: keep `raise` off hot paths, report errors through sticky state (`pbf` reads never raise) and raise only at coarse boundaries.
 - Hot paths (pbf/mvt decode, tessellation, worker packing, per-frame rendering) stay allocation-free and write into preallocated `FixedArray`/`Bytes`. Data crosses the JS boundary as buffers in linear memory, never element by element through exports (5–50× slower).
-- wasm-gc entries never link core `@json`/`strconv` (24–27KB gzip each: numbers go to the host's `Number()`), `Repr`/`Debug` output (errors are `message()` strings) or core `@math` (the host's `Math` comes in through `@core.Trig`; the clipper port alone keeps `@math`).
+- wasm-gc entries never link core `@json`/`strconv` (24–27KB gzip each: numbers go to the host's `Number()`), `Repr`/`Debug` output (errors are `message()` strings) or core `@math` (the host's `Math` comes in through `@core.Trig`, which is `ports/trig`'s; the clipper port alone keeps `@math`).
 - Never run `wasm-opt` on wasm-gc builds (12–45% slower in every browser).
 - Ports must keep matching their reference exactly: a golden's "must stay identical / 0 differ" is a hard condition. Do not swap in "equivalent" algorithms (sorts, priority queues, rounding).
 - Everything fetched at runtime is untrusted (§8.2); raw-address load/store validates every offset and length.

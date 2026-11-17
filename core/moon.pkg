@@ -1,4 +1,5 @@
 import {
+  "t-ujiie-g/trig",
   "moonbitlang/core/cmp",
   "moonbitlang/core/debug",
   "moonbitlang/core/double",

@@ -5,6 +5,7 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -40,9 +41,9 @@ pub fn compile_cluster_properties(@json.Json, path? : String) -> Array[(String, 
 
 pub fn font_face(String) -> (String, String, String)
 
-pub fn geometry_distance(Array[Shape], String, TileGeometry, @core.Trig) -> Value
+pub fn geometry_distance(Array[Shape], String, TileGeometry, @trig.Trig) -> Value
 
-pub fn geometry_within(Array[Array[Array[Double]]], String, TileGeometry, @core.Trig) -> Bool
+pub fn geometry_within(Array[Array[Array[Double]]], String, TileGeometry, @trig.Trig) -> Bool
 
 pub fn js_number(String) -> Double
 
@@ -339,7 +340,7 @@ pub fn NoFeature::property(Self, String) -> Value?
 pub fn NoFeature::resolved_locale(Self, String?) -> String?
 pub fn NoFeature::state(Self, String) -> Value?
 pub fn NoFeature::text_number(Self, String) -> Double
-pub fn NoFeature::trig(Self) -> @core.Trig
+pub fn NoFeature::trig(Self) -> @trig.Trig
 pub fn NoFeature::within(Self, Array[Array[Array[Double]]]) -> Bool
 pub impl FeatureContext for NoFeature
 
@@ -682,7 +683,7 @@ pub(open) trait FeatureContext {
   fn geometry_type(Self) -> String
   fn id(Self) -> Value = _
   fn state(Self, String) -> Value? = _
-  fn trig(Self) -> @core.Trig = _
+  fn trig(Self) -> @trig.Trig = _
   fn number_text(Self, Double) -> String = _
   fn text_number(Self, String) -> Double = _
   fn line_progress(Self) -> Double = _

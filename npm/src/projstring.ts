@@ -3,10 +3,10 @@
 // mbt-map/analysis and mbt-map/data on the first PROJ string; import-free for `npm test`.
 
 const D2R = 0.01745329251994329577;
-// `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
+// `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const SLOTS = 34;
 
-// The order of `proj/encoding.mbt` `methods`.
+// The order of `ports/proj/encoding.mbt` `methods`.
 const METHODS = ["longlat", "merc", "tmerc", "utm", "lcc", "aea", "aeqd", "stere", "sterea", "cass", "laea", "eqc", "eqdc",
   "sinu", "eck6", "moll", "robin", "cea", "mill", "poly", "omerc", "somerc", "krovak", "ortho", "gnom", "eqearth", "bonne"];
 const ALIASES: Record<string, string> = { lonlat: "longlat", latlon: "longlat", latlong: "longlat", etmerc: "tmerc" };

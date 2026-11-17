@@ -2,16 +2,16 @@
 package "t-ujiie-g/mbtmap_engine/lineops"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/trig",
 }
 
 // Values
 pub const NEAREST_WORDS : Int32 = 6
 
-pub fn line_slice(@geom.Table, Double, Double, Double, Double, trig? : @core.Trig) -> @geom.Table
+pub fn line_slice(@geom.Table, Double, Double, Double, Double, trig? : @trig.Trig) -> @geom.Table
 
-pub fn nearest_point_on_line(@geom.Table, Double, Double, trig? : @core.Trig) -> FixedArray[Double]
+pub fn nearest_point_on_line(@geom.Table, Double, Double, trig? : @trig.Trig) -> FixedArray[Double]
 
 // Errors
 

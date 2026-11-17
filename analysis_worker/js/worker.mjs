@@ -64,7 +64,7 @@ const SHAPE_OPS = ["simplify", "convex", "concave", "delaunay", "voronoi", "line
 // The exports of surface_worker: those giving a table, then those giving f64s.
 const SURFACE_TABLES = ["point_grid", "square_grid", "hex_grid", "triangle_grid", "interpolate", "isolines", "isobands", "density"];
 const SURFACE_VALUES = ["dbscan", "kmeans"];
-// `@proj.DEFINITION_SLOTS` (proj/encoding.mbt).
+// `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
 // An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it.
 const isCrs = (c) => (Number.isInteger(c) && c > 0) || (c instanceof Float64Array && c.length === DEFINITION_SLOTS);

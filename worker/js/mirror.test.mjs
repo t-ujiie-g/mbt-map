@@ -65,8 +65,8 @@ test("symbols.mjs and media.ts mirror core's tile extent", () => {
   assert.equal(jsConsts("../../npm/src/media.ts").TILE_EXTENT, TILE_EXTENT);
 });
 
-test("CRS definitions have proj/encoding.mbt's slots everywhere", () => {
-  const { DEFINITION_SLOTS } = moonConsts("../../proj/encoding.mbt");
+test("CRS definitions have ports/proj/encoding.mbt's slots everywhere", () => {
+  const { DEFINITION_SLOTS } = moonConsts("../../ports/proj/encoding.mbt");
   assert.equal(jsConsts("../../npm/src/prjwkt.ts").SLOTS, DEFINITION_SLOTS);
   assert.equal(jsConsts("../../npm/src/projstring.ts").SLOTS, DEFINITION_SLOTS);
   assert.equal(jsConsts("../../analysis_worker/js/worker.mjs").DEFINITION_SLOTS, DEFINITION_SLOTS);

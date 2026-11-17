@@ -229,8 +229,8 @@ under the Apache License 2.0 are under the terms in LICENSE.
   Exceptions, Copyright (c) LLVM Project contributors
   (https://llvm.org/LICENSE.txt).
 
-- proj/*.mbt and npm/src/projstring.ts: port of proj4js 2.22.0 (the
-  projections of lib/projections/ named in proj/crs.mbt, lib/common/, the
+- ports/proj/*.mbt and npm/src/projstring.ts: port of proj4js 2.22.0 (the
+  projections of lib/projections/ named in ports/proj/crs.mbt, lib/common/, the
   datum shifts of lib/datum*.js, lib/Proj.js, lib/transform.js,
   lib/projString.js and the tables of lib/constants/)
   https://github.com/proj4js/proj4js — MIT License:
@@ -239,7 +239,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Irons, Olivier Terral and Calvin Metcalf
     License: MIT License (text in section 2).
 
-- proj/pseudocylindrical.mbt: Equal Earth follows proj4js's
+- ports/proj/pseudocylindrical.mbt: Equal Earth follows proj4js's
   lib/projections/eqearth.js, Copyright 2018 Bernie Jenny, Monash University, Melbourne, Australia,
   Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
 
@@ -512,7 +512,7 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright 2021 Protomaps LLC
     License: BSD 3-Clause License (text in section 2).
 
-- geodesic/*.mbt: port of geographiclib-geodesic 2.2.0 (src/Math.js,
+- ports/geodesic/*.mbt: port of geographiclib-geodesic 2.2.0 (src/Math.js,
   src/Geodesic.js, src/GeodesicLine.js, src/PolygonArea.js), after
   C. F. F. Karney, "Algorithms for geodesics", J. Geodesy 87, 43-55 (2013)
   https://github.com/geographiclib/geographiclib-js — MIT License:

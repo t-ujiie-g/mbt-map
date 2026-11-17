@@ -2,8 +2,8 @@
 package "t-ujiie-g/mbtmap_engine/tiler"
 
 import {
-  "t-ujiie-g/mbtmap_engine/core",
   "t-ujiie-g/mbtmap_engine/geom",
+  "t-ujiie-g/trig",
 }
 
 // Values
@@ -37,7 +37,7 @@ pub struct ClusterIndex {
 pub fn ClusterIndex::children(Self, Int32) -> Array[ClusterFeature]?
 pub fn ClusterIndex::expansion_zoom(Self, Int32) -> Int32
 pub fn ClusterIndex::leaves(Self, Int32, limit? : Int32, offset? : Int32) -> Array[ClusterFeature]?
-pub fn ClusterIndex::new(@geom.Table, options? : ClusterOptions, wrap_buffer? : Double, trig? : @core.Trig, properties? : ClusterProperties, feature_ends? : Array[Int32], promote_id? : String) -> Self
+pub fn ClusterIndex::new(@geom.Table, options? : ClusterOptions, wrap_buffer? : Double, trig? : @trig.Trig, properties? : ClusterProperties, feature_ends? : Array[Int32], promote_id? : String) -> Self
 pub fn ClusterIndex::tile(Self, Int32, Int32, Int32) -> Array[ClusterFeature]?
 pub fn ClusterIndex::update(Self, Diff) -> Bool
 
@@ -87,7 +87,7 @@ pub struct TileData {
 pub struct Tiler {
   // private fields
 }
-pub fn Tiler::new(@geom.Table, options? : TilerOptions, trig? : @core.Trig, feature_ends? : Array[Int32], promote_id? : String) -> Self
+pub fn Tiler::new(@geom.Table, options? : TilerOptions, trig? : @trig.Trig, feature_ends? : Array[Int32], promote_id? : String) -> Self
 pub fn Tiler::tile(Self, Int32, Int32, Int32) -> TileData?
 pub fn Tiler::update(Self, Diff) -> Bool
 
@@ -104,6 +104,6 @@ pub(all) struct TilerOptions {
 pub fn TilerOptions::default() -> Self
 
 // Type aliases
-pub using @core {type Trig}
+pub using @trig {type Trig}
 
 // Traits
