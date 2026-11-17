@@ -1,9 +1,9 @@
 // The app every bundler builds (bench/bundlers/run.mjs): a map of GeoJSON circles, a feature query (a display
 // worker part), and one call each of mbt-map/analysis, mbt-map/geodesic (a worker small enough for Vite to
-// inline) and mbt-map/data with a CRS (a data worker part and proj.wasm). The result goes to `window.__result`.
+// inline) and mbt-map/table with a CRS (a data worker part and proj.wasm). The result goes to `window.__result`.
 import { Map } from "mbt-map";
 import { load } from "mbt-map/analysis";
-import { parse } from "mbt-map/data";
+import { parse } from "mbt-map/table";
 import { inverse } from "mbt-map/geodesic";
 
 const STEP_TIMEOUT = 15000;
@@ -54,7 +54,7 @@ async function run() {
   await step("geodesic", async () => Math.round((await inverse([139.7671, 35.6812], [139.7631, 35.6751])).distance));
   await step("data", async () => {
     const table = await parse("POINT (-6000 -35000)", { format: "wkt", crs: 6677 });
-    return table.toGeoJSON().features[0].geometry.coordinates.map((v) => Math.round(v * 1e3) / 1e3);
+    return (await table.toGeoJSON()).features[0].geometry.coordinates.map((v) => Math.round(v * 1e3) / 1e3);
   });
   window.__result = result;
 }

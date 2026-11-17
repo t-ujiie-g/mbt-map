@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、計画を書いたところ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.1（面の設計と型の一本化：VISION §8「テーブルの段階」）。その後 Phase 21。
+- **次**：テーブルの段階の T.2（属性の操作：VISION §8「テーブルの段階」）。その後 T.3〜T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -540,3 +540,18 @@ Where things stand, decisions and open issues. The development history before th
 - 振り返り（ユーザーの問い：解析を geopandas のようなデータフレームにそろえられたか）：データの持ち方はすでに列指向の 1 つの形で、フォーマットの違いは読み書きの層で終わっている。足りないのは属性の操作（選択、絞り込み、計算、集計、結合）と、面のそろい方（番号の配列を返すもの、`DataTable` と `Dataset` が別の型）。移植した計算は変えずに、その上の面を直せる。
 - 決めたこと（ユーザー判断）：Phase 21 の前に「テーブルの段階」を置き、0.2.0 とする。範囲は属性の操作、空間結合、型の一本化、Arrow と GeoParquet の入出力。条件と計算はスタイルの式。既存の面は揃え直す（壊れる変更、移行の案内つき）。段階 T.1〜T.8 と、各段階の初めに決めることは VISION §8「テーブルの段階」。
 - 分かっている制約：解析ワーカーは 30.3/31KB で余裕がなく、式の評価器は約 20KB（GeoJSON ワーカーの式つき 56.5KB と式なし 37.0KB の差）なので、属性の操作は別の wasm にする。GeoParquet は圧縮の展開が要る（§5 で後回しにしていた理由）。
+
+## テーブルの段階 T.1：入口 `mbt-map/table` と 1 つの型（2026-11-18、Mac）
+
+- 決めたこと（ユーザー判断）：入口は新しい `mbt-map/table`。データは使うまでページに置き、最初の操作で解析ワーカーへ移す。描画への直結もこの段階に入れる（T.4b を足した）。予算は table 9KB、共有の接続 2KB、analysis 6KB（9 から）、data 2KB（6 から）。
+- 作り：
+  - `npm/src/table.ts`：`read`・`parse`・`write`（data ワーカー）、`fromGeoJSON`・`grid`・`Table` の操作（解析ワーカー）、`Network`、`defineCrs`。`Table` は読んだバッファ（ページ）か、解析ワーカーの中のハンドルのどちらか。最初の操作でバッファを transfer して `load_table` する。読んだテーブルの id は `Table` が持ち続け、ワーカーへ移したあとの `toGeoJSON` にも付ける（操作の結果のテーブルは id なし：前と同じ）。
+  - `npm/src/clients.ts`（`dist/clients.js`）：data と解析の `WorkerClient` を 1 つずつと、`defineCrs` の名前。table・data・analysis の 3 つの入口が読むので、どの入口から使ってもワーカーは 1 つずつになる。
+  - `mbt-map/data` はラスタだけ（`read`・`parse`・`write`・`DataTable` は消した）。`mbt-map/analysis` は標高グリッド・`transform`・クラス分けと、移行中の別名（`Dataset` = `Table`、`load` = `fromGeoJSON`。テーブルを渡すと GeoJSON 経由で読み直す）。別名は T.7 で消す。
+  - 解析ワーカー：結果のテーブルに列の名前を付けて返す（wasm の `columns_out`：`Table.columns` をどのテーブルでも読めるように）。`table`（テーブルのバイト列を返す：`write` 用）を足した。
+- 変わる動き：`toGeoJSON()` は Promise を返す（前の `DataTable` は同期）。`tableBytes()` は無い。
+- 大きさ（gzip）：`mbt-map/table` 6,234（新、予算 9KB）、`clients.js` 1,749（新、2KB）、`mbt-map/analysis` 8,739 → 5,316（6KB）、`mbt-map/data` 5,140 → 1,435（2KB）。入口の合計は 13,879 → 14,734。解析ワーカー 30,351 → 30,637（予算 31KB：`columns_out` の分。残り 363 バイト）。
+- 呼び出し側：ショーケースのデータ読み込み（`examples/shared/data.js`）、サンプル（read-data、write-data）、pack test の data ページとチェック、bundlers のアプリを `mbt-map/table` に移した。data ページは、読んだテーブルをそのまま解析に使い（`pointsWithin`、`buffer`）、ワーカーへ移す前後で `toGeoJSON` と `write` の結果が同じこと、結果のテーブルの行数と列を見る。解析だけを使う例は別名のまま（T.7 で移す）。
+- 文書：`docs/data.md`・`docs/analysis.md` の入口と例、README の入口の表、FORMATS（結果の `columns`、`table`）、ARCHITECTURE-MODULES、VISION §8 に面の対応表（T.4 で確定）。`docs/analysis.md` の本文は `Dataset`・`load` のまま（別名で動く。T.7 で書き直す）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（前と同じ数）、npm のテスト（460：`stringList` の 1 件を足した）と大きさ、bench のテスト（23）、pack test（Chromium、全 24 件）、`long-comments`（46）。
+- 残り：解析ワーカーの余裕が 363 バイトしかない。T.2 以降の wasm は別のモジュールにする（計画どおり）。

@@ -41,7 +41,7 @@ MoonBit で書いた、**サーバーに頼らない WebGIS の実行基盤**（
 | `mbt-map/ui` | 全部入りで 10KB、コントローラ 1 つ 2KB |
 | `mbt-map/search` | 5KB |
 | `mbt-map/draw` | 10KB |
-| `mbt-map/services`、`mbt-map/analysis`、`mbt-map/data`、`mbt-map/geodesic`、`mbt-map/3d` | 12KB、9KB、6KB、2KB、10KB（それぞれの Worker と Wasm は別の行） |
+| `mbt-map/services`、`mbt-map/table`、`mbt-map/analysis`、`mbt-map/data`、`mbt-map/geodesic`、`mbt-map/3d` | 12KB、9KB、6KB、2KB、2KB、10KB（それぞれの Worker と Wasm は別の行。table・analysis・data が共有するワーカー接続 `clients.js` は 2KB） |
 
 - **表示しか使わない利用者のバンドルは、ほかの入口を足しても 1 バイトも増えない**こと。
 - 新しい入口やモジュールは、作るときに測ってから予算を決め、`size.mjs` に行を足す。予算の変更はユーザーの判断で行い、PROGRESS.md に記録する。
@@ -105,7 +105,7 @@ MoonBit で書いた、**サーバーに頼らない WebGIS の実行基盤**（
 
 MapLibre GL JS の API に**名前と形を寄せる**（移行しやすくするため）が、完全互換は目指さない。寄せた API は、同じ入力に同じ結果を返すことをゴールデン（`bench/`）で確かめる。
 
-データ処理と解析は別の入口（`mbt-map/data`、`mbt-map/analysis` など）から使う。初回の呼び出しで Wasm を読み込み、Worker で実行して Promise を返す。結果は列指向の表で、`toGeoJSON()` で地図のソースになる。
+データ処理と解析は別の入口（`mbt-map/table`、`mbt-map/data`、`mbt-map/analysis` など）から使う。初回の呼び出しで Wasm を読み込み、Worker で実行して Promise を返す。結果は列指向の表で、`toGeoJSON()` で地図のソースになる。
 
 ### Web Component
 
@@ -166,10 +166,35 @@ MapLibre GL JS の API に**名前と形を寄せる**（移行しやすくす�
 | T.2 属性の操作 | 列の一覧と型、列の値の取り出し、`select`・`filter`・`mutate`・`sort`・先頭の行。式の評価器を入れた wasm を、初めて使うときに読む（解析ワーカーは 30.3/31KB で余裕がない。評価器は約 20KB） | 新しい wasm の予算の行。名前（pandas 風か dplyr 風か） |
 | T.3 集計と結合 | `groupBy` と集計（数、合計、平均、最小、最大、中央値など）、属性での結合（内部・左） | 集計の種類。欠けた値（null）の扱い |
 | T.4 空間結合と揃え直し | 空間関係や最近傍で相手の属性を付けたテーブルを返す。`search`・`relate`・`pointsWithin`・`nearest` などの番号の配列を返すものと、`splitFeatures`・`mergeFeatures` を、テーブルの面に直す | どれを改名し、どれを消すか（T.1 の対応表を確定する） |
+| T.4b 描画への直結 | GeoJSON ソースの `data` にテーブルを渡すと、バッファのままタイルを作るワーカーへ送る（メインスレッドで GeoJSON に直さない） | GeoJSON ワーカー（37.0/37KB）に入れるか、別の経路にするかを計測して選ぶ |
 | T.5 Arrow | Arrow IPC（GeoArrow の拡張型つき）の読み書き。バッファのまま DuckDB-WASM や Arquero と受け渡せる | 入口を分けるか。比べる相手（apache-arrow）は bench だけに入れる |
 | T.6 GeoParquet | 読み込み（書き出しは需要を見て）。§5 の「後回し」から移す | 圧縮（snappy、zstd、gzip）をどこまで読むか、展開を移植するか依存にするか（§7 と AGENTS.md §8.1 の確認） |
 | T.7 例・文書・移行 | 3 つのショーケースに「読む → 絞る → 結合 → 集計 → 描く」を足す。`docs/data.md` と `docs/analysis.md` を書き直し、0.1 からの移行の対応表を載せる | なし |
 | T.8 点検と 0.2.0 | リファクタリングとセキュリティの点検、版上げ | なし |
+
+T.1 で決めたこと（2026-11-17、ユーザー判断）：
+- 入口：新しい `mbt-map/table` に、読み書き（`read`・`parse`・`write`）と `Table`（操作はメソッド）を置く。`mbt-map/data` はラスタ（GeoTIFF、再投影のタイル）、`mbt-map/analysis` はテーブルでないもの（標高グリッド、座標変換、クラス分け）。
+- データの居場所：読んだ直後はページ（メインスレッド）のバッファのまま。最初の操作で解析ワーカーへ移す（transfer、コピーなし）。読んで描くだけのページは解析ワーカーを読まない。
+- 描画への直結：ソースの `data` にテーブルをそのまま渡せるようにする（段階 T.4b を足した）。
+
+面の対応（T.1 の時点。T.4 で確定する）：
+
+| 0.1 | テーブルの段階 | いつ |
+|---|---|---|
+| `mbt-map/data` の `read`・`parse`・`write`・`formatOf` | `mbt-map/table` の同じ名前 | T.1 で移した |
+| `DataTable` と `Dataset` | `Table`（1 つの型） | T.1 |
+| `DataTable.toGeoJSON()`（同期） | `Table.toGeoJSON()`（Promise） | T.1 |
+| `DataTable.tableBytes()` | なし（テーブルをそのまま使う） | T.1 で消した |
+| `load(geojson)` | `fromGeoJSON(geojson)` | T.1。`mbt-map/analysis` の `load`・`Dataset` は T.7 まで別名として残す |
+| `load(dataTable)` | 要らない（`read` の結果がそのままテーブル） | T.1 |
+| `grid`・`defineCrs`・`Network` | `mbt-map/table`（`mbt-map/analysis` からも出す） | T.1 |
+| `areas`・`lengths`・`centroids`・`bboxes`（配列を返す） | 列を足す操作にするか、そのまま残すか | T.2 で決める |
+| `search`・`nearest`・`pointsWithin`・`relate`（番号の配列） | 絞り込み・空間結合の引数や結果にする | T.4 |
+| `collect` | 空間結合と集計で書けるようにする | T.4 |
+| `dbscan`・`kmeans`（番号の配列） | クラスタの列を足したテーブル | T.4 |
+| `splitFeatures`・`mergeFeatures`（Feature の配列） | テーブルの `split`・`merge` に寄せる（`mbt-map/draw` が使う形を見直す） | T.4 |
+| `simplify`・`buffer`・`clip` などテーブルを返すもの | そのまま | – |
+| `DemGrid`・`loadDem`・`loadGrid`・`sampleDem`・`transform`・クラス分け | `mbt-map/analysis` のまま | – |
 
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。

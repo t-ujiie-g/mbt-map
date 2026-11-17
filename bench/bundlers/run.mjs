@@ -34,7 +34,7 @@ const ESBUILD_COPIES = /\.wasm$|(worker(-\w+)?|data-\w+|analysis-\w+|prjwkt|proj
 const KNOWN_FAILURES = ["parcel dev", "parcel build"];
 // The app with the library's entries imported at run time from `./mbt-map/` (a copy of its dist/).
 const UNBUNDLED_IMPORTS = `const lib = (file) => import(new URL(\`mbt-map/\${file}\`, document.baseURI).href);
-const [{ Map }, { load }, { parse }, { inverse }] = await Promise.all(["index.js", "analysis.js", "data.js", "geodesic.js"].map(lib));
+const [{ Map }, { load }, { parse }, { inverse }] = await Promise.all(["index.js", "analysis.js", "table.js", "geodesic.js"].map(lib));
 `;
 const run = promisify(execFile);
 

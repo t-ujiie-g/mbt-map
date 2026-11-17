@@ -1,12 +1,12 @@
-# Spatial analysis: `mbt-map/analysis`
+# Spatial analysis: `mbt-map/table` and `mbt-map/analysis`
 
-`mbt-map/analysis` runs spatial analysis in a Web Worker of its own. You load data once into a `Dataset`, which stays in the worker together with its spatial index. Its methods return only results: typed arrays, new datasets, or GeoJSON. The entry point covers measures, spatial index queries, spatial relations (DE-9IM), geometry operations (buffer, clip, dissolve, split, merge, ...), shapes (simplify, hulls, Delaunay, Voronoi, nearest point on line), surfaces (grids, interpolation, isolines, density, clustering), routing, coordinate transforms and terrain analysis on DEM tiles and GeoTIFFs (slope, aspect, hillshade, viewshed, line of sight). Classification and statistics for choropleths run on the main thread. Each group of features ships as its own wasm module, and a module is fetched only the first time you call one of its functions. The map never imports this entry, so a page that doesn't use analysis doesn't download it.
+Spatial analysis runs in a Web Worker of its own, on the tables of `mbt-map/table`: what [`read`](./data.md) gives, or GeoJSON taken in with `fromGeoJSON`. A table's rows stay in the worker together with their spatial index, and its methods return only results: typed arrays, new tables, or GeoJSON when you ask for it. `mbt-map/analysis` has what is not a table: elevation grids, coordinate transforms and class breaks. (Until the table surface is settled it also exports the earlier names: `Dataset` is `Table`, and `load` is `fromGeoJSON`, which also reads a table again.)
 
 ```js
-import { load } from "mbt-map/analysis";
+import { fromGeoJSON } from "mbt-map/table";
 
-const blocks = await load(polygonsGeoJSON);      // an object, UTF-8 bytes, an http(s) URL or an mbt-map/data DataTable
-const shops = await load("/data/shops.geojson");
+const blocks = await fromGeoJSON(polygonsGeoJSON);      // an object, UTF-8 bytes or an http(s) URL
+const shops = await fromGeoJSON("/data/shops.geojson");
 const area = await blocks.areas();               // Float64Array, square meters
 const { count, mean } = await blocks.collect(shops, "sales");
 blocks.dispose();
@@ -32,7 +32,7 @@ All methods are asynchronous and return Promises, except the classification func
 ## Loading data
 
 ```ts
-load(data: unknown, options?: LoadOptions): Promise<Dataset>
+fromGeoJSON(data: unknown, options?: LoadOptions): Promise<Table>
 ```
 
 `data` can be:
@@ -42,18 +42,16 @@ load(data: unknown, options?: LoadOptions): Promise<Dataset>
 | A GeoJSON object | A Feature, FeatureCollection or geometry. It is serialized and copied to the worker. |
 | `ArrayBuffer` or typed array | GeoJSON as UTF-8 bytes. The bytes are copied, so your buffer stays usable. |
 | A string | An http(s) URL, resolved against the page and fetched in the worker without credentials. |
-| A `DataTable` | Anything `mbt-map/data` reads (CSV, Shapefile, KML, ...). See [data.md](./data.md). |
 
-`options.crs` gives the CRS of the input's coordinates (default EPSG:4326). Coordinates are converted to longitude and latitude as they load, so a dataset is always held in EPSG:4326. See [Coordinate systems](#coordinate-systems).
+`options.crs` gives the CRS of the input's coordinates (default EPSG:4326). Coordinates are converted to longitude and latitude as they load, so a table is always held in EPSG:4326. See [Coordinate systems](#coordinate-systems).
 
-`Dataset.length` is the number of features. A GeometryCollection counts once per member.
+`Table.length` is the number of features and `Table.columns` the property keys. A GeometryCollection counts once per member.
 
 ```js
-import { read } from "mbt-map/data";
-import { load } from "mbt-map/analysis";
+import { read } from "mbt-map/table";
 
 const wards = await read("/data/wards.zip");     // a zipped Shapefile, reprojected from its .prj
-const dataset = await load(wards);
+const areas = await wards.areas();               // the same table: its rows move into the worker here
 ```
 
 ## Measures and spatial index

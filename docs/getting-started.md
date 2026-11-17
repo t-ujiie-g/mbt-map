@@ -87,7 +87,7 @@ Feature queries (`queryRenderedFeatures`, `querySourceFeatures`) return Promises
 
 - **Web component**: `import "mbt-map/element"` and write `<mbt-map style-url="…" center="139.77,35.68" zoom="14">`. It works in plain HTML and in frameworks such as React. See [Web component](./web-component.md).
 - **MoonBit**: `t-ujiie-g/mbtmap` is a typed MoonBit API over the npm package, and `t-ujiie-g/mbtmap_rabbita` puts the map in rabbita apps. See [MoonBit](./moonbit.md).
-- **More entry points**: `mbt-map/ui`, `mbt-map/search`, `mbt-map/draw`, `mbt-map/geodesic`, `mbt-map/data`, `mbt-map/analysis`, `mbt-map/services` and `mbt-map/3d` are separate modules; a page that never imports one never downloads its code. Each has a guide in the [documentation index](./README.md).
+- **More entry points**: `mbt-map/ui`, `mbt-map/search`, `mbt-map/draw`, `mbt-map/geodesic`, `mbt-map/table`, `mbt-map/data`, `mbt-map/analysis`, `mbt-map/services` and `mbt-map/3d` are separate modules; a page that never imports one never downloads its code. Each has a guide in the [documentation index](./README.md).
 
 ## How files are loaded
 
@@ -98,8 +98,8 @@ Every module names its workers, their wasm and the parts the workers import late
 | `worker.js`, `mbt-map.wasm` | a map is created (the tile workers) |
 | `geojson.js`, `geojson-worker.js`, `geojson.wasm` | a style first has a GeoJSON source |
 | `sprite.js`, `pmtiles.js`, `media.js`, `custom.js`, `export.js` | a style has a sprite, a `pmtiles://` source, an image or video source; the first custom layer; the first `toBlob` |
-| `analysis-worker.js`, `analysis.wasm`, then `geometry.wasm`, `relate.wasm`, `shapes.wasm`, `surface.wasm`, `route.wasm`, `viewshed.wasm`, `proj.wasm` | the first `mbt-map/analysis` call, then the first call of each group |
-| `data-worker.js`, `data.wasm`, then `xml.wasm`, `geotiff.wasm`, `proj.wasm` | the first `mbt-map/data` call, then the first KML/GPX, raster or reprojection |
+| `analysis-worker.js`, `analysis.wasm`, then `geometry.wasm`, `relate.wasm`, `shapes.wasm`, `surface.wasm`, `route.wasm`, `viewshed.wasm`, `proj.wasm` | the first operation on a table or `mbt-map/analysis` call, then the first call of each group |
+| `data-worker.js`, `data.wasm`, then `xml.wasm`, `geotiff.wasm`, `proj.wasm` | the first `mbt-map/table` read or `mbt-map/data` call, then the first KML/GPX, raster or reprojection |
 | `geodesic-worker.js`, `geodesic.wasm` | the first `mbt-map/geodesic` call |
 | `3d-worker.js`, `3d.wasm`, `3d-tiles.js`, `3d-i3s.js` | the first `mbt-map/3d` layer of each kind |
 
@@ -122,7 +122,7 @@ When the build's files are served from another origin (a CDN for static assets),
 To serve the workers and wasm yourself, pass their locations:
 
 - `new Map({ workerUrl, wasmUrl, geojsonWorkerUrl, geojsonWasmUrl, geojsonPropertiesWasmUrl })` for the map's workers.
-- The last argument of `mbt-map/analysis`, `mbt-map/data` and `mbt-map/geodesic` functions takes `workerUrl`, `wasmUrl` and the URLs of the extra wasm files (`geometryWasmUrl`, `projWasmUrl`, `xmlUrl`, …); the worker starts with the options of the first call.
+- The last argument of `mbt-map/table`, `mbt-map/analysis`, `mbt-map/data` and `mbt-map/geodesic` functions takes `workerUrl`, `wasmUrl` and the URLs of the extra wasm files (`geometryWasmUrl`, `projWasmUrl`, `xmlUrl`, …); the worker starts with the options of the first call.
 
 A worker given by `workerUrl` imports its parts from beside itself (`worker.js` needs `worker-labels.js`, `worker-pmtiles.js` and `worker-query.js`; `data-worker.js` its `data-*.js`; `analysis-worker.js` needs `analysis-viewshed.js`), so copy them together. Workers given as options must come over http(s) from the page's origin or from the library's own folder (on a CDN), and wasm from an http(s) URL; `data:` and `blob:` URLs given as options are refused. Only the library's own default workers may be where a bundler put them, a `data:` URL included.
 

@@ -4,7 +4,7 @@
 import { hostNumber, hostText, MAX_INPUT_BYTES, writeInput } from "../../wasmio/js/host.mjs";
 import { readCapped } from "../../worker/js/body.mjs";
 import { checkImageSize, decodeImage } from "../../worker/js/imagesize.mjs";
-import { tableToGeoJSON } from "../../wasmio/js/table.mjs";
+import { stringList, tableToGeoJSON } from "../../wasmio/js/table.mjs";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -44,7 +44,7 @@ const i32sOf = (exports, n) => new Int32Array(outputOf(exports, checked(exports,
 const f64s = (n) => f64sOf(wasm, n);
 const i32s = (n) => i32sOf(wasm, n);
 const tableOf = (id) => outputOf(wasm, counted(wasm.table_out(id)));
-const datasetOf = (id) => ({ dataset: id, features: wasm.feature_count(id) });
+const datasetOf = (id) => ({ dataset: id, features: wasm.feature_count(id), columns: stringList(outputOf(wasm, counted(wasm.columns_out(id)))) });
 // Table bytes kept as a new dataset.
 function stored(bytes) {
   input(bytes);
@@ -367,6 +367,11 @@ const OPS = {
     check(isId(a) && isId(b) && [0, 1, 2, 3].includes(kind));
     return geometryOp([a, b], (g, lenA) => g.overlay(lenA, kind));
   },
+  // The dataset's Table bytes, for the data worker to write.
+  table({ dataset }) {
+    check(isId(dataset));
+    return tableOf(dataset).buffer;
+  },
   async toGeoJSON({ dataset, crs }) {
     check(isId(dataset) && (crs === undefined || isCrs(crs)));
     if (isLonLat(crs)) return tableToGeoJSON(tableOf(dataset));
@@ -394,7 +399,7 @@ async function run(msg) {
   if (!ready || !Object.hasOwn(OPS, msg.op)) throw new Error("unknown call");
   await ready;
   const value = await OPS[msg.op](msg);
-  const transfer = ArrayBuffer.isView(value) ? [value.buffer] : [];
+  const transfer = ArrayBuffer.isView(value) ? [value.buffer] : value instanceof ArrayBuffer ? [value] : [];
   postMessage({ type: "result", id: msg.id, value }, transfer);
 }
 

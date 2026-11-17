@@ -125,18 +125,28 @@
       "budget": 57000
     },
     {
-      "name": "mbt-map/analysis",
-      "bytes": 8739,
+      "name": "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)",
+      "bytes": 1749,
+      "budget": 2000
+    },
+    {
+      "name": "mbt-map/table",
+      "bytes": 6234,
       "budget": 9000
     },
     {
-      "name": "PROJ strings (loaded by mbt-map/analysis and mbt-map/data on the first one)",
+      "name": "mbt-map/analysis",
+      "bytes": 5316,
+      "budget": 6000
+    },
+    {
+      "name": "PROJ strings (loaded by mbt-map/table and mbt-map/analysis on the first one)",
       "bytes": 2742,
       "budget": 5000
     },
     {
       "name": "analysis worker",
-      "bytes": 30351,
+      "bytes": 30637,
       "budget": 31000
     },
     {
@@ -211,8 +221,8 @@
     },
     {
       "name": "mbt-map/data",
-      "bytes": 5140,
-      "budget": 6000
+      "bytes": 1435,
+      "budget": 2000
     },
     {
       "name": "data worker",

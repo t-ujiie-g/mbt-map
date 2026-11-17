@@ -84,10 +84,10 @@ test("the DEM grid's limit is analysis_worker/dem.mbt's", () => {
   assert.equal(jsConsts("../../npm/src/dem-zoom.ts").MAX_GRID_SIDE, MAX_GRID_SIDE);
 });
 
-test("mbt-map/analysis names measures as analysis_worker/datasets.mbt numbers them", () => {
+test("mbt-map/table names measures as analysis_worker/datasets.mbt numbers them", () => {
   const moon = moonConsts("../../analysis_worker/datasets.mbt");
-  const line = source("../../npm/src/analysis.ts").match(/^const MEASURE = \{([^}]*)\} as const;$/m);
-  assert.ok(line, "MEASURE not found in npm/src/analysis.ts");
+  const line = source("../../npm/src/table.ts").match(/^const MEASURE = \{([^}]*)\} as const;$/m);
+  assert.ok(line, "MEASURE not found in npm/src/table.ts");
   const entries = line[1].split(",").map((entry) => entry.split(":").map((part) => part.trim()));
   assert.equal(entries.length, Object.keys(moon).filter((name) => name.startsWith("MEASURE_")).length);
   for (const [name, value] of entries) assert.equal(Number(value), moon[`MEASURE_${name.toUpperCase()}`], name);

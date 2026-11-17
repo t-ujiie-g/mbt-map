@@ -4,4 +4,5 @@ export interface TableFeatureCollection {
 }
 export function tableToGeoJSON(buffer: ArrayBuffer | ArrayBufferView): TableFeatureCollection;
 export function withIds(fc: TableFeatureCollection, ids: ArrayBuffer | ArrayBufferView): TableFeatureCollection;
+export function stringList(buffer: ArrayBuffer | ArrayBufferView): string[];
 export function tableInfo(buffer: ArrayBuffer | ArrayBufferView): { length: number; columns: string[] };

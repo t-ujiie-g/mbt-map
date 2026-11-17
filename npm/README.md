@@ -37,8 +37,9 @@ Styles follow the MapLibre style specification and the `Map` API is shaped like 
 | `mbt-map/search` | geographic search |
 | `mbt-map/draw` | drawing and editing |
 | `mbt-map/geodesic` | distances, areas and circles on the WGS 84 ellipsoid |
-| `mbt-map/data` | reading and writing GIS data |
-| `mbt-map/analysis` | spatial analysis and coordinate systems |
+| `mbt-map/table` | tables of features: reading and writing GIS data, spatial analysis |
+| `mbt-map/data` | GeoTIFF and COG pixels and tiles |
+| `mbt-map/analysis` | elevation grids, coordinate systems, class breaks |
 | `mbt-map/services` | GIS web services |
 | `mbt-map/3d` | 3D models, 3D Tiles, I3S and point clouds |
 | `mbt-map/moonbit` | the entry the MoonBit API (`t-ujiie-g/mbtmap` on mooncakes) imports |

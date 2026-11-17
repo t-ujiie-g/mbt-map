@@ -55,6 +55,20 @@ pub fn feature_count(id : Int32) -> Int32 {
 }
 
 ///|
+/// Writes dataset `id`'s property keys at `output_addr`, a u32 count and then each as a u32 byte
+/// length and UTF-8; returns the length, or -1 for an unknown dataset (-2 without memory).
+#export_name("columns_out")
+pub fn columns_out(id : Int32) -> Int32 {
+  guard datasets.get(id) is Some(d) else { return -1 }
+  let w = @core.ByteWriter::new()
+  w.u32(d.table.columns.length())
+  for c in d.table.columns {
+    w.utf8(c.name)
+  }
+  @wasmio.write_bytes(w.to_bytes()[:])
+}
+
+///|
 /// Frees dataset or grid `id`.
 #export_name("dispose")
 pub fn dispose(id : Int32) -> Unit {

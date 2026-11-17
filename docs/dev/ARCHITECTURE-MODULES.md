@@ -115,7 +115,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). The entry points 
 ### CSV, WKT, WKB, shapefiles and TopoJSON
 
 - Data reading (`mbt-map/data`, its own entry, worker and wasm; Phase 17): `formats` reads CSV (RFC 4180; papaparse's delimiter guess, header renaming and `dynamicTyping`; points from latitude/longitude columns, 緯度/経度 included, or a WKT / hex WKB column found by name), WKT/EWKT and WKB/EWKB/hex into a `@geom.Table` (collections flattened, Z/M dropped).
-- `data_worker` outputs Table bytes, which `wasmio/js/table.mjs` decodes, and `npm/src/data.ts` wraps them in a `DataTable` (`toGeoJSON` for a GeoJSON source, `tableBytes` for `mbt-map/analysis`'s `load`, which checks the shape so analysis never imports data; `layer` / `layers` for shapefiles in a zip and TopoJSON objects).
+- `data_worker` outputs Table bytes, which `wasmio/js/table.mjs` decodes, and `npm/src/table.ts` wraps them in a `Table` (the bytes stay on the page for `toGeoJSON` until the first operation transfers them to the analysis worker; `layer` / `layers` for shapefiles in a zip and TopoJSON objects).
 - `formats` also reads shapefiles (`read_shapefile`: clockwise rings outer, holes to the smallest outer ring containing them, written counter-clockwise; DBF text through a host `decode` callback by `.cpg`, language driver or option; deleted records skipped; dates as `YYYY-MM-DD`) and TopoJSON (`read_topojson`, topojson-client's `feature`).
 - The WKT/WKB/CSV readers report each row's SRID (`srids?`), and the worker takes rows to 4326 through proj.wasm, loaded on first use (`data_worker/js/crs.mjs` → `data-crs.js`; f64 pairs per CRS, never per point; an explicit SRID wins, then `crs`, then the `.prj`).
 - `.prj` WKT1 is read by `npm/src/prjwkt.ts` (a wkt-parser port, imported by the worker only for a `.prj`) and zips by `npm/src/zip.ts` (`data-zip.js`: central directory, stored and `DecompressionStream` deflate, caps on entries and the inflated total).
@@ -162,7 +162,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). The entry points 
 
 - Analysis (`mbt-map/analysis`, its own entry, worker and wasm; never imported by `map` or the facade): `analysis` is pure MoonBit (a flatbush port `Index`, measures and `contains_point` matching Turf.js bit for bit given the host's `Math`, `points_within`, `collect`, `grid_count`).
 - `analysis_worker` keeps datasets by handle with their index built on first use.
-- `npm/src/analysis.ts` is the Promise API (`load` → `Dataset`).
+- `npm/src/table.ts` (`mbt-map/table`) is the Promise API of tables: `read` / `parse` / `write` through the data worker, `fromGeoJSON` and a `Table`'s operations through the analysis worker. A `Table` is its rows on the page (as read) or a handle to them in the analysis worker; results come back with their row count and column names (`columns_out`). `npm/src/analysis.ts` keeps grids, transforms and class breaks, `npm/src/data.ts` rasters. The three load `clients.js` (`npm/src/clients.ts`: one `WorkerClient` per worker and `defineCrs`'s names), so a page has one data and one analysis worker whichever entries it imports.
 - `npm run analysis:golden` must stay all identical.
 
 ### Spatial relations

@@ -10,7 +10,7 @@ export async function dataChecks(page, requests) {
   const startup = names();
   const [x, y] = proj4("EPSG:4326", "EPSG:6677", [139.7671, 35.6812]); // as pack-fixtures.mjs defines it
   const r = await page.evaluate(async ([x, y]) => {
-    const { read, parse } = await import("mbt-map/data");
+    const { read, parse } = await import("mbt-map/table");
     const map = window.__map;
     const drawn = (await map.queryRenderedFeatures({ layers: ["stations"] })).length;
     const linesDrawn = (await map.queryRenderedFeatures({ layers: ["lines"] })).length;
@@ -25,11 +25,11 @@ export async function dataChecks(page, requests) {
       ...window.__data,
       drawn,
       linesDrawn,
-      file: file.toGeoJSON().features.map((f) => f.geometry.type),
-      wkb: wkb.toGeoJSON().features[0].geometry.coordinates,
-      hex: hex.toGeoJSON().features[0].geometry.coordinates,
-      tsv: [tsv.columns, tsv.toGeoJSON().features[0].geometry.coordinates],
-      plane: plane.toGeoJSON().features.map((f) => f.geometry.coordinates),
+      file: (await file.toGeoJSON()).features.map((f) => f.geometry.type),
+      wkb: (await wkb.toGeoJSON()).features[0].geometry.coordinates,
+      hex: (await hex.toGeoJSON()).features[0].geometry.coordinates,
+      tsv: [tsv.columns, (await tsv.toGeoJSON()).features[0].geometry.coordinates],
+      plane: (await plane.toGeoJSON()).features.map((f) => f.geometry.coordinates),
       bytesKept: bytes.length,
       refused: await fail(read("data:text/csv,a,b")),
       noFormat: await fail(read(new Uint8Array([1]))),
@@ -41,10 +41,10 @@ export async function dataChecks(page, requests) {
   }, [x, y]);
   const afterPlane = names();
   const z = await page.evaluate(async () => {
-    const { read } = await import("mbt-map/data");
+    const { read } = await import("mbt-map/table");
     const map = window.__map;
     const wards = await read("./wards.zip");
-    map.addSource("wards", { type: "geojson", data: wards.toGeoJSON() });
+    map.addSource("wards", { type: "geojson", data: (await wards.toGeoJSON()) });
     map.addLayer({ id: "wards", type: "fill", source: "wards", paint: { "fill-color": "#9333ea", "fill-opacity": 0.4 } }, "stations");
     await map.once("idle");
     const drawn = (await map.queryRenderedFeatures({ layers: ["wards"] })).length;
@@ -54,11 +54,11 @@ export async function dataChecks(page, requests) {
     const looseFiles = await read(await Promise.all(["wards.shp", "wards.dbf", "wards.prj", "wards.cpg"].map(fetched)));
     const byCrs = await read({ shp: "./wards.shp", dbf: "./wards.dbf" }, { crs: "EPSG:6677", encoding: "shift_jis" });
     const fail = (p) => p.then(() => "", (e) => e.message);
-    const summary = (t) => ({ length: t.length, columns: t.columns, layer: t.layer, layers: t.layers, features: t.toGeoJSON().features });
+    const summary = async (t) => ({ length: t.length, columns: t.columns, layer: t.layer, layers: t.layers, features: (await t.toGeoJSON()).features });
     return {
       drawn,
-      wards: summary(wards),
-      same: [asFile, shpUrl, looseFiles, byCrs].map((t) => JSON.stringify(t.toGeoJSON()) === JSON.stringify(wards.toGeoJSON())),
+      wards: await summary(wards),
+      same: await Promise.all([asFile, shpUrl, looseFiles, byCrs].map(async (t) => JSON.stringify(await t.toGeoJSON()) === JSON.stringify(await wards.toGeoJSON()))),
       encrypted: await fail(read("./encrypted.zip")),
       bomb: await fail(read("./bomb.zip")),
       noLayer: await fail(read("./wards.zip", { layer: "nope" })),
@@ -70,7 +70,7 @@ export async function dataChecks(page, requests) {
   const sameRings = (got, want) => got.length === want.length && got.every((ring, i) => ring.length === want[i].length && ring.every((p, j) => near(p[0], want[i][j][0]) && near(p[1], want[i][j][1])));
   const wardFeatures = z.wards.features;
   const ok =
-    ["data.js", "data-worker.js", "data.wasm", "stations.csv", "lines.topojson"].every((n) => startup.includes(n)) &&
+    ["table.js", "clients.js", "data-worker.js", "data.wasm", "stations.csv", "lines.topojson"].every((n) => startup.includes(n)) &&
     !["proj.wasm", "prjwkt.js", "data-zip.js", "data-crs.js", "xml.wasm"].some((n) => startup.includes(n)) &&
     ["proj.wasm", "data-crs.js"].every((n) => afterPlane.includes(n)) && !["prjwkt.js", "data-zip.js", "xml.wasm"].some((n) => afterPlane.includes(n)) &&
     ["prjwkt.js", "data-zip.js", "wards.zip", "wards.shp", "wards.dbf", "wards.prj", "wards.cpg"].every((n) => loaded.includes(n)) &&
@@ -81,6 +81,8 @@ export async function dataChecks(page, requests) {
     r.features[3].properties.乗降客数 === null && r.features[4].geometry === null &&
     r.area === "Polygon" &&
     JSON.stringify(r.datasets) === JSON.stringify([5, 1]) &&
+    r.moved === true &&
+    JSON.stringify(r.derived) === JSON.stringify([5, ["名前", "緯度", "経度", "乗降客数", "備考"], null]) &&
     JSON.stringify(r.inside) === JSON.stringify([0, 1, 3]) &&
     r.drawn === 4 &&
     r.linesDrawn > 0 &&
@@ -111,7 +113,7 @@ export async function dataChecks(page, requests) {
   // of them only, and a KML is drawn.
   const xmlBefore = requests.filter((u) => u.endsWith("/xml.wasm")).length;
   const k = await page.evaluate(async () => {
-    const { read, parse } = await import("mbt-map/data");
+    const { read, parse } = await import("mbt-map/table");
     const map = window.__map;
     const kml = await read("./places.kml");
     const text = await (await fetch("./places.kml")).text();
@@ -152,23 +154,23 @@ export async function dataChecks(page, requests) {
     const kmz = await read(new File([zip([["files/icon.png", new Uint8Array(8), 0], ["doc.kml", deflated, 8, new TextEncoder().encode(text).length]])], "places.kmz"));
     const gpx = await read("./walk.gpx");
     const parsed = await parse("<gpx><wpt lat='1' lon='2'><name>a</name></wpt></gpx>", { format: "gpx" });
-    map.addSource("kml", { type: "geojson", data: kml.toGeoJSON() });
+    map.addSource("kml", { type: "geojson", data: (await kml.toGeoJSON()) });
     map.addLayer({ id: "kml-points", type: "circle", source: "kml", filter: ["==", ["geometry-type"], "Point"], paint: { "circle-radius": 5, "circle-color": "#2e7d32" } });
     map.addLayer({ id: "kml-lines", type: "line", source: "kml", paint: { "line-color": ["coalesce", ["get", "stroke"], "#000"], "line-width": 3 } });
     await map.once("idle");
     const fail = (p) => p.then(() => "", (e) => e.message);
-    const props = (t) => t.toGeoJSON().features.map((f) => f.properties);
+    const props = async (t) => (await t.toGeoJSON()).features.map((f) => f.properties);
     return {
-      kml: kml.toGeoJSON().features.map((f) => [f.geometry.type, f.properties.name]),
-      ids: kml.toGeoJSON().features.map((f) => f.id ?? null),
-      styles: props(kml).map((p) => [p.styleUrl, p.icon ?? p.stroke]),
-      extended: props(kml)[0].備考,
-      description: JSON.parse(props(kml)[0].description).value,
+      kml: (await kml.toGeoJSON()).features.map((f) => [f.geometry.type, f.properties.name]),
+      ids: (await kml.toGeoJSON()).features.map((f) => f.id ?? null),
+      styles: (await props(kml)).map((p) => [p.styleUrl, p.icon ?? p.stroke]),
+      extended: (await props(kml))[0].備考,
+      description: JSON.parse((await props(kml))[0].description).value,
       file: file.length,
-      kmz: JSON.stringify(kmz.toGeoJSON()) === JSON.stringify(kml.toGeoJSON()),
-      gpx: gpx.toGeoJSON().features.map((f) => [f.geometry.type, f.properties.name, f.properties._gpxType ?? null]),
-      heart: JSON.parse(props(gpx)[0].coordinateProperties).heart,
-      parsed: parsed.toGeoJSON().features[0].geometry.coordinates,
+      kmz: JSON.stringify((await kmz.toGeoJSON())) === JSON.stringify((await kml.toGeoJSON())),
+      gpx: (await gpx.toGeoJSON()).features.map((f) => [f.geometry.type, f.properties.name, f.properties._gpxType ?? null]),
+      heart: JSON.parse((await props(gpx))[0].coordinateProperties).heart,
+      parsed: (await parsed.toGeoJSON()).features[0].geometry.coordinates,
       drawn: [...new Set((await map.queryRenderedFeatures({ layers: ["kml-points", "kml-lines"] })).map((f) => `${f.layer.id} ${f.properties.name}`))],
       malformed: await fail(parse("<kml><Placemark></kml>", { format: "kml" })),
       badKmz: await fail(read(new File([zip([["a.png", new Uint8Array(4), 0]])], "x.kmz"))),
@@ -194,15 +196,15 @@ export async function dataChecks(page, requests) {
   // data-fgb.js is fetched with the first read only.
   const fgbBefore = requests.filter((u) => u.endsWith("/data-fgb.js")).length;
   const g = await page.evaluate(async () => {
-    const { read } = await import("mbt-map/data");
+    const { read } = await import("mbt-map/table");
     const bbox = [139.766, 35.68, 139.775, 35.683];
-    const rows = (t) => t.toGeoJSON().features.map((f) => [f.id, f.properties.名前, f.properties.番号]);
+    const rows = async (t) => (await t.toGeoJSON()).features.map((f) => [f.id, f.properties.名前, f.properties.番号]);
     const fail = (p) => p.then(() => "", (e) => e.message);
     const bytes = await (await fetch("./stations.fgb")).arrayBuffer();
     return {
-      all: rows(await read("./stations.fgb")),
-      near: rows(await read("./stations.fgb", { bbox })),
-      fromBytes: rows(await read(bytes, { format: "flatgeobuf", bbox })),
+      all: await rows(await read("./stations.fgb")),
+      near: await rows(await read("./stations.fgb", { bbox })),
+      fromBytes: await rows(await read(bytes, { format: "flatgeobuf", bbox })),
       badBbox: await fail(read("./stations.fgb", { bbox: [1, 2, 0, 3] })),
       csvBbox: await fail(read("./stations.csv", { bbox })),
     };
@@ -216,7 +218,7 @@ export async function dataChecks(page, requests) {
     /invalid bbox/.test(g.badBbox) && /bbox is for FlatGeobuf/.test(g.csvBbox);
   // Writing: a DataTable as GeoJSON, CSV and KML, a GeoJSON object as KML, each read back.
   const w = await page.evaluate(async () => {
-    const { read, parse, write } = await import("mbt-map/data");
+    const { read, parse, write } = await import("mbt-map/table");
     const stations = await read("./stations.csv");
     const drawn = {
       type: "FeatureCollection",
@@ -234,13 +236,13 @@ export async function dataChecks(page, requests) {
     const kmlBack = await parse(kml, { format: "kml" });
     const read2 = await parse(JSON.stringify(drawn), { format: "geojson" });
     return {
-      geojson: geojson === JSON.stringify(stations.toGeoJSON()),
+      geojson: geojson === JSON.stringify((await stations.toGeoJSON())),
       csvHead: csv.split("\r\n")[0],
       csvRows: back.length,
-      csvSame: JSON.stringify(back.toGeoJSON().features.map((f) => f.geometry)) === JSON.stringify(stations.toGeoJSON().features.map((f) => f.geometry)),
-      kmlNames: kmlBack.toGeoJSON().features.map((f) => [f.id ?? null, f.properties.name, f.geometry.type]),
+      csvSame: JSON.stringify((await back.toGeoJSON()).features.map((f) => f.geometry)) === JSON.stringify((await stations.toGeoJSON()).features.map((f) => f.geometry)),
+      kmlNames: (await kmlBack.toGeoJSON()).features.map((f) => [f.id ?? null, f.properties.name, f.geometry.type]),
       wktHead: wkt.split("\r\n")[0],
-      geojsonIds: read2.toGeoJSON().features.map((f) => f.id ?? null),
+      geojsonIds: (await read2.toGeoJSON()).features.map((f) => f.id ?? null),
       badFormat: await fail(write(stations, { format: "shp" })),
       lonlat: await fail(write(drawn, { format: "csv", geometryFormat: "lonlat" })),
     };

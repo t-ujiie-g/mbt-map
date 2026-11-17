@@ -26,8 +26,8 @@ Documentation, examples and a live demo: **<https://t-ujiie-g.github.io/mbt-map/
 ## What it does
 
 - **Maps**: vector tiles, raster and terrain tiles, GeoJSON (clustering, live updates), PMTiles, images and video; styles in the MapLibre style specification, labels and icons, 3D terrain, sky, globe view, extruded buildings, lights and shadows. The `Map` API is shaped like MapLibre GL JS's.
-- **Data** (`mbt-map/data`): read CSV, WKT/WKB, GeoJSON, Shapefile, TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoTIFF/COG; write GeoJSON, CSV and KML; reproject between coordinate systems, Japan's plane rectangular systems included.
-- **Analysis** (`mbt-map/analysis`): measures, spatial indexes and relations, buffers and overlays, simplification, hulls, Voronoi diagrams, interpolation, contours, clustering, routing, classification, terrain slope and viewsheds.
+- **Data** (`mbt-map/table`, `mbt-map/data`): read CSV, WKT/WKB, GeoJSON, Shapefile, TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoTIFF/COG; write GeoJSON, CSV and KML; reproject between coordinate systems, Japan's plane rectangular systems included.
+- **Analysis** (`mbt-map/table`, `mbt-map/analysis`): measures, spatial indexes and relations, buffers and overlays, simplification, hulls, Voronoi diagrams, interpolation, contours, clustering, routing, classification, terrain slope and viewsheds.
 - **Web services** (`mbt-map/services`): WMS, WMTS, WFS, OGC API and ArcGIS REST layers as map sources and features.
 - **3D** (`mbt-map/3d`): glTF models, 3D Tiles, I3S scene layers and LAS point clouds, with picking, lines of sight, viewsheds and clipping.
 - **Tools**: headless UI controllers (`mbt-map/ui`: scale, legend, layer list, measurement, attribute table, …), search (`mbt-map/search`), drawing and editing (`mbt-map/draw`), measurement on the ellipsoid (`mbt-map/geodesic`).
@@ -72,8 +72,9 @@ moon add t-ujiie-g/mbtmap_rabbita    # rabbita binding
 | `mbt-map/search` | geographic search |
 | `mbt-map/draw` | drawing and editing |
 | `mbt-map/geodesic` | distances, areas and circles on the WGS 84 ellipsoid |
-| `mbt-map/data` | reading and writing GIS data |
-| `mbt-map/analysis` | spatial analysis and coordinate systems |
+| `mbt-map/table` | tables of features: reading and writing GIS data, spatial analysis |
+| `mbt-map/data` | GeoTIFF and COG pixels and tiles |
+| `mbt-map/analysis` | elevation grids, coordinate systems, class breaks |
 | `mbt-map/services` | GIS web services |
 | `mbt-map/3d` | 3D models, 3D Tiles, I3S and point clouds |
 

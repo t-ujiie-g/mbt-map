@@ -1,5 +1,5 @@
 import { Map } from "mbt-map";
-import { parse, read } from "mbt-map/data";
+import { parse, read } from "mbt-map/table";
 
 const PLACES = `name,lat,lon,opened
 Tokyo Station,35.6812,139.7671,1914
@@ -58,7 +58,7 @@ async function show(reading, name) {
   status.textContent = `Reading ${name}…`;
   try {
     const table = await reading;
-    const data = table.toGeoJSON();
+    const data = await table.toGeoJSON();
     map.getSource("data").setData(data);
     const box = bounds(data);
     if (box) map.fitBounds(box, { padding: 60, maxZoom: 15 });

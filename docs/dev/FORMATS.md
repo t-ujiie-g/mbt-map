@@ -485,7 +485,7 @@ In:
 - `{type: "call", id, op, ...}`, run one after another in arrival order. `op` and its arguments
   (no argument may be named `op`):
   - `load` with `url` (fetched without credentials), `bytes` (GeoJSON as UTF-8) or
-    `table` (an ArrayBuffer of "Table" bytes, as mbt-map/data reads them; `load_table`),
+    `table` (an ArrayBuffer of "Table" bytes, as the data worker reads them; `load_table`),
     and `crs` (of its coordinates; anything but 4326 is transformed to 4326 by
     the coordinate system module, which every other call then assumes). A
     `crs` is an EPSG code or a Float64Array "CRS definition";
@@ -533,13 +533,15 @@ In:
     dist, location, index, multiFeatureIndex; NaN without lines);
   - `toGeoJSON` (`dataset`, `crs`): its Table bytes, transformed to `crs` when
     given, decoded into a FeatureCollection (`wasmio/js/table.mjs`);
+  - `table` (`dataset`): its Table bytes, for the data worker's `write`;
   - `transform` (`coords` an ArrayBuffer of f64 x, y pairs, `from`, `to`): the
     pairs in `to`, NaN where a point is out of the projection's reach.
 
 Out:
 
-- `{type: "result", id, value}`: `{dataset, features}` for `load` and the geometry
-  calls, a FeatureCollection for `toGeoJSON`, `{grid, width, height, bounds}` for
+- `{type: "result", id, value}`: `{dataset, features, columns}` (the row count and the property
+  keys, `columns_out`) for `load` and the calls giving a dataset, a FeatureCollection for `toGeoJSON`,
+  an ArrayBuffer for `table`, `{grid, width, height, bounds}` for
   `loadDem` (`bounds` west, south, east, north of the tiles mosaicked), null for
   `dispose`, a Uint8Array for `gridHillshade`, else a Float64Array or Int32Array
   (transferred). `collect` gives count, numeric count and sum per polygon.
