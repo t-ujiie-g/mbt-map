@@ -2,6 +2,8 @@
 // what the data worker's `read` and `write` do for the formats `arrow` and `parquet`, loaded with the first of them.
 
 const decoder = new TextDecoder();
+// `MAX_ARROW_INFLATED` (formats/arrow.mbt): the most one input's compressed parts may inflate to.
+const MAX_INFLATED = 2 ** 30;
 
 function parsed(text) {
   try {
@@ -75,6 +77,10 @@ export async function readParquet(wasm, data, options, { writeInput, output }) {
   const pages = new Int32Array(output(wasm, count < 0 ? count : count * 4));
   if (pages.length > 0) {
     const parts = [data];
+    // The wasm lists no more than it would take; checked again before anything is allocated.
+    let total = 0;
+    for (let i = 2; i < pages.length; i += 3) total += pages[i] >= 0 ? pages[i] : Infinity;
+    if (total > MAX_INFLATED) throw new Error("GZIP pages that inflate past 1 GB");
     for (let i = 0; i < pages.length; i += 3) {
       const inflated = await gunzip(data.subarray(pages[i], pages[i] + pages[i + 1]), pages[i + 2]);
       parts.push(new Uint8Array(Uint32Array.of(inflated.length).buffer), inflated);

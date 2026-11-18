@@ -1073,6 +1073,12 @@ fn ParquetReader::column(
     let packed = chunk.codec != 0 && (page.kind != 3 || page.packed)
     if self.wanted is Some(wanted) {
       if packed && chunk.codec == 2 {
+        // Charged here too: the host allocates what a page says it inflates to.
+        let size = (page.uncompressed - levels).to_int64()
+        guard size <= self.budget else {
+          return Err("pages that inflate past \{MAX_ARROW_INFLATED} bytes")
+        }
+        self.budget -= size
         wanted.push(body_at + levels)
         wanted.push(body.length() - levels)
         wanted.push(page.uncompressed - levels)

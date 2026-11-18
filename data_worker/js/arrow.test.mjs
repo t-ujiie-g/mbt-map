@@ -82,6 +82,8 @@ test("readParquet: GZIP pages are inflated to the size the wasm says and follow 
   assert.equal(seen.length, 2);
   assert.deepEqual(seen[1].map((p) => Array.from(p)), [Array.from(data), [5, 0, 0, 0], [1, 2, 3, 4, 5]]);
   await assert.rejects(run(4), /larger than its header says/);
+  await assert.rejects(run(2 ** 30 + 1), /inflate past 1 GB/);
+  await assert.rejects(run(-1), /inflate past 1 GB/);
   await assert.rejects(run(6), /smaller than its header says/);
 });
 

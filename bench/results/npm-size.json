@@ -231,7 +231,7 @@
     },
     {
       "name": "data worker",
-      "bytes": 40835,
+      "bytes": 40829,
       "budget": 41000
     },
     {
@@ -266,12 +266,12 @@
     },
     {
       "name": "Arrow IPC (loaded by the data worker on the first Arrow read or write)",
-      "bytes": 29206,
+      "bytes": 29268,
       "budget": 30000
     },
     {
       "name": "Parquet (loaded by the data worker on the first Parquet read, with data-arrow.js)",
-      "bytes": 22896,
+      "bytes": 22920,
       "budget": 24000
     },
     {

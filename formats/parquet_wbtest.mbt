@@ -98,3 +98,35 @@ test "Thrift reads the compact protocol's integers, lists and nested structs, an
   deep.fields((_, kind) => deep.skip(kind))
   assert_true(deep.bad)
 }
+
+///|
+test "listing GZIP pages charges what they say they inflate to" {
+  // A chunk of two GZIP pages of 3 bytes that each claim about 600 MB: the second passes 1 GB.
+  let header : Bytes = b"\x15\x00\x15\x80\x8c\x9b\xbc\x04\x15\x06\x2c\x15\x02\x15\x00\x15\x00\x15\x00\x00\x00"
+  let page = header.to_array() + [b'\x01', b'\x02', b'\x03']
+  let file = Bytes::from_array([b'P', b'A', b'R', b'1'] + page + page)
+  let leaf : Leaf = {
+    name: "n",
+    physical: 1,
+    length: 0,
+    optional: false,
+    logical: Plain,
+    flat: true,
+  }
+  let wanted = []
+  let reader : ParquetReader = {
+    bytes: file[:],
+    inflated: [],
+    next_inflated: 0,
+    budget: MAX_ARROW_INFLATED,
+    wanted: Some(wanted),
+  }
+  let chunk : Chunk = {
+    codec: 2,
+    start: 4L,
+    size: (page.length() * 2).to_int64(),
+  }
+  assert_true(reader.column(leaf, chunk, 2) is Err(_))
+  assert_eq(wanted.length(), 3)
+  assert_true(wanted[2] > 536870912)
+}
