@@ -16,6 +16,7 @@ const part = (name) => (typeof parts[name] === "string" ? parts[name] : null);
 const zipModule = () => (part("zip") ? import(part("zip")) : import("../../npm/src/zip.ts"));
 const crsModule = () => (part("crs") ? import(part("crs")) : import("./crs.mjs"));
 const fgbModule = () => (part("fgb") ? import(part("fgb")) : import("./fgb.mjs"));
+const arrowModule = () => (part("arrow") ? import(part("arrow")) : import("./arrow.mjs"));
 const geotiffModule = () => (part("geotiff") ? import(part("geotiff")) : import("./geotiff.mjs"));
 export const reprojectModule = () => (part("reproject") ? import(part("reproject")) : import("./reproject.mjs"));
 // Source images of reprojected tiles kept by URL (decoded), so that neighbouring tiles share them: at most
@@ -139,7 +140,7 @@ export function rasterSource({ bytes, blob, url, init }, max) {
 
 /** A reader over data.wasm (`imports` from `dataImports`): `read`, `write` and `readRaster` as the worker's messages;
  * `proj()`, `prj()`, `xml()` and `geotiff()` load proj.wasm, npm/src/prjwkt.ts, xml.wasm and geotiff.wasm on first use. */
-export function dataReader(wasm, imports, { proj, prj, xml, geotiff }) {
+export function dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow }) {
   async function shapefile(files, options) {
     const { shp, dbf, cpg, prj: prjBytes } = files;
     if (!shp) throw new Error("no .shp");
@@ -205,7 +206,9 @@ export function dataReader(wasm, imports, { proj, prj, xml, geotiff }) {
       const table = output(wasm, wasm.read_geojson());
       return { table, ids: idsOf(wasm), layer: null, layers: [] };
     }
-    if (format === "flatgeobuf") {
+    if (format === "arrow") {
+      result = (await arrowModule()).readArrow(await arrow(), data, options, { writeInput, output });
+    } else if (format === "flatgeobuf") {
       result = await flatgeobuf(parts, options);
     } else if (format === "shapefile") {
       result = data && isZip(data) ? await zip(data, options) : await shapefile(data ? { shp: data } : parts, options);
@@ -247,6 +250,7 @@ export function dataReader(wasm, imports, { proj, prj, xml, geotiff }) {
    */
   async function write(format, table, ids, options) {
     const t = new Uint8Array(table);
+    if (format === "arrow") return (await arrowModule()).writeArrow(await arrow(), t, options, { writeInput, output });
     if (format === "kml") {
       const x = await xml();
       const idBytes = ids ? new Uint8Array(ids) : new Uint8Array(0);

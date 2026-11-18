@@ -722,6 +722,19 @@ export class Table {
     return this.#ids ? withIds(fc, this.#ids) : fc;
   }
 
+  /**
+   * The table as Arrow IPC bytes (Arquero's `toArrowIPC`): a stream, or with `format: "file"` the file format
+   * (Feather). The geometry is a `geoarrow.wkb` column, or with `geometry: "native"` GeoArrow's type for the rows'
+   * kind (rejects for rows of mixed kinds); docs/data.md has the columns' types. Feature ids are not written.
+   */
+  async toArrowIPC(options: DataOptions & { format?: "stream" | "file"; geometry?: "wkb" | "native" } = {}): Promise<Uint8Array> {
+    const { format = "stream", geometry = "wkb" } = options;
+    if (!["stream", "file"].includes(format) || !["wkb", "native"].includes(geometry)) throw new Error("mbt-map: data: invalid Arrow options");
+    const { table } = await this.writeArgs();
+    startData(options);
+    return new Uint8Array(await dataClient.call<ArrayBuffer>("write", { format: "arrow", table, options: { file: format === "file", native: geometry === "native" } }, [table]));
+  }
+
   /** @internal The rows and ids as the data worker's `write` takes them (copies). */
   async writeArgs(): Promise<{ table: ArrayBuffer; ids: ArrayBuffer | null }> {
     if (this.#disposed) throw new Error("mbt-map: analysis: the dataset was disposed");
@@ -764,7 +777,7 @@ export interface ReadOptions extends DataOptions, CsvOptions {
   analysis?: AnalysisOptions;
 }
 
-const FORMATS: DataFormat[] = ["csv", "wkt", "wkb", "shapefile", "topojson", "kml", "gpx", "flatgeobuf", "geojson"];
+const FORMATS: DataFormat[] = ["csv", "wkt", "wkb", "shapefile", "topojson", "kml", "gpx", "flatgeobuf", "geojson", "arrow"];
 
 function formatFor(options: ReadOptions, name: string | null): DataFormat {
   const format = options.format ?? (name === null ? null : formatOf(name));
@@ -827,6 +840,14 @@ export async function read(input: Input | ArrayLike<File> | ShapefileParts<Input
   const single = input as Input;
   const name = typeof single === "string" || single instanceof URL ? new URL(httpUrl(single, document.baseURI, "data: the URL")).pathname : single instanceof File ? single.name : null;
   return reading(formatFor(options, name), sourceOf(single, options, transfer), options, transfer);
+}
+
+/**
+ * An Arrow IPC stream or file (a URL, a Blob or bytes: what DuckDB-WASM, Arquero's `toArrowIPC` or pyarrow give) as a
+ * table, as `read` with `format: "arrow"` (Arquero's `fromArrow`; docs/data.md has the types read).
+ */
+export function fromArrow(input: Input, options: ReadOptions = {}): Promise<Table> {
+  return read(input, { ...options, format: "arrow" });
 }
 
 /** Reads `text` (CSV, WKT, hexadecimal WKB, TopoJSON, KML, GPX or GeoJSON) as `options.format`. */

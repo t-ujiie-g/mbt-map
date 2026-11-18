@@ -1,0 +1,27 @@
+{
+  "apache-arrow": "21.2.0",
+  "wkx": "0.5.0",
+  "tables": 40,
+  "results": {
+    "write": {
+      "cases": 1724,
+      "differ": 0
+    },
+    "round trip": {
+      "cases": 248,
+      "differ": 0
+    },
+    "read": {
+      "cases": 4480,
+      "differ": 0
+    },
+    "damaged": {
+      "cases": 8,
+      "differ": 0
+    },
+    "refused": {
+      "cases": 2,
+      "differ": 0
+    }
+  }
+}

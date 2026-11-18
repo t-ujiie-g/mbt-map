@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.5（Arrow IPC の読み書き：VISION §8「テーブルの段階」）。その後 T.6〜T.8、Phase 21。
+- **次**：テーブルの段階の T.6（GeoParquet の読み込み：VISION §8「テーブルの段階」）。その後 T.7・T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -618,3 +618,21 @@ Where things stand, decisions and open issues. The development history before th
   - テーブルのソースに `updateData` を呼ぶと、黙って空の FeatureCollection に置き換わっていた（断るようにした）。
 - 分かっていること：`setData(table)` の直後に `table.dispose()` を呼ぶと、行を取り寄せる前に破棄されて読み込みが失敗する（`error` イベント。文書に書いた）。`geojson.js` の残りが 5 バイトなので、次にここへ足すときは予算を伺う。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 970、wasm-gc 982、js 1029、native 970：`geojson_tiles` 2 件を足した）、npm のテスト（465：`copy` 1 件）と大きさ、bench のテスト（23）、pack test の `npm,geojson,data,analysis,samples,showcase-html,cdn`（Chromium。data のページは 3 つのソースをテーブルのまま渡し、差し替え・`updateData` の断り・破棄済みのテーブルを見る）。
+
+## テーブルの段階 T.5：Arrow（2026-11-19、Mac）
+
+- 決めたこと（ユーザー判断）：口は `mbt-map/table` に足す（`read` が `.arrow`・`.arrows`・`.feather`、`fromArrow`、`table.toArrowIPC()`）。書くときのジオメトリは `geoarrow.wkb` が既定で、`{ geometry: "native" }` で GeoArrow のネイティブ型。新しい `arrow.wasm` の予算は 30KB で、LZ4 フレームのバッファも読む（ZSTD は断る）。
+- 作り：
+  - 読み（`formats/arrow.mbt`）：IPC のストリームと、ファイル形式（フッターのスキーマとブロックから読む）。FlatBuffers のメタデータは、位置をすべて検査する小さい読み手で読む。列はバッファを入力のビューのまま持ち、行ごとに値を取り出す（辞書、複数のレコードバッチ、辞書の差し替えと追加）。ジオメトリは `geoarrow.wkb`（既存の WKB の読み手）と、ネイティブ型 6 種（座標は並べた形と x・y を分けた形）。拡張型が無いときは、スキーマの `geo` メタデータ（GeoPandas の `to_feather`）か、`geometry` などの名前のバイナリ列。日付と時刻は ISO 8601 の文字列、10 進数は数にする。リスト・構造体などの列は読み飛ばす。
+  - LZ4（`formats/lz4.mbt`）：フレームとブロックの形式の説明から書いた（依存なし、チェックサムは検査しない）。1 つの入力で展開できるのは合計 1GB まで。
+  - 書き（`formats/arrow_write.mbt`）：前へ並べる FlatBuffers の書き手（テーブルの前に vtable、指す先は後ろ）、スキーマ・レコードバッチ 1 つ・終端、ファイル形式ならフッター。列の型はセルから決める（整数が 32 ビットに収まれば Int32、ほかの数は Float64、真偽値、文字列、混ざった列は文字列、値が無ければ Null）。ジオメトリは ISO WKB か、種類が 1 つ（または種類とその Multi）のときのネイティブ型。
+  - CRS：ジオメトリの列のメタデータ（拡張型の `crs`、無ければ `geo` メタデータ）から、JS（`data_worker/js/arrow.mjs`）が EPSG コードを取り出し、データワーカーのいつもの変換（proj.wasm）に渡す。EPSG コードが分からない CRS は `options.crs` を求めて断る。
+  - `arrow_worker`（`arrow.wasm`）と `data-arrow.js` は、データワーカーが初めての Arrow の読み書きで読む（データワーカーは 40.7/41KB で入らない）。
+- 計測（gzip）：`arrow.wasm` 28,312 + `data-arrow.js` 608 = 28,920 バイト（予算 30KB）。データワーカー 40,695 → 40,790（41KB）、`mbt-map/table` 7,913 → 8,057（9KB）、共有の接続 1,762 → 1,783（2KB）。
+- ゴールデン（`arrow:golden`、apache-arrow 21.2.0、種を固定した表 40 個ずつ）：書いたものを apache-arrow で読む 1,724 件（ストリームとファイル、WKB とネイティブ、型と値と拡張メタデータ。WKB は wkx 0.5.0 で読む）、apache-arrow が書いたものを読む 4,480 件（整数 8 種、浮動小数 3 種、真偽値、文字列 2 種、辞書、日付 2 種、時刻 4 種、Null、読み飛ばす 3 種、WKB 3 通りとネイティブ 3 通り、2 バッチ、LZ4）、往復 248 件、壊した入力（途中で切る、バイトを変える：4 つのファイルで各 4,000 回）でトラップなし：0 differ。表 300 個でも 0 differ。
+- pyarrow 23.0.1 での確かめ（手で、この Mac）：こちらが書いた 4 通り（WKB / ネイティブ × ストリーム / ファイル）を `validate(full=True)` つきで読めて、値と型が合う（shapely で WKB も読めた）。pyarrow が GeoPandas と同じ形（WKB、`geo` メタデータに PROJJSON の EPSG:6677、LZ4）で書いた Feather を読めて、経緯度に直る。そのファイルを pack test の data ページの入力にした（`bench/data/feather-fixture.py`）。
+- 分かったこと：apache-arrow（JS）21.2.0 は、圧縮したバッファの先頭 8 バイトに、仕様の「展開後の長さ」でなく圧縮後の長さを書く（`ipc/writer.js` の `_compressBodyBuffers`）。pyarrow は仕様どおり。こちらはこの値を使わず、LZ4 フレームを最後まで展開して長さを得る（上流へは未報告）。apache-arrow（JS）のファイル形式は、メッセージの並びにスキーマを入れない（フッターだけ）。
+- 途中で直したもの：ネイティブの点の列で、点数の上限が効いていなかった（テストで見つけた。点を足す所で数える）。128 ビットの 10 進数の小さい負の値が、上位と下位を足すときに桁落ちして -0 になった（符号を外してから足す）。
+- 依存（`bench` の開発用、配布物には入らない）：apache-arrow 21.2.0（Apache-2.0、導入スクリプトなし）、lz4js 0.2.0（ISC、導入スクリプトなし。apache-arrow に LZ4 で書かせるため。これまでも他の依存の下にあった）。`npm audit` は 0 件。
+- 残したもの：`geoarrow.wkt` の列は読まない。ZSTD で圧縮したバッファは断る。地物の id は書かない。FlatBuffers の読み手が FlatGeobuf 用と Arrow 用の 2 つある（T.8 の点検で寄せるかを見る）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 984、wasm-gc 996、js 1043、native 984：`formats` 14 件を足した）、npm のテスト（469：`arrow.mjs` 4 件）と大きさ、bench のテスト（23）、`data:golden`・`write:golden`（0 differ のまま）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium。data のページで Feather を読み、書いて読み戻し、断り方を見る）。

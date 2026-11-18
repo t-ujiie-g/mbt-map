@@ -3,14 +3,15 @@
 import { wasmUrl, workerParts } from "./urls";
 import { WorkerClient } from "./worker-client";
 
-/** Where the data worker (`workerUrl`), its wasm (`wasmUrl`), proj.wasm (`projWasmUrl`), xml.wasm (`xmlUrl`) and
- * geotiff.wasm (`geotiffUrl`, each loaded on first use) are served; by default next to this module. */
+/** Where the data worker (`workerUrl`), its wasm (`wasmUrl`), proj.wasm (`projWasmUrl`), xml.wasm (`xmlUrl`),
+ * geotiff.wasm (`geotiffUrl`) and arrow.wasm (`arrowUrl`, each loaded on first use) are served; by default next to this module. */
 export interface DataOptions {
   workerUrl?: string | URL;
   wasmUrl?: string | URL;
   projWasmUrl?: string | URL;
   xmlUrl?: string | URL;
   geotiffUrl?: string | URL;
+  arrowUrl?: string | URL;
 }
 
 /**
@@ -46,9 +47,11 @@ export function startData(options: DataOptions): void {
       fgb: new URL("./data-fgb.js", import.meta.url),
       geotiff: new URL("./data-geotiff.js", import.meta.url),
       reproject: new URL("./data-reproject.js", import.meta.url),
+      arrow: new URL("./data-arrow.js", import.meta.url),
     }),
     xml: wasmUrl(options.xmlUrl ?? new URL("./xml.wasm", import.meta.url), page),
     geotiff: wasmUrl(options.geotiffUrl ?? new URL("./geotiff.wasm", import.meta.url), page),
+    arrow: wasmUrl(options.arrowUrl ?? new URL("./arrow.wasm", import.meta.url), page),
   }));
 }
 

@@ -222,6 +222,11 @@ T.4 で決めたこと（2026-11-18、ユーザー判断）：
 T.4b で決めたこと（2026-11-18、ユーザー判断）：
 - テーブルは GeoJSON ワーカーがバイト列のまま読む。予算は GeoJSON ワーカー 37 → 39KB、式つきの版 57 → 59KB（計測：38,309 と 57,774 バイト）。
 
+T.5 で決めたこと（2026-11-19、ユーザー判断）：
+- 口は `mbt-map/table` に足す：`read` が `.arrow`・`.arrows`・`.feather` を読み、`fromArrow(bytes)` と `table.toArrowIPC()`（Arquero の名前）。
+- 書くときのジオメトリは `geoarrow.wkb` が既定、`{ geometry: "native" }` で GeoArrow のネイティブ型（種類が混ざる表は断る）。
+- 読み書きは新しい `arrow.wasm`（データワーカーが初めて使うときに読む）。予算 30KB。LZ4 フレームで圧縮したバッファも読む（ZSTD は断る。T.6 で圧縮をどこまで読むかと一緒に伺う）。
+
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。
 - 大きさ：入口と wasm を足すたびに `npm/scripts/size.mjs` に行を足す。表示ワーカーと解析ワーカーには式の評価器を入れない（§4、AGENTS.md §4）。

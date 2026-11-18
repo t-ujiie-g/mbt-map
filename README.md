@@ -26,7 +26,7 @@ Documentation, examples and a live demo: **<https://t-ujiie-g.github.io/mbt-map/
 ## What it does
 
 - **Maps**: vector tiles, raster and terrain tiles, GeoJSON (clustering, live updates), PMTiles, images and video; styles in the MapLibre style specification, labels and icons, 3D terrain, sky, globe view, extruded buildings, lights and shadows. The `Map` API is shaped like MapLibre GL JS's.
-- **Data** (`mbt-map/table`, `mbt-map/data`): read CSV, WKT/WKB, GeoJSON, Shapefile, TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoTIFF/COG; write GeoJSON, CSV and KML; reproject between coordinate systems, Japan's plane rectangular systems included.
+- **Data** (`mbt-map/table`, `mbt-map/data`): read CSV, WKT/WKB, GeoJSON, Shapefile, TopoJSON, KML/KMZ, GPX, FlatGeobuf, Arrow (GeoArrow, Feather) and GeoTIFF/COG; write GeoJSON, CSV, KML and Arrow; reproject between coordinate systems, Japan's plane rectangular systems included.
 - **Analysis** (`mbt-map/table`, `mbt-map/analysis`): measures, spatial indexes and relations, buffers and overlays, simplification, hulls, Voronoi diagrams, interpolation, contours, clustering, routing, classification, terrain slope and viewsheds.
 - **Web services** (`mbt-map/services`): WMS, WMTS, WFS, OGC API and ArcGIS REST layers as map sources and features.
 - **3D** (`mbt-map/3d`): glTF models, 3D Tiles, I3S scene layers and LAS point clouds, with picking, lines of sight, viewsheds and clipping.
