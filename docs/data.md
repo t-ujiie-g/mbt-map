@@ -24,7 +24,7 @@ const csv = await write(stations, { format: "csv" });
 - [Reading](#reading)
 - [`Table`](#table)
 - [Coordinate systems](#coordinate-systems)
-- [Formats](#formats): [CSV](#csv), [WKT and EWKT](#wkt-and-ewkt), [WKB and EWKB](#wkb-and-ewkb), [Shapefile](#shapefile), [TopoJSON](#topojson), [KML and KMZ](#kml-and-kmz), [GPX](#gpx), [FlatGeobuf](#flatgeobuf), [GeoJSON](#geojson)
+- [Formats](#formats): [CSV](#csv), [WKT and EWKT](#wkt-and-ewkt), [WKB and EWKB](#wkb-and-ewkb), [Shapefile](#shapefile), [TopoJSON](#topojson), [KML and KMZ](#kml-and-kmz), [GPX](#gpx), [FlatGeobuf](#flatgeobuf), [GeoJSON](#geojson), [Arrow](#arrow)
 - [Writing](#writing)
 - [GeoTIFF and COG](#geotiff-and-cog)
 - [The `geotiff` style source](#the-geotiff-style-source)
@@ -334,13 +334,55 @@ const table = await read("https://example.com/buildings.fgb", {
 
 Read by the same reader as GeoJSON map sources. A GeometryCollection gives one row per member, and feature `id`s are kept.
 
+### Arrow
+
+```ts
+read(input, { format: "arrow" })                 // also by name: .arrow, .arrows, .feather
+fromArrow(input, options?: ReadOptions): Promise<Table>
+table.toArrowIPC({ format?: "stream" | "file", geometry?: "wkb" | "native" }): Promise<Uint8Array>
+```
+
+Arrow IPC, both the streaming format and the file format (Feather version 2), with [GeoArrow](https://geoarrow.org/)'s geometry columns. It is how tables go to and from DuckDB-WASM, Arquero, pyarrow and GeoPandas as bytes. `fromArrow` is `read` with `format: "arrow"`.
+
+**Reading.** A row per record, over every record batch.
+
+- **Geometry**: the first column with a GeoArrow extension type: `geoarrow.wkb`, or `geoarrow.point`, `linestring`, `polygon`, `multipoint`, `multilinestring` and `multipolygon` with interleaved (`FixedSizeList`) or separated (`Struct` of x, y) coordinates; Z and M are dropped. Without one, the binary column that the schema's `geo` metadata names as its primary column (what GeoPandas' `to_feather` writes), else a binary column named `geometry`, `geom` or `wkb_geometry`, read as WKB. A table without any gives rows without geometry. A WKB GeometryCollection gives one row per member.
+- **CRS**: the column's `crs` (GeoArrow's extension metadata, or the `geo` metadata) when it names an EPSG code, as a string (`"EPSG:6677"`) or as PROJJSON with an `id`; the rows are converted to longitude and latitude. None, `OGC:CRS84` and EPSG:4326 are longitude and latitude. A CRS that names no EPSG code fails unless `options.crs` says what it is.
+- **Columns**: integers of 8 to 64 bits (64-bit ones as numbers, exact up to 2^53), floats of 16 to 64 bits, 128- and 256-bit decimals (as numbers), booleans, strings (`Utf8`, `LargeUtf8`), dictionary-encoded columns of these, and nulls. Dates become `"YYYY-MM-DD"` and timestamps `"YYYY-MM-DDTHH:MM:SS"` (with milliseconds when they have any, and `Z` when the column has a time zone). Lists, structs, maps, unions, binary columns that are not the geometry, times, durations and intervals are left out. A null is `null`.
+- **Compression**: buffers compressed with LZ4 frames are read (pyarrow's and GeoPandas' default for Feather); ZSTD is refused. Checksums are not verified.
+
+**Writing.** `toArrowIPC` gives the bytes of one record batch.
+
+- **Columns** take their type from their cells: 32-bit integers when every number is whole and fits, else doubles; booleans; strings. A column holding more than one of these is written as strings (numbers as JavaScript prints them, `"true"` and `"false"`). A column with no value is Arrow's `Null`. `null` and a missing cell are both null.
+- **Geometry**: a `geoarrow.wkb` column named `geometry` (with `_` added while a property has that name), any mix of kinds. With `geometry: "native"`, GeoArrow's type for the rows' kind, with interleaved x, y: one kind, or a kind and its multi written as the multi (a Polygon among MultiPolygons becomes a MultiPolygon of one). Rows of other mixes reject. A table whose rows have no geometry gets no geometry column.
+- **CRS**: `OGC:CRS84` in the column's extension metadata; the schema's `geo` metadata names the column, so that GeoPandas' `read_feather` finds it.
+- Feature ids are not written, and nothing is compressed.
+
+```js
+import { fromArrow, read } from "mbt-map/table";
+
+const wards = await read("/data/wards.feather");              // written by GeoPandas
+const bytes = await wards.toArrowIPC();                        // an IPC stream
+
+// DuckDB-WASM: the table in, a query's result out
+await connection.insertArrowFromIPCStream(bytes, { name: "wards" });
+const result = await connection.query("SELECT ward, sum(population) AS population FROM wards GROUP BY ward");
+const totals = await fromArrow(arrow.tableToIPC(result));     // rows without geometry
+
+// Arquero
+const frame = aq.fromArrow(bytes);
+const back = await fromArrow(frame.toArrowIPC());
+```
+
+What `toArrowIPC` writes reads back the same in apache-arrow 21.2.0 and in pyarrow, and what they write reads the same here.
+
 ## Writing
 
 ```ts
 write(input: Table | object, options: WriteOptions): Promise<string>
 ```
 
-`input` is a `Table`, or a GeoJSON Feature or FeatureCollection object (read as GeoJSON first). `format` is `"geojson"`, `"csv"` or `"kml"`. The result is a string. To save it, wrap it in `new Blob([text])`.
+`input` is a `Table`, or a GeoJSON Feature or FeatureCollection object (read as GeoJSON first). `format` is `"geojson"`, `"csv"` or `"kml"`. The result is a string. To save it, wrap it in `new Blob([text])`. Arrow is bytes, not text: use [`table.toArrowIPC()`](#arrow).
 
 | Format | Output |
 |---|---|
@@ -458,7 +500,8 @@ map.addSource("temp", {
 | Input size | 256 MB |
 | Points | 20 million |
 | CSV | 4096 fields per row, 16 MB per field |
-| Property cells (rows × columns: CSV, `.dbf`, TopoJSON, FlatGeobuf, KML, GPX) | 32 million |
+| Property cells (rows × columns: CSV, `.dbf`, TopoJSON, FlatGeobuf, KML, GPX, Arrow) | 32 million |
+| Arrow | 65 536 fields nested 32 deep; compressed buffers inflating to 1 GB in all. |
 | Zip | 10 000 entries, 256 MB inflated in total |
 | XML (KML, GPX) | 256 levels deep, 1024 attributes per element, 4 million nodes. KML/GPX feature properties and GPX extension names per track: 4096. |
 | FlatGeobuf | 10 MB header, 4096 columns, 256 MB read with `bbox`. Files that point at the same data repeatedly are refused. |
@@ -477,10 +520,11 @@ The first call starts `data-worker.js` with `data.wasm`. These are fetched on fi
 | `data-zip.js` | reading a zip (Shapefile zip, KMZ) |
 | `xml.wasm` | reading KML or GPX, or writing KML |
 | `data-fgb.js` | reading FlatGeobuf |
+| `arrow.wasm`, `data-arrow.js` | reading or writing Arrow |
 | `geotiff.wasm`, `data-geotiff.js` | calling `readRaster` and the other raster functions |
 | `projstring.js` | a PROJ string is given |
 | `data-reproject.js` | drawing a `reprojected` source's tiles |
 
-By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
+By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`), `arrowUrl` (`arrow.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
 
 `terminate()` stops the worker and rejects pending calls. The next call starts a new one.

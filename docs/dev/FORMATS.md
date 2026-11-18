@@ -725,13 +725,46 @@ FeatureCollection.proto's `FeatureResult`, `@formats.read_esri_pbf`).
 Out: `{type: "result", id, value: {features, exceeded}}`, the GeoJSON features (each with its
 `id` when it has one) and the result's `exceededTransferLimit`, or `{type: "result", id, error}`.
 
+## Arrow (`formats/arrow.mbt`, `formats/arrow_write.mbt`)
+
+Arrow IPC as the columnar format's specification lays it out (encapsulated messages of
+FlatBuffers metadata and a body of buffers; Schema.fbs, Message.fbs and File.fbs name the fields
+read by number). arrow.wasm (`arrow_worker`) exports `read()`, `info_out()` and `write(flags)`.
+
+- Read: a stream's messages in order, or, for a file (`ARROW1` at both ends), the footer's schema
+  and then the messages its dictionary and record batch blocks point to (a writer need not
+  repeat the schema among them). Dictionary batches replace or, with `isDelta`, extend their
+  dictionary. Buffers are taken in the schema's depth-first order: none for `Null`; validity and
+  values for fixed-width types; validity, offsets (32- or 64-bit) and data for strings and bytes;
+  validity and offsets, then the child, for lists; validity, then the children, for fixed-size
+  lists and structs. A record batch with `compression` holds each buffer as 8 bytes (-1: stored as
+  it is; else a length, which writers disagree on and is not used) and an LZ4 frame
+  (`formats/lz4.mbt`); codec 1 (ZSTD) is refused. Big-endian schemas are refused.
+- The geometry column: the first field whose `ARROW:extension:name` is `geoarrow.wkb` (or
+  `ogc.wkb`), `geoarrow.point`, `linestring`, `multipoint`, `polygon`, `multilinestring` or
+  `multipolygon`; else the binary field the schema's `geo` metadata names as `primary_column`;
+  else a binary field named `geometry`, `geom` or `wkb_geometry`. Native types nest 0 to 3 lists
+  over points, a point a fixed-size list of at least two doubles or a struct whose first two
+  children are doubles; a point of NaNs is empty.
+- `info_out()`: three strings (a u32 length and UTF-8 each): the geometry field's name, its
+  `ARROW:extension:metadata` and the schema's `geo` value, from which `data_worker/js/arrow.mjs`
+  takes the CRS (`crsCode`).
+- Write (`flags` bit 0: GeoArrow's native type, bit 1: the file format): a schema message, one
+  record batch, the end-of-stream marker (0xFFFFFFFF, 0), and for a file the magic before and a
+  footer after. Every FlatBuffers table is laid out forward (its vtable before it, what it points
+  to after it). Columns: `Int(32, signed)`, `FloatingPoint(DOUBLE)`, `Bool`, `Utf8` or `Null` by
+  their cells; the geometry `Binary` (ISO WKB, little-endian) or lists over
+  `FixedSizeList<xy: double>[2]`, with `ARROW:extension:name`, `ARROW:extension:metadata`
+  `{"crs":"OGC:CRS84","crs_type":"authority_code"}` and the schema's `geo` metadata.
+
 ## Data worker messages (`data_worker/js/worker.mjs`)
 
-In: `{type: "init", wasm, proj, prj, xml, geotiff, parts?}` (`parts`: the URLs of the files imported on
-first use, `{zip, crs, fgb, geotiff, reproject}`, else those beside the worker; data.wasm instantiated with `{ host: { number,
+In: `{type: "init", wasm, proj, prj, xml, geotiff, arrow, parts?}` (`parts`: the URLs of the files imported on
+first use, `{zip, crs, fgb, geotiff, reproject, arrow}`, else those beside the worker; data.wasm instantiated with `{ host: { number,
 decode, text_code, number_text } }` from `dataImports` in `data_worker/js/read.mjs`; `proj` the URL
 of proj.wasm, `prj` of prjwkt.js, `xml` of xml.wasm, the KML and GPX module `xml_worker` instantiated
-with `{ Math, host }` (`hostText`), and `geotiff` of geotiff.wasm, each loaded on first use), then `{type: "call", id, op: "read",
+with `{ Math, host }` (`hostText`), `geotiff` of geotiff.wasm and `arrow` of arrow.wasm (the same imports as
+xml.wasm), each loaded on first use), then `{type: "call", id, op: "read",
 format, options, ...}` with the data as one of `url` (http(s), fetched with `init`'s string
 `headers` and `credentials`, none sent otherwise), `blob` or `bytes` (an ArrayBuffer), at most
 `MAX_INPUT_BYTES`, or for a shapefile `parts: {shp, dbf?, prj?, cpg?}`, each such a source, or
@@ -739,6 +772,8 @@ format, options, ...}` with the data as one of `url` (http(s), fetched with `ini
 coordinates the data does not tag; refused for KML and GPX, which are EPSG:4326), `layer` (a
 string), `encoding` (a .dbf's, a label or code page), `bbox` (FlatGeobuf only, four finite numbers):
 
+- `format` `"arrow"` ("Arrow"; `data-arrow.js`): arrow.wasm's `read()`, the CRS its geometry
+  column names taking the place of `options.crs`;
 - `format` `"csv"`, with `options` `{delimiter, header, dynamicTyping, latitude, longitude,
   geometry}` (`delimiter` a character code or -1 to guess; the column names optional). The wasm's
   `read_csv(names, delimiter, header, typing)` takes the three names, each ended by a NUL byte

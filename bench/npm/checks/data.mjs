@@ -270,6 +270,46 @@ export async function dataChecks(page, requests) {
     JSON.stringify(g.near) === JSON.stringify([[1, "東京", 2], [2, "日本橋", 3]]) &&
     JSON.stringify(g.fromBytes) === JSON.stringify(g.near) &&
     /invalid bbox/.test(g.badBbox) && /bbox is for FlatGeobuf/.test(g.csvBbox);
+  // Arrow (arrow.wasm and data-arrow.js, fetched with the first read): a Feather file pyarrow wrote as geopandas does
+  // (LZ4, WKB in plane IX), then tables written and read back.
+  const arrowBefore = requests.filter((u) => /\/(arrow\.wasm|data-arrow\.js)$/.test(u)).length;
+  const ar = await page.evaluate(async () => {
+    const { read, fromArrow, fromGeoJSON } = await import("mbt-map/table");
+    const fail = (p) => Promise.resolve(p).then(() => "", (e) => e.message);
+    const rows = async (t) => (await t.toGeoJSON()).features.map((f) => [f.geometry?.type ?? null, f.geometry?.coordinates.flat(3).map((c) => Math.round(c * 1e4) / 1e4) ?? null, f.properties]);
+    const feather = await read("./stations.feather");
+    const mixed = await fromGeoJSON({ type: "FeatureCollection", features: [
+      { type: "Feature", properties: { name: "線", n: 1 }, geometry: { type: "LineString", coordinates: [[139.76, 35.68], [139.77, 35.69]] } },
+      { type: "Feature", properties: { name: "面", n: 2.5 }, geometry: { type: "Polygon", coordinates: [[[139.7, 35.6], [139.8, 35.6], [139.8, 35.7], [139.7, 35.6]]] } },
+      { type: "Feature", properties: { name: null, n: null }, geometry: null },
+    ] });
+    const stream = await mixed.toArrowIPC();
+    const file = await mixed.toArrowIPC({ format: "file" });
+    const points = await feather.select(["name"]);
+    const native = await points.toArrowIPC({ geometry: "native" });
+    return {
+      feather: [feather.format, feather.columns, await rows(feather)],
+      stream: [stream instanceof Uint8Array, await rows(await fromArrow(stream))],
+      file: [new TextDecoder().decode(file.subarray(0, 6)), await rows(await fromArrow(new Blob([file]))), JSON.stringify(await rows(await read(file, { format: "arrow" })))],
+      native: await rows(await fromArrow(native)),
+      mixedNative: await fail(mixed.toArrowIPC({ geometry: "native" })),
+      badOption: await fail(mixed.toArrowIPC({ format: "feather" })),
+      garbage: await fail(fromArrow(new TextEncoder().encode("ARROW1 is not all it takes"))),
+    };
+  });
+  const arrowAfter = requests.filter((u) => /\/(arrow\.wasm|data-arrow\.js)$/.test(u)).length;
+  const mixedRows = [["LineString", [139.76, 35.68, 139.77, 35.69], { name: "線", n: 1 }], ["Polygon", [139.7, 35.6, 139.8, 35.6, 139.8, 35.7, 139.7, 35.6], { name: "面", n: 2.5 }], [null, null, { name: null, n: null }]];
+  const okArrow =
+    arrowBefore === 0 && arrowAfter === 2 &&
+    JSON.stringify(ar.feather) === JSON.stringify(["arrow", ["name", "riders", "opened"], [
+      ["Point", [139.7671, 35.6812], { name: "東京", riders: 462589, opened: "1970-01-01T00:00:00" }],
+      ["Point", [139.763, 35.6751], { name: "有楽町", riders: 169550, opened: "1971-01-01T00:00:00" }],
+      ["Point", [139.7709, 35.6918], { name: "神田", riders: 98560, opened: null }],
+    ]]) &&
+    JSON.stringify(ar.stream) === JSON.stringify([true, mixedRows]) &&
+    ar.file[0] === "ARROW1" && JSON.stringify(ar.file[1]) === JSON.stringify(mixedRows) && ar.file[2] === JSON.stringify(mixedRows) &&
+    JSON.stringify(ar.native) === JSON.stringify([["Point", [139.7671, 35.6812], { name: "東京" }], ["Point", [139.763, 35.6751], { name: "有楽町" }], ["Point", [139.7709, 35.6918], { name: "神田" }]]) &&
+    /mixed geometry types/.test(ar.mixedNative) && /invalid Arrow options/.test(ar.badOption) && /^mbt-map: data: malformed Arrow at/.test(ar.garbage);
   // Writing: a DataTable as GeoJSON, CSV and KML, a GeoJSON object as KML, each read back.
   const w = await page.evaluate(async () => {
     const { read, parse, write } = await import("mbt-map/table");
@@ -411,5 +451,5 @@ export async function dataChecks(page, requests) {
     t.sampled && t.slope && /not a TIFF file/.test(t.refused) &&
     sourceBefore === 0 && sourceAfter === 1 && drawn.kept === "geotiff" &&
     drawn.pixel.every((v) => v > 30 && v < 220);
-  return [ok && okXml && okFgb && okWrite && okTiff, { raster: { tiffBefore, tiffAfter, ...t, drawn }, loaded, ...r, features: r.features.length, wards: { ...z, wards: { ...z.wards, features: wardFeatures.length } }, xml: { xmlBefore, xmlAfter, ...k }, fgb: { fgbBefore, fgbAfter, ...g }, written: w }];
+  return [ok && okXml && okFgb && okArrow && okWrite && okTiff, { arrow: { arrowBefore, arrowAfter, ...ar }, raster: { tiffBefore, tiffAfter, ...t, drawn }, loaded, ...r, features: r.features.length, wards: { ...z, wards: { ...z.wards, features: wardFeatures.length } }, xml: { xmlBefore, xmlAfter, ...k }, fgb: { fgbBefore, fgbAfter, ...g }, written: w }];
 }

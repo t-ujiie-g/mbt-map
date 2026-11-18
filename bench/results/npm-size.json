@@ -86,7 +86,7 @@
     },
     {
       "name": "services worker (ArcGIS f=json and f=pbf; loaded by mbt-map/services on the first such read)",
-      "bytes": 20312,
+      "bytes": 20323,
       "budget": 21000
     },
     {
@@ -126,12 +126,12 @@
     },
     {
       "name": "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)",
-      "bytes": 1762,
+      "bytes": 1783,
       "budget": 2000
     },
     {
       "name": "mbt-map/table",
-      "bytes": 7913,
+      "bytes": 8057,
       "budget": 9000
     },
     {
@@ -231,7 +231,7 @@
     },
     {
       "name": "data worker",
-      "bytes": 40695,
+      "bytes": 40790,
       "budget": 41000
     },
     {
@@ -263,6 +263,11 @@
       "name": "KML and GPX (loaded by the data worker on the first such read)",
       "bytes": 26777,
       "budget": 27000
+    },
+    {
+      "name": "Arrow IPC (loaded by the data worker on the first Arrow read or write)",
+      "bytes": 28920,
+      "budget": 30000
     },
     {
       "name": "GeoTIFF (loaded by the data worker on the first raster read)",

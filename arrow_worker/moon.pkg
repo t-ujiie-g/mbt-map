@@ -1,0 +1,17 @@
+// The Arrow module the data worker loads on the first Arrow read or write: IPC streams and
+// files to and from `@geom.Table` bytes (`@formats.read_arrow`, `write_arrow`), numbers
+// written as text by the host's `String`.
+
+import {
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/formats",
+  "t-ujiie-g/mbtmap_engine/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)
