@@ -205,3 +205,221 @@ test "Hooks::default computes with MoonBit's functions" {
   assert_eq((hooks.text_number)("2"), 2.0)
   assert_true(((hooks.trig.sin)(0.0) - 0.0).abs() < @double.min_positive)
 }
+
+///|
+fn cells(t : @geom.Table, name : String) -> Array[@geom.Prop?] {
+  t.column(name).unwrap().values
+}
+
+///|
+fn nums(values : Array[Double]) -> Array[@geom.Prop?] {
+  values.map(x => Some(@geom.Prop::Num(x)))
+}
+
+///|
+fn rolled(
+  t : @geom.Table,
+  how : @tableops.Aggregate,
+  value : String,
+) -> Array[@geom.Prop?] {
+  let by = [("kind", expr("[\"get\", \"kind\"]"))]
+  cells(@tableops.rollup(t, by, [("x", how, expr(value))]), "x")
+}
+
+///|
+test "rollup gives a row without geometry per group, groups in the order they first come" {
+  let t = @tableops.rollup(sample(), [("kind", expr("[\"get\", \"kind\"]"))], [
+    ("rows", Count, expr("null")),
+  ])
+  assert_eq(t.columns.map(c => c.name), ["kind", "rows"])
+  assert_eq(cells(t, "kind"), strs(["park", "school"]))
+  assert_eq(cells(t, "rows"), nums([3.0, 2.0]))
+  assert_true(t.kinds is [NoGeometry, NoGeometry])
+  assert_eq(t.coords.length(), 0)
+}
+
+///|
+test "rollup without keys gives one row, of an empty table too" {
+  let outputs = [
+    ("rows", @tableops.Aggregate::Count, expr("null")),
+    ("sum", Sum, expr("[\"get\", \"n\"]")),
+  ]
+  let t = @tableops.rollup(sample(), [], outputs)
+  assert_eq(cells(t, "rows"), nums([5.0]))
+  assert_eq(cells(t, "sum"), nums([6.0]))
+  let empty = @tableops.rollup(@geom.Table::new(), [], outputs)
+  assert_eq(cells(empty, "rows"), nums([0.0]))
+  assert_eq(cells(empty, "sum"), [Some(Null)])
+  let by = [("kind", expr("[\"get\", \"kind\"]"))]
+  assert_eq(@tableops.rollup(@geom.Table::new(), by, outputs).length(), 0)
+}
+
+///|
+test "rollup groups null with a missing key, apart from other values, and a later name replaces an earlier" {
+  let t = @tableops.rollup(
+    sample(),
+    [
+      ("n", expr("[\"get\", \"n\"]")),
+      ("big", expr("[\">\", [\"get\", \"n\"], 1]")),
+    ],
+    [("rows", Count, expr("null")), ("big", Any, expr("[\"get\", \"name\"]"))],
+  )
+  assert_eq(t.columns.map(c => c.name), ["n", "big", "rows"])
+  assert_eq(cells(t, "n"), [
+    Some(Num(3.0)),
+    Some(Num(1.0)),
+    Some(Null),
+    Some(Num(2.0)),
+  ])
+  assert_eq(cells(t, "rows"), nums([1.0, 1.0, 2.0, 1.0]))
+  assert_eq(cells(t, "big"), strs(["a", "b", "c", "d"]))
+}
+
+///|
+test "aggregates skip null and missing values, and are null without a value" {
+  let n = "[\"get\", \"n\"]"
+  assert_eq(rolled(sample(), Valid, n), nums([2.0, 1.0]))
+  assert_eq(rolled(sample(), Distinct, n), nums([3.0, 2.0]))
+  assert_eq(rolled(sample(), Sum, n), nums([5.0, 1.0]))
+  assert_eq(rolled(sample(), Product, n), nums([6.0, 1.0]))
+  assert_eq(rolled(sample(), Mean, n), nums([2.5, 1.0]))
+  assert_eq(rolled(sample(), Min, n), nums([2.0, 1.0]))
+  assert_eq(rolled(sample(), Max, n), nums([3.0, 1.0]))
+  assert_eq(rolled(sample(), Median, n), nums([2.5, 1.0]))
+  assert_eq(rolled(sample(), Any, n), nums([3.0, 1.0]))
+  assert_eq(rolled(sample(), Mode, n), nums([3.0, 1.0]))
+  assert_eq(rolled(sample(), Variance, n), [Some(Num(0.5)), Some(Null)])
+  assert_eq(rolled(sample(), Stdev, n), [Some(Num(0.5.sqrt())), Some(Null)])
+  assert_eq(rolled(sample(), Sum, "[\"get\", \"nope\"]"), [
+    Some(Null),
+    Some(Null),
+  ])
+}
+
+///|
+test "quantile is linear between the sorted values around its rank, their ends outside 0 to 1" {
+  let n = "[\"get\", \"n\"]"
+  let all = (p : Double) => {
+    cells(@tableops.rollup(sample(), [], [("q", Quantile(p), expr(n))]), "q")
+  }
+  assert_eq(all(0.0), nums([1.0]))
+  assert_eq(all(-1.0), nums([1.0]))
+  assert_eq(all(0.25), nums([1.5]))
+  assert_eq(all(0.5), nums([2.0]))
+  assert_eq(all(1.0), nums([3.0]))
+  assert_eq(all(2.0), nums([3.0]))
+}
+
+///|
+test "min, max, mode and any keep strings, ordered by code units" {
+  let name = "[\"get\", \"name\"]"
+  assert_eq(rolled(sample(), Min, name), strs(["a", "b"]))
+  assert_eq(rolled(sample(), Max, name), strs(["d", "e"]))
+  assert_eq(
+    rolled(sample(), Mode, "[\"get\", \"kind\"]"),
+    strs(["park", "school"]),
+  )
+  assert_eq(rolled(sample(), Sum, name), [Some(Null), Some(Null)])
+}
+
+///|
+test "Aggregate::coded follows the enumeration's order, Count for another code" {
+  let names = (0)
+    .until(15)
+    .map(code => {
+      match @tableops.Aggregate::coded(code, 0.25) {
+        Count => "count"
+        Valid => "valid"
+        Distinct => "distinct"
+        Sum => "sum"
+        Mean => "mean"
+        Min => "min"
+        Max => "max"
+        Median => "median"
+        Any => "any"
+        Variance => "variance"
+        Stdev => "stdev"
+        Quantile(p) => "quantile \{p}"
+        Mode => "mode"
+        Product => "product"
+      }
+    })
+  assert_eq(names.collect(), [
+    "count", "valid", "distinct", "sum", "mean", "min", "max", "median", "any", "variance",
+    "stdev", "quantile 0.25", "mode", "product", "count",
+  ])
+}
+
+///|
+/// Rows keyed by `kind` (one twice, one that no row of `sample` has, one null) with `n` and `v`.
+fn lookup() -> @geom.Table {
+  let t = @geom.Table::new()
+  let rows : Array[(@geom.Prop, Double)] = [
+    (Str("school"), 10.0),
+    (Str("park"), 20.0),
+    (Str("pool"), 30.0),
+    (Str("school"), 40.0),
+    (Null, 50.0),
+  ]
+  for row in rows {
+    t.push_row(None, [
+      ("kind", Some(row.0)),
+      ("n", Some(Num(row.1))),
+      ("v", Some(Num(row.1 + 1.0))),
+    ])
+    |> ignore
+  }
+  t
+}
+
+///|
+test "join pairs rows with equal keys, keeping the left geometry and renaming shared columns" {
+  let t = @tableops.join(sample(), lookup(), [("kind", "kind")]).unwrap()
+  assert_eq(t.columns.map(c => c.name), ["name", "n_1", "kind", "n_2", "v"])
+  assert_eq(names(t), strs(["a", "b", "b", "c", "d", "e", "e"]))
+  assert_eq(cells(t, "n_2"), nums([20.0, 10.0, 40.0, 20.0, 20.0, 10.0, 40.0]))
+  assert_eq(cells(t, "v"), nums([21.0, 11.0, 41.0, 21.0, 21.0, 11.0, 41.0]))
+  assert_true(t.kinds is [Point, Point, Point, NoGeometry, Point, Point, Point])
+  assert_eq(t.coords[0:4], [0.0, 10.0, 1.0, 10.0][:])
+}
+
+///|
+test "join scans the table with more rows, and keeps unmatched left rows last when asked" {
+  let few = @tableops.slice(sample(), 0, 2)
+  let t = @tableops.join(few, lookup(), [("kind", "kind")]).unwrap()
+  assert_eq(names(t), strs(["b", "a", "b"]))
+  let other = @tableops.join(lookup(), sample(), [("n", "n")], keep_left=true).unwrap()
+  assert_eq(other.length(), 5)
+  assert_eq(cells(other, "name"), [None, None, None, None, None])
+  assert_eq(other.columns.map(c => c.name), [
+    "kind_1", "n", "v", "name", "kind_2",
+  ])
+}
+
+///|
+test "join matches by type and value, never null, on every key" {
+  let t = @tableops.join(lookup(), lookup(), [("kind", "kind"), ("n", "n")]).unwrap()
+  assert_eq(cells(t, "v_1"), nums([11.0, 21.0, 31.0, 41.0]))
+  assert_eq(t.columns.map(c => c.name), ["kind", "n", "v_1", "v_2"])
+  let crossed = @tableops.join(lookup(), lookup(), [("kind", "n")]).unwrap()
+  assert_eq(crossed.length(), 0)
+}
+
+///|
+test "join refuses no key, a missing column and a name twice in the result" {
+  assert_true(
+    @tableops.join(sample(), lookup(), []) is Err("no key to join on"),
+  )
+  assert_true(
+    @tableops.join(sample(), lookup(), [("kind", "x")]) is Err("no column x"),
+  )
+  assert_true(
+    @tableops.join(sample(), lookup(), [("x", "kind")]) is Err("no column x"),
+  )
+  assert_true(
+    @tableops.join(sample(), lookup(), [("kind", "kind")], suffix=("", ""))
+    is Err("a column twice in the joined table"),
+  )
+  let empty = @tableops.join(@geom.Table::new(), lookup(), [("x", "kind")])
+  assert_eq(empty.unwrap().length(), 0)
+}

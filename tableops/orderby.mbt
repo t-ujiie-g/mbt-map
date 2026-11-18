@@ -21,6 +21,16 @@ fn key_of(v : @style.Value) -> Key {
 }
 
 ///|
+/// `e` in every row of `t`.
+fn keys_of(t : @geom.Table, e : @style.Expr, hooks : Hooks) -> FixedArray[Key] {
+  let ctx : Row = { table: t, row: 0, hooks, }
+  FixedArray::makei(t.length(), i => {
+    ctx.row = i
+    key_of(e.eval(0.0, ctx))
+  })
+}
+
+///|
 /// -1, 0 or 1 as JavaScript's `<` and `>` order two strings: by UTF-16 code units.
 fn code_unit_order(a : String, b : String) -> Int32 {
   let n = a.length().min(b.length())
@@ -45,15 +55,11 @@ fn Key::number(self : Key, hooks : Hooks) -> Double {
 }
 
 ///|
-/// Arquero's comparison of two values (`compare.js`): null first, then NaN, then by JavaScript's
-/// `<` and `>` (two strings by code units, else as numbers); 0 where neither holds.
-fn order(u : Key, v : Key, hooks : Hooks) -> Int32 {
-  match (u, v) {
-    (Nothing, Nothing) => return 0
-    (Nothing, _) => return -1
-    (_, Nothing) => return 1
-    (Text(a), Text(b)) => return code_unit_order(a, b)
-    _ => ()
+/// -1, 0 or 1 as JavaScript's `<` and `>` order two keys that are not null: two strings by code
+/// units, else as numbers (0 where neither holds).
+fn loose_order(u : Key, v : Key, hooks : Hooks) -> Int32 {
+  if u is Text(a) && v is Text(b) {
+    return code_unit_order(a, b)
   }
   let (a, b) = (u.number(hooks), v.number(hooks))
   if a < b {
@@ -61,14 +67,30 @@ fn order(u : Key, v : Key, hooks : Hooks) -> Int32 {
   } else if a > b {
     1
   } else {
-    let nan = (k : Key) => k is Number(n) && n.is_nan()
-    if nan(u) && !nan(v) {
-      -1
-    } else if nan(v) && !nan(u) {
-      1
-    } else {
-      0
-    }
+    0
+  }
+}
+
+///|
+/// Arquero's comparison of two values (`compare.js`): null first, then NaN, then `loose_order`.
+fn order(u : Key, v : Key, hooks : Hooks) -> Int32 {
+  match (u, v) {
+    (Nothing, Nothing) => return 0
+    (Nothing, _) => return -1
+    (_, Nothing) => return 1
+    _ => ()
+  }
+  let o = loose_order(u, v, hooks)
+  if o != 0 {
+    return o
+  }
+  let nan = (k : Key) => k is Number(n) && n.is_nan()
+  if nan(u) && !nan(v) {
+    -1
+  } else if nan(v) && !nan(u) {
+    1
+  } else {
+    0
   }
 }
 
@@ -120,14 +142,8 @@ pub fn orderby(
   keys : ArrayView[(@style.Expr, Bool)],
   hooks~ : Hooks = Hooks::default(),
 ) -> @geom.Table {
-  let ctx : Row = { table: t, row: 0, hooks, }
   let n = t.length()
-  let values = keys.map(k => {
-    FixedArray::makei(n, i => {
-      ctx.row = i
-      key_of(k.0.eval(0.0, ctx))
-    })
-  })
+  let values = keys.map(k => keys_of(t, k.0, hooks))
   let rows = FixedArray::makei(n, i => i)
   stable_sort(rows, (a, b) => {
     for k, key in keys {

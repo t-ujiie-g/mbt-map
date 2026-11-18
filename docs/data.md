@@ -105,6 +105,9 @@ A table's attribute operations follow [Arquero](https://idl.uw.edu/arquero/)'s v
 | `derive({ name: values })` | The same, with a value per row: a typed array (`areas()`, a `dbscan` result) or `{ values: [...] }` holding `null`, booleans, numbers and strings (`undefined` leaves the row without the key). |
 | `orderby(...keys)` | The rows sorted by the keys, the first key first. A key is a column's name, an expression, or `{ by, descending: true }`. `null` and missing values come first, then numbers and strings as JavaScript's `<` orders them; rows equal on every key keep their order. |
 | `slice(start?, end?)` | Rows `start` up to `end`, counted from the end when negative, as `Array.prototype.slice`. |
+| `groupby(...keys).rollup(aggregates)` | One row per group of rows with equal keys, in the order the groups first come: the keys, then the aggregates. The rows have no geometry. A key is a column's name or `{ name: expression }`. |
+| `rollup(aggregates)` | One row holding the aggregates of every row. |
+| `join(other, on?, options?)` | The rows beside the rows of `other` with equal keys: this table's geometry and columns, then `other`'s columns. |
 | `array(name)` | A Promise of the column's values, `undefined` where a row lacks the key. |
 | `columnTypes()` | A Promise of each column's type: `"number"`, `"string"`, `"boolean"`, `"mixed"`, or `"null"` when no cell holds a value. |
 
@@ -117,7 +120,54 @@ const largest = await (await sized.orderby({ by: "area", descending: true })).sl
 map.addSource("largest", { type: "geojson", data: await (await largest.select(["name", "area"])).toGeoJSON() });
 ```
 
-The first of these loads `table.wasm` (`AnalysisOptions.tableWasmUrl`). Their results match Arquero 8.0.3 on the same rows, with one difference: selecting no columns keeps the rows (for their geometry), where Arquero's table without columns has none. Tables made by an operation carry no feature ids.
+The first of these loads `table.wasm` (`AnalysisOptions.tableWasmUrl`). Tables made by an operation carry no feature ids.
+
+### Groups and aggregates
+
+`rollup` takes `{ name: aggregate }`. An aggregate is written like an expression, with a column's name or an expression as its value; it is computed per group after `groupby`, over the whole table otherwise.
+
+| Aggregate | Result |
+|---|---|
+| `["count"]` | The number of rows. |
+| `["valid", value]` | The number of rows with a value. |
+| `["distinct", value]` | The number of different values (missing values count as one). |
+| `["sum", value]`, `["product", value]`, `["mean", value]` | Of the values as numbers. |
+| `["variance", value]`, `["stdev", value]` | The sample variance and standard deviation; `null` with fewer than two values. |
+| `["min", value]`, `["max", value]` | The smallest and largest value, as JavaScript's `<` orders them (strings too). |
+| `["median", value]`, `["quantile", value, fraction]` | The value at that fraction of the sorted values (`0.5` for the median), linear between the two around it. |
+| `["mode", value]` | The most frequent value, the first seen among equals. |
+| `["any", value]` | The group's first value: keeps a column that is the same within each group. |
+
+Aggregates skip `null`, missing and NaN values, and give `null` when no value is left (`count` counts every row). `groupby` makes `null` and a missing key one group; a number and its text (`1`, `"1"`) are two. An aggregate cannot hold another: compute between them with `derive` on the result.
+
+```js
+const byKind = await table.groupby("kind").rollup({
+  n: ["count"],
+  total: ["sum", "population"],
+  density: ["mean", ["/", ["get", "population"], ["get", "area"]]],
+});
+const shares = await byKind.derive({ share: ["/", ["get", "total"], 1e6] });
+console.log(await shares.array("kind"), await shares.array("share"));
+```
+
+### Joins
+
+`join` pairs each row with the rows of another table whose key columns hold the same value of the same type; `null` and missing keys never match. A row with several matches comes once per match, with its geometry.
+
+- **`on`**: a column's name (the same in both tables), or `[left, right]` where each is a name or a list of names. Without it, every column name the two tables share.
+- **`options.left`**: `true` keeps the rows without a match too, after the matched ones; they lack the other table's columns.
+- **`options.suffix`**: added to a column name both tables have, apart from keys of the same name (which come once). Default `["_1", "_2"]`.
+
+```js
+const stats = await read("/data/population.csv");               // rows without geometry
+const wards = await read("/data/wards.fgb");
+const joined = await wards.join(stats, ["code", "ward_code"], { left: true });
+map.addSource("wards", { type: "geojson", data: await joined.toGeoJSON() });
+```
+
+To put a group's aggregates back on the map, join the rolled-up table to the rows it came from.
+
+These operations give what Arquero 8.0.3 gives on the same rows, in the same order. The differences: selecting no columns keeps the rows (for their geometry), where Arquero's table without columns has none; `groupby` takes `null` and a missing key as one group; an aggregate without a value is `null`, not `undefined`.
 
 ```js
 const zip = await read("/data/city.zip");

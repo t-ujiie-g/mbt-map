@@ -191,6 +191,7 @@ T.1 で決めたこと（2026-11-17、ユーザー判断）：
 | `areas`・`lengths`・`centroids`・`bboxes`（配列を返す） | そのまま。`derive({ area: await t.areas() })` で列にできる | T.2 |
 | （なし） | `select`・`filter`・`derive`・`orderby`・`slice`・`array`・`columnTypes`（Arquero の名前） | T.2 |
 | `search`・`nearest`・`pointsWithin`（番号の配列） | `filter(番号の配列)` に渡せる | T.2 |
+| （なし） | `groupby(...).rollup(集計)`・`rollup(集計)`・`join(other, on, { left, suffix })`（Arquero の名前） | T.3 |
 | `relate`（番号の組の配列） | 空間結合の結果にする | T.4 |
 | `collect` | 空間結合と集計で書けるようにする | T.4 |
 | `dbscan`・`kmeans`（番号の配列） | クラスタの列を足したテーブル | T.4 |
@@ -200,8 +201,15 @@ T.1 で決めたこと（2026-11-17、ユーザー判断）：
 
 T.2 で決めたこと（2026-11-18）：
 - 名前は Arquero にそろえる（ユーザー判断）：`select`・`filter`・`derive`・`orderby`・`slice`、T.3 で `groupby`・`rollup`・`join`。
-- 属性の操作の wasm（`table.wasm`）の予算は 45KB（ユーザー判断）。式は wasm の中でコンパイルする（計測：ページの JS でコンパイルすると 41.8KB + 評価だけの wasm 25.5KB、wasm の中なら 36.6KB の 1 つ）。
+- 属性の操作の wasm（`table.wasm`）の予算は 45KB（ユーザー判断。T.3 で 50KB）。式は wasm の中でコンパイルする（計測：ページの JS でコンパイルすると 41.8KB + 評価だけの wasm 25.5KB、wasm の中なら 36.6KB の 1 つ）。
 - `derive` は式のほかに、行ごとの値（型付き配列か `{ values }`）も受ける。番号や値の配列を返す既存のメソッドの結果を、そのまま列にできる。
+
+T.3 で決めたこと（2026-11-18、ユーザー判断）：
+- 集計は 14 種：`count`・`valid`・`distinct`・`sum`・`mean`・`min`・`max`・`median`・`any`・`variance`・`stdev`・`quantile`・`mode`・`product`。
+- 集計は式と同じ配列の形で書く（`["sum", 列名か式]`）。集計は一番外側だけで、集計どうしの計算は `derive` をつなぐ。
+- `groupby` → `rollup` の結果はジオメトリなし。地図に出すときは元の表に `join` で戻す。グループごとの dissolve を足すかは T.4 の初めに伺う。
+- 欠けた値は Arquero のとおり：集計は null・キーなし・NaN を飛ばし、値が無ければ null。`join` は null のキーを合わせない。
+- `table.wasm` の予算は 50KB（45KB から。計測：45,616 バイト。結合 約 1.9KB、グループ化と集計の土台 約 2.9KB、統計の 4 種 約 0.5KB）。
 
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。

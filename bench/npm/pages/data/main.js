@@ -2,7 +2,7 @@
 // drawn as GeoJSON sources and counted by the same tables (in the analysis worker). The
 // shapefiles (bench/data/pack-fixtures.mjs writes them) are read by the pack test.
 import { Map } from "mbt-map";
-import { parse, read, write } from "mbt-map/table";
+import { fromGeoJSON, parse, read, write } from "mbt-map/table";
 
 const stations = await read("./stations.csv");
 const area = await parse("SRID=4326;POLYGON ((139.760 35.670, 139.775 35.670, 139.775 35.688, 139.760 35.688, 139.760 35.670))", { format: "wkt" });
@@ -17,7 +17,28 @@ const fail = (p) => Promise.resolve(p).then(() => "", (e) => e.message);
 const ordered = await stations.orderby({ by: "乗降客数", descending: true });
 const top = await (await ordered.slice(0, 2)).select(["名前"]);
 const derived = await stations.derive({ area: await grown.areas(), half: ["/", ["get", "乗降客数"], 2], tag: { values: ["a", null, undefined, 1, true] }, 備考: ["coalesce", ["get", "備考"], "-"] });
+const sized = { size: ["case", [">", ["coalesce", ["get", "乗降客数"], 0], 100000], "busy", "quiet"] };
+const groups = await stations.groupby(sized).rollup({ n: ["count"], total: ["sum", "乗降客数"], top: ["max", "乗降客数"], first: ["any", "名前"], middle: ["quantile", "乗降客数", 0.5] });
+const routes = await fromGeoJSON({
+  type: "FeatureCollection",
+  features: [["東京", "JR"], ["東京", "Metro"], ["神田", "JR"], ["品川", "JR"]].map(([名前, 路線]) => ({ type: "Feature", geometry: null, properties: { 名前, 路線 } })),
+});
+const joined = await stations.join(routes, "名前");
 const operations = {
+  groups: (await groups.toGeoJSON()).features.map((f) => [f.geometry, f.properties]),
+  mean: await (await stations.rollup({ mean: ["mean", "乗降客数"], kinds: ["distinct", ["geometry-type"]] })).toGeoJSON().then((c) => c.features[0].properties),
+  joined: [joined.columns, await joined.array("路線"), (await joined.toGeoJSON()).features.map((f) => f.geometry?.type)],
+  natural: (await stations.join(routes)).length,
+  left: await (await stations.join(routes, ["名前", "名前"], { left: true })).array("名前"),
+  renamed: (await routes.join(routes, [["路線"]], { suffix: ["", "2"] })).columns,
+  noAggregate: await fail(stations.rollup({ x: ["nope", "名前"] })),
+  noFraction: await fail(stations.rollup({ x: ["quantile", "名前"] })),
+  noValue: await fail(stations.groupby("名前").rollup({ x: ["sum", "zz"] })),
+  noKey: await fail(stations.groupby("zz").rollup({ n: ["count"] })),
+  noJoinColumn: await fail(stations.join(routes, "路線")),
+  noShared: await fail(groups.join(routes)),
+  unevenKeys: await fail(stations.join(routes, ["名前", ["名前", "路線"]])),
+  noTable: await fail(stations.join({})),
   busy: await (await stations.filter([">", ["get", "乗降客数"], 100000])).array("名前"),
   top: (await top.toGeoJSON()).features.map((f) => [f.geometry.type, f.properties]),
   columns: derived.columns,

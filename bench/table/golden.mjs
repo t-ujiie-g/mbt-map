@@ -1,5 +1,5 @@
 // table.wasm vs Arquero 8.0.3 on seeded random tables (select, filter, derive, orderby, slice, rows by number as
-// reify, a column as array): the rows, their order, the columns' order and every value must be the same.
+// reify, a column as array, rollup, join): the rows, their order, the columns' order and every value must match.
 // Usage: node table/golden.mjs [--tables=N]; writes bench/results/table-golden.json.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -74,12 +74,13 @@ function tableOf(rows) {
 }
 // A table_worker export over table bytes and packed arguments: the rows' properties, their points and the columns.
 function run(bytes, fn, args = new ArrayBuffer(0), ...numbers) {
-  put(t, [bytes, new Uint8Array(args)]);
-  const result = out(t, t[fn](bytes.length, ...numbers));
+  const tables = Array.isArray(bytes) ? bytes : [bytes];
+  put(t, [...tables, new Uint8Array(args)]);
+  const result = out(t, t[fn](...tables.map((b) => b.length), ...numbers));
   const { features } = tableToGeoJSON(result);
   put(t, [result]);
   const kinds = new Int32Array(out(t, t.kinds() * 4).buffer);
-  return { rows: features.map((f) => f.properties), points: features.map((f) => f.geometry.coordinates[0]), columns: kinds.length / 5, bytes: result };
+  return { rows: features.map((f) => f.properties), points: features.map((f) => f.geometry?.coordinates[0] ?? null), columns: kinds.length / 5, bytes: result };
 }
 
 const results = {};
@@ -102,6 +103,36 @@ function compare(group, label, theirs, ours) {
   if (columns.includes("i")) check(group, `${label} geometry`, JSON.stringify(theirs.array("i")), JSON.stringify(ours.points));
 }
 const number = (v) => typeof v === "number";
+// Aggregates hold null where Arquero gives undefined or NaN, and groupby takes a missing key as null.
+const orNull = (v) => (v === undefined || Number.isNaN(v) ? null : v);
+const nulled = (rows, columns) => rows.map((row) => Object.fromEntries(columns.map((c) => [c, orNull(row[c])])));
+// A rollup's arguments as mbt-map/table packs them (`AGGREGATES` there has the aggregates' codes).
+const CODES = ["count", "valid", "distinct", "sum", "mean", "min", "max", "median", "any", "variance", "stdev", "quantile", "mode", "product"];
+function rollupArgs(keys, outputs) {
+  const p = new Packer().u32(keys.length);
+  for (const [name, value] of keys) p.utf8(name).json(value);
+  p.u32(outputs.length);
+  for (const [name, [op, value = null, fraction = 0.5]] of outputs) p.utf8(name).u8(CODES.indexOf(op)).f64(fraction).json(value);
+  return p.finish();
+}
+function joinArgs(pairs, left = false, suffix = ["_1", "_2"]) {
+  const p = new Packer().u8(left ? 1 : 0).utf8(suffix[0]).utf8(suffix[1]).u32(pairs.length);
+  for (const [l, r] of pairs) p.utf8(l).utf8(r);
+  return p.finish();
+}
+const AGGREGATES = ["valid", "distinct", "sum", "mean", "min", "max", "median", "any", "variance", "stdev", "mode", "product"];
+// The rows a table joins: keys as the first table's, `b` to clash with its column, `v` and `j` of their own.
+function makeOthers() {
+  const names = ["s", "n", "m", "b"].filter(() => random() < 0.85);
+  return Array.from({ length: pick([0, 1, 3, 30, 300]) }, (_, j) => {
+    const row = { j, v: int(100) };
+    for (const name of names) {
+      const v = COLUMNS[name]();
+      if (v !== undefined) row[name] = v;
+    }
+    return row;
+  });
+}
 
 for (let k = 0; k < TABLES; k++) {
   const rows = makeRows();
@@ -186,6 +217,73 @@ for (let k = 0; k < TABLES; k++) {
     compare("rows by number", `${label} ${Array.from(taken)}`, theirs.reify(taken), run(bytes, "take", taken.buffer));
   }
 
+  // The doubled `n` as a column, for Arquero to sum what ours computes per row.
+  const whole = frame(nulled(rows, columns), columns).derive({ doubled: aq.escape((d) => (number(d.n) ? d.n * 2 : null)) });
+  const c1 = int(3);
+  const GROUPS = [
+    [[], []],
+    [[["s", "s"]], ["s"]],
+    [[["b", "b"]], ["b"]],
+    [[["m", "m"]], ["m"]],
+    [[["n", "n"]], ["n"]],
+    [[["s", "s"], ["b", "b"]], ["s", "b"]],
+    [[["m", "m"], ["n", "n"], ["s", "s"]], ["m", "n", "s"]],
+    [[["big", [">", ["get", "n"], c1]]], [{ big: aq.escape((d) => (number(d.n) ? d.n > c1 : null)) }]],
+  ];
+  const fractions = [0, 0.25, random(), 1, 1.5];
+  const values = columns.filter((c) => c !== "i");
+  for (const [keys, arquero] of rows.length === 0 ? [] : GROUPS) {
+    if (!keys.every(([name, value]) => name === "big" || columns.includes(value)) || (keys[0]?.[0] === "big" && !columns.includes("n"))) continue;
+    const outputs = [["rows", ["count"]]];
+    const ops = { rows: aq.op.count() };
+    for (const c of values) {
+      for (const name of AGGREGATES) {
+        outputs.push([`${name} ${c}`, [name, c]]);
+        ops[`${name} ${c}`] = aq.op[name](c);
+      }
+      fractions.forEach((p, k) => {
+        outputs.push([`q${k} ${c}`, ["quantile", c, p]]);
+        ops[`q${k} ${c}`] = aq.op.quantile(c, p);
+      });
+    }
+    if (columns.includes("n")) {
+      outputs.push(["computed", ["sum", ["*", ["get", "n"], 2]]]);
+      ops.computed = aq.op.sum("doubled");
+    }
+    const grouped = keys.length ? whole.groupby(...arquero) : whole;
+    const want = grouped.rollup(ops);
+    const got = run(bytes, "rollup", rollupArgs(keys, outputs));
+    const names = want.columnNames();
+    check("rollup", `${label} by ${keys.map((key) => key[0])}`, show(nulled(want.objects(), names), names), show(got.rows, names));
+    check("rollup", `${label} by ${keys.map((key) => key[0])} columns`, String(names.length), String(got.columns));
+  }
+
+  const others = makeOthers();
+  const otherColumns = others.length === 0 ? [] : ["j", "v", ...["s", "n", "m", "b"].filter((c) => others.some((row) => c in row))];
+  const otherBytes = tableOf(others);
+  const right = frame(others, otherColumns);
+  const JOINS = [
+    ["s", ["s"], ["s"]],
+    [["n", "m"], ["n"], ["m"]],
+    [["m", "n"], ["m"], ["n"]],
+    [[["s", "b"], ["s", "b"]], ["s", "b"], ["s", "b"]],
+    [[["s", "m"], ["s", "n"]], ["s", "m"], ["s", "n"]],
+    [[["m"]], ["m"], ["m"]],
+    [null, null, null],
+  ];
+  for (const [on, l, r] of JOINS) {
+    const shared = columns.filter((c) => otherColumns.includes(c));
+    if (on === null ? shared.length === 0 : !l.every((c) => columns.includes(c)) || !r.every((c) => otherColumns.includes(c))) continue;
+    const pairs = (l ?? shared).map((c, k) => [c, (r ?? shared)[k]]);
+    for (const left of [false, true]) {
+      const suffix = random() < 0.2 ? ["", "#"] : undefined;
+      const want = theirs.join(right, on ?? undefined, undefined, { left, suffix });
+      const got = run([bytes, otherBytes], "join", joinArgs(pairs, left, suffix));
+      compare("join", `${label} with ${others.length} on ${JSON.stringify(on)}${left ? " left" : ""}`, want, got);
+      if (got.rows.length > 0) check("join", `${label} on ${JSON.stringify(on)} columns`, String(want.columnNames().length), String(got.columns));
+    }
+  }
+
   for (const c of columns) {
     put(t, [bytes, encoder.encode(c)]);
     const cells = out(t, t.column(bytes.length));
@@ -204,7 +302,7 @@ for (let k = 0; k < TABLES; k++) {
 const one = tableOf([{ i: 0, n: 1 }]);
 const refused = (fn, args, ...numbers) => {
   try {
-    run(one, fn, args, ...numbers);
+    run(fn === "join" ? [one, numbers.pop() ?? one] : one, fn, args, ...numbers);
     return "";
   } catch (e) {
     return e.message;
@@ -219,6 +317,15 @@ const REFUSED = [
   ["a row out of the table", refused("take", Uint32Array.of(0, 1).buffer), "a row out of the table"],
   ["given values of another length", refused("derive", new Packer().u32(1).utf8("x").u8(1).u32(2).value(1).value(2).finish()), "2 values for x in a table of 1 rows"],
   ["a derived column's bad expression", refused("derive", new Packer().u32(1).utf8("x").u8(0).json(["nope"]).finish()), /^x: /],
+  ["an aggregate of an unknown column", refused("rollup", rollupArgs([], [["x", ["sum", "y"]]])), "x: no column y"],
+  ["a group key that is no column", refused("rollup", rollupArgs([["y", "y"]], [])), "y: no column y"],
+  ["an aggregate's bad expression", refused("rollup", rollupArgs([], [["x", ["sum", ["nope"]]]])), /^x: .*nope/],
+  ["a cut rollup", refused("rollup", new Packer().u32(1).utf8("x").finish()), "malformed rollup"],
+  ["a join on a column one table lacks", refused("join", joinArgs([["i", "i"]]), tableOf([{ n: 1 }])), "no column i"],
+  ["a join on no key", refused("join", joinArgs([])), "no key to join on"],
+  ["a join giving a name twice", refused("join", joinArgs([["i", "i"]], false, ["", ""])), "a column twice in the joined table"],
+  ["a join with a negative count of keys", refused("join", new Packer().u8(0).utf8("_1").utf8("_2").u32(0xffffffff).finish()), "malformed join"],
+  ["a cut join", refused("join", new Packer().u8(0).utf8("_1").finish()), "malformed join"],
   ["malformed table bytes", (() => { try { put(t, [one.subarray(0, 9)]); out(t, t.select(9)); return ""; } catch (e) { return e.message; } })(), "malformed table"],
 ];
 for (const [label, got, want] of REFUSED) {

@@ -47,6 +47,36 @@ export type Expression = string | number | boolean | null | readonly unknown[];
 /** A column for `Table.derive`: an expression computed per row, or a value per row as given. */
 export type Derived = Expression | ArrayBufferView | { values: ArrayLike<unknown> };
 
+/** A value of each row: a column's name or an expression. */
+export type RowValue = string | readonly unknown[];
+
+/** A key for `Table.groupby`: a column's name, or names for the keys with the value of each. */
+export type GroupKey = string | Record<string, RowValue>;
+
+/**
+ * An aggregate for `rollup`, named as Arquero's: `["count"]`, or one of `valid`, `distinct`, `sum`, `mean`, `min`,
+ * `max`, `median`, `any`, `variance`, `stdev`, `mode` and `product` with a value, or `["quantile", value, fraction]`.
+ */
+export type Aggregate = readonly ["count"] | readonly [string, RowValue] | readonly ["quantile", RowValue, number];
+
+// `@tableops.Aggregate`'s cases in their order: an aggregate goes to table.wasm as its place here.
+const AGGREGATES = ["count", "valid", "distinct", "sum", "mean", "min", "max", "median", "any", "variance", "stdev", "quantile", "mode", "product"];
+
+/** A table's rows in groups: what `Table.groupby` gives. */
+export interface Grouped {
+  /** One row without geometry per group, in the order the groups first come: the keys, then `aggregates`. */
+  rollup(aggregates: Record<string, Aggregate>): Promise<Table>;
+}
+
+/** The columns `Table.join` matches: one name (or `[names]`) for the same columns in both tables, or `[left, right]`, each a name or names. */
+export type JoinKeys = string | readonly [string | readonly string[]] | readonly [string | readonly string[], string | readonly string[]];
+
+/** `left` keeps the rows without a match; `suffix` is added to a name both tables have (`["_1", "_2"]`). */
+export interface JoinOptions {
+  left?: boolean;
+  suffix?: readonly [string?, string?];
+}
+
 /** A key for `Table.orderby`: a column's name or an expression, ascending unless `descending`. */
 export type OrderKey = string | readonly unknown[] | { by: string | readonly unknown[]; descending?: boolean };
 
@@ -585,6 +615,57 @@ export class Table {
       p.u8(descending ? 1 : 0).json(typeof by === "string" ? ["get", by] : by);
     }
     return this.#rows("orderby", p.finish());
+  }
+
+  /**
+   * The rows in groups of equal `keys` (Arquero's `groupby`; null and a missing key are one group, a number and
+   * its text are two), for `rollup`.
+   */
+  groupby(...keys: GroupKey[]): Grouped {
+    const pairs = keys.flatMap((k): [string, unknown][] => (typeof k === "string" ? [[k, k]] : Object.entries(k ?? {})));
+    return { rollup: (aggregates) => this.#rollup(pairs, aggregates) };
+  }
+
+  /**
+   * One row without geometry holding `aggregates` of every row (Arquero's `rollup`): they skip null, missing and
+   * NaN values, and are null without a value left (docs/data.md has each).
+   */
+  rollup(aggregates: Record<string, Aggregate>): Promise<Table> {
+    return this.#rollup([], aggregates);
+  }
+
+  async #rollup(keys: [string, unknown][], aggregates: Record<string, Aggregate>): Promise<Table> {
+    const outputs = Object.entries(aggregates ?? {});
+    const p = new Packer().u32(keys.length);
+    for (const [name, value] of keys) p.utf8(name).json(value);
+    p.u32(outputs.length);
+    for (const [name, how] of outputs) {
+      const [op, value = null, fraction = 0.5] = (Array.isArray(how) ? how : []) as unknown[];
+      const code = AGGREGATES.indexOf(op as string);
+      const takes = op === "count" ? 1 : op === "quantile" ? 3 : 2;
+      if (code < 0 || how.length !== takes || !Number.isFinite(fraction)) throw new Error(`mbt-map: analysis: ${name}: not an aggregate: ${JSON.stringify(how)}`);
+      p.utf8(name).u8(code).f64(fraction as number).json(value);
+    }
+    return this.#rows("rollup", p.finish());
+  }
+
+  /**
+   * The rows beside the rows of `other` with equal keys in type and value (Arquero's `join`; null never
+   * matches): this table's geometry and columns, then `other`'s columns. Without `on`, the columns both have.
+   */
+  async join(other: Table, on?: JoinKeys, options: JoinOptions = {}): Promise<Table> {
+    if (!(other instanceof Table)) throw new Error("mbt-map: analysis: join takes a table");
+    const { left = false, suffix = [] } = options;
+    const names = (v: unknown): unknown[] => (Array.isArray(v) ? v : [v]);
+    const shared = on == null ? this.columns.filter((c) => other.columns.includes(c)) : null;
+    const [l, r = l] = shared ? [shared] : typeof on === "string" ? [[on]] : names(on).map(names);
+    if (!l.length || l.length !== r.length || ![...l, ...r].every((c) => typeof c === "string")) {
+      throw new Error(shared ? "mbt-map: analysis: no column in both tables to join on" : "mbt-map: analysis: join keys are a column name, or [left, right] with as many names each");
+    }
+    const p = new Packer().u8(left ? 1 : 0).utf8(suffix[0] ?? "_1").utf8(suffix[1] ?? "_2").u32(l.length);
+    l.forEach((c, i) => p.utf8(c as string).utf8(r[i] as string));
+    const args = p.finish();
+    return tableOf(analysisCall("rows", { dataset: await this.#worker("joined "), other: await other.#worker("joining "), fn: "join", args }, [args]));
   }
 
   /** The values of column `name`, one per row (Arquero's `array`): `undefined` where the row lacks the key. */

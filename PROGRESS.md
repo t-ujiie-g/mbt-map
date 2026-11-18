@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.3（グループごとの集計と属性での結合：VISION §8「テーブルの段階」）。その後 T.4〜T.8、Phase 21。
+- **次**：テーブルの段階の T.4（空間結合と、番号の配列を返すメソッドの揃え直し：VISION §8「テーブルの段階」）。その後 T.4b〜T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -570,3 +570,18 @@ Where things stand, decisions and open issues. The development history before th
 - 途中で直したもの：`Packer` が、バッファを伸ばすときに古い `DataView` へ書いていた（テストで見つけた）。wasm の公開名 `derive` と MoonBit の関数名（`derive` は予約語なので `derive_columns`）の取り違え。
 - 分かっていること：操作の結果のテーブルは地物の id を持たない（T.1 と同じ）。`Hooks`（式が使うホストの関数の束）が `cluster_props` と `tableops` の 2 か所にある（T.8 の点検で `style` に寄せるかを見る）。解析ワーカーの残りが 158 バイトなので、T.3 と T.4 でワーカーの JS に足す分は、別ファイルに分けるか予算を伺う。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 953、wasm-gc 963、js 1012、native 953：`geom` 2 件と `tableops` 8 件を足した）、npm のテスト（464：`pack` 4 件）と大きさ、bench のテスト（23）、`npm audit`（bench、0 件）、pack test の `data,analysis,samples,showcase-html,cdn`（Chromium。data のページで各メソッドと断り方を見る）。
+
+## テーブルの段階 T.3：集計と結合（2026-11-18、Mac）
+
+- 決めたこと（ユーザー判断）：集計は 14 種（`count`・`valid`・`distinct`・`sum`・`mean`・`min`・`max`・`median`・`any`・`variance`・`stdev`・`quantile`・`mode`・`product`）。書き方は式と同じ配列の形（`["sum", 列名か式]`、一番外側だけ）。`groupby` → `rollup` の結果はジオメトリなし。欠けた値は Arquero のとおり。`table.wasm` の予算は 45KB → 50KB。
+- 作り：
+  - `tableops/rollup.mbt`：行をキーの「型と値」の文字列でまとめ（最初に現れた順）、グループごとに欠けていない値を集めて集計する。集計は Arquero の `aggregate-functions.js` と `quantile.js` のとおり（平均と分散は逐次の式、`min`・`max` は JavaScript の `<`、`quantile` は安定な並べ替えのあと線形に補う、`mode` は同数なら先に現れた値）。結果は `Table::push_row` で作るジオメトリなしの行。
+  - `tableops/join.mbt`：Arquero のハッシュ結合のとおりの行の順（行の少ない表をハッシュに入れ、多い表を順に走査。`left` のときは合わなかった左の行を最後に）。キーは型と値で合わせ、null・キーなし・NaN は合わせない。列は左の全部、次に右（同じ名前のキーは 1 つ）、両方にある名前に接尾辞。ジオメトリは左の行のもの。
+  - `table_worker`：`rollup` と `join`（表を 2 つ受ける）。引数は JSON を解釈せず、ページ側で詰めたバイト列を読む（集計は番号）。列名で書いた値は、その列が無ければ断る（行が 0 のときは通す）。
+  - `Table`：`groupby(...keys)`（`rollup` を持つものを返す。同期）、`rollup(集計)`、`join(other, on?, { left, suffix })`。`on` を省くと両方にある列。集計の名前と引数の数、結合のキーの形はページ側で確かめる。
+  - 解析ワーカーの JS は `rows` を表 2 つに広げただけ（`join` のとき `other`）。別ファイルにも予算の変更にもならなかった。
+- 計測（gzip）：`table.wasm` 40,653 → 45,616 バイト（予算 50KB）。内訳は、結合 約 1.9KB、グループ化と集計の土台 約 2.9KB、統計の 4 種（`quantile`・`mode`・`mean`・分散）約 0.5KB。`mbt-map/table` 7,235 → 7,763（9KB）、解析ワーカー 30,842 → 30,885（31KB、残り 115 バイト）。
+- 大きさで試したこと：はじめは 48,540 バイト。効いたもの：`Map` の型を `Map[String, Int32]` の 1 つにそろえる・数を文字列にするのに `Int64::to_string` を使わない（-1.7KB）、集計と結合の引数を JSON でなくバイト列にして解釈をページ側へ移す（-1.1KB）。効かなかったもの：結合のキーの読み方をまとめる・`contains` を `search_by` にする（+30 バイト、戻した）。
+- ゴールデン（`table:golden`、Arquero 8.0.3、種を固定した表 60 個）：rollup 602（キーなし、1〜3 個のキー、式のキー。値の列ごとに 12 種と `quantile` 5 通り、式の値の `sum`）、join 794（キー 1〜2 個、左右で別の名前、共通の列、内部と左、接尾辞。行の数が左右どちらが多い場合も）：0 differ。全体も 0 differ、表 400 個でも 0 differ。比べるときにそろえた所：`groupby` は null とキーなしを 1 つのグループにする（Arquero は 2 つ）。値の無い集計は null（Arquero は `undefined`、数にならない合計は NaN）。
+- 分かっていること：種類の混じった値（文字列と数）の `quantile` は、比較が順序にならないので Arquero と同じとは限らない（ゴールデンの列は 1 種類ずつ）。複数キーのグループ化で、Arquero はキーを `|` でつないだ文字列で見分けるので `|` と引用符を含む文字列が衝突しうるが、こちらは衝突しない。結果のテーブルが id を持たないのは T.2 と同じ。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 964、wasm-gc 974、js 1023、native 964：`tableops` 11 件を足した）、npm のテスト（464）と大きさ、bench のテスト（23）、pack test の `data,analysis,samples,showcase-html,cdn`（Chromium。data のページで集計・結合と断り方を見る）。

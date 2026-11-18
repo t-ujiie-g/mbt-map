@@ -85,6 +85,19 @@ export async function dataChecks(page, requests) {
     r.moved === true &&
     names().includes("table.wasm") &&
     JSON.stringify(o.busy) === JSON.stringify(["東京", "有楽町"]) &&
+    JSON.stringify(o.groups) === JSON.stringify([
+      [null, { size: "busy", n: 2, total: 632139, top: 462589, first: "東京", middle: 316069.5 }],
+      [null, { size: "quiet", n: 3, total: 98570, top: 98560, first: "神田", middle: 49285 }],
+    ]) &&
+    JSON.stringify(o.mean) === JSON.stringify({ mean: 182677.25, kinds: 2 }) &&
+    JSON.stringify(o.joined) === JSON.stringify([["名前", "緯度", "経度", "乗降客数", "備考", "路線"], ["JR", "Metro", "JR"], ["Point", "Point", "Point"]]) &&
+    o.natural === 3 &&
+    JSON.stringify(o.left) === JSON.stringify(["東京", "東京", "神田", "有楽町", "大手町", "不明"]) &&
+    JSON.stringify(o.renamed) === JSON.stringify(["名前", "路線", "名前2"]) &&
+    /^mbt-map: analysis: x: not an aggregate: \["nope"/.test(o.noAggregate) && /x: not an aggregate/.test(o.noFraction) &&
+    o.noValue === "mbt-map: analysis: x: no column zz" && o.noKey === "mbt-map: analysis: zz: no column zz" &&
+    o.noJoinColumn === "mbt-map: analysis: no column 路線" && /no column in both tables/.test(o.noShared) &&
+    /as many names each/.test(o.unevenKeys) && /join takes a table/.test(o.noTable) &&
     JSON.stringify(o.top) === JSON.stringify([["Point", { 名前: "東京" }], ["Point", { 名前: "有楽町" }]]) &&
     JSON.stringify(o.columns) === JSON.stringify(["名前", "緯度", "経度", "乗降客数", "備考", "area", "half", "tag"]) &&
     JSON.stringify(o.types) === JSON.stringify({ 名前: "string", 緯度: "number", 経度: "number", 乗降客数: "number", 備考: "string", area: "number", half: "number", tag: "mixed" }) &&

@@ -14,7 +14,11 @@ pub fn derive_columns(@geom.Table, ArrayView[(String, Derived)], hooks? : Hooks)
 
 pub fn filter(@geom.Table, @style.Expr, hooks? : Hooks) -> @geom.Table
 
+pub fn join(@geom.Table, @geom.Table, ArrayView[(String, String)], keep_left? : Bool, suffix? : (String, String)) -> Result[@geom.Table, String]
+
 pub fn orderby(@geom.Table, ArrayView[(@style.Expr, Bool)], hooks? : Hooks) -> @geom.Table
+
+pub fn rollup(@geom.Table, ArrayView[(String, @style.Expr)], ArrayView[(String, Aggregate, @style.Expr)], hooks? : Hooks) -> @geom.Table
 
 pub fn select(@geom.Table, ArrayView[String]) -> Result[@geom.Table, String]
 
@@ -23,6 +27,24 @@ pub fn slice(@geom.Table, Int32, Int32) -> @geom.Table
 // Errors
 
 // Types and methods
+pub(all) enum Aggregate {
+  Count
+  Valid
+  Distinct
+  Sum
+  Mean
+  Min
+  Max
+  Median
+  Any
+  Variance
+  Stdev
+  Quantile(Double)
+  Mode
+  Product
+}
+pub fn Aggregate::coded(Int32, Double) -> Self
+
 pub(all) enum Derived {
   Computed(@style.Expr)
   Given(Array[@geom.Prop?])

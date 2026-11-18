@@ -67,7 +67,7 @@ const SHAPE_OPS = ["simplify", "convex", "concave", "delaunay", "voronoi", "line
 const SURFACE_TABLES = ["point_grid", "square_grid", "hex_grid", "triangle_grid", "interpolate", "isolines", "isobands", "density"];
 const SURFACE_VALUES = ["dbscan", "kmeans"];
 // The exports of table_worker that give a table.
-const TABLE_OPS = ["select", "filter", "take", "slice", "derive", "orderby"];
+const TABLE_OPS = ["select", "filter", "take", "slice", "derive", "orderby", "rollup", "join"];
 // `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
 // An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it.
@@ -371,12 +371,13 @@ const OPS = {
     check(isId(a) && isId(b) && [0, 1, 2, 3].includes(kind));
     return geometryOp([a, b], (g, lenA) => g.overlay(lenA, kind));
   },
-  // A table_worker export `fn` over `dataset` with `args` (bytes after the table, docs/dev/FORMATS.md
-  // "Table operations") and `numbers` (integers after the table's length): a new dataset.
-  async rows({ dataset, fn, args, numbers = [] }) {
-    check(isId(dataset) && TABLE_OPS.includes(fn) && args instanceof ArrayBuffer && Array.isArray(numbers) && numbers.every(Number.isInteger));
-    const { exports, tables } = await withTables("table", [dataset], [new Uint8Array(args)]);
-    return stored(outputOf(exports, checked(exports, exports[fn](tables[0].length, ...numbers))));
+  // A table_worker export `fn` over `dataset` (and `other`, for a join) with `args` (bytes after the tables,
+  // docs/dev/FORMATS.md "Table operations") and `numbers` (integers after the tables' lengths): a new dataset.
+  async rows({ dataset, other, fn, args, numbers = [] }) {
+    const ids = fn === "join" ? [dataset, other] : [dataset];
+    check(ids.every(isId) && TABLE_OPS.includes(fn) && args instanceof ArrayBuffer && Array.isArray(numbers) && numbers.every(Number.isInteger));
+    const { exports, tables } = await withTables("table", ids, [new Uint8Array(args)]);
+    return stored(outputOf(exports, checked(exports, exports[fn](...tables.map((t) => t.length), ...numbers))));
   },
   // The values of column `name`, one per row (undefined where the row lacks the key).
   async column({ dataset, name }) {

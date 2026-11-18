@@ -3,35 +3,43 @@
   "tables": 60,
   "results": {
     "select": {
-      "cases": 90,
+      "cases": 92,
       "differ": 0
     },
     "filter": {
-      "cases": 896,
+      "cases": 856,
       "differ": 0
     },
     "derive": {
-      "cases": 172,
+      "cases": 167,
       "differ": 0
     },
     "orderby": {
-      "cases": 484,
+      "cases": 416,
       "differ": 0
     },
     "slice": {
-      "cases": 448,
+      "cases": 428,
       "differ": 0
     },
     "rows by number": {
-      "cases": 104,
+      "cases": 94,
+      "differ": 0
+    },
+    "rollup": {
+      "cases": 602,
+      "differ": 0
+    },
+    "join": {
+      "cases": 794,
       "differ": 0
     },
     "array": {
-      "cases": 227,
+      "cases": 203,
       "differ": 0
     },
     "refused": {
-      "cases": 9,
+      "cases": 18,
       "differ": 0
     }
   }
