@@ -176,6 +176,37 @@ pub fn buffer(
 }
 
 ///|
+/// A feature per group of rows of `t` (row `i` is in group `groups[i]`, whose first row is
+/// `first[g]`): the group's polygons merged (no geometry without one), with the first row's
+/// `columns`.
+pub fn dissolve_groups(
+  t : @geom.Table,
+  groups : ArrayView[Int32],
+  first : ArrayView[Int32],
+  columns : ArrayView[String],
+) -> @geom.Table {
+  let members : Array[Array[Int32]] = Array::makei(first.length(), _ => [])
+  for row, g in groups {
+    members[g].push(row)
+  }
+  let b = @geom.TableBuilder::new()
+  for g, rows in members {
+    let parts = add_tree(
+      b,
+      tree_of(region_of(t.take(rows).unwrap())),
+      degree_xy,
+    )
+    for name in columns {
+      if t.column(name) is Some(c) && c.values[first[g]] is Some(v) {
+        b.prop(name, v)
+      }
+    }
+    b.end_feature(if parts == 0 { NoGeometry } else { polygon_kind(parts) })
+  }
+  b.finish()
+}
+
+///|
 /// The polygons of every feature of `t` merged into one feature without
 /// properties (lines and points are left out).
 pub fn dissolve(t : @geom.Table) -> @geom.Table {

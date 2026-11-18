@@ -25,7 +25,6 @@ export async function loadAnalysis(fetchBytes) {
   };
   const f64s = (n) => new Float64Array(e.memory.buffer, e.output_addr(), counted(n)).slice();
   const i32s = (n) => new Int32Array(e.memory.buffer, e.output_addr(), counted(n)).slice();
-  const encoder = new TextEncoder();
   return {
     exports: e,
     load(bytes) {
@@ -37,10 +36,6 @@ export async function loadAnalysis(fetchBytes) {
     search: (id, b) => i32s(e.search(id, b[0], b[1], b[2], b[3])),
     nearest: (id, x, y, k) => i32s(e.nearest(id, x, y, k, Infinity)),
     within: (points, polygons) => i32s(e.within(points, polygons)),
-    collect(polygons, points, property) {
-      input(encoder.encode(property));
-      return f64s(e.collect(polygons, points));
-    },
     grid: (id, b, cols, rows) => i32s(e.grid(id, b[0], b[1], b[2], b[3], cols, rows)),
   };
 }

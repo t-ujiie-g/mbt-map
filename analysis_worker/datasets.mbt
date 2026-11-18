@@ -177,17 +177,22 @@ pub fn within(points : Int32, polygons : Int32) -> Int32 {
 }
 
 ///|
-/// Writes `@analysis.collect` of dataset `polygons` over dataset `points` for
-/// the property named by the UTF-8 input (three f64s per polygon). Returns the
-/// f64 count, or -1 for an unknown dataset.
-#export_name("collect")
-pub fn collect(polygons : Int32, points : Int32) -> Int32 {
-  guard datasets.get(polygons) is Some(q) && datasets.get(points) is Some(p) else {
+/// Writes `@analysis.nearest_pairs` of dataset `a` over dataset `b`. Returns the i32 count, or
+/// -1 for an unknown dataset.
+#export_name("nearest_pairs")
+pub fn nearest_pairs(
+  a : Int32,
+  b : Int32,
+  k : Int32,
+  max_distance : Double,
+) -> Int32 {
+  guard datasets.get(a) is Some(p) && datasets.get(b) is Some(q) else {
     return -1
   }
-  let column = @core.utf8_lossy(@wasmio.input_bytes())
   @wasmio.clear_input()
-  @wasmio.write_f64s(@analysis.collect(q.table, p.table, p.index(), column))
+  @wasmio.write_i32s(
+    @analysis.nearest_pairs(p.table, q.index(), k~, max_distance~)[:],
+  )
 }
 
 ///|

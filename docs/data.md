@@ -108,6 +108,8 @@ A table's attribute operations follow [Arquero](https://idl.uw.edu/arquero/)'s v
 | `groupby(...keys).rollup(aggregates)` | One row per group of rows with equal keys, in the order the groups first come: the keys, then the aggregates. The rows have no geometry. A key is a column's name or `{ name: expression }`. |
 | `rollup(aggregates)` | One row holding the aggregates of every row. |
 | `join(other, on?, options?)` | The rows beside the rows of `other` with equal keys: this table's geometry and columns, then `other`'s columns. |
+| `spatialJoin(other, options?)` | The same, for the rows of `other` in a spatial relation with each row. |
+| `nearestJoin(other, options?)` | The same, for the rows of `other` nearest each row. |
 | `array(name)` | A Promise of the column's values, `undefined` where a row lacks the key. |
 | `columnTypes()` | A Promise of each column's type: `"number"`, `"string"`, `"boolean"`, `"mixed"`, or `"null"` when no cell holds a value. |
 
@@ -165,7 +167,33 @@ const joined = await wards.join(stats, ["code", "ward_code"], { left: true });
 map.addSource("wards", { type: "geojson", data: await joined.toGeoJSON() });
 ```
 
-To put a group's aggregates back on the map, join the rolled-up table to the rows it came from.
+To put a group's aggregates back on the map, join the rolled-up table to the rows it came from, or merge each group's polygons with `dissolve({ by })` ([analysis.md](./analysis.md)) and join the aggregates to that.
+
+### Spatial joins
+
+`spatialJoin` and `nearestJoin` pair rows by where they are and put them together as `join` does: this table's geometry and columns, then the other table's columns, a row once per match.
+
+- **`predicate`** (`spatialJoin`): a relation of [`relate`](./analysis.md) (`"intersects"` by default, `"contains"`, `"within"`, `"covers"`, `"coveredBy"`, `"touches"`, `"crosses"`, `"overlaps"`, `"equals"`) or `{ pattern }`, a DE-9IM pattern. The row is the relation's first geometry: `stations.spatialJoin(wards, { predicate: "within" })` keeps the stations within a ward.
+- **`k`, `maxDistance`** (`nearestJoin`): up to `k` rows (default 1) within `maxDistance`, nearest first, measured as `nearest` measures: from the center of the row's box to the other rows' boxes, in degrees. Rows without geometry get none.
+- **`left`, `suffix`**: as `join`'s. Columns of the same name in both tables always get the suffixes.
+- **`rollup`**: `{ name: aggregate }`, as `rollup` takes. Every row then comes once, with the aggregates of the other table's rows it is paired with (`count` is 0 and the others `null` for a row with none); a name that is already a column replaces it.
+
+```js
+// Each station with the ward it is in.
+const tagged = await stations.spatialJoin(wards, { predicate: "within" });
+
+// Each ward, still a polygon, with its stations counted and their riders summed.
+const busy = await wards.spatialJoin(stations, {
+  predicate: "contains",
+  rollup: { stations: ["count"], riders: ["sum", "riders"] },
+});
+map.addSource("wards", { type: "geojson", data: await busy.toGeoJSON() });
+
+// Each shop with its nearest station's columns.
+const near = await shops.nearestJoin(stations, { maxDistance: 0.01 });
+```
+
+A boundary counts for `"intersects"` and `"covers"` and not for `"contains"` and `"within"`, as in JTS. Counting points per polygon with `"intersects"` gives what Turf's `collect` gives.
 
 These operations give what Arquero 8.0.3 gives on the same rows, in the same order. The differences: selecting no columns keeps the rows (for their geometry), where Arquero's table without columns has none; `groupby` takes `null` and a missing key as one group; an aggregate without a value is `null`, not `undefined`.
 

@@ -302,7 +302,7 @@ for (let k = 0; k < TABLES; k++) {
 const one = tableOf([{ i: 0, n: 1 }]);
 const refused = (fn, args, ...numbers) => {
   try {
-    run(fn === "join" ? [one, numbers.pop() ?? one] : one, fn, args, ...numbers);
+    run(fn === "join" || fn === "pairs" ? [one, numbers.pop() ?? one] : one, fn, args, ...numbers);
     return "";
   } catch (e) {
     return e.message;
@@ -320,7 +320,11 @@ const REFUSED = [
   ["an aggregate of an unknown column", refused("rollup", rollupArgs([], [["x", ["sum", "y"]]])), "x: no column y"],
   ["a group key that is no column", refused("rollup", rollupArgs([["y", "y"]], [])), "y: no column y"],
   ["an aggregate's bad expression", refused("rollup", rollupArgs([], [["x", ["sum", ["nope"]]]])), /^x: .*nope/],
-  ["a cut rollup", refused("rollup", new Packer().u32(1).utf8("x").finish()), "malformed rollup"],
+  ["a cut rollup", refused("rollup", new Packer().u32(1).utf8("x").finish()), "malformed values"],
+  ["a pair out of the tables", refused("pairs", new Packer().u8(0).utf8("_1").utf8("_2").u32(2).bytes(Int32Array.of(0, 1)).finish()), "a pair out of the tables"],
+  ["half a pair", refused("pairs", new Packer().u8(1).utf8("_1").utf8("_2").u32(1).bytes(Int32Array.of(0)).finish()), "a pair out of the tables"],
+  ["more pairs than bytes", refused("pairs", new Packer().u8(0).utf8("_1").utf8("_2").u32(9).finish()), "malformed pairs"],
+  ["a pair rollup's unknown column", refused("pairs", rollupArgs([], [["x", ["sum", "y"]]]).slice(4) && new Packer().u8(2).utf8("_1").utf8("_2").u32(0).bytes(new Uint8Array(rollupArgs([], [["x", ["sum", "y"]]]).slice(4))).finish()), "x: no column y"],
   ["a join on a column one table lacks", refused("join", joinArgs([["i", "i"]]), tableOf([{ n: 1 }])), "no column i"],
   ["a join on no key", refused("join", joinArgs([])), "no key to join on"],
   ["a join giving a name twice", refused("join", joinArgs([["i", "i"]], false, ["", ""])), "a column twice in the joined table"],

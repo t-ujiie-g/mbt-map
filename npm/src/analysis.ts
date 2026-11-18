@@ -9,7 +9,7 @@ import { fromGeoJSON, Table, type BBox, type LoadOptions } from "./table";
 import { resolveTemplate } from "./urls";
 
 export { classBreaks, classStep, MAX_CKMEANS_CELLS, MAX_CLASS_VALUES, MAX_CLASSES, MAX_JENKS_WORK, statistics, type ClassMethod, type Statistics } from "./classify";
-export { defineCrs, grid, Network, type BBox, type BufferMode, type BufferOptions, type Collected, type DbscanKind, type DensityOptions, type InterpolateOptions, type LoadOptions, type NearestOnLine, type Relation } from "./table";
+export { defineCrs, grid, Network, type BBox, type BufferMode, type BufferOptions, type DbscanKind, type DensityOptions, type InterpolateOptions, type LoadOptions, type NearestOnLine, type Relation } from "./table";
 export { distance };
 export type { AnalysisOptions, Crs };
 /** `mbt-map/table`'s `Table`, by its earlier name. */

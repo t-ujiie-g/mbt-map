@@ -13,8 +13,6 @@ pub fn bbox(@geom.Table, Int32) -> (Double, Double, Double, Double)
 
 pub fn centroid(@geom.Table, Int32) -> (Double, Double)
 
-pub fn collect(@geom.Table, @geom.Table, Index, String) -> FixedArray[Double]
-
 pub fn contains_point(@geom.Table, Int32, Double, Double) -> Bool
 
 pub fn distance(@trig.Trig, Double, Double, Double, Double) -> Double
@@ -24,6 +22,8 @@ pub fn grid_count(@geom.Table, Double, Double, Double, Double, Int32, Int32) -> 
 pub fn length(@geom.Table, @trig.Trig, Int32) -> Double
 
 pub fn mercator_cell(@trig.Trig, Double, Double, Int32, Int32, Int32, Int32) -> (Double, Double)
+
+pub fn nearest_pairs(@geom.Table, Index, k? : Int32, max_distance? : Double) -> Array[Int32]
 
 pub fn points_within(@geom.Table, @geom.Table, Index) -> Array[Int32]
 

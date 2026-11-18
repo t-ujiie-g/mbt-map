@@ -492,7 +492,8 @@ In:
   - `dispose`, `measure` (`kind`: 0 area, 1 length, 2 centroid, 3 bbox), `search`
     (`bbox`), `nearest` (`x`, `y`, `k`, `maxDistance`), `grid` (`bbox`, `cols`,
     `rows`), all with `dataset`;
-  - `within` (`points`, `polygons`) and `collect` (`polygons`, `points`, `property`);
+  - `within` (`points`, `polygons`); `nearestPairs` (`a`, `b`, `k`, `maxDistance`): each row of
+    `a` with its nearest rows of `b` as i32 pairs of rows;
   - `loadDem` (`url` a `{z}/{x}/{y}` template, `z`, `bounds`, `encoding` as
     `[kind, r, g, b, base]` with kind 0 Mapbox, 1 Terrarium, 2 GSI, 3 custom),
     `gridValues` (`grid`, `kind` 0 elevations, 1 slope, 2 aspect),
@@ -502,7 +503,8 @@ In:
   - geometry, each giving a new dataset: `buffer` (`dataset`, `meters`, `mode` 0
     geodesic or 1 planar, `join` 0 round, 1 miter, 2 square, 3 bevel, `cap` 0
     round, 1 butt, 2 square, `arcTolerance` in meters, `crs` the projected CRS
-    a planar buffer is measured in), `dissolve` (`dataset`), `merge` (`dataset`) and
+    a planar buffer is measured in), `dissolve` (`dataset`, `by` an ArrayBuffer of a u32 count
+    and that many column names to group by, strings as "Table operations"), `merge` (`dataset`) and
     `overlay` (`a`, `b`, `kind` 0 clip, 1 erase, 2 intersect, 3 split); the datasets go to
     the geometry module and back as Table bytes;
   - `relate` (`a`, `b`, `predicate` 0 intersects, 1 contains, 2 within, 3 covers, 4
@@ -535,7 +537,8 @@ In:
     given, decoded into a FeatureCollection (`wasmio/js/table.mjs`);
   - `table` (`dataset`): its Table bytes, for the data worker's `write`;
   - `rows` (`dataset`, `fn` an export of table_worker giving a table, `args` an ArrayBuffer and
-    `numbers` integers, "Table operations"; `other`, a second dataset, for `join`): a new dataset; `column` (`dataset`, `name`): the
+    `numbers` integers, "Table operations"; `other`, a second dataset, for `join` and `pairs`):
+    a new dataset; `column` (`dataset`, `name`): the
     column's values as an array (undefined where a row lacks the key); `columnKinds`
     (`dataset`): five i32 counts per column;
   - `transform` (`coords` an ArrayBuffer of f64 x, y pairs, `from`, `to`): the
@@ -548,7 +551,7 @@ Out:
   an ArrayBuffer for `table`, `{grid, width, height, bounds}` for
   `loadDem` (`bounds` west, south, east, north of the tiles mosaicked), null for
   `dispose`, a Uint8Array for `gridHillshade`, else a Float64Array or Int32Array
-  (transferred). `collect` gives count, numeric count and sum per polygon.
+  (transferred).
 - `{type: "result", id, error}`.
 
 Datasets cross to the coordinate system module (proj_worker) as their
@@ -582,6 +585,10 @@ is "Table" bytes unless said otherwise.
 - `join(len_left, len_right)`: the input holds two tables; after them a u8 (1 to keep the left
   rows without a match), the two suffixes, a u32 count and that many pairs of column names
   (left, right).
+- `pairs(len_left, len_right)`: two tables; after them a u8 mode (0 join, 1 keeping the left
+  rows in no pair, 2 rollup), the two suffixes, a u32 count of i32s and the pairs (a row of the
+  left table, then one of the right), and for mode 2 the outputs as `rollup`'s, their values read
+  of the right table.
 - `column`: the name as UTF-8 to the end of the input; the output is a "Property value" per row.
 - `kinds()`: the input is the table alone; the output is five i32s per column (cells holding a
   number, a string, a boolean, null, and rows without the key).

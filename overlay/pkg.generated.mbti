@@ -17,6 +17,8 @@ pub fn clip(@geom.Table, @geom.Table) -> @geom.Table
 
 pub fn dissolve(@geom.Table) -> @geom.Table
 
+pub fn dissolve_groups(@geom.Table, ArrayView[Int32], ArrayView[Int32], ArrayView[String]) -> @geom.Table
+
 pub fn erase(@geom.Table, @geom.Table) -> @geom.Table
 
 pub fn intersect(@geom.Table, @geom.Table) -> @geom.Table

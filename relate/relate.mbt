@@ -115,6 +115,13 @@ fn intersects(g1 : Geometry, g2 : Geometry) -> Bool {
   if g2.is_rectangle() {
     return rectangle_intersects(g2, g1)
   }
+  // A point's row of the matrix is its location (RelateComputer's isolated nodes).
+  if g2.kind == Point {
+    return locate(g2.points[0], g1) != EXTERIOR
+  }
+  if g1.kind == Point {
+    return locate(g1.points[0], g2) != EXTERIOR
+  }
   im_of(g1, g2).is_intersects()
 }
 

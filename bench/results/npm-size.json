@@ -131,7 +131,7 @@
     },
     {
       "name": "mbt-map/table",
-      "bytes": 7763,
+      "bytes": 7913,
       "budget": 9000
     },
     {
@@ -146,17 +146,17 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 30885,
+      "bytes": 29525,
       "budget": 31000
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 43051,
+      "bytes": 45237,
       "budget": 50000
     },
     {
       "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
-      "bytes": 26826,
+      "bytes": 26881,
       "budget": 30000
     },
     {
@@ -180,8 +180,8 @@
       "budget": 17000
     },
     {
-      "name": "table operations (select, filter, derive, orderby, rollup, join; loaded by the analysis worker on first use)",
-      "bytes": 45616,
+      "name": "table operations (select, filter, derive, orderby, rollup, joins; loaded by the analysis worker on first use)",
+      "bytes": 46881,
       "budget": 50000
     },
     {

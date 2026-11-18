@@ -67,7 +67,7 @@ const SHAPE_OPS = ["simplify", "convex", "concave", "delaunay", "voronoi", "line
 const SURFACE_TABLES = ["point_grid", "square_grid", "hex_grid", "triangle_grid", "interpolate", "isolines", "isobands", "density"];
 const SURFACE_VALUES = ["dbscan", "kmeans"];
 // The exports of table_worker that give a table.
-const TABLE_OPS = ["select", "filter", "take", "slice", "derive", "orderby", "rollup", "join"];
+const TABLE_OPS = ["select", "filter", "take", "slice", "derive", "orderby", "rollup", "join", "pairs"];
 // `@proj.DEFINITION_SLOTS` (ports/proj/encoding.mbt).
 const DEFINITION_SLOTS = 34;
 // An EPSG code, or a definition as docs/dev/FORMATS.md "CRS definition" encodes it.
@@ -178,8 +178,8 @@ async function crsId(crs) {
 }
 
 // Runs `call` in the geometry module on datasets `ids` and keeps its result as a new dataset.
-async function geometryOp(ids, call, name = "geometry") {
-  const { exports, tables } = await withTables(name, ids);
+async function geometryOp(ids, call, name = "geometry", rest = []) {
+  const { exports, tables } = await withTables(name, ids, rest);
   return stored(outputOf(exports, checked(exports, call(exports, tables[0].length))));
 }
 
@@ -296,10 +296,10 @@ const OPS = {
     check(isId(points) && isId(polygons));
     return i32s(wasm.within(points, polygons));
   },
-  collect({ polygons, points, property }) {
-    check(isId(polygons) && isId(points) && typeof property === "string");
-    input(encoder.encode(property));
-    return f64s(wasm.collect(polygons, points));
+  // Each row of `a` with its up to `k` nearest rows of `b`, as pairs of rows.
+  nearestPairs({ a, b, k, maxDistance }) {
+    check(isId(a) && isId(b) && Number.isInteger(k) && k >= 0 && k <= 0x7fffffff && maxDistance >= 0);
+    return i32s(wasm.nearest_pairs(a, b, k, maxDistance));
   },
   async buffer({ dataset, meters, mode, join, cap, arcTolerance, crs }) {
     check(isId(dataset) && Number.isFinite(meters) && [mode, join, cap].every(Number.isInteger) && arcTolerance >= 0 && isCrs(crs));
@@ -318,9 +318,10 @@ const OPS = {
       for (const t of temps) wasm.dispose(t);
     }
   },
-  dissolve({ dataset }) {
-    check(isId(dataset));
-    return geometryOp([dataset], (g) => g.dissolve());
+  // `by` holds the columns to group by ("Table operations"' names; none merges every row).
+  dissolve({ dataset, by }) {
+    check(isId(dataset) && by instanceof ArrayBuffer);
+    return geometryOp([dataset], (g, len) => g.dissolve(len), "geometry", [new Uint8Array(by)]);
   },
   merge({ dataset }) {
     check(isId(dataset));
@@ -374,7 +375,7 @@ const OPS = {
   // A table_worker export `fn` over `dataset` (and `other`, for a join) with `args` (bytes after the tables,
   // docs/dev/FORMATS.md "Table operations") and `numbers` (integers after the tables' lengths): a new dataset.
   async rows({ dataset, other, fn, args, numbers = [] }) {
-    const ids = fn === "join" ? [dataset, other] : [dataset];
+    const ids = other === undefined ? [dataset] : [dataset, other];
     check(ids.every(isId) && TABLE_OPS.includes(fn) && args instanceof ArrayBuffer && Array.isArray(numbers) && numbers.every(Number.isInteger));
     const { exports, tables } = await withTables("table", ids, [new Uint8Array(args)]);
     return stored(outputOf(exports, checked(exports, exports[fn](...tables.map((t) => t.length), ...numbers))));

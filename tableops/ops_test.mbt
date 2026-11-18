@@ -423,3 +423,78 @@ test "join refuses no key, a missing column and a name twice in the result" {
   let empty = @tableops.join(@geom.Table::new(), lookup(), [("x", "kind")])
   assert_eq(empty.unwrap().length(), 0)
 }
+
+///|
+test "join_pairs puts the paired rows side by side in the pairs' order, unmatched left rows last" {
+  let t = @tableops.join_pairs(sample(), lookup(), [3, 0, 0, 2, 0, 4]).unwrap()
+  assert_eq(names(t), strs(["d", "a", "a"]))
+  assert_eq(t.columns.map(c => c.name), [
+    "name", "n_1", "kind_1", "kind_2", "n_2", "v",
+  ])
+  assert_eq(cells(t, "v"), nums([11.0, 31.0, 51.0]))
+  assert_eq(cells(t, "kind_2"), [
+    Some(Str("school")),
+    Some(Str("pool")),
+    Some(Null),
+  ])
+  let kept = @tableops.join_pairs(sample(), lookup(), [3, 0], keep_left=true).unwrap()
+  assert_eq(names(kept), strs(["d", "a", "b", "c", "e"]))
+  assert_eq(cells(kept, "v"), [Some(Num(11.0)), None, None, None, None])
+  assert_true(kept.kinds is [Point, Point, Point, NoGeometry, Point])
+}
+
+///|
+test "rollup_pairs aggregates the paired rows per left row, keeping every row and its geometry" {
+  let outputs = [
+    ("hits", @tableops.Aggregate::Count, expr("null")),
+    ("n", Sum, expr("[\"get\", \"n\"]")),
+  ]
+  let t = @tableops.rollup_pairs(
+    sample(),
+    lookup(),
+    [0, 0, 3, 1, 0, 2],
+    outputs,
+  ).unwrap()
+  assert_eq(t.columns.map(c => c.name), ["name", "n", "kind", "hits"])
+  assert_eq(cells(t, "hits"), nums([2.0, 0.0, 0.0, 1.0, 0.0]))
+  assert_eq(cells(t, "n"), [
+    Some(Num(40.0)),
+    Some(Null),
+    Some(Null),
+    Some(Num(20.0)),
+    Some(Null),
+  ])
+  assert_eq(t.coords, sample().coords)
+}
+
+///|
+test "pairs out of the tables or without a second row are refused" {
+  let bad : Array[Array[Int32]] = [[0], [5, 0], [0, 5], [-1, 0], [0, -1]]
+  for pairs in bad {
+    assert_true(
+      @tableops.join_pairs(sample(), lookup(), pairs)
+      is Err("a pair out of the tables"),
+    )
+    assert_true(
+      @tableops.rollup_pairs(sample(), lookup(), pairs, [])
+      is Err("a pair out of the tables"),
+    )
+  }
+}
+
+///|
+test "column_groups groups rows as rollup does, null with a missing key" {
+  let (groups, first) = @tableops.column_groups(sample(), ["kind"]).unwrap()
+  assert_eq((groups, first), ([0, 1, 0, 0, 1], [0, 1]))
+  let (groups, first) = @tableops.column_groups(sample(), ["n", "kind"]).unwrap()
+  assert_eq((groups, first), ([0, 1, 2, 3, 4], [0, 1, 2, 3, 4]))
+  let (groups, first) = @tableops.column_groups(sample(), ["n"]).unwrap()
+  assert_eq((groups, first), ([0, 1, 2, 3, 2], [0, 1, 2, 3]))
+  assert_true(@tableops.column_groups(sample(), ["x"]) is Err("no column x"))
+  assert_true(
+    @tableops.column_groups(@geom.Table::new(), ["x"]) is Ok(([], [])),
+  )
+  assert_true(
+    @tableops.column_groups(sample(), []) is Ok(([0, 0, 0, 0, 0], [0])),
+  )
+}

@@ -23,13 +23,14 @@ const points = Array.from({ length: 400 }, () => ({
 
 const polygons = await load({ type: "FeatureCollection", features: blocks });
 const dots = await load({ type: "FeatureCollection", features: points });
-const [areas, counts, inside] = await Promise.all([polygons.areas(), polygons.collect(dots, "v"), dots.pointsWithin(polygons)]);
+const [areas, counted, inside] = await Promise.all([polygons.areas(), polygons.spatialJoin(dots, { rollup: { count: ["count"], mean: ["mean", "v"] } }), dots.pointsWithin(polygons)]);
+const counts = { count: await counted.array("count"), mean: await counted.array("mean") };
 
 const rows = document.querySelector("tbody");
 blocks.forEach((b, i) => {
   b.properties.count = counts.count[i];
   const tr = rows.insertRow();
-  for (const v of [b.properties.name, Math.round(areas[i]).toLocaleString(), counts.count[i], counts.mean[i].toFixed(1)]) tr.insertCell().textContent = v;
+  for (const v of [b.properties.name, Math.round(areas[i]).toLocaleString(), counts.count[i], (counts.mean[i] ?? NaN).toFixed(1)]) tr.insertCell().textContent = v;
 });
 // The blocks grown by 30 m on the ground and merged: geometry.wasm, loaded now.
 const zone = await (await polygons.buffer(30)).dissolve();
