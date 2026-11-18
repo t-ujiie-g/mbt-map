@@ -641,11 +641,9 @@ fn message(out : Out, kind : Int32, header : Node, body : Out) -> Int32 {
 }
 
 ///|
-/// `t` as an Arrow IPC stream, or with `file` in the file format: a column per property
-/// (32-bit integers, doubles, booleans or strings by what its cells hold; a column of mixed
-/// values as their text, numbers through `number_text`), then the geometry as `geoarrow.wkb`,
-/// or with `native` as GeoArrow's type for the rows' kind (an error if they mix kinds).
-/// Longitude and latitude (OGC:CRS84); feature ids are not written.
+/// `t` as an Arrow IPC stream, or with `file` in the file format (docs/dev/FORMATS.md "Arrow"):
+/// its columns by what their cells hold (numbers as text through `number_text` in a mixed one),
+/// the geometry as WKB or, with `native`, GeoArrow's type (an error for rows of mixed kinds).
 pub fn write_arrow(
   t : @geom.Table,
   native~ : Bool = false,

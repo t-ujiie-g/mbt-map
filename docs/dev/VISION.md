@@ -168,7 +168,9 @@ MapLibre GL JS の API に**名前と形を寄せる**（移行しやすくす�
 | T.4 空間結合と揃え直し | 空間関係や最近傍で相手の属性を付けたテーブルを返す。`search`・`relate`・`pointsWithin`・`nearest` などの番号の配列を返すものと、`splitFeatures`・`mergeFeatures` を、テーブルの面に直す | どれを改名し、どれを消すか（T.1 の対応表を確定する） |
 | T.4b 描画への直結 | GeoJSON ソースの `data` にテーブルを渡すと、バッファのままタイルを作るワーカーへ送る（メインスレッドで GeoJSON に直さない） | GeoJSON ワーカー（37.0/37KB）に入れるか、別の経路にするかを計測して選ぶ |
 | T.5 Arrow | Arrow IPC（GeoArrow の拡張型つき）の読み書き。バッファのまま DuckDB-WASM や Arquero と受け渡せる | 入口を分けるか。比べる相手（apache-arrow）は bench だけに入れる |
-| T.6 GeoParquet | 読み込み（書き出しは需要を見て）。§5 の「後回し」から移す | 圧縮（snappy、zstd、gzip）をどこまで読むか、展開を移植するか依存にするか（§7 と AGENTS.md §8.1 の確認） |
+| T.6 GeoParquet | 読み込み（書き出しは需要を見て）。§5 の「後回し」から移す。ファイル全体を読む。圧縮なし・snappy・gzip | 圧縮（snappy、zstd、gzip）をどこまで読むか、展開を移植するか依存にするか（§7 と AGENTS.md §8.1 の確認） |
+| T.6b zstd | zstd の展開を MoonBit に移植し（参照実装とのゴールデン）、Parquet のページと Arrow のバッファで使う | wasm の置き場所と予算 |
+| T.6c 範囲と列を絞って読む | `bbox` と `columns` で、要る行グループと列だけを Range リクエストで取る（行グループの統計か GeoParquet 1.1 の bbox 列） | オプションの形、bbox 列が無いファイルの扱い |
 | T.7 例・文書・移行 | 3 つのショーケースに「読む → 絞る → 結合 → 集計 → 描く」を足す。`docs/data.md` と `docs/analysis.md` を書き直し、0.1 からの移行の対応表を載せる | なし |
 | T.8 点検と 0.2.0 | リファクタリングとセキュリティの点検、版上げ | なし |
 
@@ -226,6 +228,11 @@ T.5 で決めたこと（2026-11-19、ユーザー判断）：
 - 口は `mbt-map/table` に足す：`read` が `.arrow`・`.arrows`・`.feather` を読み、`fromArrow(bytes)` と `table.toArrowIPC()`（Arquero の名前）。
 - 書くときのジオメトリは `geoarrow.wkb` が既定、`{ geometry: "native" }` で GeoArrow のネイティブ型（種類が混ざる表は断る）。
 - 読み書きは新しい `arrow.wasm`（データワーカーが初めて使うときに読む）。予算 30KB。LZ4 フレームで圧縮したバッファも読む（ZSTD は断る。T.6 で圧縮をどこまで読むかと一緒に伺う）。
+
+T.6 で決めたこと（2026-11-19、ユーザー判断）：
+- 圧縮は snappy と gzip（gzip はブラウザの DecompressionStream）。zstd は次の段（T.6b）で MoonBit に移植する。依存は増やさない。
+- 範囲と列を絞って読む所まで入れる（T.6c）。まずファイル全体を読む T.6 を出す。
+- Parquet は `parquet.wasm` に分ける（予算 24KB。計測：分けて 22,755、Arrow と 1 つにすると 38,889 バイト）。
 
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。

@@ -1,0 +1,16 @@
+// The Parquet module the data worker loads on the first Parquet read: files into `@geom.Table`
+// bytes (`@formats.read_parquet`), GZIP pages inflated by the host beforehand.
+
+import {
+  "t-ujiie-g/mbtmap_engine/core",
+  "t-ujiie-g/mbtmap_engine/formats",
+  "t-ujiie-g/mbtmap_engine/wasmio",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

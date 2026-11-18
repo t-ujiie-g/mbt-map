@@ -1,6 +1,6 @@
-# bench/npm/pages/data/stations.feather: three stations in plane IX (EPSG:6677) as geopandas' `to_feather`
+# bench/npm/pages/data/stations.feather and stations.parquet: three stations in plane IX (EPSG:6677) as geopandas' `to_feather`
 # lays a file out (WKB geometry, the `geo` metadata with a PROJJSON CRS, LZ4 buffers), written by pyarrow.
-# The file is committed; this script only says how it was made.
+# The files are committed; this script only says how they were made.
 # Usage: python3 bench/data/feather-fixture.py (needs pyarrow; made with 23.0.1)
 import json
 import struct
@@ -27,3 +27,9 @@ table = pa.table(
     }
 ).replace_schema_metadata({"geo": json.dumps(GEO)})
 feather.write_feather(table, "bench/npm/pages/data/stations.feather", compression="lz4")
+
+# bench/npm/pages/data/stations.parquet: the same rows as GeoParquet (GZIP pages, so that the browser
+# inflates them), in two row groups.
+import pyarrow.parquet as pq
+
+pq.write_table(table, "bench/npm/pages/data/stations.parquet", compression="gzip", row_group_size=2)

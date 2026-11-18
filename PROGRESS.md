@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.6（GeoParquet の読み込み：VISION §8「テーブルの段階」）。その後 T.7・T.8、Phase 21。
+- **次**：テーブルの段階の T.6b（zstd の展開の移植）と T.6c（`bbox` と `columns` で範囲と列を絞って読む）。その後 T.7・T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -636,3 +636,22 @@ Where things stand, decisions and open issues. The development history before th
 - 依存（`bench` の開発用、配布物には入らない）：apache-arrow 21.2.0（Apache-2.0、導入スクリプトなし）、lz4js 0.2.0（ISC、導入スクリプトなし。apache-arrow に LZ4 で書かせるため。これまでも他の依存の下にあった）。`npm audit` は 0 件。
 - 残したもの：`geoarrow.wkt` の列は読まない。ZSTD で圧縮したバッファは断る。地物の id は書かない。FlatBuffers の読み手が FlatGeobuf 用と Arrow 用の 2 つある（T.8 の点検で寄せるかを見る）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 984、wasm-gc 996、js 1043、native 984：`formats` 14 件を足した）、npm のテスト（469：`arrow.mjs` 4 件）と大きさ、bench のテスト（23）、`data:golden`・`write:golden`（0 differ のまま）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium。data のページで Feather を読み、書いて読み戻し、断り方を見る）。
+
+## テーブルの段階 T.6：GeoParquet の読み込み（2026-11-19、Mac）
+
+- 決めたこと（ユーザー判断）：圧縮は snappy と gzip。zstd は次の段（T.6b）で MoonBit に移植する（依存は増やさない）。範囲と列を絞って読む所まで入れる（T.6c）。Parquet は `parquet.wasm` に分ける（予算 24KB）。
+- 作り（`formats/parquet.mbt`）：
+  - フッター（Thrift のコンパクトプロトコル）からスキーマ・行グループ・`geo` メタデータを読む。位置と数はすべて検査し、入れ子は 32 段まで。
+  - 行そのものの列（グループの中でも繰り返しでもない葉）だけを読む。ページは辞書ページ、データページの v1 と v2。値のエンコーディングは PLAIN、辞書（RLE とビット詰めの混成）、RLE（真偽値）、DELTA_BINARY_PACKED、DELTA_LENGTH_BYTE_ARRAY、DELTA_BYTE_ARRAY、BYTE_STREAM_SPLIT。
+  - 型：真偽値、整数（符号つき・なし）、浮動小数（16〜64 ビット）、10 進数（INT32・INT64・固定長・可変長）、文字列、日付、時刻（INT96 も）。リスト・構造体・バイナリ・時刻だけの列などは読み飛ばす。
+  - ジオメトリは WKB の列：`geo` メタデータの `primary_column`、無ければ Parquet の `GEOMETRY`・`GEOGRAPHY` 型、無ければ `geometry` などの名前。CRS は Arrow と同じ道（`data-arrow.js` が EPSG コードを取り出して変換）。
+  - snappy は形式の説明から書いた（依存なし）。gzip はブラウザの `DecompressionStream`：wasm の `pages()` が展開するページの位置と長さを並べ、JS が展開して、ファイルの後ろに付けて `read()` に渡す。
+- 計測（gzip）：`parquet.wasm` 22,896 バイト（予算 24KB）。Arrow と 1 つの wasm にすると 38,889 バイトだった（分けた場合 Arrow 28,280 + Parquet 22,896）。`data-arrow.js` 608 → 926（`arrow.wasm` と合わせて 29,206、予算 30KB）、データワーカー 40,790 → 40,835（41KB、残り 165 バイト）、`mbt-map/table` 8,057 → 8,073、共有の接続 1,783 → 1,799。
+- ゴールデン（`parquet:golden`）：
+  - pyarrow 23.0.1 が書いた 15 ファイル（`bench/table/parquet/`、合計 0.5MB をコミット。`bench/data/parquet-fixtures.py` が、読めるはずの行も値から計算して `expected.json` に書く）：圧縮なし・snappy・gzip、ページ v1・v2、辞書あり・なし、小さいページと行グループ、3 つの delta と byte stream split、INT96、投影の CRS、`geo` なしで名前から見つける列、ジオメトリなし、0 行：284 件 0 differ。zstd・lz4・brotli の 3 ファイルは断る。
+  - hyparquet 1.33.1：hyparquet-writer 0.18.0 が種を固定した表 30 個から書いたファイルを、hyparquet と同じ値に読む：0 differ（表 200 個でも 0 differ）。
+  - 壊した入力（4 ファイルを途中で切る、バイトを変える各 1,500 回。半分はフッターを狙う）：トラップなし。
+- 分かっていること：2^53 を超える 10 進数は、バイトごとに足すので最後の桁が近似になる（ゴールデンでは相対 1e-14 で比べる）。GeoParquet 1.1 の GeoArrow エンコーディング（入れ子のリスト）は読まず、そのファイルは断る。
+- 途中で直したもの：入れ子の列（リスト・構造体）の後ろにある列が「入れ子の中」と数えられて読まれなかった。0 行のファイルと、空のリストの書き方（要素の型が 0）を断っていた。10 進数を 10 で何度も割っていたので、最後の桁がずれることがあった（10 の累乗 1 回で割る。Arrow の 10 進数も同じに直した）。
+- 依存（`bench` の開発用、配布物には入らない）：hyparquet 1.33.1、hyparquet-writer 0.18.0、hyparquet-compressors 1.1.3（どれも MIT、導入スクリプトなし）。`npm audit` は 0 件。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 991、wasm-gc 1003、js 1050、native 991：`formats` 7 件を足した）、npm のテスト（471：`arrow.mjs` 2 件）と大きさ、bench のテスト（23）、`arrow:golden`（0 differ のまま）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium）と data ページを WebKit・Firefox で（pyarrow が gzip で書いた GeoParquet を読み、EPSG:6677 から経緯度に直る）。

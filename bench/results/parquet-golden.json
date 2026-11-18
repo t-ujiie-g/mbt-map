@@ -1,0 +1,24 @@
+{
+  "pyarrow": "23.0.1",
+  "hyparquet": "1.33.1",
+  "hyparquet-writer": "0.18.0",
+  "tables": 30,
+  "results": {
+    "pyarrow": {
+      "cases": 284,
+      "differ": 0
+    },
+    "refused": {
+      "cases": 5,
+      "differ": 0
+    },
+    "hyparquet": {
+      "cases": 30,
+      "differ": 0
+    },
+    "damaged": {
+      "cases": 8,
+      "differ": 0
+    }
+  }
+}

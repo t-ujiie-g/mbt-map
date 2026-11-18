@@ -86,7 +86,7 @@
     },
     {
       "name": "services worker (ArcGIS f=json and f=pbf; loaded by mbt-map/services on the first such read)",
-      "bytes": 20323,
+      "bytes": 20317,
       "budget": 21000
     },
     {
@@ -121,17 +121,17 @@
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 57774,
+      "bytes": 57778,
       "budget": 59000
     },
     {
       "name": "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)",
-      "bytes": 1783,
+      "bytes": 1799,
       "budget": 2000
     },
     {
       "name": "mbt-map/table",
-      "bytes": 8057,
+      "bytes": 8073,
       "budget": 9000
     },
     {
@@ -146,7 +146,7 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 29525,
+      "bytes": 29526,
       "budget": 31000
     },
     {
@@ -231,7 +231,7 @@
     },
     {
       "name": "data worker",
-      "bytes": 40790,
+      "bytes": 40835,
       "budget": 41000
     },
     {
@@ -266,8 +266,13 @@
     },
     {
       "name": "Arrow IPC (loaded by the data worker on the first Arrow read or write)",
-      "bytes": 28920,
+      "bytes": 29206,
       "budget": 30000
+    },
+    {
+      "name": "Parquet (loaded by the data worker on the first Parquet read, with data-arrow.js)",
+      "bytes": 22896,
+      "budget": 24000
     },
     {
       "name": "GeoTIFF (loaded by the data worker on the first raster read)",

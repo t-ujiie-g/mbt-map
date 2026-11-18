@@ -24,7 +24,7 @@ const csv = await write(stations, { format: "csv" });
 - [Reading](#reading)
 - [`Table`](#table)
 - [Coordinate systems](#coordinate-systems)
-- [Formats](#formats): [CSV](#csv), [WKT and EWKT](#wkt-and-ewkt), [WKB and EWKB](#wkb-and-ewkb), [Shapefile](#shapefile), [TopoJSON](#topojson), [KML and KMZ](#kml-and-kmz), [GPX](#gpx), [FlatGeobuf](#flatgeobuf), [GeoJSON](#geojson), [Arrow](#arrow)
+- [Formats](#formats): [CSV](#csv), [WKT and EWKT](#wkt-and-ewkt), [WKB and EWKB](#wkb-and-ewkb), [Shapefile](#shapefile), [TopoJSON](#topojson), [KML and KMZ](#kml-and-kmz), [GPX](#gpx), [FlatGeobuf](#flatgeobuf), [GeoJSON](#geojson), [Arrow](#arrow), [Parquet](#parquet)
 - [Writing](#writing)
 - [GeoTIFF and COG](#geotiff-and-cog)
 - [The `geotiff` style source](#the-geotiff-style-source)
@@ -376,6 +376,27 @@ const back = await fromArrow(frame.toArrowIPC());
 
 What `toArrowIPC` writes reads back the same in apache-arrow 21.2.0 and in pyarrow, and what they write reads the same here.
 
+### Parquet
+
+```ts
+read(input, { format: "parquet" })               // also by name: .parquet, .geoparquet
+```
+
+Parquet files, with [GeoParquet](https://geoparquet.org/)'s metadata: what GeoPandas' `to_parquet`, GDAL and DuckDB's `COPY ... TO 'x.parquet'` write. The whole file is read (up to 256 MB); every row group gives its rows.
+
+- **Geometry**: the WKB column that the `geo` metadata names as its primary column; without that metadata, a column of Parquet's `GEOMETRY` or `GEOGRAPHY` type, else a binary column named `geometry`, `geom` or `wkb_geometry`. A file without any gives rows without geometry. GeoParquet 1.1's GeoArrow encodings (`point`, `polygon`, …) are not read: such a file fails.
+- **CRS**: the column's `crs` in the `geo` metadata, as for [Arrow](#arrow): converted when it names an EPSG code, longitude and latitude when absent.
+- **Columns**: the rows' own columns (not inside a group, not repeated) of booleans, integers (signed and unsigned, 8 to 64 bits; 64-bit ones exact up to 2^53), floats (16 to 64 bits), decimals (as numbers; past 2^53 their last digits are approximate) and strings (`STRING`, `ENUM`, `JSON`). Dates become `"YYYY-MM-DD"`, timestamps (`INT96` ones too) `"YYYY-MM-DDTHH:MM:SS"` as for Arrow. Lists, maps, structs, binary columns that are not the geometry, times, UUIDs and intervals are left out. A null is `null`.
+- **Encodings**: plain, dictionary, RLE, the three delta encodings and byte stream split, in data pages of version 1 and 2.
+- **Compression**: none, Snappy and GZIP (inflated by the browser). ZSTD, LZ4 and Brotli pages are refused. Checksums are not verified.
+
+```js
+const buildings = await read("/data/buildings.parquet");
+map.addSource("buildings", { type: "geojson", data: buildings });
+```
+
+Reading a part of a file (a `bbox`, some columns) by range requests is not there yet.
+
 ## Writing
 
 ```ts
@@ -500,8 +521,9 @@ map.addSource("temp", {
 | Input size | 256 MB |
 | Points | 20 million |
 | CSV | 4096 fields per row, 16 MB per field |
-| Property cells (rows × columns: CSV, `.dbf`, TopoJSON, FlatGeobuf, KML, GPX, Arrow) | 32 million |
+| Property cells (rows × columns: CSV, `.dbf`, TopoJSON, FlatGeobuf, KML, GPX, Arrow, Parquet) | 32 million |
 | Arrow | 65 536 fields nested 32 deep; compressed buffers inflating to 1 GB in all. |
+| Parquet | 65 536 schema elements, row groups and columns; pages inflating to 1 GB in all. |
 | Zip | 10 000 entries, 256 MB inflated in total |
 | XML (KML, GPX) | 256 levels deep, 1024 attributes per element, 4 million nodes. KML/GPX feature properties and GPX extension names per track: 4096. |
 | FlatGeobuf | 10 MB header, 4096 columns, 256 MB read with `bbox`. Files that point at the same data repeatedly are refused. |
@@ -521,10 +543,11 @@ The first call starts `data-worker.js` with `data.wasm`. These are fetched on fi
 | `xml.wasm` | reading KML or GPX, or writing KML |
 | `data-fgb.js` | reading FlatGeobuf |
 | `arrow.wasm`, `data-arrow.js` | reading or writing Arrow |
+| `parquet.wasm`, `data-arrow.js` | reading Parquet |
 | `geotiff.wasm`, `data-geotiff.js` | calling `readRaster` and the other raster functions |
 | `projstring.js` | a PROJ string is given |
 | `data-reproject.js` | drawing a `reprojected` source's tiles |
 
-By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`), `arrowUrl` (`arrow.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
+By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`), `arrowUrl` (`arrow.wasm`), `parquetUrl` (`parquet.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
 
 `terminate()` stops the worker and rejects pending calls. The next call starts a new one.

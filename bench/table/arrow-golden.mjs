@@ -1,6 +1,5 @@
-// arrow.wasm vs apache-arrow 21.2.0 (wkx 0.5.0 for WKB, lz4js 0.2.0 for its LZ4 buffers) on seeded random
-// tables: what it writes must read back in apache-arrow as the table's values and geometries, what
-// apache-arrow writes must read as its values, and damaged input must be refused without a trap.
+// arrow.wasm vs apache-arrow 21.2.0 (wkx 0.5.0 for WKB, lz4js 0.2.0 for LZ4) on seeded random tables: what each
+// writes the other must read as the same values and geometries; damaged input must be refused without a trap.
 // Usage: node table/arrow-golden.mjs [--tables=N]; writes bench/results/arrow-golden.json.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
