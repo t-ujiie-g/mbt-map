@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.4b（描画への直結：GeoJSON ソースの `data` にテーブルを渡す。VISION §8「テーブルの段階」）。その後 T.5〜T.8、Phase 21。
+- **次**：テーブルの段階の T.5（Arrow IPC の読み書き：VISION §8「テーブルの段階」）。その後 T.6〜T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -601,3 +601,20 @@ Where things stand, decisions and open issues. The development history before th
   - 残っているもの：6MB のテーブルをモジュールごとに読み直す所（`Table::from_bytes`）が大きい。どの wasm の間の受け渡しにも効くので、T.8 の点検で見る。
 - 途中で直したもの：pack test のチェックで、最近傍の結合の期待値を見積もり違いしていた（箱の中心からの距離で手計算し直して合わせた）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 970、wasm-gc 980、js 1029、native 970：`tableops` 4 件、`overlay` 1 件、`analysis` 1 件を足した）、npm のテスト（464）と大きさ、bench のテスト（23）、`geometry:node`（dissolve 165 ms、前回 170 ms）、pack test の `data,analysis,samples,showcase-html,cdn`（Chromium。analysis のページで結合・集計・グループごとの dissolve・クラスタの列と断り方を見る）。
+
+## テーブルの段階 T.4b：描画への直結（2026-11-18、Mac）
+
+- 決めたこと（ユーザー判断）：テーブルは GeoJSON ワーカーがバイト列のまま読む。予算は GeoJSON ワーカー 37 → 39KB、式つきの版 57 → 59KB。
+- 作り：
+  - `geojson_tiles` の `load`：`flags` の bit 1 が立っていると、入力を「テーブルのバイト列（長さつき）と、行ごとの id」として読み、`@geom.Table::from_bytes` の結果をそのままタイラーに渡す（GeoJSON を経ない）。bit 0 はこれまでの `lineMetrics`。
+  - `geojson.js`：ソースの `data` がテーブル（`writeArgs` を持つもの）なら、行と id のバイト列をもらってワーカーへ送る。ページにあるテーブルはコピー、解析ワーカーにあるテーブルはワーカーから取り寄せる。届くまでの間、そのソースのタイルとクラスタの問い合わせは送らずに待たせる。`updateData` はテーブルのソースでは断る（`error` イベント）。
+  - 本体（`npm/src/style.ts` の `copy`）：スタイルを JSON で写すとき、テーブルは参照のまま残す。
+- 計測（gzip）：GeoJSON ワーカー 36,994 → 38,309 バイト（39KB）、式つきの版 56,491 → 57,774（59KB）、`geojson.js` 4,850 → 4,995（5KB、残り 5 バイト）、本体 167,113 → 167,170（168KB）。
+- 速さ（`table:source`、Node、5 回の中央値）：ワーカーでの読み込みは、建物 88,375 件で GeoJSON の文字列から 418 ms、テーブルから 113 ms。道路 105,617 件で 356 → 119 ms、点 8,018 件で 15.3 → 5.6 ms、混在 116,840 件で 537 → 152 ms。これまでの経路でページ側にかかっていた分（テーブルを GeoJSON にして文字列にする：建物 115 + 123 ms、道路 214 + 91 ms、混在 252 + 155 ms）は無くなる。
+- 確かめ（同じタイルになるか）：`table:source` で 4 つのデータ × 13 タイル（ズーム 0・4・10・14・16）を、GeoJSON から読んだ場合とバイト単位で比べて all tiles identical。`geojson:golden`・`cluster:golden`・`geojson:update` は 0 differ / all identical のまま。
+- 途中で直したもの：
+  - 解析ワーカーにあるテーブルを渡すと何も描かれなかった。行を取り寄せる間に、タイルの要求が先に GeoJSON ワーカーへ届き、「読み込みが無い」として空のタイルが返っていた。行を送り終えるまでタイルと問い合わせを待たせた。
+  - スタイルの写し（JSON）でテーブルがただのオブジェクトになっていた（`copy` を直した）。
+  - テーブルのソースに `updateData` を呼ぶと、黙って空の FeatureCollection に置き換わっていた（断るようにした）。
+- 分かっていること：`setData(table)` の直後に `table.dispose()` を呼ぶと、行を取り寄せる前に破棄されて読み込みが失敗する（`error` イベント。文書に書いた）。`geojson.js` の残りが 5 バイトなので、次にここへ足すときは予算を伺う。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 970、wasm-gc 982、js 1029、native 970：`geojson_tiles` 2 件を足した）、npm のテスト（465：`copy` 1 件）と大きさ、bench のテスト（23）、pack test の `npm,geojson,data,analysis,samples,showcase-html,cdn`（Chromium。data のページは 3 つのソースをテーブルのまま渡し、差し替え・`updateData` の断り・破棄済みのテーブルを見る）。

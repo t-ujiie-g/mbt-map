@@ -1,0 +1,80 @@
+{
+  "env": {
+    "runtime": "node v22.23.4"
+  },
+  "runs": 5,
+  "results": {
+    "buildings": {
+      "features": 88375,
+      "bytes": {
+        "geojson": 32903929,
+        "table": 12478052
+      },
+      "tiles": {
+        "compared": 13,
+        "identical": 13,
+        "nonEmpty": 7
+      },
+      "ms": {
+        "worker: load from GeoJSON text": 418.43333299999995,
+        "worker: load from table bytes": 113.05858400000034,
+        "page: table to GeoJSON object": 114.63129200000003,
+        "page: JSON.stringify and encode": 122.94983400000001
+      }
+    },
+    "roads": {
+      "features": 105617,
+      "bytes": {
+        "geojson": 30080119,
+        "table": 13705988
+      },
+      "tiles": {
+        "compared": 13,
+        "identical": 13,
+        "nonEmpty": 8
+      },
+      "ms": {
+        "worker: load from GeoJSON text": 355.7797499999997,
+        "worker: load from table bytes": 119.13004200000069,
+        "page: table to GeoJSON object": 214.27687500000138,
+        "page: JSON.stringify and encode": 90.78062499999942
+      }
+    },
+    "points": {
+      "features": 8018,
+      "bytes": {
+        "geojson": 1532376,
+        "table": 709918
+      },
+      "tiles": {
+        "compared": 13,
+        "identical": 13,
+        "nonEmpty": 10
+      },
+      "ms": {
+        "worker: load from GeoJSON text": 15.314000000000306,
+        "worker: load from table bytes": 5.647458000001279,
+        "page: table to GeoJSON object": 12.49091700000099,
+        "page: JSON.stringify and encode": 6.051124999999956
+      }
+    },
+    "mixed": {
+      "features": 116840,
+      "bytes": {
+        "geojson": 41117417,
+        "table": 17091175
+      },
+      "tiles": {
+        "compared": 13,
+        "identical": 13,
+        "nonEmpty": 9
+      },
+      "ms": {
+        "worker: load from GeoJSON text": 537.2229590000006,
+        "worker: load from table bytes": 151.48345800000243,
+        "page: table to GeoJSON object": 251.46470799999952,
+        "page: JSON.stringify and encode": 154.98720800000228
+      }
+    }
+  }
+}

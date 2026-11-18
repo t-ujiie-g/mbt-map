@@ -38,13 +38,14 @@ fn load_test(
   max_zoom~ : Int32 = 14,
   buffer~ : Double = 64.0,
   cluster~ : Int32 = 0,
+  flags~ : Int32 = 0,
 ) -> Int32 {
   load(
     source,
     max_zoom,
     buffer,
     3.0,
-    0,
+    flags,
     cluster,
     14,
     50.0,
@@ -133,4 +134,47 @@ test "update applies a diff to a loaded source, found by its promoteId" {
   assert_true(update(4, (_, _) => panic()) < 0)
   assert_true(update(99, (_, _) => panic()) < 0)
   unload(4)
+}
+
+///|
+/// The last tile written at `output_addr`, `n` bytes.
+fn output(n : Int32) -> Array[Int32] {
+  Array::makei(n, i => load_u8(@wasmio.output_addr() + i))
+}
+
+///|
+test "a table loads as the GeoJSON it holds does, with the ids given after it" {
+  let json : Bytes = b"{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"id\":7,\"properties\":{\"name\":\"a\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[10,10]}},{\"type\":\"Feature\",\"id\":\"b\",\"properties\":{\"n\":2},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[0,0],[20,20]]}}]}"
+  assert_eq(load_plain(1, json), 2)
+  let want = output(tile(1, 0, 0, 0))
+  let (table, _) = @formats.read_geojson_features(json[:], (_, _) => panic())
+  let ids = @core.ByteWriter::new()
+  for id in table.ids {
+    @geom.write_prop(ids, id)
+  }
+  put_input(sized(table.to_bytes(), ids.to_bytes()))
+  assert_eq(load_test(2, flags=2), 2)
+  assert_eq(output(tile(2, 0, 0, 0)), want)
+  // Without ids the rows have none.
+  put_input(sized(table.to_bytes(), b""))
+  assert_eq(load_test(2, flags=2), 2)
+  assert_true(output(tile(2, 0, 0, 0)) != want)
+  unload(1)
+  unload(2)
+}
+
+///|
+test "a table that is cut, or whose ids are, is refused" {
+  let table = @geom.Table::new()
+  table.push_row(None, [("a", Some(Num(1.0)))]) |> ignore
+  let bytes = table.to_bytes()
+  put_input(sized(bytes, b"\x09"))
+  assert_true(load_test(3, flags=2) < 0)
+  put_input(sized(bytes[:bytes.length() - 1].to_owned(), b""))
+  assert_true(load_test(3, flags=2) < 0)
+  put_input(b"\xff\xff\xff\x7f")
+  assert_true(load_test(3, flags=2) < 0)
+  put_input(sized(bytes, b""))
+  assert_eq(load_test(3, flags=2), 1)
+  unload(3)
 }

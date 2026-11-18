@@ -59,6 +59,7 @@
     "shapes:golden": "npm run build:moon && node shapes/golden.mjs",
     "surface:golden": "npm run build:moon && node surface/golden.mjs",
     "table:golden": "npm run build:moon && node table/golden.mjs",
+    "table:source": "npm run build:moon && node --max-old-space-size=8192 table/source.mjs",
     "viewshed:golden": "npm run build:moon && node viewshed/golden.mjs",
     "route:golden": "npm run build:moon && node route/golden.mjs",
     "relate:node": "npm run build:moon && node relate/node.mjs",

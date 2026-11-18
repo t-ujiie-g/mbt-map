@@ -21,10 +21,33 @@ export async function dataChecks(page, requests) {
     const tsv = await parse("x\ty\tname\n1\t2\ta\n", { format: "csv" });
     const plane = await parse(`SRID=6677;POINT (${x} ${y})\nPOINT (139.7671 35.6812)`, { format: "wkt" });
     const fail = (p) => p.then(() => "", (e) => e.message);
+    // A source's data replaced by a table an operation gave, a diff refused, and a disposed table.
+    const lineIds = (await map.queryRenderedFeatures({ layers: ["lines"] })).map((f) => f.id);
+    const errors = [];
+    window.__expectErrors = true;
+    map.on("error", (e) => errors.push(e.error.message));
+    const source = map.getSource("stations");
+    const settled = async (done) => {
+      for (let i = 0; i < 100 && !(await done()); i++) await new Promise((resolve) => setTimeout(resolve, 50));
+    };
+    const stationsDrawn = async () => (await map.queryRenderedFeatures({ layers: ["stations"] })).map((f) => f.properties.名前).sort();
+    const busy = await window.__stations.filter([">", ["get", "乗降客数"], 100000]);
+    source.setData(busy);
+    await settled(async () => (await stationsDrawn()).length === 2);
+    const replaced = await stationsDrawn();
+    await source.updateData({ add: [] });
+    const gone = await window.__stations.slice(0, 1);
+    gone.dispose();
+    source.setData(gone);
+    await settled(() => errors.length === 2);
+    source.setData(window.__stations);
+    await settled(async () => (await stationsDrawn()).length === 4);
+    window.__expectErrors = false;
     return {
       ...window.__data,
       drawn,
       linesDrawn,
+      tableSource: { lineIds: [...new Set(lineIds)].sort(), replaced, errors, restored: (await stationsDrawn()).length },
       file: (await file.toGeoJSON()).features.map((f) => f.geometry.type),
       wkb: (await wkb.toGeoJSON()).features[0].geometry.coordinates,
       hex: (await hex.toGeoJSON()).features[0].geometry.coordinates,
@@ -113,6 +136,9 @@ export async function dataChecks(page, requests) {
     JSON.stringify(r.derived) === JSON.stringify([5, ["名前", "緯度", "経度", "乗降客数", "備考"], null]) &&
     JSON.stringify(r.inside) === JSON.stringify([0, 1, 3]) &&
     r.drawn === 4 &&
+    JSON.stringify(r.tableSource.lineIds) === '[2,"a"]' && JSON.stringify(r.tableSource.replaced) === JSON.stringify(["有楽町", "東京"]) &&
+    r.tableSource.errors.length === 2 && /not compatible with updateData/.test(r.tableSource.errors[0]) && /stations: .*disposed/.test(r.tableSource.errors[1]) &&
+    r.tableSource.restored === 4 &&
     r.linesDrawn > 0 &&
     JSON.stringify([r.lines.layer, r.lines.layers]) === JSON.stringify(["lines", ["lines"]]) &&
     JSON.stringify(r.lines.features.map((f) => [f.id, f.properties.name, f.geometry.type])) === JSON.stringify([["a", "内堀通り", "LineString"], [2, "永代通り", "LineString"]]) &&

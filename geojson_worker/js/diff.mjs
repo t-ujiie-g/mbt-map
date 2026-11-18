@@ -12,9 +12,10 @@ function sized(bytes) {
   return out;
 }
 
-/** The input of `load`: `promoteId` (a string, else none) and then `data`, the GeoJSON as UTF-8. */
-export function loadInput(promoteId, data) {
-  return [sized(encoder.encode(typeof promoteId === "string" ? promoteId : "")), data];
+/** The input of `load`: `promoteId` (a string, else none) and then `data`, the GeoJSON as UTF-8, or the table `table` (sized) and its `ids`. */
+export function loadInput(promoteId, data, table, ids) {
+  const key = sized(encoder.encode(typeof promoteId === "string" ? promoteId : ""));
+  return table ? [key, sized(new Uint8Array(table)), new Uint8Array(ids ?? 0)] : [key, data];
 }
 
 class Writer {

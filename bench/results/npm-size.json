@@ -6,12 +6,12 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 167113,
+      "bytes": 167170,
       "budget": 168000
     },
     {
       "name": "GeoJSON sources (loaded by mbt-map when a style has one)",
-      "bytes": 4850,
+      "bytes": 4995,
       "budget": 5000
     },
     {
@@ -116,13 +116,13 @@
     },
     {
       "name": "GeoJSON worker",
-      "bytes": 36994,
-      "budget": 37000
+      "bytes": 38309,
+      "budget": 39000
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 56491,
-      "budget": 57000
+      "bytes": 57774,
+      "budget": 59000
     },
     {
       "name": "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)",
