@@ -83,6 +83,13 @@ export class Packer {
     return this.u8(4).utf8(typeof v === "string" ? v : typeof v === "bigint" ? String(v) : JSON.stringify(v) ?? "");
   }
 
+  /** The bytes of `view` as they are. */
+  bytes(view: ArrayBufferView): this {
+    const at = this.#room(view.byteLength);
+    this.#bytes.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength), at);
+    return this;
+  }
+
   /** The bytes written, as a buffer of their own. */
   finish(): ArrayBuffer {
     return this.#bytes.slice(0, this.#at).buffer;

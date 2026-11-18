@@ -354,8 +354,25 @@ const checks = {
         bands: (await (await idw.isobands([10, 20, 30, 40, 50])).toGeoJSON()).features.map((f) => f.properties.elevation),
         lines: (await idw.isolines([25])).length,
         density: (await spots.density({ thresholds: 3 })).length > 0,
-        dbscan: (await spots.dbscan(1, { minPoints: 1 })).kinds,
-        kmeans: Array.from((await spots.kmeans(2)).clusters),
+        dbscan: await (await spots.dbscan(1, { minPoints: 1 })).array("dbscan"),
+        kmeans: await spots.kmeans(2).then(async (t) => [t.columns, (await t.array("cluster")).length, (await t.array("centroid_x")).every((x) => x > 139.7 && x < 139.8)]),
+      };
+      // Spatial joins (relate.wasm's pairs, table.wasm's columns) and a dissolve per group (geometry.wasm).
+      const halfBox = (x0, y0, x1, y1, side) => ({ type: "Feature", properties: { side }, geometry: { type: "Polygon", coordinates: [[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]] } });
+      const sides = await load(fc([halfBox(139.7, 35.6, 139.74, 35.7, "west"), halfBox(139.74, 35.6, 139.8, 35.7, "east"), halfBox(139.7, 35.6, 139.72, 35.7, "west"), halfBox(0, 0, 1, 1, "far")]));
+      const sideOf = await spots.spatialJoin(sides, { predicate: "within" });
+      const perHalf = await sides.spatialJoin(spots, { predicate: "contains", rollup: { n: ["count"], top: ["max", "elevation"] } });
+      const nearSpot = await sides.nearestJoin(spots, { maxDistance: 1, left: true });
+      const bySide = await sides.dissolve({ by: "side" });
+      const joins = {
+        tagged: [sideOf.columns, await sideOf.array("elevation"), await sideOf.array("side")],
+        counted: [await perHalf.array("n"), await perHalf.array("top"), (await perHalf.toGeoJSON()).features.every((f) => f.geometry.type === "Polygon")],
+        near: [(await nearSpot.array("elevation")).map((v) => v ?? "none"), nearSpot.length],
+        merged: [bySide.columns, await bySide.array("side"), Array.from(await bySide.areas(), (a) => Math.round(a / 1e6))],
+        whole: (await sides.dissolve()).length,
+        noGroup: await sides.dissolve({ by: "nope" }).then(() => "", (e) => e.message),
+        noRelation: await spots.spatialJoin(sides, { predicate: "nope" }).then(() => "", (e) => e.message),
+        noTable: await spots.nearestJoin({}).then(() => "", (e) => e.message),
       };
       // Routing (route.wasm, loaded now): around a square of four streets with a diagonal.
       const streets = await load(fc([[[0, 0], [1, 0]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[0, 1], [0, 0]], [[0, 0], [1, 1]]].map((c) => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: c } }))));
@@ -417,6 +434,7 @@ const checks = {
         shapes,
         classes,
         surfaces,
+        joins,
         routes,
         snapped,
         disposedRoute,
@@ -471,7 +489,14 @@ const checks = {
       JSON.stringify(r.geometry.shapes.nearest) === "[1]" && /invalid bbox/.test(r.geometry.shapes.badBox) &&
       r.geometry.surfaces.hexes === 5 && r.geometry.surfaces.idw === 20 && r.geometry.surfaces.lines === 1 && r.geometry.surfaces.density &&
       JSON.stringify(r.geometry.surfaces.bands) === JSON.stringify(["10-20", "20-30", "30-40", "40-50"]) &&
-      JSON.stringify(r.geometry.surfaces.dbscan) === JSON.stringify(["core", "core", "core", "core"]) && r.geometry.surfaces.kmeans.length === 4 &&
+      JSON.stringify(r.geometry.surfaces.dbscan) === JSON.stringify(["core", "core", "core", "core"]) &&
+      JSON.stringify(r.geometry.surfaces.kmeans) === JSON.stringify([["elevation", "cluster", "centroid_x", "centroid_y"], 4, true]) &&
+      JSON.stringify(r.geometry.joins.tagged) === JSON.stringify([["elevation", "side"], [10, 10, 30, 50, 20], ["west", "west", "east", "east", "west"]]) &&
+      JSON.stringify(r.geometry.joins.counted) === JSON.stringify([[2, 2, 1, 0], [20, 50, 10, null], true]) &&
+      JSON.stringify(r.geometry.joins.near) === JSON.stringify([[20, 30, 20, "none"], 4]) &&
+      JSON.stringify(r.geometry.joins.merged[0]) === '["side"]' && JSON.stringify(r.geometry.joins.merged[1]) === JSON.stringify(["west", "east", "far"]) &&
+      r.geometry.joins.merged[2][0] > 30 && r.geometry.joins.merged[2][0] < 50 && r.geometry.joins.whole === 1 &&
+      r.geometry.joins.noGroup === "mbt-map: analysis: no column nope" && /unknown relation nope/.test(r.geometry.joins.noRelation) && /takes a table/.test(r.geometry.joins.noTable) &&
       JSON.stringify(r.geometry.routes) === JSON.stringify({ diagonal: [[0, 0], [1, 1]], off: null }) &&
       JSON.stringify(r.geometry.snapped) === JSON.stringify({ 0: null, 2: [[0, 0], [0.0005, 0], [0.0005, 0.001]] }) && /disposed/.test(r.geometry.disposedRoute) &&
       JSON.stringify(r.geometry.classes) === JSON.stringify({ jenks: [1, 7, 20, 22], mean: 10.1, step: ["step", ["get", "v"], "a", 7, "b", 20, "c"] }) &&

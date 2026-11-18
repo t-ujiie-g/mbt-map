@@ -2,6 +2,16 @@
 // Copyright (c) 2020-2024, UW Interactive Data Lab. See NOTICE.
 
 ///|
+fn cell_key(cell : @geom.Prop?) -> Key {
+  match cell {
+    Some(Num(n)) => Number(n)
+    Some(Str(s)) => Text(s)
+    Some(Bool(b)) => Flag(b)
+    _ => Nothing
+  }
+}
+
+///|
 /// What rows of `t` join by in `columns`, None for a row with a null, absent or NaN key.
 fn join_keys(
   t : @geom.Table,
@@ -18,12 +28,7 @@ fn join_keys(
     Array::makei(t.length(), i => {
       let id = StringBuilder()
       for column in values {
-        let key : Key = match column[i] {
-          Some(Num(n)) => Number(n)
-          Some(Str(s)) => Text(s)
-          Some(Bool(b)) => Flag(b)
-          _ => Nothing
-        }
+        let key = cell_key(column[i])
         if key.missing() {
           return None
         }
@@ -35,11 +40,9 @@ fn join_keys(
 }
 
 ///|
-/// The rows of `left` (with their geometry) beside the rows of `right` whose columns `on.1`
-/// equal `left`'s `on.0` in type and value; with `keep_left`, also the rows without a match.
-/// The columns are `left`'s, then `right`'s but the keys of the same name; a name in both gets
-/// `suffix`. The rows come as Arquero's `join` gives them. Errors: no key, a column that is
-/// missing, a name twice in the result.
+/// The rows of `left` beside the rows of `right` whose columns `on.1` equal `left`'s `on.0` in
+/// type and value, in Arquero's order, put as `beside` puts them; with `keep_left`, also the
+/// rows without a match. Errors: no key, a column that is missing, a name twice in the result.
 pub fn join(
   left : @geom.Table,
   right : @geom.Table,
@@ -97,6 +100,21 @@ pub fn join(
       }
     }
   }
+  beside(left, right, rows_l, rows_r, on, suffix)
+}
+
+///|
+/// Rows `rows_l` of `left` (with their geometry) beside rows `rows_r` of `right` (-1: none):
+/// `left`'s columns, then `right`'s but the keys `on` of the same name; a name in both gets
+/// `suffix`. An error for a name twice in the result.
+fn beside(
+  left : @geom.Table,
+  right : @geom.Table,
+  rows_l : Array[Int32],
+  rows_r : Array[Int32],
+  on : ArrayView[(String, String)],
+  suffix : (String, String),
+) -> Result[@geom.Table, String] {
   let from_right = right.columns.filter(c => {
     on.search_by(k => k.0 == c.name && k.1 == c.name) is None
   })
@@ -123,4 +141,106 @@ pub fn join(
     Some(out) => Ok(out)
     None => Err("a column twice in the joined table")
   }
+}
+
+///|
+/// Whether `pairs` (a row of `left`, then a row of `right`, and so on) are whole and in the tables.
+fn pairs_fit(
+  left : @geom.Table,
+  right : @geom.Table,
+  pairs : ArrayView[Int32],
+) -> Bool {
+  guard pairs.length() % 2 == 0 else { return false }
+  for k in 0..<(pairs.length() / 2) {
+    let (l, r) = (pairs[2 * k], pairs[2 * k + 1])
+    guard l >= 0 && l < left.length() && r >= 0 && r < right.length() else {
+      return false
+    }
+  }
+  true
+}
+
+///|
+/// The rows of `left` beside the rows of `right` that `pairs` give (`pairs_fit`), in their
+/// order; with `keep_left`, also the rows of `left` in no pair, last. Columns as `join`'s.
+pub fn join_pairs(
+  left : @geom.Table,
+  right : @geom.Table,
+  pairs : ArrayView[Int32],
+  keep_left~ : Bool = false,
+  suffix~ : (String, String) = ("_1", "_2"),
+) -> Result[@geom.Table, String] {
+  guard pairs_fit(left, right, pairs) else {
+    return Err("a pair out of the tables")
+  }
+  let n = pairs.length() / 2
+  let rows_l = Array::makei(n, k => pairs[2 * k])
+  let rows_r = Array::makei(n, k => pairs[2 * k + 1])
+  if keep_left {
+    let hit = FixedArray::make(left.length(), false)
+    for l in rows_l {
+      hit[l] = true
+    }
+    for l in 0..<left.length() {
+      if !hit[l] {
+        rows_l.push(l)
+        rows_r.push(-1)
+      }
+    }
+  }
+  beside(left, right, rows_l, rows_r, [], suffix)
+}
+
+///|
+/// `left` with a column per output: the aggregate, over the rows of `right` that `pairs` give
+/// each row, of the value the output takes of them. One named as a column replaces it.
+pub fn rollup_pairs(
+  left : @geom.Table,
+  right : @geom.Table,
+  pairs : ArrayView[Int32],
+  outputs : ArrayView[(String, Aggregate, @style.Expr)],
+  hooks~ : Hooks = Hooks::default(),
+) -> Result[@geom.Table, String] {
+  guard pairs_fit(left, right, pairs) else {
+    return Err("a pair out of the tables")
+  }
+  let n = pairs.length() / 2
+  let columns = left.columns.map(c => (c.name, c.values))
+  let computed = aggregates(
+    right,
+    Array::makei(n, k => pairs[2 * k + 1]),
+    Array::makei(n, k => pairs[2 * k]),
+    left.length(),
+    outputs,
+    hooks,
+  )
+  for column in computed {
+    let values = column.1.map(v => Some(v))
+    match columns.search_by(c => c.0 == column.0) {
+      Some(i) => columns[i] = (column.0, values)
+      None => columns.push((column.0, values))
+    }
+  }
+  Ok(left.with_columns(columns).unwrap())
+}
+
+///|
+/// The group of each row of `t` and each group's first row, as `rollup` groups rows by the
+/// columns `names`; the name that is not a column as the error (unless `t` has no row).
+pub fn column_groups(
+  t : @geom.Table,
+  names : ArrayView[String],
+) -> Result[(Array[Int32], Array[Int32]), String] {
+  let keys = []
+  for name in names {
+    match t.column(name) {
+      Some(c) =>
+        keys.push(FixedArray::makei(t.length(), i => cell_key(c.values[i])))
+      None => if t.length() > 0 { return Err("no column \{name}") }
+    }
+  }
+  if t.length() == 0 {
+    return Ok(([], []))
+  }
+  Ok(group_rows(t.length(), keys))
 }

@@ -2,6 +2,7 @@
 // on a loaded dataset (export calls, no worker messages). "bbox + index" includes
 // computing the boxes; mbtmap builds its index on the first search.
 import { loadAnalysis, MEASURE } from "./load.mjs";
+import { loadJoin } from "./join.mjs";
 import * as ref from "./reference.mjs";
 import { median } from "../lib/rows.mjs";
 
@@ -65,9 +66,10 @@ export async function runAnalysisBench(fetchBytes, { runs = 5 } = {}) {
   const pointsId = wasm.load(new TextEncoder().encode(pointsText));
   const polyIndex = ref.index(ref.bboxes(polys));
   wasm.within(pointsId, polyId);
-  wasm.collect(polyId, pointsId, "alti");
+  const join = await loadJoin(fetchBytes, wasm.exports);
+  join.rollup(polyId, pointsId, "alti");
   row("points within polygons", time(() => ref.pointsWithin(points, polys, polyIndex)), time(() => wasm.within(pointsId, polyId)));
-  row("collect", time(() => ref.collected(polys, points, "alti")), time(() => wasm.collect(polyId, pointsId, "alti")));
+  row("spatial join rollup (Turf's collect)", time(() => ref.collected(polys, points, "alti")), time(() => join.rollup(polyId, pointsId, "alti")));
   const extent = ref.extentOf(ref.bboxes(points));
   row("grid 256 x 256", time(() => ref.grid(points, extent, 256, 256)), time(() => wasm.grid(pointsId, extent, 256, 256)));
   features = null;

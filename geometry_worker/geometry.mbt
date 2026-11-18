@@ -81,13 +81,29 @@ pub fn buffer(
 }
 
 ///|
-/// `@overlay.dissolve` of the input table.
+/// `@overlay.dissolve` of the input table (its first `len` bytes), or `@overlay.dissolve_groups`
+/// by the columns named after it (a u32 count and that many names) when there are any.
 #export_name("dissolve")
-pub fn dissolve() -> Int32 {
-  guard tables(-1) is Some((t, _)) else {
+pub fn dissolve(len : Int32) -> Int32 {
+  let rest = @wasmio.input_length() - len
+  guard @wasmio.input_table(0, len) is Some(t) && @overlay.refusal(t) is None else {
     return @wasmio.fail_with("malformed table or coordinates")
   }
-  finish(@overlay.dissolve(t))
+  let r = @core.ByteReader::new(@wasmio.input_slice(len, rest)[:])
+  let n = r.u32()
+  guard n >= 0 && n <= r.remaining() else {
+    return @wasmio.fail_with("malformed names")
+  }
+  let names = Array::makei(n, _ => r.utf8())
+  guard r.ok() else { return @wasmio.fail_with("malformed names") }
+  if n == 0 {
+    return finish(@overlay.dissolve(t))
+  }
+  match @tableops.column_groups(t, names) {
+    Ok((groups, first)) =>
+      finish(@overlay.dissolve_groups(t, groups, first, names))
+    Err(message) => @wasmio.fail_with(message)
+  }
 }
 
 ///|

@@ -231,8 +231,8 @@ fn Aggregate::of(
 fn group_rows(
   n : Int32,
   keys : ArrayView[FixedArray[Key]],
-) -> (FixedArray[Int32], Array[Int32]) {
-  let of_row = FixedArray::make(n, 0)
+) -> (Array[Int32], Array[Int32]) {
+  let of_row = Array::make(n, 0)
   if keys.length() == 0 {
     return (of_row, [0])
   }
@@ -254,6 +254,36 @@ fn group_rows(
     }
   }
   (of_row, first)
+}
+
+///|
+/// Each of `outputs` (a name, an aggregate and the value it takes of a row of `t`) in `size`
+/// groups: row `rows[k]` is in group `groups[k]`.
+fn aggregates(
+  t : @geom.Table,
+  rows : Array[Int32],
+  groups : Array[Int32],
+  size : Int32,
+  outputs : ArrayView[(String, Aggregate, @style.Expr)],
+  hooks : Hooks,
+) -> Array[(String, Array[@geom.Prop])] {
+  let counts = FixedArray::make(size, 0)
+  for k in 0..<rows.length() {
+    counts[groups[k]] += 1
+  }
+  outputs.map(output => {
+    let (name, how, e) = output
+    let held : Array[Array[Key]] = Array::makei(size, _ => [])
+    if !(how is Count) {
+      let values = keys_of(t, e, hooks)
+      for k, row in rows {
+        if !values[row].missing() {
+          held[groups[k]].push(values[row])
+        }
+      }
+    }
+    (name, Array::makei(size, g => how.of(counts[g], held[g], hooks)))
+  })
 }
 
 ///|
@@ -280,22 +310,9 @@ pub fn rollup(
   for k, key in keys {
     put(key.0, first.map(row => key_values[k][row].prop()))
   }
-  let counts = FixedArray::make(size, 0)
-  for g in of_row {
-    counts[g] += 1
-  }
-  for output in outputs {
-    let (name, how, e) = output
-    let groups : Array[Array[Key]] = Array::makei(size, _ => [])
-    if !(how is Count) {
-      let values = keys_of(t, e, hooks)
-      for i in 0..<n {
-        if !values[i].missing() {
-          groups[of_row[i]].push(values[i])
-        }
-      }
-    }
-    put(name, Array::makei(size, g => how.of(counts[g], groups[g], hooks)))
+  let rows = Array::makei(n, i => i)
+  for column in aggregates(t, rows, of_row, size, outputs, hooks) {
+    put(column.0, column.1)
   }
   let out = @geom.Table::new()
   for g in 0..<size {

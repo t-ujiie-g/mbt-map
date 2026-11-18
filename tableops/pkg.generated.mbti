@@ -8,6 +8,8 @@ import {
 }
 
 // Values
+pub fn column_groups(@geom.Table, ArrayView[String]) -> Result[(Array[Int32], Array[Int32]), String]
+
 pub fn column_kinds(@geom.Table) -> Array[Int32]
 
 pub fn derive_columns(@geom.Table, ArrayView[(String, Derived)], hooks? : Hooks) -> Result[@geom.Table, String]
@@ -16,9 +18,13 @@ pub fn filter(@geom.Table, @style.Expr, hooks? : Hooks) -> @geom.Table
 
 pub fn join(@geom.Table, @geom.Table, ArrayView[(String, String)], keep_left? : Bool, suffix? : (String, String)) -> Result[@geom.Table, String]
 
+pub fn join_pairs(@geom.Table, @geom.Table, ArrayView[Int32], keep_left? : Bool, suffix? : (String, String)) -> Result[@geom.Table, String]
+
 pub fn orderby(@geom.Table, ArrayView[(@style.Expr, Bool)], hooks? : Hooks) -> @geom.Table
 
 pub fn rollup(@geom.Table, ArrayView[(String, @style.Expr)], ArrayView[(String, Aggregate, @style.Expr)], hooks? : Hooks) -> @geom.Table
+
+pub fn rollup_pairs(@geom.Table, @geom.Table, ArrayView[Int32], ArrayView[(String, Aggregate, @style.Expr)], hooks? : Hooks) -> Result[@geom.Table, String]
 
 pub fn select(@geom.Table, ArrayView[String]) -> Result[@geom.Table, String]
 

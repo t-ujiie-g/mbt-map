@@ -43,9 +43,9 @@ const map = new Map({
 await map.once("load");
 
 const cells = await grid(BOX, 1, "square");
-const { count } = await cells.collect(await load(places), "count");
-const data = await cells.toGeoJSON();
-data.features.forEach((f, i) => (f.properties.count = count[i]));
+const counted = await cells.spatialJoin(await load(places), { rollup: { count: ["count"] } });
+const count = await counted.array("count");
+const data = await counted.toGeoJSON();
 map.getSource("cells").setData(data);
 
 const legend = document.getElementById("legend");

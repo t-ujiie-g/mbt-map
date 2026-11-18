@@ -8,7 +8,7 @@ import { fromGeoJSON } from "mbt-map/table";
 const blocks = await fromGeoJSON(polygonsGeoJSON);      // an object, UTF-8 bytes or an http(s) URL
 const shops = await fromGeoJSON("/data/shops.geojson");
 const area = await blocks.areas();               // Float64Array, square meters
-const { count, mean } = await blocks.collect(shops, "sales");
+const counted = await blocks.spatialJoin(shops, { rollup: { count: ["count"], mean: ["mean", "sales"] } });
 blocks.dispose();
 shops.dispose();
 ```
@@ -65,7 +65,6 @@ const areas = await wards.areas();               // the same table: its rows mov
 | `search(bbox)` | `Int32Array`: indices of the features whose boxes meet `bbox` (`[minX, minY, maxX, maxY]` in degrees). |
 | `nearest(x, y, { k, maxDistance })` | `Int32Array`: up to `k` (default 1) features nearest to (x, y), nearest first. The distance is the distance to the feature's box, in degrees. |
 | `pointsWithin(polygons)` | `Int32Array`: this dataset's point features that lie inside some polygon of `polygons`. A point on a boundary counts as inside. |
-| `collect(points, property)` | For each polygon of this dataset, the points of `points` inside it: `{ count, numbers, sum, mean }`, each a `Float64Array`. `numbers` counts the points that have a numeric `property`, and `mean` is NaN when none do. |
 | `grid(bbox, cols, rows)` | `Int32Array`: point counts in a `cols` × `rows` grid over `bbox`, row by row from the south edge. |
 
 Measures and point-in-polygon tests give the same values as Turf.js 7.4.0. Index searches return features in the same order as flatbush 4.6.2.
@@ -81,6 +80,7 @@ relate(other: Dataset, relation: Relation | { pattern: string }): Promise<Int32A
 relateMatrix(other: Dataset, i: number, j: number): Promise<string>
 ```
 
+- `spatialJoin` and `nearestJoin` ([data.md](./data.md#spatial-joins)) give a table of the related rows with both tables' columns, or aggregates of them per row; `relate` is the pairs themselves.
 - `relate` returns the pairs of feature `i` in this dataset and feature `j` in `other` that satisfy `relation`, as a flat `Int32Array` `[i0, j0, i1, j1, ...]` sorted by `i`, then `j`.
 - `relation` is one of `"intersects"`, `"contains"`, `"within"`, `"covers"`, `"coveredBy"`, `"touches"`, `"crosses"`, `"overlaps"` or `"equals"` (JTS's `equalsTopo`). It can also be a DE-9IM pattern such as `{ pattern: "T*F**FFF*" }`.
 - Only pairs whose bounding boxes meet are tested. So `disjoint` isn't offered, and a pattern that disjoint pairs would match (all four interior/boundary cells `F` or `*`) is refused.
@@ -100,7 +100,7 @@ These are a port of Clipper2 2.0.1, with results identical to the C++ library. T
 | Method | What it does |
 |---|---|
 | `buffer(meters, { mode, join, cap, arcTolerance, crs })` | Grows each feature by `meters` into polygons. A negative distance shrinks polygons and leaves points and lines without geometry (as Turf's `buffer`, which gives nothing for them). Properties are kept. A feature that vanishes keeps its row without geometry. |
-| `dissolve()` | Merges all polygons into one feature without properties. Lines and points are left out. |
+| `dissolve({ by })` | Merges all polygons into one feature without properties. With `by` (a column's name or names), one feature per group of rows with equal values there, holding those columns; a group without polygons has no geometry. Lines and points are left out. |
 | `clip(other)` | Cuts this dataset's features to the area of `other`'s polygons. Lines stay lines, points are kept or dropped. Properties are kept. |
 | `erase(other)` | Removes the area of `other`'s polygons from this dataset's features. Properties are kept. |
 | `intersect(other)` | One feature per overlap of a feature here with a polygon of `other`, carrying the properties of both. Keys of `other` that also exist here get the suffix `_2`. |
@@ -166,7 +166,7 @@ import { grid, load } from "mbt-map/analysis";
 
 const hexes = await grid([139.68, 35.62, 139.83, 35.74], 0.5, "hex");
 const points = await load(pointsGeoJSON);
-const { count } = await hexes.collect(points, "value");
+const counted = await hexes.spatialJoin(points, { rollup: { count: ["count"] } });   // the hexes, with a count column
 ```
 
 **Dataset methods:**
@@ -177,8 +177,8 @@ const { count } = await hexes.collect(points, "value");
 | `isolines(breaks, { zProperty })` | Lines where a grid of points (from `grid(..., "point")` or `interpolate`) crosses each value in `breaks` (Turf's `isolines`). `zProperty` defaults to `"elevation"`. |
 | `isobands(breaks, { zProperty })` | Polygons between consecutive `breaks` (Turf's `isobands`). Lines or bands that meet no cell become rows without geometry. |
 | `density({ bbox, width, height, cellSize, bandwidth, thresholds, weight })` | Contours of kernel density as d3-contour's `contourDensity` draws them, computed on a `width` × `height` pixel grid over `bbox` (default: the points' box). Each contour is a MultiPolygon with its density in `value`. `weight` names a property. The defaults are d3's: 960 × 500, `cellSize` 4, `bandwidth` √420, 20 `thresholds`. |
-| `dbscan(maxDistance, { minPoints })` | Turf's `clustersDbscan`: `{ clusters: Int32Array, kinds }`, with each feature's cluster (-1 for none) and its kind, `"core"`, `"edge"` or `"noise"` (`null` for features that aren't points). `minPoints` defaults to 3. |
-| `kmeans(k?)` | Turf's `clustersKmeans`: `{ clusters: Int32Array, centroids: Float64Array }`. `k` defaults to round(√(n/2)). Features that aren't points get -1. |
+| `dbscan(maxDistance, { minPoints })` | Turf's `clustersDbscan`: the table with the columns `cluster` (a point's cluster; missing for noise) and `dbscan` (`"core"`, `"edge"` or `"noise"`). Rows that aren't points get neither. `minPoints` defaults to 3. |
+| `kmeans(k?)` | Turf's `clustersKmeans`: the table with the columns `cluster` and its centroid's `centroid_x` and `centroid_y`. `k` defaults to round(√(n/2)). Rows that aren't points get none. |
 
 ```js
 const samples = await load(samplePointsGeoJSON);

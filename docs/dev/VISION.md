@@ -192,10 +192,12 @@ T.1 で決めたこと（2026-11-17、ユーザー判断）：
 | （なし） | `select`・`filter`・`derive`・`orderby`・`slice`・`array`・`columnTypes`（Arquero の名前） | T.2 |
 | `search`・`nearest`・`pointsWithin`（番号の配列） | `filter(番号の配列)` に渡せる | T.2 |
 | （なし） | `groupby(...).rollup(集計)`・`rollup(集計)`・`join(other, on, { left, suffix })`（Arquero の名前） | T.3 |
-| `relate`（番号の組の配列） | 空間結合の結果にする | T.4 |
-| `collect` | 空間結合と集計で書けるようにする | T.4 |
-| `dbscan`・`kmeans`（番号の配列） | クラスタの列を足したテーブル | T.4 |
-| `splitFeatures`・`mergeFeatures`（Feature の配列） | テーブルの `split`・`merge` に寄せる（`mbt-map/draw` が使う形を見直す） | T.4 |
+| `relate`（番号の組の配列） | そのまま残す（行の組が欲しいとき用）。結合したテーブルは `spatialJoin(other, { predicate, left, suffix })` | T.4 |
+| （なし） | `nearestJoin(other, { k, maxDistance, left, suffix })` | T.4 |
+| `collect` | 消した。`spatialJoin(other, { rollup: 集計 })`（左の行ごとに相手の値を集計。ジオメトリは残る） | T.4 |
+| `dbscan`・`kmeans`（番号の配列） | 列を足したテーブルを返す（`cluster`・`dbscan`、`cluster`・`centroid_x`・`centroid_y`） | T.4 |
+| `dissolve()` | `dissolve({ by })` でグループごとにも | T.4 |
+| `splitFeatures`・`mergeFeatures`（Feature の配列） | `mbt-map/analysis` にそのまま残す（`mbt-map/draw` の `geometry` に渡す Feature 用の口で、中身はテーブルの `split`・`merge`） | T.4 |
 | `simplify`・`buffer`・`clip` などテーブルを返すもの | そのまま | – |
 | `DemGrid`・`loadDem`・`loadGrid`・`sampleDem`・`transform`・クラス分け | `mbt-map/analysis` のまま | – |
 
@@ -210,6 +212,12 @@ T.3 で決めたこと（2026-11-18、ユーザー判断）：
 - `groupby` → `rollup` の結果はジオメトリなし。地図に出すときは元の表に `join` で戻す。グループごとの dissolve を足すかは T.4 の初めに伺う。
 - 欠けた値は Arquero のとおり：集計は null・キーなし・NaN を飛ばし、値が無ければ null。`join` は null のキーを合わせない。
 - `table.wasm` の予算は 50KB（45KB から。計測：45,616 バイト。結合 約 1.9KB、グループ化と集計の土台 約 2.9KB、統計の 4 種 約 0.5KB）。
+
+T.4 で決めたこと（2026-11-18、ユーザー判断）：
+- 空間結合の名前は `spatialJoin` と `nearestJoin`。
+- `relate` は残し、`collect` は消して `spatialJoin` の `rollup` オプションにする。
+- `dbscan` と `kmeans` は列を足したテーブルを返す。
+- グループごとの `dissolve({ by })` を足す。
 
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。

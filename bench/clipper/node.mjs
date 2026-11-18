@@ -39,8 +39,9 @@ const load = (fc) => {
 };
 // One geometry call on datasets, as analysis_worker/js/worker.mjs makes it;
 // with `geojson`, the result decoded as toGeoJSON() does.
-function geometry(ids, call, geojson) {
-  const bytes = ids.map((id) => out(a, a.table_out(id)));
+// `rest`: bytes after the tables (dissolve's names to group by; none here).
+function geometry(ids, call, geojson, rest = new Uint8Array(0)) {
+  const bytes = [...ids.map((id) => out(a, a.table_out(id))), rest];
   const all = new Uint8Array(bytes.reduce((s, b) => s + b.length, 0));
   let at = 0;
   for (const b of bytes) { all.set(b, at); at += b.length; }
@@ -95,8 +96,8 @@ const med = (xs) => [...xs].sort((p, q) => p - q)[xs.length >> 1];
 // Turf's clip meets each building with only the water polygons near it, as mbtmap does.
 const cases = {
   dissolve: {
-    mbtmap: (t, d) => geometry([d.buildings], () => g.dissolve()),
-    mbtmapGeoJSON: (t, d) => geometry([d.buildings], () => g.dissolve(), true),
+    mbtmap: (t, d) => geometry([d.buildings], (len) => g.dissolve(len), false, new Uint8Array(4)),
+    mbtmapGeoJSON: (t, d) => geometry([d.buildings], (len) => g.dissolve(len), true, new Uint8Array(4)),
     turf: (t) => union(t.buildings),
   },
   buffer10m: {

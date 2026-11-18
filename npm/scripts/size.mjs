@@ -49,7 +49,7 @@ const ENTRIES = [
   { name: "surfaces (grids, IDW, clusters, contours, density; loaded by the analysis worker on first use)", files: ["surface.wasm"], budget: 30_000, references: [] },
   { name: "viewshed (GDAL's; loaded by the analysis worker on first use)", files: ["viewshed.wasm", "analysis-viewshed.js"], budget: 12_000, references: [] },
   { name: "routing (geojson-path-finder; loaded by the analysis worker on first use)", files: ["route.wasm"], budget: 17_000, references: [] },
-  { name: "table operations (select, filter, derive, orderby, rollup, join; loaded by the analysis worker on first use)", files: ["table.wasm"], budget: 50_000, references: [] },
+  { name: "table operations (select, filter, derive, orderby, rollup, joins; loaded by the analysis worker on first use)", files: ["table.wasm"], budget: 50_000, references: [] },
   { name: "coordinate systems (loaded by the analysis and data workers on first use)", files: ["proj.wasm"], budget: 25_000, references: [] },
   { name: "mbt-map/geodesic", files: ["geodesic.js"], budget: 2_000, references: ["./geodesic-worker.js", "./geodesic.wasm"] },
   { name: "geodesic worker", files: ["geodesic-worker.js", "geodesic.wasm"], budget: 15_000, references: [] },

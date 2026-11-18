@@ -214,7 +214,7 @@ test "indexes of no items, too few items and a single node" {
 }
 
 ///|
-test "points_within, collect and grid_count" {
+test "points_within and grid_count" {
   let polys = holed()
   let pts = points(
     [(0.1, 0.1), (0.5, 0.5), (1.0, 0.5), (3.0, 3.0), (0.9, 0.9)],
@@ -228,10 +228,6 @@ test "points_within, collect and grid_count" {
   pindex.search(1.5, 1.5, 2.0, 2.0, hits)
   assert_eq(hits, [])
   assert_eq(@analysis.points_within(pts, polys, pindex), [0, 2, 4])
-  let sums = @analysis.collect(polys, pts, @analysis.Index::of_table(pts), "k")
-  assert_eq(sums, [3.0, 2.0, 5.0])
-  let none = @analysis.collect(polys, pts, @analysis.Index::of_table(pts), "x")
-  assert_eq(none, [3.0, 0.0, 0.0])
   let grid = @analysis.grid_count(pts, 0.0, 0.0, 1.0, 1.0, 2, 2).unwrap()
   assert_eq(grid, [1, 0, 0, 3])
   assert_true(@analysis.grid_count(pts, 0.0, 0.0, 0.0, 1.0, 2, 2) is None)
@@ -309,4 +305,20 @@ test "mercator_cell places a point in a mosaic of Web Mercator tiles" {
   )
   assert_true((x - 244.74055111128837).abs() < 1.0e-9)
   assert_true((y - 169.1885011838749).abs() < 1.0e-9)
+}
+
+///|
+test "nearest_pairs gives each feature with a geometry its nearest items, nearest first" {
+  let from = points([(0.0, 0.0), (10.0, 0.0), (4.0, 0.0)])
+  let to = points([(1.0, 0.0), (9.0, 0.0), (5.5, 0.0)])
+  let index = @analysis.Index::of_table(to)
+  assert_eq(@analysis.nearest_pairs(from, index), [0, 0, 1, 1, 2, 2])
+  assert_eq(@analysis.nearest_pairs(from, index, k=2), [
+    0, 0, 0, 2, 1, 1, 1, 2, 2, 2, 2, 0,
+  ])
+  assert_eq(@analysis.nearest_pairs(from, index, max_distance=1.2), [0, 0, 1, 1])
+  assert_eq(@analysis.nearest_pairs(from, index, k=0), [])
+  let none = @geom.Table::new()
+  none.push_row(None, []) |> ignore
+  assert_eq(@analysis.nearest_pairs(none, index), [])
 }

@@ -240,55 +240,87 @@ fn value_of(json : Json, t : @geom.Table) -> Result[@style.Expr, String] {
 }
 
 ///|
-/// `@tableops.rollup`: the arguments are a u32 count and per key its name and value, then a u32
-/// count and per output its name, aggregate (its place in `@tableops.Aggregate`), f64 fraction
-/// (`quantile`'s) and value; values are packed JSON as `value_of` takes them.
+/// A u32 count and per item its name, what `extra` reads after it, and a value of `t` (packed
+/// JSON as `value_of` takes it).
+fn[T] read_values(
+  r : @core.ByteReader,
+  t : @geom.Table,
+  extra : () -> T,
+) -> Result[Array[(String, T, @style.Expr)], String] {
+  let n = r.u32()
+  guard n >= 0 && n <= r.remaining() else { return Err("malformed values") }
+  let out = []
+  for _ in 0..<n {
+    let name = r.utf8()
+    let more = extra()
+    guard read_json(r, 0) is Some(json) && r.ok() else {
+      return Err("malformed values")
+    }
+    match value_of(json, t) {
+      Ok(e) => out.push((name, more, e))
+      Err(message) => return Err("\{name}: \{message}")
+    }
+  }
+  Ok(out)
+}
+
+///|
+/// Outputs as `rollup` and `pairs` take them: `read_values` with, per output, its aggregate
+/// (the place in `@tableops.Aggregate`) and an f64 fraction (`quantile`'s).
+fn read_outputs(
+  r : @core.ByteReader,
+  t : @geom.Table,
+) -> Result[Array[(String, @tableops.Aggregate, @style.Expr)], String] {
+  read_values(r, t, () => @tableops.Aggregate::coded(r.u8(), r.f64()))
+}
+
+///|
+/// `@tableops.rollup`: the arguments are the keys (`read_values`), then the outputs
+/// (`read_outputs`).
 #export_name("rollup")
 pub fn rollup(len_table : Int32) -> Int32 {
   run(len_table, (t, r) => {
-    let value = (name : String) => {
-      guard read_json(r, 0) is Some(json) && r.ok() else {
-        return Err("malformed rollup")
-      }
-      value_of(json, t).map_err(message => "\{name}: \{message}")
+    let keys = match read_values(r, t, () => ()) {
+      Ok(keys) => keys.map(k => (k.0, k.2))
+      Err(message) => return Err(message)
     }
-    let keys = []
-    for _ in 0..<r.u32().min(r.remaining()) {
-      let name = r.utf8()
-      match value(name) {
-        Ok(e) => keys.push((name, e))
-        Err(message) => return Err(message)
-      }
-    }
-    let outputs = []
-    for _ in 0..<r.u32().min(r.remaining()) {
-      let name = r.utf8()
-      let how = @tableops.Aggregate::coded(r.u8(), r.f64())
-      match value(name) {
-        Ok(e) => outputs.push((name, how, e))
-        Err(message) => return Err(message)
-      }
-    }
-    guard r.ok() else { return Err("malformed rollup") }
-    Ok(@tableops.rollup(t, keys, outputs, hooks~))
+    read_outputs(r, t).map(outputs => @tableops.rollup(t, keys, outputs, hooks~))
   })
 }
 
 ///|
-/// `@tableops.join` of the input's two tables (`len_left` bytes, then `len_right`) with the
-/// arguments after them (docs/dev/FORMATS.md "Table operations"). A table at `output_addr`: its
-/// length, or minus an error message's.
-#export_name("join")
-pub fn join(len_left : Int32, len_right : Int32) -> Int32 {
+/// The input's two tables (`len_left` bytes, then `len_right`) and a reader of the rest.
+fn two_tables(
+  len_left : Int32,
+  len_right : Int32,
+) -> (@geom.Table, @geom.Table, @core.ByteReader)? {
   let rest = @wasmio.input_length() - len_left - len_right
   guard @wasmio.input_table(0, len_left) is Some(left) &&
     @wasmio.input_table(len_left, len_right) is Some(right) else {
+    return None
+  }
+  let args = @wasmio.input_slice(len_left + len_right, rest)
+  @wasmio.clear_input()
+  Some((left, right, @core.ByteReader::new(args[:])))
+}
+
+///|
+/// Writes the table at `output_addr`: its length, or minus the error message's.
+fn finish(result : Result[@geom.Table, String]) -> Int32 {
+  match result {
+    Ok(out) => @wasmio.write_table(out)
+    Err(message) => @wasmio.fail_with(message)
+  }
+}
+
+///|
+/// `@tableops.join` of the input's two tables with the arguments after them (docs/dev/FORMATS.md
+/// "Table operations").
+#export_name("join")
+pub fn join(len_left : Int32, len_right : Int32) -> Int32 {
+  guard two_tables(len_left, len_right) is Some((left, right, r)) else {
     return @wasmio.fail_with("malformed table")
   }
-  let r = @core.ByteReader::new(
-    @wasmio.input_slice(len_left + len_right, rest)[:],
-  )
-  @wasmio.clear_input()
   let keep_left = r.u8() == 1
   let suffix = (r.utf8(), r.utf8())
   let n = r.u32()
@@ -297,8 +329,33 @@ pub fn join(len_left : Int32, len_right : Int32) -> Int32 {
   }
   let on = Array::makei(n, _ => (r.utf8(), r.utf8()))
   guard r.ok() else { return @wasmio.fail_with("malformed join") }
-  match @tableops.join(left, right, on, keep_left~, suffix~) {
-    Ok(out) => @wasmio.write_table(out)
-    Err(message) => @wasmio.fail_with(message)
+  finish(@tableops.join(left, right, on, keep_left~, suffix~))
+}
+
+///|
+/// `@tableops.join_pairs` (or, with outputs, `@tableops.rollup_pairs`) of the input's two tables
+/// with the arguments after them (docs/dev/FORMATS.md "Table operations").
+#export_name("pairs")
+pub fn pairs(len_left : Int32, len_right : Int32) -> Int32 {
+  guard two_tables(len_left, len_right) is Some((left, right, r)) else {
+    return @wasmio.fail_with("malformed table")
   }
+  let mode = r.u8()
+  let suffix = (r.utf8(), r.utf8())
+  let n = r.u32()
+  guard n >= 0 && n <= r.remaining() / 4 else {
+    return @wasmio.fail_with("malformed pairs")
+  }
+  let rows = Array::makei(n, _ => r.u32())
+  guard r.ok() else { return @wasmio.fail_with("malformed pairs") }
+  if mode != 2 {
+    return finish(
+      @tableops.join_pairs(left, right, rows, keep_left=mode == 1, suffix~),
+    )
+  }
+  finish(
+    read_outputs(r, right).bind(outputs => {
+      @tableops.rollup_pairs(left, right, rows, outputs, hooks~)
+    }),
+  )
 }

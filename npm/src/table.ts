@@ -62,6 +62,25 @@ export type Aggregate = readonly ["count"] | readonly [string, RowValue] | reado
 // `@tableops.Aggregate`'s cases in their order: an aggregate goes to table.wasm as its place here.
 const AGGREGATES = ["count", "valid", "distinct", "sum", "mean", "min", "max", "median", "any", "variance", "stdev", "quantile", "mode", "product"];
 
+// Packs `aggregates` as table.wasm reads a rollup's outputs (docs/dev/FORMATS.md "Table operations").
+function outputsOf(p: Packer, aggregates: Record<string, Aggregate>): Packer {
+  const outputs = Object.entries(aggregates ?? {});
+  p.u32(outputs.length);
+  for (const [name, how] of outputs) {
+    const [op, value = null, fraction = 0.5] = (Array.isArray(how) ? how : []) as unknown[];
+    const code = AGGREGATES.indexOf(op as string);
+    const takes = op === "count" ? 1 : op === "quantile" ? 3 : 2;
+    if (code < 0 || how.length !== takes || !Number.isFinite(fraction)) throw new Error(`mbt-map: analysis: ${name}: not an aggregate: ${JSON.stringify(how)}`);
+    p.utf8(name).u8(code).f64(fraction as number).json(value);
+  }
+  return p;
+}
+
+/** How `spatialJoin` and `nearestJoin` put rows together: as `join`'s `left` and `suffix`, or `rollup` to aggregate the other table's rows per row. */
+export interface PairOptions extends JoinOptions {
+  rollup?: Record<string, Aggregate>;
+}
+
 /** A table's rows in groups: what `Table.groupby` gives. */
 export interface Grouped {
   /** One row without geometry per group, in the order the groups first come: the keys, then `aggregates`. */
@@ -168,14 +187,6 @@ export interface NearestOnLine {
   location: number;
   index: number;
   multiFeatureIndex: number;
-}
-
-/** Per polygon: the points inside, how many have a numeric value, their sum and mean (NaN without one). */
-export interface Collected {
-  count: Float64Array;
-  numbers: Float64Array;
-  sum: Float64Array;
-  mean: Float64Array;
 }
 
 const isPoint = (p: unknown): p is [number, number] => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
@@ -313,20 +324,6 @@ export class Table {
     return analysisCall("within", { points: await this.#worker("points "), polygons: await polygons.#worker("polygons ") });
   }
 
-  /** Per polygon of this dataset, the points of `points` inside it and their `property` values. */
-  async collect(points: Table, property: string): Promise<Collected> {
-    const v = await analysisCall<Float64Array>("collect", { polygons: await this.#worker("polygons "), points: await points.#worker("points "), property });
-    const n = v.length / 3;
-    const out = { count: new Float64Array(n), numbers: new Float64Array(n), sum: new Float64Array(n), mean: new Float64Array(n) };
-    for (let i = 0; i < n; i++) {
-      out.count[i] = v[i * 3];
-      out.numbers[i] = v[i * 3 + 1];
-      out.sum[i] = v[i * 3 + 2];
-      out.mean[i] = out.numbers[i] > 0 ? out.sum[i] / out.numbers[i] : NaN;
-    }
-    return out;
-  }
-
   /** Point counts of a `cols` x `rows` grid over `bbox`, row by row from its south edge. */
   grid(bbox: BBox, cols: number, rows: number): Promise<Int32Array> {
     return this.#call("grid", { bbox, cols, rows });
@@ -445,30 +442,32 @@ export class Table {
   }
 
   /**
-   * DBSCAN over the points here as Turf's `clustersDbscan` (`maxDistance` in kilometers): per feature its
-   * cluster (-1 for none) and whether it is a `core`, `edge` or `noise` point (null for other features).
+   * The table with DBSCAN over its points as Turf's `clustersDbscan` gives it (`maxDistance` in kilometers): the
+   * columns `cluster` (a point's cluster; missing for noise) and `dbscan` (`core`, `edge` or `noise`). Rows that
+   * are not points get neither.
    */
-  async dbscan(maxDistance: number, { minPoints = 3 }: { minPoints?: number } = {}): Promise<{ clusters: Int32Array; kinds: (DbscanKind | null)[] }> {
+  async dbscan(maxDistance: number, { minPoints = 3 }: { minPoints?: number } = {}): Promise<Table> {
     if (!(maxDistance >= 0) || !Number.isInteger(minPoints) || minPoints < 1) throw new Error("mbt-map: analysis: invalid DBSCAN options");
     const v = await this.#call<Float64Array>("surface", { fn: "dbscan", args: [maxDistance, minPoints] });
-    const kinds: (DbscanKind | null)[] = [];
-    const clusters = new Int32Array(v.length / 2);
-    for (let i = 0; i < clusters.length; i++) {
-      clusters[i] = v[i * 2];
-      kinds.push(DBSCAN_KINDS[v[i * 2 + 1]] ?? null);
-    }
-    return { clusters, kinds };
+    const rows = Array.from({ length: v.length / 2 }, (_, i) => i);
+    return this.derive({
+      cluster: { values: rows.map((i) => (v[i * 2] < 0 ? undefined : v[i * 2])) },
+      dbscan: { values: rows.map((i) => DBSCAN_KINDS[v[i * 2 + 1]]) },
+    });
   }
 
   /**
-   * k-means over the points here as Turf's `clustersKmeans` (`k` by default `round(sqrt(n / 2))`): per
-   * feature its cluster (-1 for features that are not points) and the centroids as x, y pairs.
+   * The table with k-means over its points as Turf's `clustersKmeans` gives it (`k` by default
+   * `round(sqrt(n / 2))`): the columns `cluster` and its centroid's `centroid_x` and `centroid_y`. Rows that
+   * are not points get none.
    */
-  async kmeans(k?: number): Promise<{ clusters: Int32Array; centroids: Float64Array }> {
+  async kmeans(k?: number): Promise<Table> {
     if (k !== undefined && !(Number.isInteger(k) && k > 0)) throw new Error("mbt-map: analysis: invalid k");
     const v = await this.#call<Float64Array>("surface", { fn: "kmeans", args: [k ?? 0] });
     const n = v[0];
-    return { clusters: Int32Array.from(v.subarray(1, 1 + n)), centroids: v.slice(1 + n) };
+    const clusters = Array.from(v.subarray(1, 1 + n), (c) => (c < 0 ? undefined : c));
+    const centroid = (at: number) => ({ values: clusters.map((c) => (c === undefined ? undefined : v[1 + n + c * 2 + at])) });
+    return this.derive({ cluster: { values: clusters }, centroid_x: centroid(0), centroid_y: centroid(1) });
   }
 
   /**
@@ -503,9 +502,18 @@ export class Table {
     }));
   }
 
-  /** All polygons merged into one feature without properties (lines and points are left out). */
-  async dissolve(): Promise<Table> {
-    return tableOf(analysisCall("dissolve", { dataset: await this.#worker("dissolved ") }));
+  /**
+   * All polygons merged into one feature without properties (lines and points are left out); with `by` (a
+   * column's name or names), a feature per group of rows with equal values there, as `groupby` groups them,
+   * holding those columns (no geometry for a group without polygons).
+   */
+  async dissolve({ by = [] }: { by?: string | readonly string[] } = {}): Promise<Table> {
+    const names = typeof by === "string" ? [by] : by;
+    if (!Array.isArray(names) || !names.every((c) => typeof c === "string")) throw new Error("mbt-map: analysis: dissolve groups by column names");
+    const p = new Packer().u32(names.length);
+    for (const name of names) p.utf8(name);
+    const args = p.finish();
+    return tableOf(analysisCall("dissolve", { dataset: await this.#worker("dissolved "), by: args }, [args]));
   }
 
   async #overlay(other: Table, kind: keyof typeof OVERLAY, roles: [string, string]): Promise<Table> {
@@ -635,18 +643,36 @@ export class Table {
   }
 
   async #rollup(keys: [string, unknown][], aggregates: Record<string, Aggregate>): Promise<Table> {
-    const outputs = Object.entries(aggregates ?? {});
     const p = new Packer().u32(keys.length);
     for (const [name, value] of keys) p.utf8(name).json(value);
-    p.u32(outputs.length);
-    for (const [name, how] of outputs) {
-      const [op, value = null, fraction = 0.5] = (Array.isArray(how) ? how : []) as unknown[];
-      const code = AGGREGATES.indexOf(op as string);
-      const takes = op === "count" ? 1 : op === "quantile" ? 3 : 2;
-      if (code < 0 || how.length !== takes || !Number.isFinite(fraction)) throw new Error(`mbt-map: analysis: ${name}: not an aggregate: ${JSON.stringify(how)}`);
-      p.utf8(name).u8(code).f64(fraction as number).json(value);
-    }
-    return this.#rows("rollup", p.finish());
+    return this.#rows("rollup", outputsOf(p, aggregates).finish());
+  }
+
+  // The rows beside (or, with `rollup`, aggregating) the rows of `other` that `pairs` give them.
+  async #pairs(other: Table, pairs: Int32Array, { left = false, suffix = [], rollup }: PairOptions): Promise<Table> {
+    const p = new Packer().u8(rollup ? 2 : left ? 1 : 0).utf8(suffix[0] ?? "_1").utf8(suffix[1] ?? "_2").u32(pairs.length).bytes(pairs);
+    const args = (rollup ? outputsOf(p, rollup) : p).finish();
+    return tableOf(analysisCall("rows", { dataset: await this.#worker("joined "), other: await other.#worker("joining "), fn: "pairs", args }, [args]));
+  }
+
+  /**
+   * The rows beside the rows of `other` they are in `predicate` with (a relation of `relate`, or
+   * `{ pattern }`; `intersects` by default), as `join` puts them: this table's geometry and columns, then
+   * `other`'s columns. With `rollup`, every row once, with those aggregates of the rows of `other` it meets.
+   */
+  async spatialJoin(other: Table, options: PairOptions & { predicate?: Relation | { pattern: string } } = {}): Promise<Table> {
+    return this.#pairs(other, await this.relate(other, options.predicate ?? "intersects"), options);
+  }
+
+  /**
+   * The rows beside their `k` nearest rows of `other` (1 by default) within `maxDistance`, as `nearest`
+   * measures from the center of a row's box: put as `spatialJoin` puts them, `rollup` too.
+   */
+  async nearestJoin(other: Table, options: PairOptions & { k?: number; maxDistance?: number } = {}): Promise<Table> {
+    if (!(other instanceof Table)) throw new Error("mbt-map: analysis: a join takes a table");
+    const { k = 1, maxDistance = Infinity } = options;
+    const pairs = await analysisCall<Int32Array>("nearestPairs", { a: await this.#worker("joined "), b: await other.#worker("joining "), k, maxDistance });
+    return this.#pairs(other, pairs, options);
   }
 
   /**

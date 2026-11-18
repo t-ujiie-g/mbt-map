@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.4（空間結合と、番号の配列を返すメソッドの揃え直し：VISION §8「テーブルの段階」）。その後 T.4b〜T.8、Phase 21。
+- **次**：テーブルの段階の T.4b（描画への直結：GeoJSON ソースの `data` にテーブルを渡す。VISION §8「テーブルの段階」）。その後 T.5〜T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -585,3 +585,19 @@ Where things stand, decisions and open issues. The development history before th
 - ゴールデン（`table:golden`、Arquero 8.0.3、種を固定した表 60 個）：rollup 602（キーなし、1〜3 個のキー、式のキー。値の列ごとに 12 種と `quantile` 5 通り、式の値の `sum`）、join 794（キー 1〜2 個、左右で別の名前、共通の列、内部と左、接尾辞。行の数が左右どちらが多い場合も）：0 differ。全体も 0 differ、表 400 個でも 0 differ。比べるときにそろえた所：`groupby` は null とキーなしを 1 つのグループにする（Arquero は 2 つ）。値の無い集計は null（Arquero は `undefined`、数にならない合計は NaN）。
 - 分かっていること：種類の混じった値（文字列と数）の `quantile` は、比較が順序にならないので Arquero と同じとは限らない（ゴールデンの列は 1 種類ずつ）。複数キーのグループ化で、Arquero はキーを `|` でつないだ文字列で見分けるので `|` と引用符を含む文字列が衝突しうるが、こちらは衝突しない。結果のテーブルが id を持たないのは T.2 と同じ。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 964、wasm-gc 974、js 1023、native 964：`tableops` 11 件を足した）、npm のテスト（464）と大きさ、bench のテスト（23）、pack test の `data,analysis,samples,showcase-html,cdn`（Chromium。data のページで集計・結合と断り方を見る）。
+
+## テーブルの段階 T.4：空間結合と揃え直し（2026-11-18、Mac）
+
+- 決めたこと（ユーザー判断）：名前は `spatialJoin` と `nearestJoin`。`relate` は残し、`collect` は消して `spatialJoin` の `rollup` オプションにする。`dbscan` と `kmeans` は列を足したテーブルを返す。グループごとの `dissolve({ by })` を足す。`splitFeatures`・`mergeFeatures` は `mbt-map/analysis` にそのまま残した（`mbt-map/draw` に渡す Feature 用の口で、テーブルの面ではない）。
+- 作り：
+  - 空間結合は「行の組を作る所」と「組からテーブルを作る所」に分けた。組は relate.wasm（`relate` と同じ）か解析の wasm（`nearest_pairs`：行の箱の中心から、相手の箱までの距離で近い順）が作り、テーブルは table.wasm の `pairs` が作る（`@tableops.join_pairs`：属性の `join` と同じ列の並べ方。`@tableops.rollup_pairs`：左の行ごとに相手の行の値を集計して列にする。ジオメトリは左のまま）。ページ側で 2 つの呼び出しをつなぐので、解析ワーカーの JS には受け口を足していない。
+  - `dissolve({ by })`：`@tableops.column_groups`（`rollup` と同じグループ分け）を geometry.wasm から呼び、`@overlay.dissolve_groups` がグループごとにポリゴンを併合してキーの列を付ける。式の評価器は geometry.wasm に入らない（列の値だけで分ける）。
+  - `dbscan`・`kmeans`：ワーカーの結果を `derive` で列にする（ページ側だけの変更）。
+  - 消したもの：`Table.collect`、型 `Collected`、解析ワーカーの `collect`、wasm の `collect`、`@analysis.collect`。
+- 計測（gzip）：`table.wasm` 45,616 → 46,881 バイト（50KB）。`geometry.wasm` 43,051 → 45,226（50KB）。`relate.wasm` 26,826 → 26,881（30KB）。`mbt-map/table` 7,763 → 7,913（9KB）。解析ワーカー 30,885 → 29,525（31KB：`collect` を消した分が、`nearestPairs` と `dissolve` の引数の分より大きい）。予算の変更はなし。
+- ゴールデン：`analysis:golden` の `collect` の比較を、空間結合（`intersects`）と集計（count・valid・sum）の経路に付け替えた。Turf の `collect` と all identical（2,783,078 値）。`relate:golden` all identical、`table:golden` 0 differ（断るもの 22）。
+- 速さ（`analysis:node`・`analysis:browser`、GSI の建物 42,515 ポリゴン × 8,018 点、ポリゴンごとの点の数と合計）：旧 `collect` は Node 11.1 ms・Chromium 9.3・Firefox 12.0・WebKit 10.3。新しい経路は Node 51.7 ms・Chromium 39.2・Firefox 50.5・WebKit 48.0（Turf は 17〜25 ms）。約 4〜5 倍遅くなった。内訳（Node）：テーブルを relate.wasm へ渡して読む 約 17 ms、組を作る 約 11 ms、table.wasm で読んで集計して書く 約 14 ms、解析の wasm から書き出す 約 5 ms。旧 `collect` は解析の wasm の中（読み済みのテーブル）で点とポリゴンだけを見ていた。
+  - 試して効いたもの：`intersects` の相手が 1 つの点のとき、行列を作らずに JTS の点の位置判定（`PointLocator` の移植、`locate`）で答える。組を作る所が 21 → 11 ms（`relate:golden` は all identical のまま。JTS の行列でも、孤立した点の行は同じ判定から決まる）。
+  - 残っているもの：6MB のテーブルをモジュールごとに読み直す所（`Table::from_bytes`）が大きい。どの wasm の間の受け渡しにも効くので、T.8 の点検で見る。
+- 途中で直したもの：pack test のチェックで、最近傍の結合の期待値を見積もり違いしていた（箱の中心からの距離で手計算し直して合わせた）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 970、wasm-gc 980、js 1029、native 970：`tableops` 4 件、`overlay` 1 件、`analysis` 1 件を足した）、npm のテスト（464）と大きさ、bench のテスト（23）、`geometry:node`（dissolve 165 ms、前回 170 ms）、pack test の `data,analysis,samples,showcase-html,cdn`（Chromium。analysis のページで結合・集計・グループごとの dissolve・クラスタの列と断り方を見る）。

@@ -361,3 +361,23 @@ test "the largest coordinate fits Clipper's integers at both scales" {
   assert_true(MAX_COORDINATE * DEGREE_SCALE < max)
   assert_true(MAX_COORDINATE * METER_SCALE < max)
 }
+
+///|
+test "dissolve_groups merges each group's polygons and keeps the first row's columns" {
+  let t = table([
+    (Polygon, [square(0.0, 0.0, 2.0)], "a"),
+    (Polygon, [square(10.0, 10.0, 1.0)], "b"),
+    (Polygon, [square(1.0, 1.0, 2.0)], "a"),
+    (Point, [[(5.0, 5.0)]], "c"),
+  ])
+  let out = dissolve_groups(t, [0, 1, 0, 2], [0, 1, 3], ["name", "nope"])
+  assert_true(out.kinds is [Polygon, Polygon, NoGeometry])
+  assert_eq((area_of(out, 0), area_of(out, 1)), (7.0, 1.0))
+  assert_eq(out.columns.map(c => c.name), ["name"])
+  assert_eq(out.column("name").unwrap().values, [
+    Some(Str("a")),
+    Some(Str("b")),
+    Some(Str("c")),
+  ])
+  assert_eq(dissolve_groups(t, [], [], ["name"]).length(), 0)
+}

@@ -110,7 +110,7 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 
 ### Analysis, geometry, CRS and geodesics
 
-- `npm run analysis:golden`: analysis wasm vs Turf.js 7.4.0 / flatbush 4.6.2 on all fixtures (must stay all identical).
+- `npm run analysis:golden`: analysis wasm vs Turf.js 7.4.0 / flatbush 4.6.2 on all fixtures, and a spatial join with a rollup (relate.wasm's `intersects` pairs, table.wasm's count, valid and sum) vs Turf's `collect` (must stay all identical).
 - `npm run analysis:node`: analysis vs Turf.js + flatbush in Node (also analysis:browser).
 - `npm run terrain:golden`: terrain analysis vs GDAL gdaldem (slope, aspect, hillshade) and gdallocationinfo (bilinear samples) on the Mt Fuji DEM fixtures, also read from a GDAL-written COG by readRaster and loadGrid; needs GDAL.
 - `npm run relate:golden`: relate.wasm vs JSTS 2.12.1: DE-9IM matrices and predicates on hand-written, random grid and GSI features (must stay all identical).

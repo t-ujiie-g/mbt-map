@@ -7,10 +7,12 @@ import { ROOT } from "../lib/root.mjs";
 import { nodeFetchBytes } from "../lib/node-io.mjs";
 import { makeGeoJSONFixtures } from "../geojson/fixtures.mjs";
 import { loadAnalysis, MEASURE } from "./load.mjs";
+import { loadJoin } from "./join.mjs";
 import * as ref from "./reference.mjs";
 
 const files = await makeGeoJSONFixtures();
 const wasm = await loadAnalysis(nodeFetchBytes);
+const join = await loadJoin(nodeFetchBytes, wasm.exports);
 const same = (a, b) => a === b || (Number.isNaN(a) && Number.isNaN(b));
 let failures = 0;
 const report = (what, got, want) => {
@@ -65,7 +67,8 @@ for (const name of ["buildings", "world"]) {
   const within = ref.pointsWithin(pts.features, polygons.features, ix);
   compared += report(`${name} pointsWithin`, wasm.within(pts.id, polygons.id), within);
   const property = name === "world" ? "i" : "alti";
-  compared += report(`${name} collect`, wasm.collect(polygons.id, points.id, property), ref.collected(polygons.features, points.features, property));
+  // Turf's `collect` as a spatial join (`intersects`: a boundary counts) with count, valid and sum.
+  compared += report(`${name} spatial join rollup`, join.collected(join.rollup(polygons.id, points.id, property)), ref.collected(polygons.features, points.features, property));
   const b = ref.extentOf(ref.bboxes(pts.features));
   compared += report(`${name} grid`, wasm.grid(pts.id, b, 64, 48), ref.grid(pts.features, b, 64, 48));
   console.log(`${name}: ${within.length} of ${pts.features.length} points within ${polygons.features.length} polygons`);

@@ -10,19 +10,19 @@
   },
   "summary": {
     "dissolve": {
-      "mbtmap": 170.3,
-      "mbtmapGeoJSON": 179.3,
-      "turf": 2435.8
+      "mbtmap": 165.1,
+      "mbtmapGeoJSON": 176.3,
+      "turf": 2384.2
     },
     "buffer10m": {
-      "mbtmap": 388.7,
-      "mbtmapGeoJSON": 502.9,
-      "turf": 1246.8
+      "mbtmap": 385.5,
+      "mbtmapGeoJSON": 497.5,
+      "turf": 1207.2
     },
     "clipByWater": {
-      "mbtmap": 59,
-      "mbtmapGeoJSON": 58.8,
-      "turf": 978.9
+      "mbtmap": 59.4,
+      "mbtmapGeoJSON": 60.4,
+      "turf": 972.1
     }
   }
 }

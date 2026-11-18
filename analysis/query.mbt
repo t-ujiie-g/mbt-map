@@ -66,48 +66,31 @@ pub fn points_within(
 }
 
 ///|
-/// Turf's `collect` reduced to three numbers per polygon: the Point features of
-/// `points` inside, how many have a numeric `column` and their sum (added in
-/// feature order); `index` is `Index::of_table(points)`.
-pub fn collect(
-  polygons : @geom.Table,
-  points : @geom.Table,
+/// Per feature of `t` with a geometry, up to `k` items of `index` by box distance from the
+/// center of its box within `max_distance`, nearest first: pairs of the feature and an item.
+pub fn nearest_pairs(
+  t : @geom.Table,
   index : Index,
-  column : String,
-) -> FixedArray[Double] {
-  let n = polygons.length()
-  let out = FixedArray::make(n * 3, 0.0)
-  let values = points.column(column).map(c => c.values)
-  let hits = []
-  for f in 0..<n {
-    guard is_polygon(polygons.kinds[f]) else { continue }
-    let (x0, y0, x1, y1) = bbox(polygons, f)
-    hits.clear()
-    index.search(x0, y0, x1, y1, hits)
-    hits.sort()
-    let mut count = 0
-    let mut numbers = 0
-    let mut sum = 0.0
-    for i in hits {
-      guard points.kinds[i] is Point else { continue }
-      let (a, _) = points.feature_points(i)
-      if !contains_point(
-          polygons,
-          f,
-          points.coords[a * 2],
-          points.coords[a * 2 + 1],
-        ) {
-        continue
-      }
-      count += 1
-      if values is Some(v) && v[i] is Some(Num(x)) {
-        numbers += 1
-        sum += x
-      }
+  k~ : Int32 = 1,
+  max_distance~ : Double = @double.infinity,
+) -> Array[Int32] {
+  let out = []
+  let near = []
+  for f in 0..<t.length() {
+    let (x0, y0, x1, y1) = bbox(t, f)
+    guard x0 <= x1 else { continue }
+    near.clear()
+    index.neighbors(
+      (x0 + x1) / 2.0,
+      (y0 + y1) / 2.0,
+      near,
+      max_results=k,
+      max_distance~,
+    )
+    for item in near {
+      out.push(f)
+      out.push(item)
     }
-    out[f * 3] = count.to_double()
-    out[f * 3 + 1] = numbers.to_double()
-    out[f * 3 + 2] = sum
   }
   out
 }
