@@ -142,3 +142,20 @@ test("setPaintProperty keeps the order of a layer's other properties", () => {
   const changed = edit.setPaintProperty(style, "b", "background-color", "#fff");
   assert.deepEqual(Object.keys(edit.getLayer(changed, "b")!.paint!), ["background-color", "background-opacity"]);
 });
+
+test("copy and the source edits keep a table by reference, among plain copies", () => {
+  const table = { length: 2, writeArgs: () => Promise.resolve({ table: new ArrayBuffer(0), ids: null }) };
+  const nested = { a: [1, { b: 2 }] };
+  const source = { type: "geojson", data: table, nested };
+  const copied = edit.copy(source);
+  assert.equal(copied.data, table);
+  assert.deepEqual(copied.nested, nested);
+  assert.notEqual(copied.nested.a, nested.a);
+  assert.equal(edit.copy(table), table);
+  assert.deepEqual(edit.copy({ "\0table": 0 }), { "\0table": 0 });
+  const s = edit.addSource({ version: 8, sources: {}, layers: [] } as never, "t", source as never);
+  assert.equal((edit.sourceOf(s, "t") as { data: unknown }).data, table);
+  const other = { ...table };
+  assert.equal((edit.sourceOf(edit.setSourceData(s, "t", other), "t") as { data: unknown }).data, other);
+  assert.equal((edit.sourceOf(edit.keepGeoJSONData(s, edit.copy(s)), "t") as { data: unknown }).data, table);
+});

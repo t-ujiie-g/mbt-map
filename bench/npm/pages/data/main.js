@@ -64,9 +64,10 @@ const map = new Map({
     version: 8,
     sources: {
       gsi: { type: "vector", tiles: ["/bench/fixtures/gsi-bvmap/{z}/{x}/{y}.pbf"], minzoom: 14, maxzoom: 14, attribution: "国土地理院ベクトルタイル提供実験" },
-      area: { type: "geojson", data: (await area.toGeoJSON()) },
-      stations: { type: "geojson", data: (await stations.toGeoJSON()) },
-      lines: { type: "geojson", data: (await lines.toGeoJSON()) },
+      // Tables as they are: `stations` is in the analysis worker by now, `lines` still on the page.
+      area: { type: "geojson", data: area },
+      stations: { type: "geojson", data: stations },
+      lines: { type: "geojson", data: lines },
     },
     layers: [
       { id: "background", type: "background", paint: { "background-color": "#f5f3ee" } },
@@ -77,7 +78,8 @@ const map = new Map({
     ],
   },
 });
-map.on("error", (e) => console.error(e.error));
+// The check asks for errors on purpose (`__expectErrors`) and reads them itself.
+map.on("error", (e) => window.__expectErrors || console.error(e.error));
 map.once("load").then(async () => {
   window.__data = {
     length: stations.length,
@@ -94,3 +96,4 @@ map.once("load").then(async () => {
   window.__loaded = performance.now();
 });
 window.__map = map;
+window.__stations = stations;

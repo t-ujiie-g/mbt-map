@@ -6,7 +6,7 @@
 import { read, parse, write } from "mbt-map/table";
 
 const stations = await read("/data/stations.csv");    // points from the latitude and longitude columns
-map.addSource("stations", { type: "geojson", data: await stations.toGeoJSON() });
+map.addSource("stations", { type: "geojson", data: stations });
 const nearest = await stations.nearest(139.767, 35.681); // the table has the analysis as methods
 
 const area = await parse("SRID=4326;POLYGON ((139.76 35.67, 139.775 35.67, 139.775 35.688, 139.76 35.688, 139.76 35.67))", { format: "wkt" });
@@ -87,10 +87,25 @@ TopoJSON in a `.json` file needs `format: "topojson"`.
 | `columns` | The property names. |
 | `layer` | The Shapefile or TopoJSON object read, or `null` for formats without layers. |
 | `layers` | Every layer in the input: the Shapefiles of a zip or the TopoJSON objects. Empty for formats without layers. |
-| `toGeoJSON()` | A Promise of a new FeatureCollection on every call. You can pass it as a GeoJSON source's `data`. Rows without geometry have `geometry: null`. TopoJSON ids, KML `Placemark` ids and FlatGeobuf feature indices (0-based order in the file) become the features' `id`. |
+| `toGeoJSON()` | A Promise of a new FeatureCollection on every call. Rows without geometry have `geometry: null`. TopoJSON ids, KML `Placemark` ids and FlatGeobuf feature indices (0-based order in the file) become the features' `id`. |
 | `dispose()` | Frees the rows. |
 
 The rows stay on the page until the table's first operation (a method of [analysis.md](./analysis.md), or `toGeoJSON` with a `crs`), which moves them into the analysis worker without copying and starts that worker (`ReadOptions.analysis` says where it is served). Reading a file and drawing it never loads the analysis worker.
+
+### Drawing a table
+
+A table is a GeoJSON source's `data` as it is: in the style, to `addSource`, and to `getSource(id).setData`.
+
+```js
+map.addSource("stations", { type: "geojson", data: stations });
+map.getSource("stations").setData(await stations.filter([">", ["get", "riders"], 100000]));
+```
+
+The rows go to the source's worker as bytes, with their feature ids, and are cut into tiles there: nothing is turned into GeoJSON on the page. The source's options (`cluster`, `promoteId`, `lineMetrics`, `tolerance`, …) apply as for GeoJSON, and the tiles are the ones the table's GeoJSON would give. Rows without geometry are not drawn.
+
+- The map takes a copy of the rows when the source loads, so the table can be changed by further operations (each gives a new table) or disposed afterwards. Disposing it before the source has loaded fails the load, with an `error` event.
+- `updateData` needs GeoJSON features to apply its diff to, and reports an `error` for a source whose data is a table: call `setData` with a new table.
+- `getStyle()` and the source's `getData()` give the table back, not GeoJSON.
 
 ### Columns and rows
 
@@ -119,7 +134,7 @@ In an expression, `["get", name]` reads the row's property, `["geometry-type"]` 
 const parks = await table.filter(["==", ["get", "kind"], "park"]);
 const sized = await parks.derive({ area: await parks.areas() });   // square meters, as a column
 const largest = await (await sized.orderby({ by: "area", descending: true })).slice(0, 10);
-map.addSource("largest", { type: "geojson", data: await (await largest.select(["name", "area"])).toGeoJSON() });
+map.addSource("largest", { type: "geojson", data: await largest.select(["name", "area"]) });
 ```
 
 The first of these loads `table.wasm` (`AnalysisOptions.tableWasmUrl`). Tables made by an operation carry no feature ids.
@@ -164,7 +179,7 @@ console.log(await shares.array("kind"), await shares.array("share"));
 const stats = await read("/data/population.csv");               // rows without geometry
 const wards = await read("/data/wards.fgb");
 const joined = await wards.join(stats, ["code", "ward_code"], { left: true });
-map.addSource("wards", { type: "geojson", data: await joined.toGeoJSON() });
+map.addSource("wards", { type: "geojson", data: joined });
 ```
 
 To put a group's aggregates back on the map, join the rolled-up table to the rows it came from, or merge each group's polygons with `dissolve({ by })` ([analysis.md](./analysis.md)) and join the aggregates to that.
@@ -187,7 +202,7 @@ const busy = await wards.spatialJoin(stations, {
   predicate: "contains",
   rollup: { stations: ["count"], riders: ["sum", "riders"] },
 });
-map.addSource("wards", { type: "geojson", data: await busy.toGeoJSON() });
+map.addSource("wards", { type: "geojson", data: busy });
 
 // Each shop with its nearest station's columns.
 const near = await shops.nearestJoin(stations, { maxDistance: 0.01 });
@@ -201,7 +216,7 @@ These operations give what Arquero 8.0.3 gives on the same rows, in the same ord
 const zip = await read("/data/city.zip");
 console.log(zip.layers);                           // e.g. ["roads", "buildings"]
 const buildings = await read("/data/city.zip", { layer: "buildings" });
-map.addSource("buildings", { type: "geojson", data: await buildings.toGeoJSON() });
+map.addSource("buildings", { type: "geojson", data: buildings });
 ```
 
 ## Coordinate systems
@@ -268,7 +283,7 @@ Input can be bytes or a hexadecimal string (PostGIS output; whitespace is ignore
 // Files picked together in <input type="file" multiple>.
 input.addEventListener("change", async () => {
   const table = await read(input.files, { encoding: "shift_jis" });
-  map.getSource("upload").setData(await table.toGeoJSON());
+  map.getSource("upload").setData(table);
 });
 ```
 

@@ -54,9 +54,15 @@ export function withState(style: StyleSpecification, values: Record<string, unkn
   return { ...style, state: Object.fromEntries(keys.map((k) => [k, { default: values[k] }])) };
 }
 
-/** A plain copy, so that later changes by the caller do not reach the map. */
+/**
+ * A plain copy, so that later changes by the caller do not reach the map. A table (mbt-map/table's `Table`, a GeoJSON
+ * source's `data`) is kept as it is: it has no JSON, and its rows never change.
+ */
 export function copy<T>(value: T): T {
-  return value === undefined ? value : (JSON.parse(JSON.stringify(value)) as T);
+  if (value === undefined) return value;
+  const tables: unknown[] = [];
+  const text = JSON.stringify(value, (_, v) => (typeof v?.writeArgs === "function" ? { "\0table": tables.push(v) - 1 } : v));
+  return JSON.parse(text, tables.length ? (_, v) => tables[v?.["\0table"]] ?? v : undefined) as T;
 }
 
 export function getLayer(style: StyleSpecification, id: string): LayerSpecification | undefined {

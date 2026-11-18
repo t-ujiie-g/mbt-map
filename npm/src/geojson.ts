@@ -31,11 +31,20 @@ export interface GeoJSONTiles {
 /** Whether a diff changed tile z/x/y (MapLibre's `shouldReloadTile`); null when it may have changed any (clusters, `removeAll`). */
 export type Reload = ((z: number, x: number, y: number) => boolean) | null;
 
+/** What a source's `data` may be besides GeoJSON: a table giving its rows and their ids as bytes. */
+interface TableData {
+  writeArgs(): Promise<{ table: ArrayBuffer; ids: ArrayBuffer | null }>;
+}
+
+const isTable = (data: unknown): data is TableData => typeof (data as TableData | null)?.writeArgs === "function";
+
 /** A source loaded: the number the worker knows it by, `busy` the load awaited (0 for none), `waiting` the diff after it. */
 interface Loaded {
   n: number;
   source: GeoJSONSource;
   busy: number;
+  /** A table's rows on their way to the worker: tiles and cluster queries are asked after them. */
+  sending?: Promise<unknown>;
   waiting?: GeoJSONSourceDiff;
   settled: (() => void)[];
   updateable?: Updateable;
@@ -123,7 +132,8 @@ export function createGeoJSONTiles(
     for (const resolve of l.settled.splice(0)) resolve();
   };
   // Posts `s`'s data; returns the load's number, 0 if it could not be asked.
-  const load = (s: GeoJSONSource, n: number): number => {
+  const load = (s: GeoJSONSource, l: Loaded): number => {
+    const n = l.n;
     const p = s.spec.cluster === true && s.spec.clusterProperties ? compile(JSON.stringify(s.spec.clusterProperties)) : null;
     const id = nextLoad++;
     const options = { type: "load", source: n, id, ...loadOptions(s.spec), ...(p && p.length > 0 ? { properties: p } : {}) };
@@ -139,6 +149,14 @@ export function createGeoJSONTiles(
         return 0;
       }
       worker.postMessage({ ...options, url, init: r ? { headers: r.headers, credentials: r.credentials } : undefined });
+    } else if (isTable(data)) {
+      // mbt-map/table's Table: its rows go as they are (copied here, or sent by the analysis worker).
+      // Not if the source got other data meanwhile: the worker loads in the order it is told.
+      const current = () => loaded.get(s.id)?.busy === id;
+      l.sending = data.writeArgs().then(
+        ({ table, ids }) => current() && worker.postMessage({ ...options, table, ids }, ids ? [table, ids] : [table]),
+        (err) => current() && worker.postMessage({ ...options, failed: String(err?.message ?? err) }),
+      );
     } else {
       const bytes = new TextEncoder().encode(JSON.stringify(data)).buffer;
       worker.postMessage({ ...options, bytes }, [bytes]);
@@ -149,7 +167,7 @@ export function createGeoJSONTiles(
   const updateable = (l: Loaded, key: string | undefined): Updateable | undefined => {
     if (l.updateable) return l.updateable;
     const data = l.source.spec.data;
-    if (typeof data !== "string") return toUpdateable(data, key);
+    if (typeof data !== "string") return isTable(data) ? undefined : toUpdateable(data, key);
     return toUpdateable(l.fetched ? JSON.parse(new TextDecoder().decode(l.fetched)) : null, key);
   };
   // Applies the diff waiting to the data kept here and sends it to the worker, which updates its index as geojson-vt does.
@@ -182,11 +200,14 @@ export function createGeoJSONTiles(
     tile(source, z, x, y) {
       const l = loaded.get(source);
       if (l === undefined || stopped !== null) return Promise.resolve(null);
-      const id = nextTile++;
-      return new Promise((resolve) => {
-        pending.set(id, resolve);
-        worker.postMessage({ type: "tile", id, source: l.n, z, x, y });
-      });
+      const ask = () =>
+        new Promise<ArrayBuffer | null>((resolve) => {
+          if (stopped !== null) return resolve(null);
+          const id = nextTile++;
+          pending.set(id, resolve);
+          worker.postMessage({ type: "tile", id, source: l.n, z, x, y });
+        });
+      return l.sending ? l.sending.then(ask) : ask();
     },
     set(next, nextBase) {
       base = nextBase;
@@ -210,7 +231,7 @@ export function createGeoJSONTiles(
         // New data drops the diffs waiting, as MapLibre's `setData` does; their promises settle after it.
         const l: Loaded = { n, source: s, busy: 0, settled: old?.settled ?? [] };
         loaded.set(s.id, l);
-        l.busy = load(s, n);
+        l.busy = load(s, l);
         if (!l.busy) settle(l);
         if (old) reloaded.push(s.id);
       }
@@ -229,14 +250,14 @@ export function createGeoJSONTiles(
       return settled;
     },
     cluster(source, query) {
-      return new Promise((resolve, reject) => {
-        const l = loaded.get(source);
-        if (l === undefined) throw new Error(`mbt-map: source "${source}" is not a GeoJSON source`);
+      const l = loaded.get(source);
+      if (l === undefined) return Promise.reject(new Error(`mbt-map: source "${source}" is not a GeoJSON source`));
+      return Promise.resolve(l.sending).then(() => new Promise((resolve, reject) => {
         if (stopped !== null) throw new Error(stopped);
         const id = nextQuery++;
         worker.postMessage({ type: "cluster", id, source: l.n, ...clusterArgs(query) });
         asked.set(id, [resolve, reject]);
-      });
+      }));
     },
     terminate() {
       stop("the map was removed");

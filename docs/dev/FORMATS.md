@@ -399,11 +399,15 @@ In:
   (`geojson_props_worker`) instantiated for the first source with cluster properties.
   Both import `Math` and `host.number` (`hostNumber`, for numbers past the reader's
   fast path); the one with expressions adds `hostText`'s, as the display worker's.
-- `{type: "load", source, id, url, init | bytes, maxzoom, buffer, tolerance, lineMetrics, cluster, properties, promoteId}`:
+- `{type: "load", source, id, url, init | bytes | table, ids | failed, maxzoom, buffer, tolerance, lineMetrics, cluster, properties, promoteId}`:
   `source` is an integer naming the source; `url` (http(s)) is fetched with `init`,
   what the map's `transformRequest` gave, checked as a tile's (string `headers` and a
   `credentials` mode, else none are sent), up to `MAX_INPUT_BYTES` (256 MiB);
-  `bytes` is the GeoJSON as UTF-8 (an ArrayBuffer). The reader takes at most
+  `bytes` is the GeoJSON as UTF-8 (an ArrayBuffer); `table` is "Table" bytes (an ArrayBuffer)
+  with `ids`, null or a "Property value" per row (an ArrayBuffer), what mbt-map/table's `Table`
+  gives of its rows; `failed` is why a table's rows could not be had, which fails the load.
+  The wasm's `load` takes the input `promoteId` (sized), then the GeoJSON, or the table (sized)
+  and the ids, with bit 1 of its `flags` set (bit 0 is `lineMetrics`). The reader takes at most
   `@geom.MAX_TABLE_POINTS` points, `@formats.MAX_GEOJSON_KEYS` keys,
   `@geom.MAX_TABLE_CELLS` property cells (features times keys) and `MAX_GEOJSON_DEPTH`
   levels of nesting. The options are MapLibre's GeoJSON source options in pixels,

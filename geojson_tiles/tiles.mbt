@@ -14,15 +14,15 @@ priv enum Index {
 let sources : Map[Int32, (@geom.Table, Index)] = Map([])
 
 ///|
-/// Reads the input (`promoteId`, GeoJSON) as source `source` with its options (docs/dev/FORMATS.md
-/// "GeoJSON worker messages"; `properties` for clusters; the host's `trig`, `slow_number`). Returns
-/// the feature count, or minus the length of a UTF-8 error message at `output_addr`.
+/// Reads the input (`promoteId`, then GeoJSON or, with bit 1 of `flags`, a table) as source
+/// `source` with its options (docs/dev/FORMATS.md "GeoJSON worker messages"; bit 0 of `flags`
+/// is `lineMetrics`). Returns the feature count, or minus an error message's length.
 pub fn load(
   source : Int32,
   max_zoom : Int32,
   buffer : Double,
   tolerance : Double,
-  line_metrics : Int32,
+  flags : Int32,
   cluster : Int32,
   cluster_max_zoom : Int32,
   cluster_radius : Double,
@@ -49,13 +49,16 @@ pub fn load(
     "" => None
     k => Some(k)
   }
-  let (table, feature_ends) = read_features(
-    input,
-    at,
-    input.length(),
-    slow_number,
-  ) catch {
-    e => return @wasmio.fail_with(e.message())
+  let (table, feature_ends) = if (flags & 2) != 0 {
+    guard read_table(input[at:]) is Some(table) else {
+      return @wasmio.fail_with("malformed table")
+    }
+    (table, None)
+  } else {
+    let (table, ends) = read_features(input, at, input.length(), slow_number) catch {
+      e => return @wasmio.fail_with(e.message())
+    }
+    (table, Some(ends))
   }
   let buffer = (buffer * units_per_pixel).round().to_int()
   let index = if cluster != 0 {
@@ -74,7 +77,7 @@ pub fn load(
         wrap_buffer~,
         trig~,
         properties?=properties.map(f => f(table)),
-        feature_ends~,
+        feature_ends?,
         promote_id?,
       ),
     )
@@ -84,9 +87,9 @@ pub fn load(
       max_zoom,
       buffer,
       tolerance: tolerance * units_per_pixel,
-      line_metrics: line_metrics != 0,
+      line_metrics: (flags & 1) != 0,
     }
-    Tiles(@tiler.Tiler::new(table, options~, trig~, feature_ends~, promote_id?))
+    Tiles(@tiler.Tiler::new(table, options~, trig~, feature_ends?, promote_id?))
   }
   sources[source] = (table, index)
   table.length()
@@ -100,6 +103,28 @@ fn split_input(input : Bytes) -> (Int32, BytesView)? {
   let n = r.u32()
   guard r.ok() && n >= 0 && n <= r.remaining() else { return None }
   Some((4 + n, input[4:4 + n]))
+}
+
+///|
+/// A table as a source's data: a u32 length and its bytes (docs/dev/FORMATS.md "Table"), then
+/// nothing or a property value per row, its id. None if malformed.
+fn read_table(input : BytesView) -> @geom.Table? {
+  let r = @core.ByteReader::new(input)
+  let n = r.u32()
+  guard r.ok() &&
+    n >= 0 &&
+    n <= r.remaining() &&
+    @geom.Table::from_bytes(input[4:4 + n]) is Some(table) else {
+    return None
+  }
+  let ids = @core.ByteReader::new(input[4 + n:])
+  if ids.remaining() > 0 {
+    for i in 0..<table.length() {
+      table.ids[i] = @geom.read_prop(ids)
+    }
+  }
+  guard ids.ok() else { return None }
+  Some(table)
 }
 
 ///|

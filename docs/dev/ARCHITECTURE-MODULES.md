@@ -24,6 +24,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). The entry points 
 ## GeoJSON sources
 
 - GeoJSON sources (`geojson.js`, loaded by the facade with a dynamic `import("./geojson.js")` only when a style has one): `npm/src/geojson.ts` starts `geojson_worker` (wasm-gc: `formats` + `tiler`, host `Math` for `Trig`), sends each source's data (URL fetched in the worker without credentials, or the object as UTF-8), and serves tiles by source id.
+- A source whose `data` is a table (mbt-map/table's `Table`, told by its `writeArgs`) is loaded from the table's bytes and ids (`@geom.Table::from_bytes` in `geojson_tiles`, no GeoJSON on the way): `geojson.js` asks the table for them (a copy of what the page holds, or what the analysis worker sends) and holds the source's tile and cluster requests until they are posted. The facade's `copy` of a style keeps a table by reference. `npm run table:source` checks that the tiles are the bytes the table's GeoJSON gives.
 - `map` asks the facade's provider (`map/dom.mbt` `Provider`) for a GeoJSON tile, gets an `@tiler.encode_tile` buffer and posts it to a display worker as `bytes`; the display worker reads it as a `ColumnTile` (bounds-checked) behind the same `Features` enum as MVT layers, so filters, grouping and tessellation are shared.
 - `map` keeps one `SourceTiles` per source its layers use; the facade strips GeoJSON `data` from the style the engine parses.
 

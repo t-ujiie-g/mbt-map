@@ -26,7 +26,7 @@ const input = (wasm, bytes) => writeInput(wasm, [bytes], "GeoJSON");
 
 const isInt32 = (v) => Number.isInteger(v) && v >= -(2 ** 31) && v < 2 ** 31;
 
-async function load({ source, url, init, bytes, maxzoom, buffer, tolerance, lineMetrics, cluster, properties, promoteId }, previous) {
+async function load({ source, url, init, bytes, table, ids, failed, maxzoom, buffer, tolerance, lineMetrics, cluster, properties, promoteId }, previous) {
   const withProperties = cluster && properties instanceof Uint8Array && properties.length > 0;
   if (withProperties && !propsReady) {
     if (typeof propsUrl !== "string") throw new Error("no module for cluster properties");
@@ -40,8 +40,11 @@ async function load({ source, url, init, bytes, maxzoom, buffer, tolerance, line
   if (cluster && !(isInt32(cluster.maxZoom) && typeof cluster.radius === "number" && cluster.radius >= 0 && cluster.radius < Infinity && isInt32(cluster.minPoints))) {
     throw new Error("malformed cluster options");
   }
+  if (typeof failed === "string") throw new Error(failed);
+  // A table (docs/dev/FORMATS.md "Table") comes with its rows' ids, or none.
+  const rows = table instanceof ArrayBuffer && (ids == null || ids instanceof ArrayBuffer);
   let data = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
-  if (!data) {
+  if (!data && !rows) {
     if (typeof url !== "string" || !/^https?:/.test(url)) throw new Error("data must be an http(s) URL");
     const res = await fetch(url, fetchInit(init));
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
@@ -51,12 +54,12 @@ async function load({ source, url, init, bytes, maxzoom, buffer, tolerance, line
     input(wasm, properties);
     if (wasm.set_properties() < 0) throw new Error("malformed cluster properties");
   }
-  writeInput(wasm, loadInput(promoteId, data), "GeoJSON");
+  writeInput(wasm, loadInput(promoteId, data, rows && table, ids), "GeoJSON");
   const c = cluster ?? { maxZoom: 0, radius: 0, minPoints: 0 };
-  const n = wasm.load(source, maxzoom, buffer, tolerance, lineMetrics === true ? 1 : 0, cluster ? 1 : 0, c.maxZoom, c.radius, c.minPoints);
+  const n = wasm.load(source, maxzoom, buffer, tolerance, (lineMetrics === true ? 1 : 0) | (rows ? 2 : 0), cluster ? 1 : 0, c.maxZoom, c.radius, c.minPoints);
   if (n < 0) throw new Error(decoder.decode(new Uint8Array(wasm.memory.buffer, wasm.output_addr(), -n)));
   // Data fetched here goes back to the page, which applies `updateData` diffs to it.
-  return { features: n, fetched: bytes instanceof ArrayBuffer ? null : data.buffer };
+  return { features: n, fetched: data && !(bytes instanceof ArrayBuffer) ? data.buffer : null };
 }
 
 const EMPTY = new TextEncoder().encode("{}");
@@ -109,7 +112,7 @@ onmessage = (e) => {
     propsUrl = msg.propsWasm;
     ready = instantiate(msg.wasm, {});
   } else if ((msg?.type === "load" || (msg?.type === "update" && msg.diff instanceof ArrayBuffer)) && ready && Number.isInteger(msg.source)) {
-    if (msg.type === "load") options.set(msg.source, { ...msg, url: undefined, bytes: undefined, init: undefined });
+    if (msg.type === "load") options.set(msg.source, { ...msg, url: undefined, bytes: undefined, init: undefined, table: undefined, ids: undefined });
     const done = (msg.type === "load" ? load : update)(msg, loads.get(msg.source));
     loads.set(msg.source, done);
     const { source, id } = msg;
