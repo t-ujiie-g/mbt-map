@@ -1,7 +1,7 @@
 // Seeded points counted per block in the analysis worker; the counts then
 // color the blocks on the map. Nothing of the analysis runs on the main thread.
 import { Map } from "mbt-map";
-import { load } from "mbt-map/analysis";
+import { fromGeoJSON } from "mbt-map/table";
 
 let s = 7;
 const rand = () => (s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296;
@@ -21,8 +21,8 @@ const points = Array.from({ length: 400 }, () => ({
   geometry: { type: "Point", coordinates: [x0 + rand() * size * 3, y0 + rand() * size * 2] },
 }));
 
-const polygons = await load({ type: "FeatureCollection", features: blocks });
-const dots = await load({ type: "FeatureCollection", features: points });
+const polygons = await fromGeoJSON({ type: "FeatureCollection", features: blocks });
+const dots = await fromGeoJSON({ type: "FeatureCollection", features: points });
 const [areas, counted, inside] = await Promise.all([polygons.areas(), polygons.spatialJoin(dots, { rollup: { count: ["count"], mean: ["mean", "v"] } }), dots.pointsWithin(polygons)]);
 const counts = { count: await counted.array("count"), mean: await counted.array("mean") };
 

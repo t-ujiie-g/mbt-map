@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.7（3 つのショーケースに「読む → 絞る → 結合 → 集計 → 描く」を足す、`docs/data.md` と `docs/analysis.md` の書き直し、0.1 からの移行の対応表、別名の削除）。その後 T.8、Phase 21。
+- **次**：テーブルの段階の T.8（リファクタリングとセキュリティの点検、0.2.0）。T.7（例・文書・移行、別名の削除）まで済み。その後 Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -685,3 +685,11 @@ Where things stand, decisions and open issues. The development history before th
 - ゴールデン（`parquet:golden`）：covering つきの 2 ファイル（float64 と、外向きに丸めた float32。西から東へ並べて小さい行グループ）を足した。部分読み 174 件（5 ファイル × 7 通りの `bbox`・`columns` を、バイト列から・範囲リクエストで・範囲なしのサーバで・大きさを見せないサーバで読み、期待する行を絞ったものと比べる。covering つきなら小さい箱で計画されるチャンクが半分未満）：0 differ。全体も 0 differ（pyarrow 334、hyparquet 30、壊した入力 10）。
 - 分かっていること：covering の無いファイルでは `bbox` は通信量を減らさない（文書に書いた）。行グループが大きい、または空間で並んでいないファイルも同じ。実際の大きいファイル（Overture など）での通信量は測っていない（ゴールデンのファイルは最初の 64KiB より小さいので、計画されるチャンクの数で見送りを確かめている）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1002、wasm-gc 1014、js 1061、native 1002：`formats` 3 件を足した）、npm のテスト（474：範囲読みの 4 件に書き直した）と大きさ、bench のテスト（23）、`arrow:golden`（0 differ のまま）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium）と data ページを WebKit・Firefox で（`bbox` と `columns` で一部を読む、断り方）。
+
+## テーブルの段階 T.7：例・文書・移行（2026-11-20、Mac）
+
+- ショーケース（html・element・react。`examples/shared/analyze.js`）：解析のタブに「Table: read, join, count, draw」を足した。公園の CSV を `read` で読み、地点から駅を `filter` で絞り、`nearestJoin` で公園ごとに最寄りの駅を付け、`groupby`・`rollup` で駅ごとに数え、`join` で駅に戻し、そのテーブルをソースの `data` にそのまま渡して円で描く（半径は公園の数）。途中のテーブルは終わりに `dispose` する。
+- 別名の削除：`mbt-map/analysis` の `load` と `Dataset` を消した（`mbt-map/analysis` 5,316 → 5,263 バイト gzip）。呼び出し側（ショーケース、サンプル buffer-voronoi・route・classify、pack test と analysis・cdn のページ、bundlers のアプリ）を `mbt-map/table` の `fromGeoJSON` に移した。classify のサンプルは、結合の結果のテーブルをそのまま `setData` に渡す。
+- 文書：`docs/migrating.md`（0.1 → 0.2：移った名前、変わった戻り値、新しい機能、配るファイル）。`docs/analysis.md` を `Table`・`fromGeoJSON` の言葉に直し、`docs/data.md` の入口をテーブル中心（読む → 絞る → 結合 → 集計 → 描くの例）に書き直した。`CHANGELOG.md` に Unreleased の節。
+- チェック（`bench/npm/checks/analyze.mjs`）：5 つの公園が最寄りの 4 駅に数えられ（有楽町駅 2、ほか 1）、ソースの `getData()` がテーブルで、列が `name, kind, name_station, parks, first`、タイルに「有楽町駅 2」があること。
+- 確かめ：`moon check --target all --deny-warn`、npm のテスト（475）と大きさ、bench のテスト（23）、pack test の全部（Chromium）。

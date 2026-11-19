@@ -1,6 +1,23 @@
-# Reading and writing data: `mbt-map/table` and `mbt-map/data`
+# Tables: `mbt-map/table` and `mbt-map/data`
 
-`mbt-map/table` reads vector GIS files in a Web Worker of its own. It handles CSV, WKT/EWKT, WKB/EWKB, Shapefile (loose files or a zip), TopoJSON, KML/KMZ, GPX, FlatGeobuf and GeoJSON. Each read returns a `Table` in longitude and latitude, which gives a GeoJSON source its data and has the analysis of [analysis.md](./analysis.md) as methods. The entry point also writes GeoJSON, CSV and KML. `mbt-map/data` reads GeoTIFF and Cloud Optimized GeoTIFF (COG) pixels in the same worker. The worker starts on the first call. Coordinate conversion, KML/GPX and GeoTIFF each ship as a separate module, fetched only the first time they're needed.
+`mbt-map/table` has one type, `Table`: rows with a geometry and properties. A table is read from a file (CSV, WKT/EWKT, WKB/EWKB, Shapefile as loose files or a zip, TopoJSON, KML/KMZ, GPX, FlatGeobuf, GeoJSON, Arrow IPC and Feather, GeoParquet) or made from GeoJSON, always in longitude and latitude. Its methods filter, compute, group and join it, and it has the analysis of [analysis.md](./analysis.md) as methods; each returns a new table. A table is a GeoJSON source's `data` as it is, and it is written as GeoJSON, CSV, KML or Arrow.
+
+`mbt-map/data` reads GeoTIFF and Cloud Optimized GeoTIFF (COG) pixels. Both entries work in Web Workers that start on the first call; coordinate conversion, KML/GPX, Arrow, Parquet and GeoTIFF each ship as a separate module, fetched only the first time they're needed. Coming from 0.1's `DataTable` and `Dataset`: [migrating.md](./migrating.md).
+
+```js
+import { fromGeoJSON, read } from "mbt-map/table";
+
+// Read, filter, join, aggregate, draw.
+const parks = await read("/data/parks.csv");
+const stations = await (await fromGeoJSON(placesGeoJSON)).filter(["==", ["get", "kind"], "station"]);
+const beside = await parks.nearestJoin(stations, { suffix: ["", "_station"] });     // each park beside its nearest station
+const perStation = await beside.groupby("name_station").rollup({ parks: ["count"] });
+const counted = await stations.join(perStation, ["name", "name_station"]);
+map.addSource("stations", { type: "geojson", data: counted });
+map.addLayer({ id: "stations", type: "circle", source: "stations", paint: { "circle-radius": ["+", 6, ["*", 4, ["get", "parks"]]] } });
+```
+
+Reading and writing:
 
 ```js
 import { read, parse, write } from "mbt-map/table";

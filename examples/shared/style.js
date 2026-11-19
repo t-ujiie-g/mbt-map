@@ -90,7 +90,7 @@ export const LAYER_TITLES = {
   elevation: "Spot heights", symbol: "Symbols", label: "Labels", "label-vertical": "Labels (vertical)", places: "Places", "places-label": "Place names",
   "stations-cluster": "Station clusters", stations: "Yamanote Line stations", "stations-count": "Station counts", "stations-heat": "Station density", walk: "Walk",
   hillshade: "Hillshade", world: "World map", photo: "Aerial photo", sketch: "Station sketch", "analysis-cells": "Place cell area", "analysis-cells-line": "Place cell borders",
-  "analysis-route": "Route", "analysis-route-end": "Route ends", "analysis-viewshed": "Viewshed", "analysis-sight": "Line of sight", "analysis-sight-point": "Line of sight points",
+  "analysis-table": "Stations by parks nearby", "analysis-route": "Route", "analysis-route-end": "Route ends", "analysis-viewshed": "Viewshed", "analysis-sight": "Line of sight", "analysis-sight-point": "Line of sight points",
 };
 
 // GSI's road classes (rdCtg).

@@ -1,5 +1,5 @@
 import { Map } from "mbt-map";
-import { load } from "mbt-map/analysis";
+import { fromGeoJSON } from "mbt-map/table";
 
 const STATIONS = [
   ["Tokyo", 139.7671, 35.6812], ["Shinjuku", 139.7006, 35.6896], ["Shibuya", 139.7016, 35.658],
@@ -42,7 +42,7 @@ const map = new Map({
 });
 await map.once("load");
 
-const points = await load(stations);
+const points = await fromGeoJSON(stations);
 const status = document.getElementById("status");
 const buttons = document.querySelectorAll("[data-op]");
 

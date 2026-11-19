@@ -1,6 +1,6 @@
 // The map's tile workers, its GeoJSON worker and the analysis worker, all from the CDN origin.
 import { Map } from "mbt-map";
-import { load } from "mbt-map/analysis";
+import { fromGeoJSON } from "mbt-map/table";
 
 const tokyo = [139.7671, 35.6812];
 const places = { type: "FeatureCollection", features: [{ type: "Feature", properties: { name: "東京駅" }, geometry: { type: "Point", coordinates: tokyo } }] };
@@ -22,7 +22,7 @@ map.once("load", async () => {
   window.__loaded = performance.now();
   await map.once("idle");
   const features = await map.queryRenderedFeatures([400, 300]);
-  const centroids = await (await load(places)).centroids();
+  const centroids = await (await fromGeoJSON(places)).centroids();
   window.__cdn = {
     module: import.meta.resolve("mbt-map"),
     names: features.map((f) => f.properties.name),

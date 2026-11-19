@@ -2,6 +2,18 @@
 
 All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujiie-g/mbtmap` and `t-ujiie-g/mbtmap_rabbita`. They share one version.
 
+## Unreleased
+
+Reading, analysis and display share one table. Some names move or change: [docs/migrating.md](docs/migrating.md) has the list.
+
+- `mbt-map/table` (new): `read`, `parse` and `write` (from `mbt-map/data`) and `Table`, the one type for what was `DataTable` and `Dataset`. What `read` gives is analysed as it is; its rows move into the analysis worker on the first operation.
+- `mbt-map/table`: attribute operations named as Arquero's (`select`, `filter`, `derive`, `orderby`, `slice`, `groupby`, `rollup` with 14 aggregates, `join`), with style expressions for conditions and computed values. Results match Arquero 8.0.3.
+- `mbt-map/table`: `spatialJoin` and `nearestJoin` give the joined table or, with `rollup`, aggregates per row; `dissolve({ by })` merges per group; `dbscan` and `kmeans` return the table with cluster columns.
+- `mbt-map`: a GeoJSON source's `data` may be a `Table`. Its rows go to the source's worker as bytes: nothing is turned into GeoJSON on the page.
+- `mbt-map/table`: Arrow IPC (`fromArrow`, `toArrowIPC`; GeoArrow WKB and native geometry; Feather; LZ4 and ZSTD buffers) and GeoParquet (`read`; Snappy, GZIP and ZSTD; `bbox` and `columns` by HTTP range requests, row groups passed over by GeoParquet 1.1's covering column).
+- `mbt-map/data` is now rasters only (`readRaster`, `rasterInfo`, `rasterTile`, `reprojectTile`); `mbt-map/analysis` keeps elevation grids, coordinate transforms and classification.
+- Removed: `load` and `Dataset` from `mbt-map/analysis` (`fromGeoJSON` and `Table` in `mbt-map/table`), `DataTable.tableBytes`, `Dataset.collect` (`spatialJoin` with `rollup`).
+
 ## 0.1.1
 
 - `mbt-map`: a map with `interactive: false` is no longer a tab stop (its canvas gets `tabindex="-1"`, as MapLibre's).

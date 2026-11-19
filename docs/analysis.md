@@ -1,6 +1,6 @@
 # Spatial analysis: `mbt-map/table` and `mbt-map/analysis`
 
-Spatial analysis runs in a Web Worker of its own, on the tables of `mbt-map/table`: what [`read`](./data.md) gives, or GeoJSON taken in with `fromGeoJSON`. A table's rows stay in the worker together with their spatial index, and its methods return only results: typed arrays, new tables, or GeoJSON when you ask for it. `mbt-map/analysis` has what is not a table: elevation grids, coordinate transforms and class breaks. (Until the table surface is settled it also exports the earlier names: `Dataset` is `Table`, and `load` is `fromGeoJSON`, which also reads a table again.)
+Spatial analysis runs in a Web Worker of its own, on the tables of `mbt-map/table`: what [`read`](./data.md) gives, or GeoJSON taken in with `fromGeoJSON`. A table's rows stay in the worker together with their spatial index, and its methods return only results: typed arrays, new tables, or GeoJSON when you ask for it. `mbt-map/analysis` has what is not a table: elevation grids, coordinate transforms and class breaks. (Until the table surface is settled it also exports the earlier names: `Table` is `Table`, and `load` is `fromGeoJSON`, which also reads a table again.)
 
 ```js
 import { fromGeoJSON } from "mbt-map/table";
@@ -14,6 +14,8 @@ shops.dispose();
 ```
 
 All methods are asynchronous and return Promises, except the classification functions and `distance`.
+
+A table's attribute operations (`filter`, `derive`, `groupby`, `rollup`, `join`), its spatial joins and how it is read, written and drawn are in [data.md](./data.md). Coming from 0.1's `load` and `Dataset`: [migrating.md](./migrating.md).
 
 ## Contents
 
@@ -64,7 +66,7 @@ const areas = await wards.areas();               // the same table: its rows mov
 | `bboxes()` | `Float64Array`: min x, min y, max x, max y per feature. |
 | `search(bbox)` | `Int32Array`: indices of the features whose boxes meet `bbox` (`[minX, minY, maxX, maxY]` in degrees). |
 | `nearest(x, y, { k, maxDistance })` | `Int32Array`: up to `k` (default 1) features nearest to (x, y), nearest first. The distance is the distance to the feature's box, in degrees. |
-| `pointsWithin(polygons)` | `Int32Array`: this dataset's point features that lie inside some polygon of `polygons`. A point on a boundary counts as inside. |
+| `pointsWithin(polygons)` | `Int32Array`: this table's point features that lie inside some polygon of `polygons`. A point on a boundary counts as inside. |
 | `grid(bbox, cols, rows)` | `Int32Array`: point counts in a `cols` × `rows` grid over `bbox`, row by row from the south edge. |
 
 Measures and point-in-polygon tests give the same values as Turf.js 7.4.0. Index searches return features in the same order as flatbush 4.6.2.
@@ -76,37 +78,37 @@ The module-level function `distance(from, to)` returns the great-circle distance
 These are a port of JSTS 2.12.1's `RelateOp`, so matrices and predicates come out the same as in JTS. The module (`relate.wasm`) is fetched on the first call. Longitude and latitude are treated as a plane.
 
 ```ts
-relate(other: Dataset, relation: Relation | { pattern: string }): Promise<Int32Array>
-relateMatrix(other: Dataset, i: number, j: number): Promise<string>
+relate(other: Table, relation: Relation | { pattern: string }): Promise<Int32Array>
+relateMatrix(other: Table, i: number, j: number): Promise<string>
 ```
 
 - `spatialJoin` and `nearestJoin` ([data.md](./data.md#spatial-joins)) give a table of the related rows with both tables' columns, or aggregates of them per row; `relate` is the pairs themselves.
-- `relate` returns the pairs of feature `i` in this dataset and feature `j` in `other` that satisfy `relation`, as a flat `Int32Array` `[i0, j0, i1, j1, ...]` sorted by `i`, then `j`.
+- `relate` returns the pairs of feature `i` in this table and feature `j` in `other` that satisfy `relation`, as a flat `Int32Array` `[i0, j0, i1, j1, ...]` sorted by `i`, then `j`.
 - `relation` is one of `"intersects"`, `"contains"`, `"within"`, `"covers"`, `"coveredBy"`, `"touches"`, `"crosses"`, `"overlaps"` or `"equals"` (JTS's `equalsTopo`). It can also be a DE-9IM pattern such as `{ pattern: "T*F**FFF*" }`.
 - Only pairs whose bounding boxes meet are tested. So `disjoint` isn't offered, and a pattern that disjoint pairs would match (all four interior/boundary cells `F` or `*`) is refused.
 - `relateMatrix` returns the DE-9IM matrix of one pair in JTS's notation, for example `"FF2F11212"`.
 
 ```js
-const parks = await load(parksGeoJSON);
-const stations = await load(stationsGeoJSON);
+const parks = await fromGeoJSON(parksGeoJSON);
+const stations = await fromGeoJSON(stationsGeoJSON);
 const pairs = await parks.relate(stations, "contains");   // [park, station, park, station, ...]
 const m = await parks.relateMatrix(stations, pairs[0], pairs[1]);
 ```
 
 ## Geometry operations
 
-These are a port of Clipper2 2.0.1, with results identical to the C++ library. The module (`geometry.wasm`) is fetched on the first call. Each operation returns a new `Dataset`.
+These are a port of Clipper2 2.0.1, with results identical to the C++ library. The module (`geometry.wasm`) is fetched on the first call. Each operation returns a new `Table`.
 
 | Method | What it does |
 |---|---|
 | `buffer(meters, { mode, join, cap, arcTolerance, crs })` | Grows each feature by `meters` into polygons. A negative distance shrinks polygons and leaves points and lines without geometry (as Turf's `buffer`, which gives nothing for them). Properties are kept. A feature that vanishes keeps its row without geometry. |
 | `dissolve({ by })` | Merges all polygons into one feature without properties. With `by` (a column's name or names), one feature per group of rows with equal values there, holding those columns; a group without polygons has no geometry. Lines and points are left out. |
-| `clip(other)` | Cuts this dataset's features to the area of `other`'s polygons. Lines stay lines, points are kept or dropped. Properties are kept. |
-| `erase(other)` | Removes the area of `other`'s polygons from this dataset's features. Properties are kept. |
+| `clip(other)` | Cuts this table's features to the area of `other`'s polygons. Lines stay lines, points are kept or dropped. Properties are kept. |
+| `erase(other)` | Removes the area of `other`'s polygons from this table's features. Properties are kept. |
 | `intersect(other)` | One feature per overlap of a feature here with a polygon of `other`, carrying the properties of both. Keys of `other` that also exist here get the suffix `_2`. |
 | `split(lines)` | Splits each feature by the lines of `lines`. A polygon splits where a line crosses it from edge to edge, a line where they cross. The pieces keep the original properties. |
 | `merge()` | Makes all features one feature with the first one's properties: polygons are united, lines are joined end to end, points become a MultiPoint. Rejects when the geometry kinds differ. |
-| `toGeoJSON({ crs })` | The dataset as a GeoJSON FeatureCollection, built in the worker. Pass `crs` to get coordinates in that CRS. Feature ids are not kept. |
+| `toGeoJSON({ crs })` | The table as a GeoJSON FeatureCollection, built in the worker. Pass `crs` to get coordinates in that CRS. Feature ids are not kept. |
 
 `buffer` options:
 
@@ -121,17 +123,17 @@ These are a port of Clipper2 2.0.1, with results identical to the C++ library. T
 Distances: `meters` must be a finite number. A geodesic buffer takes at most 10,000 km (`10_000_000`, a quarter of a meridian); a larger one rejects with `a geodesic buffer takes at most 10,000 km`. A point's circle is within millimeters of the distance at 1 km, 2 m at 50 km, 0.1% at 1,000 km and 0.6% at 10,000 km (measured with GeographicLib). A geodesic buffer's longitudes stay within ±180: one that crosses the antimeridian is cut there into the parts of a MultiPolygon (RFC 7946 §3.1.9), and one that holds a pole runs along ±180 up to the pole's latitude and across it, so planar tools fill the cap. The cut parts are on a 1e-7° grid (about 1 cm); buffers that are not cut are unchanged. A planar buffer takes up to 1e9 of the CRS's units.
 
 ```js
-const roads = await load(roadsGeoJSON);
+const roads = await fromGeoJSON(roadsGeoJSON);
 const corridor = await roads.buffer(50, { cap: "butt" });
 const zone = await corridor.dissolve();
-const inside = await (await load(buildingsGeoJSON)).clip(zone);
+const inside = await (await fromGeoJSON(buildingsGeoJSON)).clip(zone);
 map.getSource("result").setData(await inside.toGeoJSON());
 ```
 
 For [mbt-map/draw](./draw.md) there are two helpers that work directly on GeoJSON features. They load the features, run the operation and dispose of everything:
 
-- `splitFeatures(features, line, options?)`: the features split by `line` (a LineString geometry), as `Dataset.split`.
-- `mergeFeatures(features, options?)`: the features merged into one, as `Dataset.merge`.
+- `splitFeatures(features, line, options?)`: the features split by `line` (a LineString geometry), as `Table.split`.
+- `mergeFeatures(features, options?)`: the features merged into one, as `Table.merge`.
 
 ## Shapes
 
@@ -139,13 +141,13 @@ These are ports of Turf.js 7.4.0, concaveman 2.0.0 and d3-delaunay 6.0.6, produc
 
 | Method | Result |
 |---|---|
-| `simplify({ tolerance, highQuality })` | A `Dataset` with each feature simplified as Turf's `simplify` does: radial distance, then Douglas-Peucker. `tolerance` is in degrees (default 1). `highQuality` skips the radial pass. Properties are kept. |
-| `convexHull()` | A `Dataset` with one polygon around every vertex (Turf's `convex`), or no feature when there are fewer than three points. |
+| `simplify({ tolerance, highQuality })` | A `Table` with each feature simplified as Turf's `simplify` does: radial distance, then Douglas-Peucker. `tolerance` is in degrees (default 1). `highQuality` skips the radial pass. Properties are kept. |
+| `convexHull()` | A `Table` with one polygon around every vertex (Turf's `convex`), or no feature when there are fewer than three points. |
 | `concaveHull({ concavity, lengthThreshold })` | concaveman's concave hull as one polygon. `concavity` defaults to 2 (1 gives the tightest hull). Edges shorter than `lengthThreshold` degrees (default 0) stay. |
-| `delaunay()` | A `Dataset` of the Delaunay triangles of the points, as polygons, in d3-delaunay's order. |
+| `delaunay()` | A `Table` of the Delaunay triangles of the points, as polygons, in d3-delaunay's order. |
 | `voronoi(bbox)` | Each point's Voronoi cell cut to `bbox`, with that point's properties. A duplicate point keeps its row without geometry. |
 | `nearestPointOnLine(x, y)` | For each feature, the point on its lines nearest to (x, y): `{ point, dist, location, index, multiFeatureIndex }`, or `null` for features without lines. `dist` (distance) and `location` (distance along the line) are in kilometers. |
-| `lineSlice(start, stop)` | A `Dataset` with each line cut between the points nearest to `start` and `stop` (`[lng, lat]`), as Turf's `lineSlice`. |
+| `lineSlice(start, stop)` | A `Table` with each line cut between the points nearest to `start` and `stop` (`[lng, lat]`), as Turf's `lineSlice`. |
 
 Use `split(lines)` (in [Geometry operations](#geometry-operations)) to split lines by other lines.
 
@@ -153,23 +155,23 @@ Use `split(lines)` (in [Geometry operations](#geometry-operations)) to split lin
 
 These are ports of Turf.js 7.4.0 and d3-contour 4.0.3, producing the same coordinates, values and clusters. The module (`surface.wasm`) is fetched on the first call. Distances are in kilometers, as in Turf.
 
-**Grids** are made by the module-level function `grid`. Don't confuse it with the `Dataset.grid` method above, which counts points.
+**Grids** are made by the module-level function `grid`. Don't confuse it with the `Table.grid` method above, which counts points.
 
 ```ts
-grid(bbox: BBox, cellSide: number, type?: "square" | "point" | "hex" | "triangle", options?: { triangles?: boolean }): Promise<Dataset>
+grid(bbox: BBox, cellSide: number, type?: "square" | "point" | "hex" | "triangle", options?: { triangles?: boolean }): Promise<Table>
 ```
 
-`grid` returns a `Dataset` of cells covering `bbox`: Turf's `squareGrid` (the default), `pointGrid`, `hexGrid` or `triangleGrid`. With `type: "hex"`, `triangles: true` splits each hexagon into six triangles. Grids are capped at one million cells. To aggregate points per hexagon, call `collect` on the grid:
+`grid` returns a `Table` of cells covering `bbox`: Turf's `squareGrid` (the default), `pointGrid`, `hexGrid` or `triangleGrid`. With `type: "hex"`, `triangles: true` splits each hexagon into six triangles. Grids are capped at one million cells. To aggregate points per hexagon, call `collect` on the grid:
 
 ```js
-import { grid, load } from "mbt-map/analysis";
+import { fromGeoJSON, grid } from "mbt-map/table";
 
 const hexes = await grid([139.68, 35.62, 139.83, 35.74], 0.5, "hex");
-const points = await load(pointsGeoJSON);
+const points = await fromGeoJSON(pointsGeoJSON);
 const counted = await hexes.spatialJoin(points, { rollup: { count: ["count"] } });   // the hexes, with a count column
 ```
 
-**Dataset methods:**
+**Table methods:**
 
 | Method | Result |
 |---|---|
@@ -181,7 +183,7 @@ const counted = await hexes.spatialJoin(points, { rollup: { count: ["count"] } }
 | `kmeans(k?)` | Turf's `clustersKmeans`: the table with the columns `cluster` and its centroid's `centroid_x` and `centroid_y`. `k` defaults to round(√(n/2)). Rows that aren't points get none. |
 
 ```js
-const samples = await load(samplePointsGeoJSON);
+const samples = await fromGeoJSON(samplePointsGeoJSON);
 const surface = await samples.interpolate(0.2, { gridType: "point", property: "pm25" });
 const bands = await surface.isobands([0, 10, 20, 35, 55], { zProperty: "pm25" });
 ```
@@ -191,19 +193,19 @@ const bands = await surface.isobands([0, 10, 20, 35, 55], { zProperty: "pm25" })
 This is a port of geojson-path-finder 2.1.0, producing the same paths and weights. The module (`route.wasm`) is fetched on the first call.
 
 ```ts
-Dataset.network({ tolerance?: number, snap?: number }): Promise<Network>
+Table.network({ tolerance?: number, snap?: number }): Promise<Network>
 Network.route(from: [number, number], to: [number, number]): Promise<{ path: [number, number][]; weight: number } | null>
 Network.dispose(): void
 ```
 
-- `network` builds a routable graph from the dataset's lines (LineString, plus each line of a MultiLineString) and keeps it in the worker.
+- `network` builds a routable graph from the table's lines (LineString, plus each line of a MultiLineString) and keeps it in the worker.
 - `tolerance` (degrees, default `1e-5`): vertices closer than this are treated as the same vertex.
 - `snap` (meters, default 0, off): first nodes the lines so that nearly-touching data still connects. A line end within `snap` of another line's segment is joined to that segment at its nearest point, and ends within `snap` of each other become one vertex. This joins T-junctions and lines cut at tile edges that are slightly off.
 - `route` returns the shortest path between two vertices of the network (matched within `tolerance`): `path` holds the coordinates and `weight` the length in kilometers. It returns `null` when the points aren't connected or aren't vertices. You can call it as many times as you like.
 - `dispose()` frees the network in the worker.
 
 ```js
-const roads = await load(roadsGeoJSON);
+const roads = await fromGeoJSON(roadsGeoJSON);
 const net = await roads.network({ snap: 2 });
 const r = await net.route([139.7671, 35.6812], [139.7454, 35.6586]);
 if (r) console.log(`${r.weight.toFixed(2)} km`, r.path);
@@ -389,5 +391,5 @@ The first call that needs the worker starts `analysis-worker.js` and `analysis.w
 
 By default every file is loaded from next to `analysis.js`. The options of the first call can point elsewhere: `workerUrl`, `wasmUrl`, `geometryWasmUrl`, `relateWasmUrl`, `shapesWasmUrl`, `surfaceWasmUrl`, `viewshedWasmUrl`, `routeWasmUrl` and `projWasmUrl`. See [getting-started.md](./getting-started.md) for serving the files with a bundler.
 
-- `Dataset.dispose()`, `DemGrid.dispose()` and `Network.dispose()` free their data in the worker. Later calls on them reject.
-- `terminate()` stops the worker. Every dataset, grid and network is lost and pending calls reject. The next `load` starts a fresh worker.
+- `Table.dispose()`, `DemGrid.dispose()` and `Network.dispose()` free their data in the worker. Later calls on them reject.
+- `terminate()` stops the worker. Every table, grid and network is lost and pending calls reject. The next call starts a fresh worker.

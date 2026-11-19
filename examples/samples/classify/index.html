@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A classified choropleth</title>
-<meta name="description" content="Points counted in a square grid by mbt-map/analysis, classed with classBreaks (jenks, quantile or equal intervals) and colored by a step expression from classStep.">
+<meta name="description" content="Points counted in a square grid by an mbt-map/table spatial join, classed with classBreaks (jenks, quantile or equal intervals) and colored by a step expression from classStep.">
 <link rel="stylesheet" href="../sample.css">
 <style>
   #legend { display: grid; grid-template-columns: 16px 1fr; gap: 3px 8px; align-items: center; font-size: 12px; }
@@ -13,7 +13,8 @@
   {
     "imports": {
       "mbt-map": "../node_modules/mbt-map/dist/index.js",
-      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js"
+      "mbt-map/analysis": "../node_modules/mbt-map/dist/analysis.js",
+      "mbt-map/table": "../node_modules/mbt-map/dist/table.js"
     }
   }
 </script>

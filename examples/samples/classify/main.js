@@ -1,5 +1,6 @@
 import { Map } from "mbt-map";
-import { classBreaks, classStep, grid, load } from "mbt-map/analysis";
+import { classBreaks, classStep } from "mbt-map/analysis";
+import { fromGeoJSON, grid } from "mbt-map/table";
 
 const BOX = [139.68, 35.62, 139.83, 35.74];
 const CENTERS = [[139.7671, 35.6812], [139.7006, 35.6896], [139.7016, 35.658], [139.7774, 35.7141], [139.7109, 35.7295]];
@@ -43,10 +44,10 @@ const map = new Map({
 await map.once("load");
 
 const cells = await grid(BOX, 1, "square");
-const counted = await cells.spatialJoin(await load(places), { rollup: { count: ["count"] } });
+const counted = await cells.spatialJoin(await fromGeoJSON(places), { rollup: { count: ["count"] } });
 const count = await counted.array("count");
-const data = await counted.toGeoJSON();
-map.getSource("cells").setData(data);
+// The table is the source's data as it is.
+map.getSource("cells").setData(counted);
 
 const legend = document.getElementById("legend");
 const method = document.getElementById("method");

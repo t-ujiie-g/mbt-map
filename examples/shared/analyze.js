@@ -1,7 +1,8 @@
-// The analysis tab: places' Voronoi cells classed by area (field editor columns, jenks as a `step`
-// the legend lists), the shortest way along the drawn roads, and what the center sees (GSI's DEM:
-// a viewshed on a canvas source, a line of sight to a click).
-import { classBreaks, classStep, load, loadDem } from "mbt-map/analysis";
+// The analysis tab: places' Voronoi cells classed by area, a table pipeline (parks read from a CSV, joined to
+// their nearest station, counted and drawn), the shortest way along the drawn roads, and what the center
+// sees on GSI's DEM (a viewshed on a canvas source, a line of sight to a click).
+import { classBreaks, classStep, loadDem } from "mbt-map/analysis";
+import { fromGeoJSON, read } from "mbt-map/table";
 import { createFieldEditor } from "mbt-map/ui";
 import { PLACES } from "./places.js";
 import { DEM_TILES } from "./style.js";
@@ -19,22 +20,27 @@ const HIDDEN = 128;
 const METERS_PER_DEGREE = 111320;
 const DEM_MARGIN = 1.1;
 
+/** The parks the table pipeline reads. */
+const PARKS = new URL("../shared/sample-parks.csv", location.href).href;
+
 const empty = () => ({ type: "FeatureCollection", features: [] });
 const line = (coordinates, properties = {}) => ({ type: "Feature", properties, geometry: { type: "LineString", coordinates } });
 const point = (coordinates, properties = {}) => ({ type: "Feature", properties, geometry: { type: "Point", coordinates } });
 
 /**
- * `cells` `{ breaks, count }`, `route` `{ length, steps }`, `sight` `{ visible }` (share seen), `target` `{ visible, blockedAt }`
- * (each null, "loading" or `{ error }`); `picking` "route" | "sight" | null while clicks go here; route `points`; last `error`.
+ * `cells` `{ breaks, count }`, `table` `{ parks, stations }` (`stations` as `[name, parks, names]`), `route` `{ length, steps }`,
+ * `sight` `{ visible }` (share seen), `target` `{ visible, blockedAt }` (each null, "loading" or `{ error }`); `picking`
+ * "route" | "sight" | null while clicks go here; route `points`; last `error`.
  */
 function initial() {
-  return { cells: null, route: null, sight: null, target: null, picking: null, points: [], error: null };
+  return { cells: null, table: null, route: null, sight: null, target: null, picking: null, points: [], error: null };
 }
 
 /** The tab's tools on `map`; `beforePick` runs before clicks start going to it (to stop drawing and measuring). */
 export function createAnalysis(map, beforePick = () => {}) {
   const listeners = new Set();
-  const data = { "analysis-cells": empty(), "analysis-route": empty(), "analysis-sight": empty() };
+  // A source's data is GeoJSON, or a table as it is (the pipeline's result).
+  const data = { "analysis-cells": empty(), "analysis-table": empty(), "analysis-route": empty(), "analysis-sight": empty() };
   const canvas = document.createElement("canvas");
   let viewshed = null;
   let grid = null;
@@ -65,6 +71,12 @@ export function createAnalysis(map, beforePick = () => {}) {
       map.addLayer({ id: "analysis-cells", type: "fill", source: "analysis-cells", paint: { "fill-color": cellPaint, "fill-opacity": 0.6 } }, below());
       map.addLayer({ id: "analysis-cells-line", type: "line", source: "analysis-cells", paint: { "line-color": "#7a2e14", "line-width": 1 } }, below());
     }
+    if (!map.getLayer("analysis-table")) {
+      map.addLayer({
+        id: "analysis-table", type: "circle", source: "analysis-table",
+        paint: { "circle-radius": ["+", 6, ["*", 4, ["get", "parks"]]], "circle-color": "#2da44e", "circle-opacity": 0.75, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 },
+      }, below());
+    }
     if (viewshed && !map.getSource("analysis-viewshed")) {
       const [w, s, e, n] = viewshed.bounds;
       map.addSource("analysis-viewshed", { type: "canvas", canvas, coordinates: [[w, n], [e, n], [e, s], [w, s]], animate: false });
@@ -94,7 +106,7 @@ export function createAnalysis(map, beforePick = () => {}) {
     try {
       const [w, s, e, n] = CELLS_BBOX;
       const inside = PLACES.features.filter(({ geometry: { coordinates: [x, y] } }) => x >= w && x <= e && y >= s && y <= n);
-      points = await load({ type: "FeatureCollection", features: inside });
+      points = await fromGeoJSON({ type: "FeatureCollection", features: inside });
       cells = await points.voronoi(CELLS_BBOX);
       const [areas, fc] = await Promise.all([cells.areas(), cells.toGeoJSON()]);
       setData("analysis-cells", fc);
@@ -121,6 +133,40 @@ export function createAnalysis(map, beforePick = () => {}) {
     removeLayers("analysis-cells-line", "analysis-cells");
     setData("analysis-cells", empty());
     a.set({ cells: null });
+  };
+
+  /**
+   * A table pipeline: the parks read from a CSV, the stations filtered from the places, each park beside its nearest
+   * station (a join), the parks counted per station (a rollup) and joined back to the stations, which are drawn
+   * from the table itself.
+   */
+  let counted = null;
+  a.tally = async () => {
+    a.set({ table: "loading", error: null });
+    const made = [];
+    const keep = (t) => (made.push(t), t);
+    try {
+      const parks = keep(await read(PARKS));
+      const stations = keep(await keep(await fromGeoJSON(PLACES)).filter(["==", ["get", "kind"], "駅"]));
+      const beside = keep(await parks.nearestJoin(stations, { suffix: ["", "_station"] }));
+      const perStation = keep(await beside.groupby("name_station").rollup({ parks: ["count"], first: ["any", "name"] }));
+      const result = await stations.join(perStation, ["name", "name_station"]);
+      const [names, counts, firsts] = await Promise.all(["name", "parks", "first"].map((c) => result.array(c)));
+      counted?.dispose();
+      counted = result;
+      setData("analysis-table", result);
+      a.set({ table: { parks: parks.length, stations: names.map((name, i) => [name, counts[i], firsts[i]]) } });
+    } catch (err) {
+      failed(err, { table: null });
+    } finally {
+      for (const t of made) t.dispose();
+    }
+  };
+  a.clearTable = () => {
+    setData("analysis-table", empty());
+    counted?.dispose();
+    counted = null;
+    a.set({ table: null });
   };
 
   /** Clicks go to `mode` ("route": a start and an end; "sight": targets), or nowhere with null. */
@@ -163,7 +209,7 @@ export function createAnalysis(map, beforePick = () => {}) {
       const lines = tileLines(features).map((c) => line(c));
       const [start, end] = [nearestVertex(lines, from), nearestVertex(lines, to)];
       if (!start || !end) return a.set({ route: { error: "No road found" } });
-      roads = await load({ type: "FeatureCollection", features: lines });
+      roads = await fromGeoJSON({ type: "FeatureCollection", features: lines });
       network = await roads.network({ tolerance: 1e-5, snap: 2 });
       const found = await network.route(start, end);
       setData("analysis-route", { type: "FeatureCollection", features: [...(found ? [line(found.path)] : []), point(start), point(end)] });
@@ -264,6 +310,10 @@ export function analysisActions(a, s, center) {
       ["Color by area", () => a.classify(), undefined, s.cells !== "loading"],
       ["Clear", () => a.clearCells(), undefined, Boolean(s.cells)],
     ],
+    table: [
+      ["Parks per station", () => a.tally(), undefined, s.table !== "loading"],
+      ["Clear", () => a.clearTable(), undefined, Boolean(s.table)],
+    ],
     route: [
       ["Click 2 points", () => a.pick(s.picking === "route" ? null : "route"), s.picking === "route", s.route !== "loading"],
       ["Clear", () => a.clearRoute(), undefined, Boolean(s.route) || s.points.length > 0],
@@ -280,6 +330,10 @@ export function analysisActions(a, s, center) {
 export function analysisRows(s) {
   const cells =
     s.cells === "loading" ? [["", "Computing…"]] : s.cells ? [["Places", `${s.cells.count}`], ["Breaks", breakList(s.cells.breaks)]] : [["—", "Colors the places' Voronoi cells by area in 5 classes (natural breaks)"]];
+  const table =
+    s.table === "loading" ? [["", "Computing…"]]
+    : s.table ? [["Parks read", `${s.table.parks}`], ...s.table.stations.map(([name, parks, first]) => [name, `${parks} (${first}${parks > 1 ? ", …" : ""})`])]
+    : [["—", "Reads parks from a CSV, joins each to its nearest station and counts them per station"]];
   const route =
     s.route === "loading" ? [["", "Computing…"]]
     : s.route?.error ? [["—", s.route.error]]
@@ -293,7 +347,7 @@ export function analysisRows(s) {
   if (s.target?.error) sight.push(["Line of sight", s.target.error]);
   else if (s.target) sight.push(["Line of sight", s.target.visible ? "Visible" : "Hidden (blocked at the red dot)"]);
   else if (s.picking === "sight") sight.push(["", "Click a point to look at"]);
-  return { cells, route, sight, error: s.error };
+  return { cells, table, route, sight, error: s.error };
 }
 
 /**
@@ -320,7 +374,7 @@ export function mountAnalysis(map, beforePick) {
   const draw = (s) => {
     const actions = analysisActions(a, s, () => map.getCenter());
     const rows = analysisRows(s);
-    for (const key of ["cells", "route", "sight"]) {
+    for (const key of ["cells", "table", "route", "sight"]) {
       document.getElementById(`analysis-${key}`).replaceChildren(
         ...actions[key].map(([label, f, pressed, enabled]) => {
           const b = el("button", { textContent: label, disabled: !enabled });

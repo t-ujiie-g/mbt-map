@@ -277,7 +277,8 @@ const checks = {
 
   async analysis(page, requests) {
     const r = await page.evaluate(async () => {
-      const { load, distance } = await import("mbt-map/analysis");
+      const { distance } = await import("mbt-map/analysis");
+      const { fromGeoJSON: load } = await import("mbt-map/table");
       // A disposed dataset rejects; a non-http URL is refused before any request.
       const d = await load({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [0, 0] } });
       d.dispose();

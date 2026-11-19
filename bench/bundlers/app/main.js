@@ -2,8 +2,7 @@
 // worker part), and one call each of mbt-map/analysis, mbt-map/geodesic (a worker small enough for Vite to
 // inline) and mbt-map/table with a CRS (a data worker part and proj.wasm). The result goes to `window.__result`.
 import { Map } from "mbt-map";
-import { load } from "mbt-map/analysis";
-import { parse } from "mbt-map/table";
+import { fromGeoJSON, parse } from "mbt-map/table";
 import { inverse } from "mbt-map/geodesic";
 
 const STEP_TIMEOUT = 15000;
@@ -50,7 +49,7 @@ async function run() {
     return "idle";
   });
   await step("query", async () => (await map.queryRenderedFeatures({ layers: ["points"] })).map((f) => f.properties.name).sort());
-  await step("analysis", async () => Array.from(await (await load(polygons)).centroids()).map((v) => Math.round(v * 1e3) / 1e3));
+  await step("analysis", async () => Array.from(await (await fromGeoJSON(polygons)).centroids()).map((v) => Math.round(v * 1e3) / 1e3));
   await step("geodesic", async () => Math.round((await inverse([139.7671, 35.6812], [139.7631, 35.6751])).distance));
   await step("data", async () => {
     const table = await parse("POINT (-6000 -35000)", { format: "wkt", crs: 6677 });
