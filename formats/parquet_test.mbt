@@ -65,3 +65,87 @@ test "read_parquet refuses what is no Parquet file, by where and why" {
   }
   assert_eq(listed, [-1])
 }
+
+///|
+/// The FileMetaData of `parquet_plain`, as a host hands it to `parquet_open`.
+fn plain_metadata() -> BytesView {
+  let n = parquet_plain.length()
+  let size = parquet_plain[n - 8].to_int() |
+    (parquet_plain[n - 7].to_int() << 8)
+  parquet_plain[n - 8 - size:n - 8]
+}
+
+///|
+test "parquet_open, plan and read take a file in parts: only the ranges planned" {
+  let file = @formats.parquet_open(plain_metadata())
+  assert_eq(file.info().geometry, "geometry")
+  let ranges = file.plan()
+  assert_eq(ranges.length(), 3)
+  // Each chunk as a part of its own, placed anywhere in the host's input.
+  let parts = ranges.map(r => {
+    (r.0, 0, parquet_plain[r.0.to_int():(r.0 + r.1).to_int()])
+  })
+  let t = file.read(parts)
+  assert_eq(t.length(), 3)
+  assert_eq(t.coords, [1.0, 2.0, 3.0, 4.0])
+  assert_eq(file.packed_pages(parts), [])
+  // A part that is missing is said so.
+  let message = try file.read(parts[1:]) catch {
+    e => e.message()
+  } noraise {
+    _ => ""
+  }
+  assert_true(
+    message.contains("a column chunk outside the bytes read of the file"),
+  )
+}
+
+///|
+test "plan keeps the columns asked for and the rows whose geometry meets the box" {
+  let file = @formats.parquet_open(plain_metadata())
+  let whole = [(0L, 0, parquet_plain[:])]
+  assert_eq(file.plan(columns=["n"]).length(), 2)
+  let t = file.read(whole)
+  assert_eq(t.columns.map(c => c.name), ["n"])
+  assert_eq(t.length(), 3)
+  assert_eq(file.plan(columns=[]).length(), 1)
+  assert_eq(file.read(whole).columns.length(), 0)
+  // Points (1, 2) and (3, 4), and a row without geometry, which no box keeps.
+  file.plan(bbox=(2.5, 0.0, 9.0, 9.0)) |> ignore
+  let t = file.read(whole)
+  assert_eq(t.coords, [3.0, 4.0])
+  assert_eq(t.column("n").unwrap().values, [Some(Num(2.0))])
+  file.plan(bbox=(1.0, 2.0, 1.0, 2.0), columns=["name"]) |> ignore
+  let t = file.read(whole)
+  assert_eq(t.column("name").unwrap().values, [Some(Str("a"))])
+  file.plan(bbox=(50.0, 50.0, 60.0, 60.0)) |> ignore
+  assert_eq(file.read(whole).length(), 0)
+  // Covering columns that the file lacks leave every row group to read.
+  assert_eq(
+    file
+    .plan(bbox=(50.0, 50.0, 60.0, 60.0), covering=[
+      "b.x0", "b.y0", "b.x1", "b.y1",
+    ])
+    .length(),
+    3,
+  )
+  let refused = (columns : Array[String]) => {
+    try file.plan(columns~) catch {
+      e => e.message()
+    } noraise {
+      _ => ""
+    }
+  }
+  assert_true(refused(["nope"]).contains("no column nope"))
+  assert_true(refused(["geometry"]).contains("no column geometry"))
+}
+
+///|
+test "parquet_open refuses a malformed footer" {
+  let message = try @formats.parquet_open(b"\x15") catch {
+    e => e.message()
+  } noraise {
+    _ => ""
+  }
+  assert_eq(message, "malformed Parquet at 0: a malformed footer")
+}

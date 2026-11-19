@@ -192,9 +192,11 @@ priv enum Logical {
 
 ///|
 /// A leaf of the schema: its physical type (parquet.thrift's `Type`), whether it may be null,
-/// and `flat`, whether it is a column of the rows themselves (not inside a group or repeated).
+/// `flat`, whether it is a column of the rows themselves (not inside a group or repeated), and
+/// `path`, its name after its groups' (`bbox.xmin`).
 priv struct Leaf {
   name : String
+  path : String
   physical : Int32
   length : Int32
   optional : Bool
@@ -264,8 +266,9 @@ fn Thrift::logical(self : Thrift) -> Logical {
 }
 
 ///|
-/// The SchemaElement at the position: its leaf (None for a group) and its children's count.
-fn Thrift::schema_element(self : Thrift, top : Bool) -> (Leaf?, Int32) {
+/// The SchemaElement at the position: its name, its leaf (None for a group) and its children's
+/// count.
+fn Thrift::schema_element(self : Thrift, top : Bool) -> (String, Leaf?, Int32) {
   let mut name = ""
   let mut physical = -1
   let mut length = 0
@@ -288,7 +291,7 @@ fn Thrift::schema_element(self : Thrift, top : Bool) -> (Leaf?, Int32) {
     }
   })
   if physical < 0 {
-    return (None, children)
+    return (name, None, children)
   }
   // ConvertedType, for files without a LogicalType.
   let logical = match logical {
@@ -309,8 +312,10 @@ fn Thrift::schema_element(self : Thrift, top : Bool) -> (Leaf?, Int32) {
       }
   }
   (
+    name,
     Some({
       name,
+      path: name,
       physical,
       length,
       optional: repetition == 1,
@@ -323,11 +328,14 @@ fn Thrift::schema_element(self : Thrift, top : Bool) -> (Leaf?, Int32) {
 
 ///|
 /// A column chunk: its codec (parquet.thrift's `CompressionCodec`), where its pages start and
-/// how many bytes they take.
+/// how many bytes they take, and its statistics' smallest and largest value as stored (empty
+/// without them).
 priv struct Chunk {
   codec : Int32
   start : Int64
   size : Int64
+  min : BytesView
+  max : BytesView
 }
 
 ///|
@@ -336,6 +344,8 @@ fn Thrift::chunk(self : Thrift) -> Chunk {
   let mut size = 0L
   let mut data = 0L
   let mut dictionary = 0L
+  let mut min = self.b[0:0]
+  let mut max = self.b[0:0]
   self.fields((id, kind) => {
     if id == 3 && kind == 12 {
       self.fields((id, kind) => {
@@ -344,6 +354,25 @@ fn Thrift::chunk(self : Thrift) -> Chunk {
           7 => size = self.int()
           9 => data = self.int()
           11 => dictionary = self.int()
+          // Statistics: `min_value` and `max_value`, or the older `min` and `max`.
+          12 if kind == 12 =>
+            self.fields((id, kind) => {
+              match id {
+                1 | 5 if kind == 8 => {
+                  let v = self.binary()
+                  if id == 5 || max.length() == 0 {
+                    max = v
+                  }
+                }
+                2 | 6 if kind == 8 => {
+                  let v = self.binary()
+                  if id == 6 || min.length() == 0 {
+                    min = v
+                  }
+                }
+                _ => self.skip(kind)
+              }
+            })
           _ => self.skip(kind)
         }
       })
@@ -356,7 +385,7 @@ fn Thrift::chunk(self : Thrift) -> Chunk {
   } else {
     data
   }
-  { codec, start, size, }
+  { codec, start, size, min, max, }
 }
 
 ///|
@@ -377,6 +406,7 @@ fn parquet_footer(bytes : BytesView) -> Footer? {
   let mut geo = ""
   // How many more elements belong to the group being read, outermost first.
   let open : Array[Int32] = []
+  let names : Array[String] = []
   t.fields((id, kind) => {
     match id {
       2 =>
@@ -385,13 +415,26 @@ fn parquet_footer(bytes : BytesView) -> Footer? {
             open.pop() |> ignore
           }
           // The root is the one element outside any group; its children are the rows' columns.
-          let (leaf, children) = t.schema_element(open.length() == 1)
+          while names.length() > open.length() {
+            names.pop() |> ignore
+          }
+          let (name, leaf, children) = t.schema_element(open.length() == 1)
           if open.length() > 0 {
             open[open.length() - 1] -= 1
           }
           match leaf {
-            Some(leaf) => leaves.push(leaf)
-            None => open.push(children.max(0))
+            // The root's own name is no part of a path.
+            Some(leaf) => {
+              let mut path = name
+              for k = names.length() - 1; k >= 1; k = k - 1 {
+                path = names[k] + "." + path
+              }
+              leaves.push({ ..leaf, path, })
+            }
+            None => {
+              open.push(children.max(0))
+              names.push(name)
+            }
           }
         })
       4 =>
@@ -983,10 +1026,19 @@ fn Leaf::is_property(self : Leaf) -> Bool {
 }
 
 ///|
-/// A read in progress: the file, its footer, the pages the host inflated (GZIP, ZSTD) in the order
-/// they are met, and what one input may inflate to in all.
-priv struct ParquetReader {
+/// Bytes of the file placed in the input: where they are in the file, where in the input, and
+/// the bytes.
+priv struct Segment {
+  offset : Int64
+  base : Int32
   bytes : BytesView
+}
+
+///|
+/// A read in progress: the parts of the file at hand, the pages the host inflated (GZIP, ZSTD)
+/// in the order they are met, and what one input may inflate to in all.
+priv struct ParquetReader {
+  segments : ArrayView[Segment]
   inflated : ArrayView[BytesView]
   mut next_inflated : Int32
   mut budget : Int64
@@ -1038,19 +1090,27 @@ fn ParquetReader::column(
   chunk : Chunk,
   rows : Int32,
 ) -> Result[(Values, Array[Int32]), String] {
-  let n = self.bytes.length().to_int64()
-  guard chunk.start >= 4L && chunk.size >= 0L && chunk.start <= n - chunk.size else {
-    return Err("a column chunk outside the file")
+  // The segment that holds the whole chunk; positions are in its bytes from here on.
+  let mut held : Segment? = None
+  for s in self.segments {
+    if chunk.start >= s.offset &&
+      chunk.size <= s.offset + s.bytes.length().to_int64() - chunk.start {
+      held = Some(s)
+    }
   }
-  let end = (chunk.start + chunk.size).to_int()
-  let mut pos = chunk.start.to_int()
+  guard chunk.start >= 4L && chunk.size >= 0L && held is Some(segment) else {
+    return Err("a column chunk outside the bytes read of the file")
+  }
+  let bytes = segment.bytes
+  let mut pos = (chunk.start - segment.offset).to_int()
+  let end = pos + chunk.size.to_int()
   let mut dictionary : Values? = None
   // Every value of the chunk, and for each row its value's place (-1 for null).
   let mut all : Values? = None
   let places : Array[Int32] = Array(capacity=rows)
   let mut count = 0
   while pos < end && places.length() < rows {
-    let t : Thrift = { b: self.bytes[pos:end], pos: 0, bad: false, depth: 0, }
+    let t : Thrift = { b: bytes[pos:end], pos: 0, bad: false, depth: 0, }
     let page = t.page()
     guard !t.bad &&
       page.compressed >= 0 &&
@@ -1059,8 +1119,8 @@ fn ParquetReader::column(
       page.values >= 0 else {
       return Err("a malformed page header")
     }
-    let body = self.bytes[pos + t.pos:pos + t.pos + page.compressed]
-    let body_at = pos + t.pos
+    let body = bytes[pos + t.pos:pos + t.pos + page.compressed]
+    let body_at = segment.base + pos + t.pos
     pos += t.pos + page.compressed
     guard page.kind == 0 || page.kind == 2 || page.kind == 3 else { continue }
     // Version 2 keeps its levels before the values, never compressed.
@@ -1175,30 +1235,37 @@ fn ParquetReader::column(
 }
 
 ///|
-/// `read_parquet` over `bytes` with the pages the host inflated, or, with `wanted`, only listing
-/// the pages it must inflate.
-fn parquet_table(
-  bytes : BytesView,
-  inflated : ArrayView[BytesView],
-  wanted : Array[Int32]?,
-  max_points : Int32,
-  max_cells : Int32,
-) -> (@geom.Table, ArrowInfo) raise ReadError {
-  let bad = (at : Int32, message : String) => {
-    ReadError::Invalid(format="Parquet", pos=at, message)
-  }
-  let n = bytes.length()
-  guard n >= 12 && bytes[0:4] == parquet_magic && bytes[n - 4:] == parquet_magic else {
-    raise bad(0, "not a Parquet file")
-  }
-  let size = le_i32(bytes, n - 8)
-  guard size > 0 && size <= n - 12 else {
-    raise bad(n - 8, "a footer past the start of the file")
-  }
-  guard parquet_footer(bytes[n - 8 - size:n - 8]) is Some(footer) else {
-    raise bad(n - 8 - size, "a malformed footer")
+/// A Parquet file's footer, opened: its schema and row groups, which column holds the geometry,
+/// and what `plan` chose to read (every row group and column until it is called).
+struct ParquetFile {
+  footer : Footer
+  geometry : Int32?
+  mut groups : Array[Int32]
+  mut kept : Array[Bool]
+  mut bbox : (Double, Double, Double, Double)?
+}
+
+///|
+fn parquet_error(at : Int32, message : String) -> ReadError {
+  Invalid(format="Parquet", pos=at, message)
+}
+
+///|
+/// Opens the footer `metadata` (the FileMetaData before a file's last 8 bytes).
+pub fn parquet_open(metadata : BytesView) -> ParquetFile raise ReadError {
+  guard parquet_footer(metadata) is Some(footer) else {
+    raise parquet_error(0, "a malformed footer")
   }
   let leaves = footer.leaves
+  for group in footer.groups {
+    guard group.0 >= 0L &&
+      group.0 <= 0x7fffffffL &&
+      group.1.length() == leaves.length() else {
+      raise parquet_error(
+        0, "a row group with another count of columns than the schema",
+      )
+    }
+  }
   let primary = json_string_after(footer.geo, "primary_column")
   let binary = (named : (Leaf) -> Bool) => {
     leaves.search_by(l => {
@@ -1216,42 +1283,139 @@ fn parquet_table(
   }
   // GeoParquet's GeoArrow encodings nest lists, which are not read.
   if geometry is None && primary != "" {
-    raise bad(
+    raise parquet_error(
       0,
       "the geometry column \{primary} is not WKB, which is all that is read",
     )
   }
+  let file : ParquetFile = {
+    footer,
+    geometry,
+    groups: [],
+    kept: [],
+    bbox: None,
+  }
+  file.plan() |> ignore
+  file
+}
+
+///|
+/// The geometry column's name (empty without one) and the `geo` metadata.
+pub fn ParquetFile::info(self : ParquetFile) -> ArrowInfo {
+  let geometry = match self.geometry {
+    Some(g) => self.footer.leaves[g].name
+    None => ""
+  }
+  { geometry, extension: "", geo: self.footer.geo, }
+}
+
+///|
+/// A fixed-width statistic as a number: NaN unless `stored` is a FLOAT's or a DOUBLE's bytes.
+fn Leaf::statistic(self : Leaf, stored : BytesView) -> Double {
+  match (self.physical, stored.length()) {
+    (4, 4) => Float::reinterpret_from_int(le_i32(stored, 0)).to_double()
+    (5, 8) => le_u64(stored, 0).reinterpret_as_double()
+    _ => @double.not_a_number
+  }
+}
+
+///|
+/// Chooses what `read` takes (docs/dev/FORMATS.md "Parquet"): the property `columns` named, the
+/// rows whose geometry's box meets `bbox`, and no row group whose `covering` statistics lie
+/// outside it. Gives the byte ranges of the file `read` needs, a position and a length each.
+pub fn ParquetFile::plan(
+  self : ParquetFile,
+  bbox? : (Double, Double, Double, Double),
+  columns? : ArrayView[String],
+  covering~ : ArrayView[String] = [],
+) -> Array[(Int64, Int64)] raise ReadError {
+  let leaves = self.footer.leaves
+  let property = (c : Int32) => {
+    leaves[c].flat && leaves[c].is_property() && self.geometry != Some(c)
+  }
+  if columns is Some(names) {
+    for name in names {
+      guard leaves.search_by(l => l.name == name) is Some(c) && property(c) else {
+        raise parquet_error(0, "no column \{name}")
+      }
+    }
+  }
+  self.kept = Array::makei(leaves.length(), c => {
+    self.geometry == Some(c) ||
+    (
+      property(c) &&
+      (match columns {
+        Some(names) => names.contains(leaves[c].name)
+        None => true
+      })
+    )
+  })
+  self.bbox = bbox
+  let boxes = covering.map(path => leaves.search_by(l => l.path == path))
+  let ranges = []
+  self.groups = []
+  for g, group in self.footer.groups {
+    let chunks = group.1
+    if bbox is Some((x0, y0, x1, y1)) &&
+      boxes is [Some(xmin), Some(ymin), Some(xmax), Some(ymax)] {
+      // NaN (no statistics) compares false: the group is kept.
+      let outside = leaves[xmin].statistic(chunks[xmin].min) > x1 ||
+        leaves[ymin].statistic(chunks[ymin].min) > y1 ||
+        leaves[xmax].statistic(chunks[xmax].max) < x0 ||
+        leaves[ymax].statistic(chunks[ymax].max) < y0
+      guard !outside else { continue }
+    }
+    guard group.0 > 0L else { continue }
+    self.groups.push(g)
+    for c, chunk in chunks {
+      if self.kept[c] {
+        guard chunk.start >= 4L && chunk.size >= 0L else {
+          raise parquet_error(0, "a column chunk outside the file")
+        }
+        ranges.push((chunk.start, chunk.size))
+      }
+    }
+  }
+  ranges
+}
+
+///|
+/// `read` over `segments` with the pages the host inflated, or, with `wanted`, only listing
+/// the pages it must inflate.
+fn ParquetFile::table(
+  self : ParquetFile,
+  segments : ArrayView[Segment],
+  inflated : ArrayView[BytesView],
+  wanted : Array[Int32]?,
+  max_points : Int32,
+  max_cells : Int32,
+) -> @geom.Table raise ReadError {
+  let leaves = self.footer.leaves
+  let geometry = self.geometry
   let reader : ParquetReader = {
-    bytes,
+    segments,
     inflated,
     next_inflated: 0,
     budget: MAX_ARROW_INFLATED,
     wanted,
   }
   let out = @geom.TableBuilder::new()
-  let wkb = Wkb::new(bytes, max_points)
+  let wkb = Wkb::new(b"", max_points)
   let none = Shapes::new()
   let mut used = 0
   let props = []
-  for group in footer.groups {
-    let (rows, chunks) = group
-    guard rows >= 0L &&
-      rows <= 0x7fffffffL &&
-      chunks.length() == leaves.length() else {
-      raise bad(0, "a row group with another count of columns than the schema")
-    }
+  for g in self.groups {
+    let (rows, chunks) = self.footer.groups[g]
     let rows = rows.to_int()
-    guard rows > 0 else { continue }
     let columns = []
     for c, leaf in leaves {
-      let kept = leaf.flat && (leaf.is_property() || geometry == Some(c))
-      if !kept {
+      if !self.kept[c] {
         columns.push(None)
         continue
       }
       match reader.column(leaf, chunks[c], rows) {
         Ok(column) => columns.push(Some(column))
-        Err(why) => raise bad(chunks[c].start.to_int(), why)
+        Err(why) => raise parquet_error(0, "column \{leaf.name}: \{why}")
       }
     }
     guard wanted is None else { continue }
@@ -1261,13 +1425,16 @@ fn parquet_table(
         columns[g] is Some((Blobs(cells), places)) &&
         places[i] >= 0 {
         guard wkb.cell(cells[places[i]]) else {
-          raise bad(chunks[g].start.to_int(), "malformed WKB in a row")
+          raise parquet_error(0, "malformed WKB in a row")
         }
         used += wkb.shapes.points()
         guard used <= max_points else {
-          raise bad(0, "more than \{max_points} points")
+          raise parquet_error(0, "more than \{max_points} points")
         }
         shapes = wkb.shapes
+      }
+      if self.bbox is Some(bbox) && !shapes.meets(bbox) {
+        continue
       }
       props.clear()
       for c, column in columns {
@@ -1286,27 +1453,52 @@ fn parquet_table(
       }
       shapes.emit(out, props, None, max_cells~)
       if property_limit(out, max_cells) is Some(why) {
-        raise bad(0, why)
+        raise parquet_error(0, why)
       }
     }
   }
-  let name = match geometry {
-    Some(g) => leaves[g].name
-    None => ""
-  }
-  (out.finish(), { geometry: name, extension: "", geo: footer.geo, })
+  out.finish()
 }
 
 ///|
-/// Reads a Parquet file (docs/dev/FORMATS.md "Parquet"): a row per record, its geometry from
-/// GeoParquet's WKB column; flat columns of numbers, booleans, strings, dates and decimals are
-/// kept. GZIP and ZSTD pages come in `inflated`, in `parquet_packed_pages`' order.
-pub fn read_parquet(
-  bytes : BytesView,
+/// Whether the box of the shapes' points meets `bbox` (never without a point).
+fn Shapes::meets(
+  self : Shapes,
+  bbox : (Double, Double, Double, Double),
+) -> Bool {
+  let c = self.coords
+  guard c.length() >= 2 else { return false }
+  let mut x0 = c[0]
+  let mut x1 = c[0]
+  let mut y0 = c[1]
+  let mut y1 = c[1]
+  for i = 2; i + 1 < c.length(); i = i + 2 {
+    x0 = x0.min(c[i])
+    x1 = x1.max(c[i])
+    y0 = y0.min(c[i + 1])
+    y1 = y1.max(c[i + 1])
+  }
+  x0 <= bbox.2 && x1 >= bbox.0 && y0 <= bbox.3 && y1 >= bbox.1
+}
+
+///|
+/// The parts of the file given as (their position in the file, their position in the host's
+/// input, their bytes) as segments.
+fn segments_of(parts : ArrayView[(Int64, Int32, BytesView)]) -> Array[Segment] {
+  parts.map(p => { offset: p.0, base: p.1, bytes: p.2, })
+}
+
+///|
+/// Reads the rows `plan` chose from `parts` of the file (each its position in the file, its
+/// position in the host's input and its bytes), which must hold every range `plan` gave. GZIP
+/// and ZSTD pages come in `inflated`, in `packed_pages`' order.
+pub fn ParquetFile::read(
+  self : ParquetFile,
+  parts : ArrayView[(Int64, Int32, BytesView)],
   inflated~ : ArrayView[BytesView] = [],
-) -> (@geom.Table, ArrowInfo) raise ReadError {
-  parquet_table(
-    bytes,
+) -> @geom.Table raise ReadError {
+  self.table(
+    segments_of(parts),
     inflated,
     None,
     @geom.MAX_TABLE_POINTS,
@@ -1315,13 +1507,16 @@ pub fn read_parquet(
 }
 
 ///|
-/// The GZIP members and ZSTD frames `read_parquet` needs inflated: for each, in the order it
-/// takes them, its position in `bytes`, its length, the length it inflates to and its codec
+/// The GZIP members and ZSTD frames `read` needs inflated: for each, in the order it takes
+/// them, its position in the host's input, its length, the length it inflates to and its codec
 /// (2 GZIP, 6 ZSTD).
-pub fn parquet_packed_pages(bytes : BytesView) -> Array[Int32] raise ReadError {
+pub fn ParquetFile::packed_pages(
+  self : ParquetFile,
+  parts : ArrayView[(Int64, Int32, BytesView)],
+) -> Array[Int32] raise ReadError {
   let wanted = []
-  parquet_table(
-    bytes,
+  self.table(
+    segments_of(parts),
     [],
     Some(wanted),
     @geom.MAX_TABLE_POINTS,
@@ -1329,4 +1524,38 @@ pub fn parquet_packed_pages(bytes : BytesView) -> Array[Int32] raise ReadError {
   )
   |> ignore
   wanted
+}
+
+///|
+/// The FileMetaData of the whole file `bytes`, and where it starts.
+fn metadata_of(bytes : BytesView) -> (BytesView, Int32) raise ReadError {
+  let n = bytes.length()
+  guard n >= 12 && bytes[0:4] == parquet_magic && bytes[n - 4:] == parquet_magic else {
+    raise parquet_error(0, "not a Parquet file")
+  }
+  let size = le_i32(bytes, n - 8)
+  guard size > 0 && size <= n - 12 else {
+    raise parquet_error(n - 8, "a footer past the start of the file")
+  }
+  (bytes[n - 8 - size:n - 8], n - 8 - size)
+}
+
+///|
+/// Reads the whole Parquet file `bytes` (docs/dev/FORMATS.md "Parquet"): `parquet_open` of its
+/// footer and `ParquetFile::read` of every row; `inflated` as `read`'s.
+pub fn read_parquet(
+  bytes : BytesView,
+  inflated~ : ArrayView[BytesView] = [],
+) -> (@geom.Table, ArrowInfo) raise ReadError {
+  let file = parquet_open(metadata_of(bytes).0) catch {
+    Invalid(pos~, message, ..) =>
+      raise parquet_error(pos + metadata_of(bytes).1, message)
+  }
+  (file.read([(0L, 0, bytes)], inflated~), file.info())
+}
+
+///|
+/// `ParquetFile::packed_pages` of the whole file `bytes`.
+pub fn parquet_packed_pages(bytes : BytesView) -> Array[Int32] raise ReadError {
+  parquet_open(metadata_of(bytes).0).packed_pages([(0L, 0, bytes)])
 }

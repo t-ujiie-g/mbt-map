@@ -8,6 +8,7 @@ import { parquetWriteBuffer } from "hyparquet-writer";
 import { hostText, writeInput } from "../../wasmio/js/host.mjs";
 import { tableToGeoJSON } from "../../wasmio/js/table.mjs";
 import { readParquet } from "../../data_worker/js/arrow.mjs";
+import { rangeReader } from "../../data_worker/js/read.mjs";
 import { ROOT } from "../lib/root.mjs";
 import { arg } from "../lib/args.mjs";
 
@@ -21,11 +22,32 @@ function output(e, n) {
   if (n < 0) throw new Error(decoder.decode(new Uint8Array(e.memory.buffer, e.output_addr(), -n)));
   return e.memory.buffer.slice(e.output_addr(), e.output_addr() + n);
 }
-// A Parquet file read as the data worker reads it: the rows as GeoJSON features and the CRS its geometry names.
-async function read(bytes) {
-  const { table, crs } = await readParquet(w, bytes, {}, { writeInput, output }, async () => z);
+// A Parquet file read as the data worker reads it (`source` its bytes, or `{ remote }` for range requests): the
+// rows as GeoJSON features and the CRS its geometry names.
+async function read(source, options = {}) {
+  const parts = source instanceof Uint8Array ? { data: source } : source;
+  const { table, crs } = await readParquet(w, parts, options, { writeInput, output }, async () => z, rangeReader);
   return { features: tableToGeoJSON(new Uint8Array(table)).features, crs: crs ?? null };
 }
+// `fetch` over the fixture files by name, as a server with range requests answers; `served` counts the bytes sent.
+const files = new Map();
+let served = 0;
+let requests = 0;
+globalThis.fetch = async (url, init = {}) => {
+  const body = files.get(String(url));
+  if (!body) return new Response(null, { status: 404 });
+  requests++;
+  const range = /^bytes=(\d*)-(\d*)$/.exec(new Headers(init.headers).get("range") ?? "");
+  if (!range || String(url).includes("no-ranges")) {
+    served += body.length;
+    return new Response(body, { status: 200 });
+  }
+  const start = range[1] === "" ? Math.max(0, body.length - Number(range[2])) : Number(range[1]);
+  const end = range[1] === "" || range[2] === "" ? body.length - 1 : Math.min(body.length - 1, Number(range[2]));
+  served += end - start + 1;
+  const headers = String(url).includes("hidden-size") ? {} : { "content-range": `bytes ${start}-${end}/${body.length}` };
+  return new Response(body.subarray(start, end + 1), { status: 206, headers });
+};
 
 const results = {};
 const failures = [];
@@ -55,7 +77,7 @@ for (const [name, file] of Object.entries(expected.files)) {
     check("pyarrow", name, "read", e.message);
     continue;
   }
-  const rows = expected.data[file.rows];
+  const rows = (file.order ?? expected.data[file.rows].map((_, i) => i)).map((i) => expected.data[file.rows][i]);
   check("pyarrow", `${name} rows`, file.rows, got.features.length);
   check("pyarrow", `${name} crs`, file.crs, got.crs);
   check("pyarrow", `${name} geometry`, json(rows.map((r) => (file.geometry ? r.geometry : null))), json(got.features.map((f) => f.geometry)));
@@ -67,6 +89,70 @@ for (const [name, file] of Object.entries(expected.files)) {
     else check("pyarrow", `${name} ${column}`, json(want), json(have));
   }
 }
+
+// How many byte ranges parquet.wasm plans to read of the file `bytes` for `options`, its covering column named
+// as bench/data/parquet-fixtures.py writes it.
+function planned(bytes, { bbox, columns }) {
+  const size = new DataView(bytes.buffer, bytes.byteOffset).getUint32(bytes.length - 8, true);
+  writeInput(w, [bytes.subarray(bytes.length - 8 - size, bytes.length - 8)]);
+  output(w, w.open());
+  const names = (list) => [new Uint8Array(Uint32Array.of(list.length).buffer), ...list.flatMap((t) => [new Uint8Array(Uint32Array.of(t.length).buffer), new TextEncoder().encode(t)])];
+  writeInput(w, [Uint8Array.of(bbox ? 1 : 0), new Uint8Array(Float64Array.from(bbox ?? [0, 0, 0, 0]).buffer), Uint8Array.of(columns ? 1 : 0), ...(columns ? names(columns) : []), ...names(["bbox.xmin", "bbox.ymin", "bbox.xmax", "bbox.ymax"])]);
+  const count = w.plan();
+  output(w, count < 0 ? count : 0);
+  return count / 2;
+}
+
+// A part of a file: by `bbox` (rows whose geometry's box meets it) and `columns`, from its bytes and by range
+// requests; with a covering column, far fewer bytes than the file are fetched.
+const boxOf = (g) => {
+  const flat = g.coordinates.flat(4);
+  const xs = flat.filter((_, i) => i % 2 === 0);
+  const ys = flat.filter((_, i) => i % 2 === 1);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+};
+const meets = (g, [x0, y0, x1, y1]) => {
+  if (!g) return false;
+  const b = boxOf(g);
+  return b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0;
+};
+for (const name of ["covering", "covering-f32", "snappy", "gzip", "zstd"]) {
+  const file = expected.files[name];
+  const bytes = new Uint8Array(await readFile(path.join(DIR, `${name}.parquet`)));
+  const rows = (file.order ?? expected.data[file.rows].map((_, i) => i)).map((i) => expected.data[file.rows][i]);
+  for (const kind of ["", "no-ranges", "hidden-size"]) files.set(`http://files/${kind}/${name}.parquet`, bytes);
+  const remote = (kind = "") => ({ remote: { url: `http://files/${kind}/${name}.parquet` } });
+  // Every column but `huge`, whose last digits are approximate (compared above).
+  const all = file.columns.filter((c) => c !== "huge");
+  const QUERIES = [
+    [{}, rows, all],
+    [{ bbox: [-20, -20, 20, 20] }, rows.filter((r) => meets(r.geometry, [-20, -20, 20, 20])), all],
+    [{ bbox: [100, -90, 180, 90], columns: ["text"] }, rows.filter((r) => meets(r.geometry, [100, -90, 180, 90])), ["text"]],
+    [{ bbox: [-171, -81, -165, 81] }, rows.filter((r) => meets(r.geometry, [-171, -81, -165, 81])), all],
+    [{ bbox: [300, 300, 301, 301] }, [], all],
+    // The columns come in the file's order, whatever order they are asked in.
+    [{ columns: ["text", "i32"] }, rows, file.columns.filter((c) => c === "i32" || c === "text")],
+    [{ columns: [] }, rows, []],
+  ];
+  for (const [options, want, columns] of QUERIES) {
+    const label = `${name} ${JSON.stringify(options)}`;
+    const show = (features) => json(features.map((f) => [f.geometry, columns.map((c) => f.properties[c])]));
+    const wanted = json(want.map((r) => [r.geometry, columns.map((c) => r.properties[c])]));
+    check("part", `${label} from bytes`, wanted, show((await read(bytes, options)).features));
+    served = requests = 0;
+    const got = await read(remote(), options);
+    check("part", `${label} by ranges`, wanted, show(got.features));
+    if (options.columns) check("part", `${label} columns`, json(want.length === 0 ? [] : columns), json(Object.keys(got.features[0]?.properties ?? {})));
+    // With a covering column, a small box leaves few of the row groups' chunks to read (the files here are
+    // smaller than the first request, so the bytes fetched do not show it).
+    if (file.order && options.bbox && want.length < rows.length / 4) check("part", `${label} plans a fraction of the chunks`, "true", String(planned(bytes, options) * 2 < planned(bytes, {})));
+    for (const kind of ["no-ranges", "hidden-size"]) check("part", `${label} from a server with ${kind}`, wanted, show((await read(remote(kind), options)).features));
+  }
+  const refusal = (options) => read(remote(), options).then(() => "", (e) => e.message);
+  check("part", `${name} an unknown column`, "true", String(/no column nope/.test(await refusal({ columns: ["nope"] }))));
+  check("part", `${name} a nested column`, "true", String(/no column /.test(await refusal({ columns: [file.order ? "bbox" : "list"] }))));
+}
+check("part", "a file that is not there", "true", String(/HTTP 404/.test(await read({ remote: { url: "http://files/none.parquet" } }).then(() => "", (e) => e.message))));
 
 // Seeded xorshift32, so that every run compares the same tables.
 let seed = 0x9a2c3f1;

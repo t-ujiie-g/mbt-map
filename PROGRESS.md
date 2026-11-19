@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）、T.6b（zstd の展開の移植）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）、T.6b（zstd の展開の移植）、T.6c（Parquet を `bbox` と `columns` で絞って範囲リクエストで読む）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.6c（`bbox` と `columns` で範囲と列を絞って読む）。その後 T.7・T.8、Phase 21。
+- **次**：テーブルの段階の T.7（3 つのショーケースに「読む → 絞る → 結合 → 集計 → 描く」を足す、`docs/data.md` と `docs/analysis.md` の書き直し、0.1 からの移行の対応表、別名の削除）。その後 T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -670,3 +670,18 @@ Where things stand, decisions and open issues. The development history before th
   - 手で（pyarrow 23.0.1）：zstd の Feather と IPC ストリーム（3 バッチ）を読めた。
 - 手元の道具：この Mac の MoonBit のコアが新しくなり、`Bytes::new` が非推奨の警告になった（`wasmio`・`surface_worker` の 2 か所を `Bytes::make` に直した。固定版でも通る書き方）。`moon fmt` が `style/` の 2 ファイルの末尾カンマを変えたが、戻した（版上げは別の PR で）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 999、wasm-gc 1011、js 1058、native 999：`zstd` 7 件、`formats` 1 件を足した）、npm のテスト（471）と大きさ、bench のテスト（23）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium）と data ページを WebKit・Firefox で（pyarrow が zstd で書いた GeoParquet と Feather を読む）。
+
+## テーブルの段階 T.6c：Parquet を範囲と列で絞って読む（2026-11-19、Mac）
+
+- 決めたこと（ユーザー判断）：`bbox` はファイルの座標で受ける（FlatGeobuf と同じ）。範囲の手がかりが無いファイルは全部読んで行を絞る。予算は `parquet.wasm` 24 → 27KB、`data-arrow.js` 1.5 → 3KB。
+- 作り：
+  - 読み手を 3 段にした（`formats/parquet.mbt`）：`parquet_open`（フッターだけ）→ `ParquetFile::plan`（`bbox`・`columns`・covering の列名から、読むバイト範囲を出す）→ `ParquetFile::read`（取ってきた断片から読む）。断片は「ファイル上の位置・入力上の位置・バイト列」で渡し、列チャンクは自分を含む断片から読む。ファイル全体を渡す `read_parquet` は、その上の薄い包み。
+  - 行グループの見送り：GeoParquet 1.1 の `covering`（各行の箱を持つ `bbox.xmin` などの列）の統計（`min_value`・`max_value`、古い `min`・`max`）が `bbox` の外なら、その行グループは計画に入れない。統計が無ければ残す。
+  - 行の絞り込み：読んだ行のジオメトリ（WKB）の箱が `bbox` にかかるものだけ残す（covering の有無によらず結果は同じ）。ジオメトリの無い行は `bbox` があれば落とす。
+  - `columns`：名前で属性の列を選ぶ（ジオメトリは常に読む。順はファイルのまま）。読めない列や無い名前は断る。
+  - 取得（`data_worker/js/arrow.mjs`）：URL は末尾 64KiB（フッターの大半が入る）を先に取り、足りなければフッターを取り直す。計画された範囲は 16KiB 以内の隙間ならまとめて 1 回で取り、並行に取る。合計 256MB まで。範囲リクエストに答えないサーバ（200）や、`Content-Range` を見せないサーバは、ファイル全体を取って同じ結果にする。Blob とバイト列は全体を持っているので、同じ計画で一部だけを読む。
+- 計測（gzip）：`parquet.wasm` 22,927 → 25,943 バイト（27KB）、`data-arrow.js` 1,129 → 2,628（3KB）、データワーカー 40,825 → 40,865（41KB）、`mbt-map/table` 8,057 → 8,134（9KB）。
+- 大きさで試したこと：はじめ 26,810 バイト。パスの連結を `join` でなく自前に、断片探しをイテレータでなくループにして -0.9KB。
+- ゴールデン（`parquet:golden`）：covering つきの 2 ファイル（float64 と、外向きに丸めた float32。西から東へ並べて小さい行グループ）を足した。部分読み 174 件（5 ファイル × 7 通りの `bbox`・`columns` を、バイト列から・範囲リクエストで・範囲なしのサーバで・大きさを見せないサーバで読み、期待する行を絞ったものと比べる。covering つきなら小さい箱で計画されるチャンクが半分未満）：0 differ。全体も 0 differ（pyarrow 334、hyparquet 30、壊した入力 10）。
+- 分かっていること：covering の無いファイルでは `bbox` は通信量を減らさない（文書に書いた）。行グループが大きい、または空間で並んでいないファイルも同じ。実際の大きいファイル（Overture など）での通信量は測っていない（ゴールデンのファイルは最初の 64KiB より小さいので、計画されるチャンクの数で見送りを確かめている）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1002、wasm-gc 1014、js 1061、native 1002：`formats` 3 件を足した）、npm のテスト（474：範囲読みの 4 件に書き直した）と大きさ、bench のテスト（23）、`arrow:golden`（0 differ のまま）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium）と data ページを WebKit・Firefox で（`bbox` と `columns` で一部を読む、断り方）。

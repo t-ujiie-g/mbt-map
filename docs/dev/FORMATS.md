@@ -763,8 +763,21 @@ read by number). arrow.wasm (`arrow_worker`) exports `read()`, `info_out()` and 
 ## Parquet (`formats/parquet.mbt`)
 
 Parquet as parquet-format lays it out: `PAR1`, the column chunks' pages, a FileMetaData in
-Thrift's compact protocol, its length and `PAR1`. parquet.wasm (`parquet_worker`) exports
-`pages()`, `read(len_file)` and `info_out()` (as arrow.wasm's).
+Thrift's compact protocol, its length and `PAR1`. parquet.wasm (`parquet_worker`) is driven in
+steps by `data_worker/js/arrow.mjs`, which fetches only what a read needs:
+
+- `open()`: the input is the FileMetaData; the file stays open for the calls after it.
+  `info_out()` as arrow.wasm's (the geometry column's name, an empty string, the `geo` value).
+- `plan()`: the input is a u8 (1 with a bbox) and four f64s (min x, min y, max x, max y), a u8 (1
+  with columns) and, if 1, the columns' names, then the names of the four covering columns
+  (`bbox.xmin`, `bbox.ymin`, `bbox.xmax`, `bbox.ymax`; none: no row group is passed over); names
+  are a u32 count and a u32 length and UTF-8 each. The output is the byte ranges to read as f64
+  pairs (a position in the file and a length): the chunks of the kept columns in the row groups
+  whose covering statistics (`min_value`/`max_value`, or `min`/`max`, of FLOAT or DOUBLE leaves)
+  meet the bbox.
+- `pages()` and `read(len_parts)`: the input is the parts of the file: a u32 count, per part its
+  position in the file (an f64) and its length (a u32), then the parts' bytes; every planned
+  range must lie in one part. Rows whose geometry's box does not meet the bbox are left out.
 
 - The footer gives the schema (flattened depth first; a leaf directly under the root that is
   not `REPEATED` is a column of the rows, the others are passed over with their chunks), the row
@@ -780,9 +793,9 @@ Thrift's compact protocol, its length and `PAR1`. parquet.wasm (`parquet_worker`
   (6), `DELTA_BYTE_ARRAY` (7) and `BYTE_STREAM_SPLIT` (9).
 - Codecs: 0 none, 1 Snappy (`snappy`, from its format description), 2 GZIP, 6 ZSTD. GZIP and
   ZSTD are inflated by the host (`DecompressionStream("gzip")`, zstd.wasm): `pages()` lists, for
-  the file placed as input (which stays), an i32 quadruple per page body to inflate (its
-  position, its length, the length it inflates to and its codec), and `read` takes the file's
-  `len_file` bytes followed by each inflated body, a u32 length before it, in that order. What
+  the parts placed as input (which stay), an i32 quadruple per page body to inflate (its
+  position in the input, its length, the length it inflates to and its codec), and `read` takes
+  the parts' `len_parts` bytes followed by each inflated body, a u32 length before it, in that order. What
   the listed bodies inflate to counts against the 1 GB of one input while they are listed.
 - The geometry column: a flat BYTE_ARRAY leaf of logical type GEOMETRY or GEOGRAPHY, else the one
   `geo` names as `primary_column`, else one named `geometry`, `geom` or `wkb_geometry`; its cells
@@ -811,8 +824,11 @@ coordinates the data does not tag; refused for KML and GPX, which are EPSG:4326)
 string), `encoding` (a .dbf's, a label or code page), `bbox` (FlatGeobuf only, four finite numbers):
 
 - `format` `"arrow"` ("Arrow"; `data-arrow.js`): arrow.wasm's `read()`, the CRS its geometry
-  column names taking the place of `options.crs`; `"parquet"` ("Parquet"; `data-arrow.js`):
-  parquet.wasm's `pages()`, the listed bodies inflated (`DecompressionStream("gzip")`, zstd.wasm's
+  column names taking the place of `options.crs`; `"parquet"` ("Parquet"; `data-arrow.js`; options
+  `bbox` and `columns`, an array of names; a `url` is read by range requests: its last 64 KiB,
+  the footer if longer, then the planned ranges, those less than 16 KiB apart as one, at most
+  `MAX_DATA_BYTES` in all, the whole file from a server without ranges):
+  parquet.wasm's `open()`, `plan()`, `pages()`, the listed bodies inflated (`DecompressionStream("gzip")`, zstd.wasm's
   `inflate`), then `read(len_file)`, the CRS as for Arrow; Arrow's ZSTD buffers go the same way;
 - `format` `"csv"`, with `options` `{delimiter, header, dynamicTyping, latitude, longitude,
   geometry}` (`delimiter` a character code or -1 to guess; the column names optional). The wasm's

@@ -207,7 +207,7 @@ export function dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parq
       return { table, ids: idsOf(wasm), layer: null, layers: [] };
     }
     if (format === "parquet") {
-      result = await (await arrowModule()).readParquet(await parquet(), data, options, { writeInput, output }, zstd);
+      result = await (await arrowModule()).readParquet(await parquet(), parts, options, { writeInput, output }, zstd, rangeReader);
     } else if (format === "arrow") {
       result = await (await arrowModule()).readArrow(await arrow(), data, options, { writeInput, output }, zstd);
     } else if (format === "flatgeobuf") {
