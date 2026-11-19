@@ -54,15 +54,17 @@ async function bytesOf({ url, init, blob, bytes }, optional = false) {
 async function read(msg) {
   const { format, options = {}, parts } = msg;
   check(FORMATS.includes(format) && options && typeof options === "object");
-  const { crs, layer, encoding, bbox } = options;
-  check(bbox === undefined || (format === "flatgeobuf" && Array.isArray(bbox) && bbox.length === 4 && bbox.every(Number.isFinite)));
+  const { crs, layer, encoding, bbox, columns } = options;
+  const ranged = format === "flatgeobuf" || format === "parquet";
+  check(bbox === undefined || (ranged && Array.isArray(bbox) && bbox.length === 4 && bbox.every(Number.isFinite)));
+  check(columns === undefined || (format === "parquet" && Array.isArray(columns) && columns.every((c) => typeof c === "string")));
   check(crs === undefined || isCrs(crs));
   check((layer === undefined || typeof layer === "string") && (encoding === undefined || typeof encoding === "string"));
   const files = {};
   if (parts && typeof parts === "object") {
     check(format === "shapefile");
     for (const p of PARTS) if (parts[p]) files[p] = await bytesOf(parts[p]);
-  } else if (format === "flatgeobuf" && bbox !== undefined && typeof msg.url === "string") {
+  } else if (ranged && (bbox !== undefined || format === "parquet") && typeof msg.url === "string") {
     check(/^https?:/i.test(msg.url));
     files.remote = { url: msg.url, init: msg.init };
   } else {

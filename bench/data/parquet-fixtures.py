@@ -119,21 +119,44 @@ def data(n):
     return DATA[n]
 
 
-def write(name, shaped=True, n=N, geometry="geometry", geo=True, crs=None, only=None, **options):
+def write(name, shaped=True, n=N, geometry="geometry", geo=True, crs=None, only=None, covering=None, **options):
     cols = [c for c in data(n)[0] if only is None or c[0] in only]
     shapes = data(n)[1] if shaped else None
-    arrays = {c[0]: pa.array(c[1], c[2]) for c in cols}
+    # With `covering` (a float type), the rows go west to east with a `bbox` column of each one's box, as
+    # GeoParquet 1.1's `covering` (rounded outward for float32), so that row groups can be passed over.
+    order = list(range(n))
+    if covering is not None:
+        order.sort(key=lambda i: (shapes[i] is None, shapes[i].bounds[0] if shapes[i] is not None else 0))
+    arrays = {c[0]: pa.array([c[1][i] for i in order], c[2]) for c in cols}
     metadata = {}
     if shapes is not None:
-        arrays[geometry] = pa.array([None if g is None else shapely.to_wkb(g) for g in shapes], pa.binary())
+        arrays[geometry] = pa.array([None if shapes[i] is None else shapely.to_wkb(shapes[i]) for i in order], pa.binary())
+        if covering is not None:
+            import numpy
+
+            def edge(v, up):
+                if covering == pa.float64():
+                    return v
+                f = numpy.float32(v)
+                return float(numpy.nextafter(f, numpy.float32(numpy.inf if up else -numpy.inf))) if (f < v if up else f > v) else float(f)
+
+            boxes = [None if shapes[i] is None else shapes[i].bounds for i in order]
+            arrays["bbox"] = pa.array(
+                [None if b is None else {"xmin": edge(b[0], False), "ymin": edge(b[1], False), "xmax": edge(b[2], True), "ymax": edge(b[3], True)} for b in boxes],
+                pa.struct([(k, covering) for k in ("xmin", "ymin", "xmax", "ymax")]),
+            )
         if geo:
             column = {"encoding": "WKB", "geometry_types": []}
+            if covering is not None:
+                column["covering"] = {"bbox": {k: ["bbox", k] for k in ("xmin", "ymin", "xmax", "ymax")}}
             if crs is not None:
                 column["crs"] = crs
             metadata["geo"] = json.dumps({"version": "1.1.0", "primary_column": geometry, "columns": {geometry: column}})
     table = pa.table(arrays).replace_schema_metadata(metadata)
     pq.write_table(table, OUT + name + ".parquet", **options)
     expected["files"][name] = {"rows": n, "columns": [c[0] for c in cols if c[3] is not None], "geometry": geometry if shaped else "", "crs": None if crs is None else 6677}
+    if covering is not None:
+        expected["files"][name]["order"] = order
 
 
 write("plain", compression="none", use_dictionary=False)
@@ -156,6 +179,8 @@ write("no-geometry", shaped=False, compression="snappy", n=60)
 write("empty", n=0, compression="snappy", only=("text", "i32"))
 write("zstd", compression="zstd", data_page_size=2000, row_group_size=120)
 write("zstd-v2", compression="zstd", data_page_version="2.0", use_dictionary=False, n=40, only=("text", "i32", "f64"))
+write("covering", covering=pa.float64(), compression="snappy", row_group_size=25, only=("text", "i32", "f64", "day"))
+write("covering-f32", covering=pa.float32(), compression="zstd", row_group_size=40, data_page_version="2.0", only=("text", "i32"))
 write("lz4", compression="lz4", n=40, only=("text",))
 write("brotli", compression="brotli", n=40, only=("text",))
 for name, why in (("lz4", "a codec that is not read (7)"), ("brotli", "a codec that is not read (4)")):

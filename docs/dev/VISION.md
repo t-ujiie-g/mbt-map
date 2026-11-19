@@ -238,6 +238,11 @@ T.6b で決めたこと（2026-11-19、ユーザー判断）：
 - zstd は単独の `zstd.wasm`（予算 7KB）。Parquet と Arrow の wasm が圧縮された部分を並べ、ワーカーが zstd.wasm で展開して渡す（gzip と同じ流れ）。
 - `data-arrow.js` は自分の行（1.5KB）に分ける。`arrow.wasm` は 30KB のまま。
 
+T.6c で決めたこと（2026-11-19、ユーザー判断）：
+- `bbox` はファイルの座標で受ける（FlatGeobuf と同じ）。行は、ジオメトリの箱が `bbox` にかかるものを残す。
+- 範囲の手がかり（GeoParquet 1.1 の `covering` の列と行グループの統計）が無いファイルは、全部読んで行を絞る。
+- 予算：`parquet.wasm` 24 → 27KB、`data-arrow.js` 1.5 → 3KB。
+
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。
 - 大きさ：入口と wasm を足すたびに `npm/scripts/size.mjs` に行を足す。表示ワーカーと解析ワーカーには式の評価器を入れない（§4、AGENTS.md §4）。

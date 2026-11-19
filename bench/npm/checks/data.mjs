@@ -269,7 +269,7 @@ export async function dataChecks(page, requests) {
     JSON.stringify(g.all) === JSON.stringify(STATIONS.map(([name], i) => [i, name, i + 1])) &&
     JSON.stringify(g.near) === JSON.stringify([[1, "東京", 2], [2, "日本橋", 3]]) &&
     JSON.stringify(g.fromBytes) === JSON.stringify(g.near) &&
-    /invalid bbox/.test(g.badBbox) && /bbox is for FlatGeobuf/.test(g.csvBbox);
+    /invalid bbox/.test(g.badBbox) && /bbox is for FlatGeobuf and Parquet/.test(g.csvBbox);
   // Arrow and Parquet (arrow.wasm, parquet.wasm, zstd.wasm and data-arrow.js, fetched with the first read that needs each): a Feather
   // file (LZ4) and a GeoParquet file (GZIP) pyarrow wrote as geopandas does (WKB in plane IX), then tables written and read back.
   const arrowBefore = requests.filter((u) => /\/(arrow\.wasm|parquet\.wasm|zstd\.wasm|data-arrow\.js)$/.test(u)).length;
@@ -292,6 +292,10 @@ export async function dataChecks(page, requests) {
       feather: [feather.format, feather.columns, await rows(feather)],
       parquet: [parquet.format, parquet.columns, JSON.stringify(await rows(parquet)) === JSON.stringify(await rows(feather))],
       zstd: [JSON.stringify(await rows(await read("./stations-zstd.parquet"))) === JSON.stringify(await rows(feather)), JSON.stringify(await rows(await read("./stations-zstd.feather"))) === JSON.stringify(await rows(feather))],
+      // The stations are in plane IX: the box is in the file's coordinates, around 東京.
+      part: await rows(await read("./stations.parquet", { bbox: [-6100, -35500, -5900, -35300], columns: ["riders"] })),
+      noColumn: await fail(read("./stations.parquet", { columns: ["nope"] })),
+      csvColumns: await fail(read("./stations.csv", { columns: ["名前"] })),
       notParquet: await fail(read(new TextEncoder().encode("PAR1 and nothing else PAR1"), { format: "parquet" })),
       stream: [stream instanceof Uint8Array, await rows(await fromArrow(stream))],
       file: [new TextDecoder().decode(file.subarray(0, 6)), await rows(await fromArrow(new Blob([file]))), JSON.stringify(await rows(await read(file, { format: "arrow" })))],
@@ -313,7 +317,9 @@ export async function dataChecks(page, requests) {
     JSON.stringify(ar.stream) === JSON.stringify([true, mixedRows]) &&
     ar.file[0] === "ARROW1" && JSON.stringify(ar.file[1]) === JSON.stringify(mixedRows) && ar.file[2] === JSON.stringify(mixedRows) &&
     JSON.stringify(ar.native) === JSON.stringify([["Point", [139.7671, 35.6812], { name: "東京" }], ["Point", [139.763, 35.6751], { name: "有楽町" }], ["Point", [139.7709, 35.6918], { name: "神田" }]]) &&
-    JSON.stringify(ar.parquet) === JSON.stringify(["parquet", ["name", "riders", "opened"], true]) && /^mbt-map: data: malformed Parquet at/.test(ar.notParquet) && JSON.stringify(ar.zstd) === "[true,true]" &&
+    JSON.stringify(ar.parquet) === JSON.stringify(["parquet", ["name", "riders", "opened"], true]) && /^mbt-map: data: malformed Parquet at/.test(ar.notParquet) &&
+    JSON.stringify(ar.part) === JSON.stringify([["Point", [139.7671, 35.6812], { riders: 462589 }]]) &&
+    /no column nope/.test(ar.noColumn) && /columns is a list of column names, for Parquet/.test(ar.csvColumns) && JSON.stringify(ar.zstd) === "[true,true]" &&
     /mixed geometry types/.test(ar.mixedNative) && /invalid Arrow options/.test(ar.badOption) && /^mbt-map: data: malformed Arrow at/.test(ar.garbage);
   // Writing: a DataTable as GeoJSON, CSV and KML, a GeoJSON object as KML, each read back.
   const w = await page.evaluate(async () => {

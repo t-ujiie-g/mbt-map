@@ -59,7 +59,8 @@ To read data you already hold as text, pass it to `parse` with an explicit `form
 | `crs` | The CRS of coordinates the data doesn't tag. See [Coordinate systems](#coordinate-systems). |
 | `layer` | The Shapefile inside a zip (its name without `.shp`, with or without folders) or the TopoJSON object to read. Default: the first. |
 | `encoding` | A `.dbf`'s text encoding (`"shift_jis"` or another label, or a code page). Overrides `.cpg` and the language driver. |
-| `bbox` | `[minX, minY, maxX, maxY]` in a FlatGeobuf's coordinates: read only the features its index finds there. FlatGeobuf only. |
+| `bbox` | `[minX, minY, maxX, maxY]` in the file's coordinates: read only the features there. FlatGeobuf (by its index) and [Parquet](#parquet). |
+| `columns` | The property columns to read. [Parquet](#parquet) only. |
 | `delimiter`, `header`, `dynamicTyping`, `latitude`, `longitude`, `geometry` | CSV options. See [CSV](#csv). |
 
 `formatOf(name)` returns the format for a file name or path, or `null`:
@@ -382,7 +383,7 @@ What `toArrowIPC` writes reads back the same in apache-arrow 21.2.0 and in pyarr
 read(input, { format: "parquet" })               // also by name: .parquet, .geoparquet
 ```
 
-Parquet files, with [GeoParquet](https://geoparquet.org/)'s metadata: what GeoPandas' `to_parquet`, GDAL and DuckDB's `COPY ... TO 'x.parquet'` write. The whole file is read (up to 256 MB); every row group gives its rows.
+Parquet files, with [GeoParquet](https://geoparquet.org/)'s metadata: what GeoPandas' `to_parquet`, GDAL and DuckDB's `COPY ... TO 'x.parquet'` write. Every row group gives its rows; `bbox` and `columns` read a part of the file.
 
 - **Geometry**: the WKB column that the `geo` metadata names as its primary column; without that metadata, a column of Parquet's `GEOMETRY` or `GEOGRAPHY` type, else a binary column named `geometry`, `geom` or `wkb_geometry`. A file without any gives rows without geometry. GeoParquet 1.1's GeoArrow encodings (`point`, `polygon`, …) are not read: such a file fails.
 - **CRS**: the column's `crs` in the `geo` metadata, as for [Arrow](#arrow): converted when it names an EPSG code, longitude and latitude when absent.
@@ -395,7 +396,19 @@ const buildings = await read("/data/buildings.parquet");
 map.addSource("buildings", { type: "geojson", data: buildings });
 ```
 
-Reading a part of a file (a `bbox`, some columns) by range requests is not there yet.
+**Reading a part of a file.** A URL is read by HTTP range requests: the end of the file (its footer), then only the column chunks that are needed. Two options narrow what that is:
+
+- **`columns`**: the property columns to read, by name (the geometry always comes; the columns keep the file's order). A name that is not a column of numbers, booleans, strings or dates fails.
+- **`bbox`**: `[minX, minY, maxX, maxY]` in the file's coordinates (longitude and latitude for most files; a projected file's own units). The rows whose geometry's box meets it are kept; rows without geometry are dropped.
+
+With GeoParquet 1.1's `covering` (a `bbox` column of each row's box: Overture Maps' files, GeoPandas' `write_covering_bbox=True`, GDAL's default), the row groups whose statistics lie outside `bbox` are not fetched at all. Without it every row group is read and the rows are filtered, so `bbox` saves nothing on the network; a file sorted in space with small row groups gains most.
+
+```js
+// A few megabytes of a multi-gigabyte file, if it has a covering column.
+const places = await read("https://example.com/places.parquet", { bbox: [139.6, 35.6, 139.9, 35.8], columns: ["name", "category"] });
+```
+
+A server that does not answer range requests, or does not let the page see the `Content-Range` header (a CORS `Access-Control-Expose-Headers` matter), gives the whole file, which is then read as bytes are; the result is the same. At most 256 MB are fetched for one read.
 
 ## Writing
 

@@ -15,6 +15,8 @@ pub const MAX_GEOJSON_KEYS : Int32 = 4096
 
 pub fn arrow_packed_buffers(BytesView) -> Array[Int32] raise ReadError
 
+pub fn parquet_open(BytesView) -> ParquetFile raise ReadError
+
 pub fn parquet_packed_pages(BytesView) -> Array[Int32] raise ReadError
 
 pub fn read_arrow(BytesView, inflated? : ArrayView[BytesView]) -> (@geom.Table, ArrowInfo) raise ReadError
@@ -88,6 +90,12 @@ pub(all) struct CsvOptions {
   geometry : String?
 }
 pub fn CsvOptions::new(delimiter? : Int32, header? : Bool, dynamic_typing? : Bool, latitude? : String, longitude? : String, geometry? : String) -> Self
+
+type ParquetFile
+pub fn ParquetFile::info(Self) -> ArrowInfo
+pub fn ParquetFile::packed_pages(Self, ArrayView[(Int64, Int32, BytesView)]) -> Array[Int32] raise ReadError
+pub fn ParquetFile::plan(Self, bbox? : (Double, Double, Double, Double), columns? : ArrayView[String], covering? : ArrayView[String]) -> Array[(Int64, Int64)] raise ReadError
+pub fn ParquetFile::read(Self, ArrayView[(Int64, Int32, BytesView)], inflated? : ArrayView[BytesView]) -> @geom.Table raise ReadError
 
 // Type aliases
 

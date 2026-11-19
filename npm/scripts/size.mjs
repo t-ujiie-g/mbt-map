@@ -66,9 +66,9 @@ const ENTRIES = [
   { name: "coordinates from another CRS (loaded by the data worker with proj.wasm)", files: ["data-crs.js"], budget: 1_500, references: [] },
   { name: ".prj WKT (loaded by the data worker on the first .prj)", files: ["prjwkt.js"], budget: 4_000, references: [] },
   { name: "KML and GPX (loaded by the data worker on the first such read)", files: ["xml.wasm"], budget: 27_000, references: [] },
-  { name: "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)", files: ["data-arrow.js"], budget: 1_500, references: [] },
+  { name: "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)", files: ["data-arrow.js"], budget: 3_000, references: [] },
   { name: "Arrow IPC (loaded by the data worker on the first Arrow read or write)", files: ["arrow.wasm"], budget: 30_000, references: [] },
-  { name: "Parquet (loaded by the data worker on the first Parquet read)", files: ["parquet.wasm"], budget: 24_000, references: [] },
+  { name: "Parquet (loaded by the data worker on the first Parquet read)", files: ["parquet.wasm"], budget: 27_000, references: [] },
   { name: "Zstandard (loaded by the data worker with the first ZSTD-compressed Parquet page or Arrow buffer)", files: ["zstd.wasm"], budget: 7_000, references: [] },
   { name: "GeoTIFF (loaded by the data worker on the first raster read)", files: ["geotiff.wasm", "data-geotiff.js"], budget: 20_000, references: [] },
 ];

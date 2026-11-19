@@ -107,6 +107,7 @@ test "listing GZIP pages charges what they say they inflate to" {
   let file = Bytes::from_array([b'P', b'A', b'R', b'1'] + page + page)
   let leaf : Leaf = {
     name: "n",
+    path: "n",
     physical: 1,
     length: 0,
     optional: false,
@@ -115,7 +116,7 @@ test "listing GZIP pages charges what they say they inflate to" {
   }
   let wanted = []
   let reader : ParquetReader = {
-    bytes: file[:],
+    segments: [{ offset: 0L, base: 0, bytes: file[:], }],
     inflated: [],
     next_inflated: 0,
     budget: MAX_ARROW_INFLATED,
@@ -125,6 +126,8 @@ test "listing GZIP pages charges what they say they inflate to" {
     codec: 2,
     start: 4L,
     size: (page.length() * 2).to_int64(),
+    min: b"",
+    max: b"",
   }
   assert_true(reader.column(leaf, chunk, 2) is Err(_))
   assert_eq(wanted.length(), 4)
