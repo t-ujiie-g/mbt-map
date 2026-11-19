@@ -155,13 +155,13 @@ export async function readParquet(wasm, { data, remote }, options, io, zstd, ran
   const magic = (at) => end.length >= 12 && end[at] === 0x50 && end[at + 1] === 0x41 && end[at + 2] === 0x52 && end[at + 3] === 0x31;
   if (!magic(end.length - 4) || (whole && !magic(0))) throw new Error("malformed Parquet at 0: not a Parquet file");
   const footer = new DataView(end.buffer, end.byteOffset, end.byteLength).getUint32(end.length - 8, true);
-  if (footer + 12 > size) throw new Error(`malformed Parquet at ${size - 8}: a footer past the start of the file`);
-  const ranges = whole ? null : rangeReader(remote.url, remote.init, MAX_DATA_BYTES);
-  // `length` bytes of the file from `offset`: of the whole file, of the end already here, or fetched.
-  const get = async (offset, length) => {
+  if (footer + 12 > size || footer > MAX_DATA_BYTES) throw new Error(`malformed Parquet at ${size - 8}: a footer past the start of the file, or too long`);
+  // `length` bytes of the file from `offset`: of the whole file, of the end already here, or fetched. A server
+  // may answer with the whole file instead (`fallback`); else no more than `length` bytes are taken of its answer.
+  const get = async (offset, length, fallback = true) => {
     if (!whole && offset >= size - end.length) return end.subarray(offset - (size - end.length)).subarray(0, length);
     if (!whole) {
-      const got = await ranges(offset, length);
+      const got = await rangeReader(remote.url, remote.init, fallback ? MAX_DATA_BYTES : length)(offset, length);
       if (!got.whole) return got;
       whole = got.whole;
     }
@@ -189,7 +189,9 @@ export async function readParquet(wasm, { data, remote }, options, io, zstd, ran
     else wanted.push([offset, length]);
   }
   if (wanted.reduce((n, [, length]) => n + length, 0) > MAX_DATA_BYTES) throw new Error(`more than ${MAX_DATA_BYTES} bytes to read: narrow bbox or columns`);
-  const parts = await Promise.all(wanted.map(([offset, length]) => get(offset, length)));
+  // The first range alone, which may bring the whole file; the others at once, each held to its length.
+  const parts = wanted.length ? [await get(...wanted[0])] : [];
+  parts.push(...(await Promise.all(wanted.slice(1).map(([offset, length]) => get(offset, length, false)))));
   // parquet.wasm's input: how many parts, where each is in the file and how long, then their bytes.
   const table = new DataView(new ArrayBuffer(4 + wanted.length * 12));
   table.setUint32(0, wanted.length, true);

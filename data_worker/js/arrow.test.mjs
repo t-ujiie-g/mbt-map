@@ -113,14 +113,19 @@ async function ranged(ranges, { server = "ranges", options = {} } = {}) {
   const fetching = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     const range = /^bytes=(\d*)-(\d*)$/.exec(new Headers(init.headers).get("range") ?? "");
-    if (!range || server === "whole") return (sent.push([0, file.length]), new Response(file, { status: 200 }));
+    if (!range || server === "whole" || (server === "late" && sent.length >= 2)) return (sent.push([0, file.length]), new Response(file, { status: 200 }));
     const start = range[1] === "" ? file.length - Number(range[2]) : Number(range[1]);
     const end = range[1] === "" ? file.length - 1 : Number(range[2]);
     sent.push([start, end - start + 1]);
     return new Response(file.subarray(start, end + 1), { status: 206, headers: server === "hidden" ? {} : { "content-range": `bytes ${start}-${end}/${file.length}` } });
   };
-  // As data_worker/js/read.mjs's `rangeReader`.
-  const rangeReader = (url) => async (offset, length) => new Uint8Array(await (await fetch(url, { headers: { Range: `bytes=${offset}-${offset + length - 1}` } })).arrayBuffer());
+  // As data_worker/js/read.mjs's `rangeReader`: a 200 is the whole file, and nothing longer than `max` is taken.
+  const rangeReader = (url, init, max) => async (offset, length) => {
+    const res = await fetch(url, { headers: { Range: `bytes=${offset}-${offset + length - 1}` } });
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.length > max) throw new Error(`response larger than ${max} bytes`);
+    return res.status === 200 ? { whole: bytes } : bytes;
+  };
   try {
     const r = await readParquet(wasm, { remote: { url: "http://x/f.parquet" } }, options, { writeInput: (w, parts) => (input = parts), output }, null, rangeReader);
     return { main: new Uint8Array(r.table), calls, sent, file };
@@ -164,10 +169,19 @@ test("readParquet: a server without ranges, or that hides the size, gives the wh
   }
 });
 
+test("readParquet: a server that sends the whole file for a later range is refused, not read again and again", async () => {
+  // Ranges for the end and for the first part, then the whole file for the next (the two near ranges as one).
+  await assert.rejects(ranged([[1000, 100], [20000, 10], [30000, 10]], { server: "late" }), /response larger than 10010 bytes/);
+});
+
 test("readParquet: what is no Parquet file, and more than may be read, are refused", async () => {
   const { readParquet } = await import("./arrow.mjs");
   const io = { writeInput: () => {}, output: () => new ArrayBuffer(0) };
   await assert.rejects(readParquet({}, { data: new Uint8Array(20) }, {}, io), /not a Parquet file/);
   await assert.rejects(readParquet({}, { data: Uint8Array.of(0x50, 0x41, 0x52, 0x31, 0, 0, 0, 0, 99, 0, 0, 0, 0x50, 0x41, 0x52, 0x31) }, {}, io), /a footer past the start/);
+  // A footer that says it is 2 GB long, in a "file" a server says is larger still.
+  const fetching = globalThis.fetch;
+  globalThis.fetch = async () => new Response(Uint8Array.of(0, 0, 0, 0, 0, 0, 0, 0x80, 0x50, 0x41, 0x52, 0x31), { status: 206, headers: { "content-range": "bytes 0-11/9000000000" } });
+  await assert.rejects(readParquet({}, { remote: { url: "http://x/f" } }, {}, io, null, () => assert.fail("nothing more is fetched")), /or too long/).finally(() => (globalThis.fetch = fetching));
   await assert.rejects(ranged([[0, 2 ** 28 + 1]]), /bytes to read: narrow bbox or columns/);
 });

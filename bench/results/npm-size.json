@@ -266,7 +266,7 @@
     },
     {
       "name": "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)",
-      "bytes": 2628,
+      "bytes": 2667,
       "budget": 3000
     },
     {
