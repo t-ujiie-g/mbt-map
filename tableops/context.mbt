@@ -1,30 +1,9 @@
 ///|
-/// The host hooks expressions take (`@style.FeatureContext`'s `trig`, `number_text`,
-/// `text_number` and `intl`).
-pub(all) struct Hooks {
-  trig : @core.Trig
-  number_text : (Double) -> String
-  text_number : (String) -> Double
-  intl : @style.Intl
-}
-
-///|
-/// MoonBit's own, for tests and the js backend.
-pub fn Hooks::default() -> Hooks {
-  {
-    trig: @core.Trig::moonbit(),
-    number_text: Double::to_string,
-    text_number: @style.js_number,
-    intl: @style.Intl::fallback(),
-  }
-}
-
-///|
 /// What an expression reads of a table: the properties and geometry type of `row`.
 priv struct Row {
   table : @geom.Table
   mut row : Int32
-  hooks : Hooks
+  hooks : @style.Hooks
 }
 
 ///|

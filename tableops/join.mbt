@@ -199,7 +199,7 @@ pub fn rollup_pairs(
   right : @geom.Table,
   pairs : ArrayView[Int32],
   outputs : ArrayView[(String, Aggregate, @style.Expr)],
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> Result[@geom.Table, String] {
   guard pairs_fit(left, right, pairs) else {
     return Err("a pair out of the tables")

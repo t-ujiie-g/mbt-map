@@ -121,7 +121,7 @@
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 57747,
+      "bytes": 57763,
       "budget": 59000
     },
     {
@@ -156,7 +156,7 @@
     },
     {
       "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
-      "bytes": 26866,
+      "bytes": 27685,
       "budget": 30000
     },
     {
@@ -181,7 +181,7 @@
     },
     {
       "name": "table operations (select, filter, derive, orderby, rollup, joins; loaded by the analysis worker on first use)",
-      "bytes": 46848,
+      "bytes": 46817,
       "budget": 50000
     },
     {
@@ -276,7 +276,7 @@
     },
     {
       "name": "Parquet (loaded by the data worker on the first Parquet read)",
-      "bytes": 25943,
+      "bytes": 25934,
       "budget": 27000
     },
     {

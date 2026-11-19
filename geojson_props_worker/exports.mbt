@@ -1,6 +1,6 @@
 ///|
 /// The host's `Math`, `Number`, `String` and `Intl`, as the display worker's.
-let hooks : @cluster_props.Hooks = {
+let hooks : @style.Hooks = {
   trig: @wasmio.host_trig(),
   number_text: @wasmio.host_number_to_text,
   text_number: @wasmio.host_text_to_number,

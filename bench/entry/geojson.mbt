@@ -145,7 +145,7 @@ fn build_clusters(
     @core.strconv_number(bytes[s:e])
   },
   properties? : Array[(String, @style.Expr, @style.Expr)],
-  hooks~ : @cluster_props.Hooks = @cluster_props.Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> Int32 {
   let table = @formats.read_geojson(bytes, slow_number~) catch {
     _ => return -1

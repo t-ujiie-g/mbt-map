@@ -123,7 +123,11 @@ fn tally(values : ArrayView[Key]) -> (Array[Key], Array[Int32]) {
 
 ///|
 /// Arquero's `quantile` of values sorted ascending: linear between the two around the rank.
-fn quantile(sorted : ArrayView[Key], p : Double, hooks : Hooks) -> @geom.Prop {
+fn quantile(
+  sorted : ArrayView[Key],
+  p : Double,
+  hooks : @style.Hooks,
+) -> @geom.Prop {
   let n = sorted.length()
   if n == 0 {
     return Null
@@ -148,7 +152,7 @@ fn Aggregate::of(
   self : Aggregate,
   count : Int32,
   values : Array[Key],
-  hooks : Hooks,
+  hooks : @style.Hooks,
 ) -> @geom.Prop {
   let valid = values.length()
   match self {
@@ -265,7 +269,7 @@ fn aggregates(
   groups : Array[Int32],
   size : Int32,
   outputs : ArrayView[(String, Aggregate, @style.Expr)],
-  hooks : Hooks,
+  hooks : @style.Hooks,
 ) -> Array[(String, Array[@geom.Prop])] {
   let counts = FixedArray::make(size, 0)
   for k in 0..<rows.length() {
@@ -294,7 +298,7 @@ pub fn rollup(
   t : @geom.Table,
   keys : ArrayView[(String, @style.Expr)],
   outputs : ArrayView[(String, Aggregate, @style.Expr)],
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> @geom.Table {
   let n = t.length()
   let key_values = keys.map(k => keys_of(t, k.1, hooks))

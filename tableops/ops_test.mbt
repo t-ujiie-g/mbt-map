@@ -199,14 +199,6 @@ test "orderby compares strings by code units and other pairs as JavaScript numbe
 }
 
 ///|
-test "Hooks::default computes with MoonBit's functions" {
-  let hooks = @tableops.Hooks::default()
-  assert_eq((hooks.number_text)(1.5), "1.5")
-  assert_eq((hooks.text_number)("2"), 2.0)
-  assert_true(((hooks.trig.sin)(0.0) - 0.0).abs() < @double.min_positive)
-}
-
-///|
 fn cells(t : @geom.Table, name : String) -> Array[@geom.Prop?] {
   t.column(name).unwrap().values
 }

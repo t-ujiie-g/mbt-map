@@ -1,25 +1,4 @@
 ///|
-/// The host hooks expressions take (`@style.FeatureContext`'s `trig`, `number_text`,
-/// `text_number` and `intl`).
-pub(all) struct Hooks {
-  trig : @core.Trig
-  number_text : (Double) -> String
-  text_number : (String) -> Double
-  intl : @style.Intl
-}
-
-///|
-/// MoonBit's own, for tests and the js backend.
-pub fn Hooks::default() -> Hooks {
-  {
-    trig: @core.Trig::moonbit(),
-    number_text: Double::to_string,
-    text_number: @style.js_number,
-    intl: @style.Intl::fallback(),
-  }
-}
-
-///|
 /// What a map or reduce expression reads: a point's properties (`table` at `row`) or a
 /// point's or cluster's mapped values (`values` by `keys`), and `acc`, the value so far.
 priv struct Props {
@@ -28,7 +7,7 @@ priv struct Props {
   keys : Array[String]
   mut values : Array[@geom.Prop]
   mut acc : @style.Value
-  hooks : Hooks
+  hooks : @style.Hooks
 }
 
 ///|
@@ -129,7 +108,7 @@ impl @style.FeatureContext for Props with fn resolved_locale(self, locale) {
 pub fn cluster_properties(
   table : @geom.Table,
   props : Array[(String, @style.Expr, @style.Expr)],
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> @tiler.ClusterProperties {
   let keys = props.map(p => p.0)
   let point : Props = {

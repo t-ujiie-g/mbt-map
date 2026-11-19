@@ -35,3 +35,29 @@ test "pairs are found within the caps and refused past them" {
   assert_true(pairs(t, t, 0, None, max_points=5) is Err(_))
   assert_true(pairs(t, t, 0, None, max_points=6) is Ok(_))
 }
+
+///|
+fn points_at(xs : Array[Double]) -> @geom.Table {
+  let b = @geom.TableBuilder::new()
+  for x in xs {
+    b.point(x, 0.0)
+    b.end_ring()
+    b.end_part()
+    b.end_feature(Point)
+  }
+  b.finish()
+}
+
+///|
+test "pairs come in the first table's order whichever table is searched" {
+  let many = points_at([2.0, 0.0, 1.0, 2.0, 0.0])
+  let few = points_at([0.0, 2.0])
+  assert_true(physical_equal(indexed(many, few), many))
+  assert_true(physical_equal(indexed(few, many), many))
+  assert_true(physical_equal(indexed(few, few), few))
+  assert_true(pairs(many, few, 0, None) is Ok([0, 1, 1, 0, 3, 1, 4, 0]))
+  assert_true(pairs(few, many, 0, None) is Ok([0, 1, 0, 4, 1, 0, 1, 3]))
+  assert_true(pairs(many, few, 0, None, max_candidates=3) is Err(_))
+  assert_true(pairs(many, few, 0, None, max_points=7) is Err(_))
+  assert_true(pairs(many, few, 0, None, max_points=8) is Ok(_))
+}

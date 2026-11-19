@@ -60,7 +60,7 @@ fn diff_clusters(
   trig : @tiler.Trig,
   slow : (Int32) -> (Int32, Int32) -> Double,
   properties? : Array[(String, @style.Expr, @style.Expr)],
-  hooks~ : @cluster_props.Hooks = @cluster_props.Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> Int32 {
   let at = after_sized(b)
   guard at >= 0 && diff_features(b, at, b.length(), slow) is Some((table, ends)) else {

@@ -119,7 +119,7 @@ pub fn geojson_clusters_diffs(
     js_slow(bytes),
     properties?,
     hooks={
-      ..@cluster_props.Hooks::default(),
+      ..@style.Hooks::default(),
       number_text: js_number_text,
       text_number: js_text_number,
     },
@@ -166,7 +166,7 @@ pub fn geojson_clusters(
     @tiler.Trig::moonbit(),
     properties?,
     hooks={
-      ..@cluster_props.Hooks::default(),
+      ..@style.Hooks::default(),
       number_text: js_number_text,
       text_number: js_text_number,
     },
