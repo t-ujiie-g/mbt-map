@@ -1,4 +1,4 @@
-// Arrow IPC through arrow.wasm and Parquet through parquet.wasm (docs/dev/FORMATS.md "Arrow", "Parquet"):
+// Arrow IPC through arrow.wasm and Parquet through parquet.wasm, with zstd.wasm (docs/dev/FORMATS.md "Arrow", "Parquet"):
 // what the data worker's `read` and `write` do for the formats `arrow` and `parquet`, loaded with the first of them.
 
 const decoder = new TextDecoder();
@@ -27,9 +27,9 @@ export function crsCode(crs) {
 }
 
 /** The Arrow stream or file `data` as `read` gives a format's result: its table and the CRS its geometry column names. */
-export function readArrow(wasm, data, options, { writeInput, output }) {
-  writeInput(wasm, [data]);
-  return described(wasm, output(wasm, wasm.read()), options, output);
+export async function readArrow(wasm, data, options, io, zstd) {
+  await place(wasm, data, io, zstd);
+  return described(wasm, io.output(wasm, wasm.read(data.length)), options, io.output);
 }
 
 // `table` with the CRS the last read's geometry column names (`info_out`).
@@ -68,26 +68,40 @@ async function gunzip(bytes, size) {
 }
 
 /**
- * The Parquet file `data` as `readArrow` gives an Arrow one: its GZIP pages are inflated here (the browser's
- * DecompressionStream) and handed to the wasm after the file, each with its length before it.
+ * Places `data` as `wasm`'s input and, after it, what `wasm.pages()` lists of it inflated (a u32 length before each):
+ * GZIP members by the browser's DecompressionStream, ZSTD frames by zstd.wasm (`zstd()` loads it). The parts may
+ * inflate to MAX_INFLATED bytes in all; one whose size is listed must inflate to exactly it.
  */
-export async function readParquet(wasm, data, options, { writeInput, output }) {
+async function place(wasm, data, { writeInput, output }, zstd) {
   writeInput(wasm, [data]);
   const count = wasm.pages();
-  const pages = new Int32Array(output(wasm, count < 0 ? count : count * 4));
-  if (pages.length > 0) {
-    const parts = [data];
-    // The wasm lists no more than it would take; checked again before anything is allocated.
-    let total = 0;
-    for (let i = 2; i < pages.length; i += 3) total += pages[i] >= 0 ? pages[i] : Infinity;
-    if (total > MAX_INFLATED) throw new Error("GZIP pages that inflate past 1 GB");
-    for (let i = 0; i < pages.length; i += 3) {
-      const inflated = await gunzip(data.subarray(pages[i], pages[i] + pages[i + 1]), pages[i + 2]);
-      parts.push(new Uint8Array(Uint32Array.of(inflated.length).buffer), inflated);
+  const list = new Int32Array(output(wasm, count < 0 ? count : count * 4));
+  if (list.length === 0) return;
+  const parts = [data];
+  let left = MAX_INFLATED;
+  for (let i = 0; i < list.length; i += 4) {
+    const [at, length, size, codec] = list.subarray(i, i + 4);
+    if (size > left) throw new Error("compressed parts that inflate past 1 GB");
+    const packed = data.subarray(at, at + length);
+    let bytes;
+    if (codec === 2) bytes = await gunzip(packed, size);
+    else {
+      const z = await zstd();
+      writeInput(z, [packed]);
+      const n = z.inflate(size < 0 ? left : size);
+      if (n < 0 || (size >= 0 && n !== size)) throw new Error(n === -2 ? "out of memory" : "malformed ZSTD data, or of another size than its header says");
+      bytes = new Uint8Array(z.memory.buffer.slice(z.output_addr(), z.output_addr() + n));
     }
-    writeInput(wasm, parts);
+    left -= bytes.length;
+    parts.push(new Uint8Array(Uint32Array.of(bytes.length).buffer), bytes);
   }
-  return described(wasm, output(wasm, wasm.read(data.length)), options, output);
+  writeInput(wasm, parts);
+}
+
+/** The Parquet file `data` as `readArrow` gives an Arrow one (parquet.wasm). */
+export async function readParquet(wasm, data, options, io, zstd) {
+  await place(wasm, data, io, zstd);
+  return described(wasm, io.output(wasm, wasm.read(data.length)), options, io.output);
 }
 
 /** `table` (Table bytes) as Arrow IPC: `options.native` for GeoArrow's types, `options.file` for the file format. */

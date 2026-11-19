@@ -38,7 +38,7 @@ const ENTRIES = [
   { name: "feature queries (loaded by the display worker with the first query)", files: ["worker-query.js"], budget: 1_500, references: [] },
   { name: "GeoJSON worker", files: ["geojson-worker.js", "geojson.wasm"], budget: 39_000, references: [] },
   { name: "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)", files: ["geojson-worker.js", "geojson-properties.wasm"], budget: 59_000, references: [] },
-  { name: "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)", files: ["clients.js"], budget: 2_000, references: ["./analysis-worker.js", "./analysis.wasm", "./geometry.wasm", "./relate.wasm", "./shapes.wasm", "./surface.wasm", "./viewshed.wasm", "./route.wasm", "./proj.wasm", "./table.wasm", "./analysis-viewshed.js", "./data-worker.js", "./data.wasm", "./prjwkt.js", "./xml.wasm", "./geotiff.wasm", "./arrow.wasm", "./parquet.wasm", "./data-zip.js", "./data-crs.js", "./data-fgb.js", "./data-geotiff.js", "./data-reproject.js", "./data-arrow.js"] },
+  { name: "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)", files: ["clients.js"], budget: 2_000, references: ["./analysis-worker.js", "./analysis.wasm", "./geometry.wasm", "./relate.wasm", "./shapes.wasm", "./surface.wasm", "./viewshed.wasm", "./route.wasm", "./proj.wasm", "./table.wasm", "./analysis-viewshed.js", "./data-worker.js", "./data.wasm", "./prjwkt.js", "./xml.wasm", "./geotiff.wasm", "./arrow.wasm", "./parquet.wasm", "./zstd.wasm", "./data-zip.js", "./data-crs.js", "./data-fgb.js", "./data-geotiff.js", "./data-reproject.js", "./data-arrow.js"] },
   { name: "mbt-map/table", files: ["table.js"], budget: 9_000, references: ["./clients.js", "./projstring.js"] },
   { name: "mbt-map/analysis", files: ["analysis.js"], budget: 6_000, references: ["./clients.js", "./table.js", "./projstring.js"] },
   { name: "PROJ strings (loaded by mbt-map/table and mbt-map/analysis on the first one)", files: ["projstring.js"], budget: 5_000, references: [] },
@@ -66,8 +66,10 @@ const ENTRIES = [
   { name: "coordinates from another CRS (loaded by the data worker with proj.wasm)", files: ["data-crs.js"], budget: 1_500, references: [] },
   { name: ".prj WKT (loaded by the data worker on the first .prj)", files: ["prjwkt.js"], budget: 4_000, references: [] },
   { name: "KML and GPX (loaded by the data worker on the first such read)", files: ["xml.wasm"], budget: 27_000, references: [] },
-  { name: "Arrow IPC (loaded by the data worker on the first Arrow read or write)", files: ["arrow.wasm", "data-arrow.js"], budget: 30_000, references: [] },
-  { name: "Parquet (loaded by the data worker on the first Parquet read, with data-arrow.js)", files: ["parquet.wasm"], budget: 24_000, references: [] },
+  { name: "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)", files: ["data-arrow.js"], budget: 1_500, references: [] },
+  { name: "Arrow IPC (loaded by the data worker on the first Arrow read or write)", files: ["arrow.wasm"], budget: 30_000, references: [] },
+  { name: "Parquet (loaded by the data worker on the first Parquet read)", files: ["parquet.wasm"], budget: 24_000, references: [] },
+  { name: "Zstandard (loaded by the data worker with the first ZSTD-compressed Parquet page or Arrow buffer)", files: ["zstd.wasm"], budget: 7_000, references: [] },
   { name: "GeoTIFF (loaded by the data worker on the first raster read)", files: ["geotiff.wasm", "data-geotiff.js"], budget: 20_000, references: [] },
 ];
 

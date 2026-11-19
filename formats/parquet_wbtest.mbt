@@ -127,6 +127,6 @@ test "listing GZIP pages charges what they say they inflate to" {
     size: (page.length() * 2).to_int64(),
   }
   assert_true(reader.column(leaf, chunk, 2) is Err(_))
-  assert_eq(wanted.length(), 3)
+  assert_eq(wanted.length(), 4)
   assert_true(wanted[2] > 536870912)
 }

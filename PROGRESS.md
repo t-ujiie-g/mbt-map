@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）まで済んだ。
+- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）、T.6b（zstd の展開の移植）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.6b（zstd の展開の移植）と T.6c（`bbox` と `columns` で範囲と列を絞って読む）。その後 T.7・T.8、Phase 21。
+- **次**：テーブルの段階の T.6c（`bbox` と `columns` で範囲と列を絞って読む）。その後 T.7・T.8、Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -655,3 +655,18 @@ Where things stand, decisions and open issues. The development history before th
 - 途中で直したもの：入れ子の列（リスト・構造体）の後ろにある列が「入れ子の中」と数えられて読まれなかった。0 行のファイルと、空のリストの書き方（要素の型が 0）を断っていた。10 進数を 10 で何度も割っていたので、最後の桁がずれることがあった（10 の累乗 1 回で割る。Arrow の 10 進数も同じに直した）。
 - 依存（`bench` の開発用、配布物には入らない）：hyparquet 1.33.1、hyparquet-writer 0.18.0、hyparquet-compressors 1.1.3（どれも MIT、導入スクリプトなし）。`npm audit` は 0 件。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 991、wasm-gc 1003、js 1050、native 991：`formats` 7 件を足した）、npm のテスト（471：`arrow.mjs` 2 件）と大きさ、bench のテスト（23）、`arrow:golden`（0 differ のまま）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium）と data ページを WebKit・Firefox で（pyarrow が gzip で書いた GeoParquet を読み、EPSG:6677 から経緯度に直る）。
+
+## テーブルの段階 T.6b：zstd の展開（2026-11-19、Mac）
+
+- 決めたこと（ユーザー判断）：zstd は単独の `zstd.wasm`（予算 7KB）。`data-arrow.js` は自分の行（1.5KB）に分け、`arrow.wasm` は 30KB のまま。
+- 作り：
+  - `zstd`（純粋な MoonBit、全ターゲットでテスト）：fzstd 0.1.1（MIT）の展開の移植。FSE の表、ハフマンの表（重みの直接指定と FSE 圧縮）、リテラル（生・RLE・ハフマン 1 本と 4 本・表の使い回し）、シーケンス（既定の表・RLE・記述・使い回し、繰り返しオフセット）、生と RLE のブロック、複数のフレームとスキップ可能フレーム。読み取りはすべて範囲を検査する（移植元は範囲外を未定義値として読む作り）。出力は 1 本の伸びるバッファで、一致はフレームの先頭までさかのぼれる。辞書つきのフレームは断る。チェックサムは検査しない。NOTICE に足した。
+  - 流れは gzip と同じ：parquet.wasm と arrow.wasm の `pages()` が圧縮された部分（位置・長さ・展開後の長さ・コーデック）を並べ、`data-arrow.js` が gzip はブラウザで、zstd は zstd.wasm で展開して、ファイルの後ろに付けて `read()` に渡す。Arrow はレコードバッチごとにバッファの一覧を先に見て、ZSTD のものだけを並べる（LZ4 はこれまでどおり wasm の中）。
+- 計測（gzip）：`zstd.wasm` 6,665 バイト（予算 7KB）。`parquet.wasm` 22,896 → 22,927（24KB）、`arrow.wasm` 28,280 → 29,461（30KB）、`data-arrow.js` 926 → 1,129（1.5KB）、データワーカー 40,835 → 40,825（41KB：URL の受け取りをループにまとめた）、共有の接続 1,799 → 1,810。
+- ゴールデン：
+  - `zstd:golden`（Node の zlib = libzstd）：6 種類のデータ × 10 通りの大きさ（0 バイト〜3MB）を、レベル -5・1・3・9・19、チェックサムあり・内容の大きさなし・小さい窓で圧縮した 900 件を同じバイト列に戻す：0 differ（400 件 × 15 通りでも 0 differ）。複数フレームとスキップ可能フレーム、上限、辞書の断り。壊した入力（4 つ、各 3,000 回）でトラップなし。
+  - `parquet:golden`：pyarrow が zstd で書いた 2 ファイル（ページ v1・v2）が加わり 320 件 0 differ。断るのは lz4 と brotli。
+  - `arrow:golden`：apache-arrow に zstd で書かせたストリームとファイルが加わり、読み 6,720 件 0 differ。
+  - 手で（pyarrow 23.0.1）：zstd の Feather と IPC ストリーム（3 バッチ）を読めた。
+- 手元の道具：この Mac の MoonBit のコアが新しくなり、`Bytes::new` が非推奨の警告になった（`wasmio`・`surface_worker` の 2 か所を `Bytes::make` に直した。固定版でも通る書き方）。`moon fmt` が `style/` の 2 ファイルの末尾カンマを変えたが、戻した（版上げは別の PR で）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 999、wasm-gc 1011、js 1058、native 999：`zstd` 7 件、`formats` 1 件を足した）、npm のテスト（471）と大きさ、bench のテスト（23）、pack test の `npm,data,analysis,samples,showcase-html,cdn`（Chromium）と data ページを WebKit・Firefox で（pyarrow が zstd で書いた GeoParquet と Feather を読む）。

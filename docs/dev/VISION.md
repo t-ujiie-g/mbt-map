@@ -234,6 +234,10 @@ T.6 で決めたこと（2026-11-19、ユーザー判断）：
 - 範囲と列を絞って読む所まで入れる（T.6c）。まずファイル全体を読む T.6 を出す。
 - Parquet は `parquet.wasm` に分ける（予算 24KB。計測：分けて 22,755、Arrow と 1 つにすると 38,889 バイト）。
 
+T.6b で決めたこと（2026-11-19、ユーザー判断）：
+- zstd は単独の `zstd.wasm`（予算 7KB）。Parquet と Arrow の wasm が圧縮された部分を並べ、ワーカーが zstd.wasm で展開して渡す（gzip と同じ流れ）。
+- `data-arrow.js` は自分の行（1.5KB）に分ける。`arrow.wasm` は 30KB のまま。
+
 守ること：
 - ゴールデン：属性の操作と集計は、既存の実装（候補は Arquero）と結果を比べる。Arrow は apache-arrow、GeoParquet は既存の読み手と比べる。比べる相手は `bench/` だけに入れる。
 - 大きさ：入口と wasm を足すたびに `npm/scripts/size.mjs` に行を足す。表示ワーカーと解析ワーカーには式の評価器を入れない（§4、AGENTS.md §4）。

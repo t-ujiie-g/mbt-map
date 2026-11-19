@@ -1,0 +1,15 @@
+// The Zstandard module the data worker loads with the first ZSTD-compressed Parquet page or
+// Arrow buffer: `@zstd.decompress` over linear memory.
+
+import {
+  "t-ujiie-g/mbtmap_engine/wasmio",
+  "t-ujiie-g/mbtmap_engine/zstd",
+}
+
+supported_targets = "+wasm-gc"
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "wasm-gc": { "export-memory-name": "memory" } },
+)

@@ -430,10 +430,9 @@ fn parquet_footer(bytes : BytesView) -> Footer? {
 }
 
 ///|
-/// A page's header (parquet.thrift's `PageHeader`): its kind (0 a data page, 2 a dictionary
-/// page, 3 a data page of version 2; others are passed over), the sizes of its body, its value
-/// count and encoding, and for version 2 the bytes its levels take and whether the values after
-/// them are compressed.
+/// A page's header (parquet.thrift's `PageHeader`): `kind` 0 a data page, 2 a dictionary page,
+/// 3 a data page of version 2 (others are passed over); `levels` and `packed` are version 2's:
+/// the bytes its levels take, and whether the values after them are compressed.
 priv struct Page {
   kind : Int32
   uncompressed : Int32
@@ -984,7 +983,7 @@ fn Leaf::is_property(self : Leaf) -> Bool {
 }
 
 ///|
-/// A read in progress: the file, its footer, the pages the host inflated (GZIP) in the order
+/// A read in progress: the file, its footer, the pages the host inflated (GZIP, ZSTD) in the order
 /// they are met, and what one input may inflate to in all.
 priv struct ParquetReader {
   bytes : BytesView
@@ -1015,18 +1014,17 @@ fn ParquetReader::inflate(
         Some(bytes) => Ok(bytes[:])
         None => Err("a malformed Snappy block")
       }
-    2 => {
+    2 | 6 => {
       guard self.next_inflated < self.inflated.length() else {
-        return Err("a GZIP page that was not inflated")
+        return Err("a GZIP or ZSTD page that was not inflated")
       }
       self.next_inflated += 1
       let bytes = self.inflated[self.next_inflated - 1]
       guard bytes.length() == size else {
-        return Err("a GZIP page of another size than its header says")
+        return Err("a page of another size than its header says")
       }
       Ok(bytes)
     }
-    6 => Err("ZSTD-compressed pages are not supported")
     _ => Err("pages compressed with a codec that is not read (\{codec})")
   }
 }
@@ -1072,7 +1070,7 @@ fn ParquetReader::column(
     }
     let packed = chunk.codec != 0 && (page.kind != 3 || page.packed)
     if self.wanted is Some(wanted) {
-      if packed && chunk.codec == 2 {
+      if packed && (chunk.codec == 2 || chunk.codec == 6) {
         // Charged here too: the host allocates what a page says it inflates to.
         let size = (page.uncompressed - levels).to_int64()
         guard size <= self.budget else {
@@ -1082,6 +1080,7 @@ fn ParquetReader::column(
         wanted.push(body_at + levels)
         wanted.push(body.length() - levels)
         wanted.push(page.uncompressed - levels)
+        wanted.push(chunk.codec)
       }
       if page.kind != 2 {
         count += page.values
@@ -1299,11 +1298,9 @@ fn parquet_table(
 }
 
 ///|
-/// Reads a Parquet file: a row per record, its geometry from the WKB column that GeoParquet's
-/// `geo` metadata names (or a GEOMETRY column, or a binary column named `geometry`); flat
-/// columns of numbers, booleans, strings, dates and decimals are kept, others left out. Pages
-/// may be uncompressed or Snappy; GZIP pages are taken from `inflated`, in the order
-/// `parquet_gzip_pages` lists them.
+/// Reads a Parquet file (docs/dev/FORMATS.md "Parquet"): a row per record, its geometry from
+/// GeoParquet's WKB column; flat columns of numbers, booleans, strings, dates and decimals are
+/// kept. GZIP and ZSTD pages come in `inflated`, in `parquet_packed_pages`' order.
 pub fn read_parquet(
   bytes : BytesView,
   inflated~ : ArrayView[BytesView] = [],
@@ -1318,9 +1315,10 @@ pub fn read_parquet(
 }
 
 ///|
-/// The GZIP members `read_parquet` needs inflated: for each, in the order it takes them, its
-/// position in `bytes`, its length and the length it inflates to.
-pub fn parquet_gzip_pages(bytes : BytesView) -> Array[Int32] raise ReadError {
+/// The GZIP members and ZSTD frames `read_parquet` needs inflated: for each, in the order it
+/// takes them, its position in `bytes`, its length, the length it inflates to and its codec
+/// (2 GZIP, 6 ZSTD).
+pub fn parquet_packed_pages(bytes : BytesView) -> Array[Int32] raise ReadError {
   let wanted = []
   parquet_table(
     bytes,

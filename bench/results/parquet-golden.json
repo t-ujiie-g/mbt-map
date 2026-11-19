@@ -5,11 +5,11 @@
   "tables": 30,
   "results": {
     "pyarrow": {
-      "cases": 284,
+      "cases": 320,
       "differ": 0
     },
     "refused": {
-      "cases": 5,
+      "cases": 4,
       "differ": 0
     },
     "hyparquet": {
@@ -17,7 +17,7 @@
       "differ": 0
     },
     "damaged": {
-      "cases": 8,
+      "cases": 10,
       "differ": 0
     }
   }

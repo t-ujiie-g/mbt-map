@@ -739,7 +739,10 @@ read by number). arrow.wasm (`arrow_worker`) exports `read()`, `info_out()` and 
   validity and offsets, then the child, for lists; validity, then the children, for fixed-size
   lists and structs. A record batch with `compression` holds each buffer as 8 bytes (-1: stored as
   it is; else a length, which writers disagree on and is not used) and an LZ4 frame
-  (`formats/lz4.mbt`); codec 1 (ZSTD) is refused. Big-endian schemas are refused.
+  (`formats/lz4.mbt`, codec 0) or a ZSTD frame (codec 1). ZSTD frames are inflated by the host:
+  `pages()` lists them for the data placed as input (which stays) as i32 quadruples (position,
+  length, -1, 6), and `read(len_file)` takes the data's `len_file` bytes followed by each
+  inflated buffer, a u32 length before it, in that order. Big-endian schemas are refused.
 - The geometry column: the first field whose `ARROW:extension:name` is `geoarrow.wkb` (or
   `ogc.wkb`), `geoarrow.point`, `linestring`, `multipoint`, `polygon`, `multilinestring` or
   `multipolygon`; else the binary field the schema's `geo` metadata names as `primary_column`;
@@ -775,22 +778,31 @@ Thrift's compact protocol, its length and `PAR1`. parquet.wasm (`parquet_worker`
 - Values: `PLAIN` (0), `PLAIN_DICTIONARY` (2) and `RLE_DICTIONARY` (8: a bit width, then the RLE
   and bit-packing hybrid), `RLE` (3, booleans), `DELTA_BINARY_PACKED` (5), `DELTA_LENGTH_BYTE_ARRAY`
   (6), `DELTA_BYTE_ARRAY` (7) and `BYTE_STREAM_SPLIT` (9).
-- Codecs: 0 none, 1 Snappy (`snappy`, from its format description), 2 GZIP. GZIP is inflated by
-  the host: `pages()` lists, for the file placed as input (which stays), an i32 triple per page
-  body to inflate (its position, its length and the length it inflates to), and `read` takes the
-  file's `len_file` bytes followed by each inflated body, a u32 length before it, in that order.
+- Codecs: 0 none, 1 Snappy (`snappy`, from its format description), 2 GZIP, 6 ZSTD. GZIP and
+  ZSTD are inflated by the host (`DecompressionStream("gzip")`, zstd.wasm): `pages()` lists, for
+  the file placed as input (which stays), an i32 quadruple per page body to inflate (its
+  position, its length, the length it inflates to and its codec), and `read` takes the file's
+  `len_file` bytes followed by each inflated body, a u32 length before it, in that order. What
+  the listed bodies inflate to counts against the 1 GB of one input while they are listed.
 - The geometry column: a flat BYTE_ARRAY leaf of logical type GEOMETRY or GEOGRAPHY, else the one
   `geo` names as `primary_column`, else one named `geometry`, `geom` or `wkb_geometry`; its cells
   are WKB. `info_out()` gives its name, an empty string and the `geo` value.
 
+## Zstandard (`zstd/zstd.mbt`)
+
+zstd.wasm (`zstd_worker`): `inflate(limit)` inflates the frames placed as input (RFC 8878;
+skippable frames passed over, several frames one after another) to at most `limit` bytes at
+`output_addr`, and returns their length, or -1 for data that is malformed, names a dictionary or
+holds more. Checksums are not verified; a match may reach back to the start of its frame.
+
 ## Data worker messages (`data_worker/js/worker.mjs`)
 
-In: `{type: "init", wasm, proj, prj, xml, geotiff, arrow, parquet, parts?}` (`parts`: the URLs of the files imported on
+In: `{type: "init", wasm, proj, prj, xml, geotiff, arrow, parquet, zstd, parts?}` (`parts`: the URLs of the files imported on
 first use, `{zip, crs, fgb, geotiff, reproject, arrow}`, else those beside the worker; data.wasm instantiated with `{ host: { number,
 decode, text_code, number_text } }` from `dataImports` in `data_worker/js/read.mjs`; `proj` the URL
 of proj.wasm, `prj` of prjwkt.js, `xml` of xml.wasm, the KML and GPX module `xml_worker` instantiated
 with `{ Math, host }` (`hostText`), `geotiff` of geotiff.wasm, `arrow` of arrow.wasm and `parquet` of parquet.wasm (the same imports as
-xml.wasm), each loaded on first use), then `{type: "call", id, op: "read",
+xml.wasm) and `zstd` of zstd.wasm (no imports), each loaded on first use), then `{type: "call", id, op: "read",
 format, options, ...}` with the data as one of `url` (http(s), fetched with `init`'s string
 `headers` and `credentials`, none sent otherwise), `blob` or `bytes` (an ArrayBuffer), at most
 `MAX_INPUT_BYTES`, or for a shapefile `parts: {shp, dbf?, prj?, cpg?}`, each such a source, or
@@ -800,8 +812,8 @@ string), `encoding` (a .dbf's, a label or code page), `bbox` (FlatGeobuf only, f
 
 - `format` `"arrow"` ("Arrow"; `data-arrow.js`): arrow.wasm's `read()`, the CRS its geometry
   column names taking the place of `options.crs`; `"parquet"` ("Parquet"; `data-arrow.js`):
-  parquet.wasm's `pages()`, the listed bodies inflated with `DecompressionStream("gzip")`, then
-  `read(len_file)`, the CRS as for Arrow;
+  parquet.wasm's `pages()`, the listed bodies inflated (`DecompressionStream("gzip")`, zstd.wasm's
+  `inflate`), then `read(len_file)`, the CRS as for Arrow; Arrow's ZSTD buffers go the same way;
 - `format` `"csv"`, with `options` `{delimiter, header, dynamicTyping, latitude, longitude,
   geometry}` (`delimiter` a character code or -1 to guess; the column names optional). The wasm's
   `read_csv(names, delimiter, header, typing)` takes the three names, each ended by a NUL byte

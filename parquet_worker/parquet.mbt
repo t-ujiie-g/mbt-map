@@ -22,12 +22,11 @@ let last_info : Ref[@formats.ArrowInfo] = Ref({
 })
 
 ///|
-/// The GZIP members of the Parquet file placed as input that `read` needs inflated, as
-/// i32 pairs (a position and a length) at `output_addr`: their count times two, or minus an
-/// error message's length. The input stays.
+/// What of the Parquet file placed as input `read` needs inflated (`@formats.parquet_packed_pages`),
+/// as i32s at `output_addr`: their count, or minus an error message's length. The input stays.
 #export_name("pages")
 pub fn pages() -> Int32 {
-  let pages = @formats.parquet_gzip_pages(@wasmio.input_bytes()[:]) catch {
+  let pages = @formats.parquet_packed_pages(@wasmio.input_bytes()[:]) catch {
     e => return @wasmio.fail_with(e.message())
   }
   @wasmio.write_i32s(pages[:])

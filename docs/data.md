@@ -349,7 +349,7 @@ Arrow IPC, both the streaming format and the file format (Feather version 2), wi
 - **Geometry**: the first column with a GeoArrow extension type: `geoarrow.wkb`, or `geoarrow.point`, `linestring`, `polygon`, `multipoint`, `multilinestring` and `multipolygon` with interleaved (`FixedSizeList`) or separated (`Struct` of x, y) coordinates; Z and M are dropped. Without one, the binary column that the schema's `geo` metadata names as its primary column (what GeoPandas' `to_feather` writes), else a binary column named `geometry`, `geom` or `wkb_geometry`, read as WKB. A table without any gives rows without geometry. A WKB GeometryCollection gives one row per member.
 - **CRS**: the column's `crs` (GeoArrow's extension metadata, or the `geo` metadata) when it names an EPSG code, as a string (`"EPSG:6677"`) or as PROJJSON with an `id`; the rows are converted to longitude and latitude. None, `OGC:CRS84` and EPSG:4326 are longitude and latitude. A CRS that names no EPSG code fails unless `options.crs` says what it is.
 - **Columns**: integers of 8 to 64 bits (64-bit ones as numbers, exact up to 2^53), floats of 16 to 64 bits, 128- and 256-bit decimals (as numbers), booleans, strings (`Utf8`, `LargeUtf8`), dictionary-encoded columns of these, and nulls. Dates become `"YYYY-MM-DD"` and timestamps `"YYYY-MM-DDTHH:MM:SS"` (with milliseconds when they have any, and `Z` when the column has a time zone). Lists, structs, maps, unions, binary columns that are not the geometry, times, durations and intervals are left out. A null is `null`.
-- **Compression**: buffers compressed with LZ4 frames are read (pyarrow's and GeoPandas' default for Feather); ZSTD is refused. Checksums are not verified.
+- **Compression**: buffers compressed with LZ4 frames (pyarrow's and GeoPandas' default for Feather) or ZSTD are read. Checksums are not verified.
 
 **Writing.** `toArrowIPC` gives the bytes of one record batch.
 
@@ -388,7 +388,7 @@ Parquet files, with [GeoParquet](https://geoparquet.org/)'s metadata: what GeoPa
 - **CRS**: the column's `crs` in the `geo` metadata, as for [Arrow](#arrow): converted when it names an EPSG code, longitude and latitude when absent.
 - **Columns**: the rows' own columns (not inside a group, not repeated) of booleans, integers (signed and unsigned, 8 to 64 bits; 64-bit ones exact up to 2^53), floats (16 to 64 bits), decimals (as numbers; past 2^53 their last digits are approximate) and strings (`STRING`, `ENUM`, `JSON`). Dates become `"YYYY-MM-DD"`, timestamps (`INT96` ones too) `"YYYY-MM-DDTHH:MM:SS"` as for Arrow. Lists, maps, structs, binary columns that are not the geometry, times, UUIDs and intervals are left out. A null is `null`.
 - **Encodings**: plain, dictionary, RLE, the three delta encodings and byte stream split, in data pages of version 1 and 2.
-- **Compression**: none, Snappy and GZIP (inflated by the browser). ZSTD, LZ4 and Brotli pages are refused. Checksums are not verified.
+- **Compression**: none, Snappy, GZIP (inflated by the browser) and ZSTD. LZ4 and Brotli pages are refused. Checksums are not verified.
 
 ```js
 const buildings = await read("/data/buildings.parquet");
@@ -524,6 +524,7 @@ map.addSource("temp", {
 | Property cells (rows × columns: CSV, `.dbf`, TopoJSON, FlatGeobuf, KML, GPX, Arrow, Parquet) | 32 million |
 | Arrow | 65 536 fields nested 32 deep; compressed buffers inflating to 1 GB in all. |
 | Parquet | 65 536 schema elements, row groups and columns; pages inflating to 1 GB in all. |
+| ZSTD | No dictionaries; a match reaches back within its frame. |
 | Zip | 10 000 entries, 256 MB inflated in total |
 | XML (KML, GPX) | 256 levels deep, 1024 attributes per element, 4 million nodes. KML/GPX feature properties and GPX extension names per track: 4096. |
 | FlatGeobuf | 10 MB header, 4096 columns, 256 MB read with `bbox`. Files that point at the same data repeatedly are refused. |
@@ -544,10 +545,11 @@ The first call starts `data-worker.js` with `data.wasm`. These are fetched on fi
 | `data-fgb.js` | reading FlatGeobuf |
 | `arrow.wasm`, `data-arrow.js` | reading or writing Arrow |
 | `parquet.wasm`, `data-arrow.js` | reading Parquet |
+| `zstd.wasm` | reading a Parquet or Arrow file compressed with ZSTD |
 | `geotiff.wasm`, `data-geotiff.js` | calling `readRaster` and the other raster functions |
 | `projstring.js` | a PROJ string is given |
 | `data-reproject.js` | drawing a `reprojected` source's tiles |
 
-By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`), `arrowUrl` (`arrow.wasm`), `parquetUrl` (`parquet.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
+By default every file loads from next to `data.js`. The options of the first call can point elsewhere: `workerUrl` (`data-worker.js`), `wasmUrl` (`data.wasm`), `projWasmUrl`, `xmlUrl` (`xml.wasm`), `arrowUrl` (`arrow.wasm`), `parquetUrl` (`parquet.wasm`), `zstdUrl` (`zstd.wasm`) and `geotiffUrl` (`geotiff.wasm`). The `.js` parts load from next to `data.js` (where a bundler put them), or from next to the `data-worker.js` given as `workerUrl`. See [getting-started.md](./getting-started.md).
 
 `terminate()` stops the worker and rejects pending calls. The next call starts a new one.

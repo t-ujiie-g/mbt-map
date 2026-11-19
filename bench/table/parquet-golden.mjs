@@ -1,6 +1,5 @@
-// parquet.wasm vs files pyarrow wrote (bench/table/parquet/, with the rows
-// bench/data/parquet-fixtures.py expects of them) and vs hyparquet 1.33.1 on files hyparquet-writer 0.18.0
-// writes from seeded random tables; damaged input must be refused without a trap.
+// parquet.wasm (with zstd.wasm) vs files pyarrow wrote (bench/table/parquet/, their rows from
+// bench/data/parquet-fixtures.py) and vs hyparquet 1.33.1 on files hyparquet-writer 0.18.0 writes; damaged input must not trap.
 // Usage: node table/parquet-golden.mjs [--tables=N]; writes bench/results/parquet-golden.json.
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -14,6 +13,8 @@ import { arg } from "../lib/args.mjs";
 
 const TABLES = Number(arg("tables", 30));
 const DIR = path.join(ROOT, "bench/table/parquet");
+const BUILD = path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine");
+const z = (await WebAssembly.instantiate(await readFile(path.join(BUILD, "zstd_worker/zstd_worker.wasm")), {})).instance.exports;
 const w = (await WebAssembly.instantiate(await readFile(path.join(ROOT, "_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/parquet_worker/parquet_worker.wasm")), { Math, host: hostText() })).instance.exports;
 const decoder = new TextDecoder();
 function output(e, n) {
@@ -22,7 +23,7 @@ function output(e, n) {
 }
 // A Parquet file read as the data worker reads it: the rows as GeoJSON features and the CRS its geometry names.
 async function read(bytes) {
-  const { table, crs } = await readParquet(w, bytes, {}, { writeInput, output });
+  const { table, crs } = await readParquet(w, bytes, {}, { writeInput, output }, async () => z);
   return { features: tableToGeoJSON(new Uint8Array(table)).features, crs: crs ?? null };
 }
 
@@ -114,7 +115,7 @@ async function survives(bytes) {
     return !(e instanceof WebAssembly.RuntimeError) && !(e instanceof RangeError);
   }
 }
-for (const name of ["small-pages", "delta", "pages-v2-plain", "split"]) {
+for (const name of ["small-pages", "delta", "pages-v2-plain", "split", "zstd"]) {
   const bytes = new Uint8Array(await readFile(path.join(DIR, `${name}.parquet`)));
   let trapped = 0;
   for (let cut = 0; cut < bytes.length; cut += 1 + int(bytes.length / 300)) if (!(await survives(bytes.subarray(0, cut)))) trapped++;

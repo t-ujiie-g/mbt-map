@@ -64,6 +64,8 @@ test "write_arrow and read_arrow carry every geometry kind as WKB, in a stream a
     let bytes = @formats.write_arrow(t, file~).unwrap()
     assert_eq(bytes[0:6] == b"ARROW1", file)
     let (back, info) = @formats.read_arrow(bytes[:])
+    // Nothing for the host to inflate in what is not compressed.
+    assert_eq(@formats.arrow_packed_buffers(bytes[:]), [])
     assert_eq(info.geometry, "geometry")
     assert_true(info.extension.contains("OGC:CRS84"))
     assert_true(info.geo.contains("\"primary_column\":\"geometry\""))

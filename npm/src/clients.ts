@@ -4,7 +4,7 @@ import { wasmUrl, workerParts } from "./urls";
 import { WorkerClient } from "./worker-client";
 
 /** Where the data worker (`workerUrl`), its wasm (`wasmUrl`), proj.wasm (`projWasmUrl`), xml.wasm (`xmlUrl`),
- * geotiff.wasm (`geotiffUrl`), arrow.wasm (`arrowUrl`) and parquet.wasm (`parquetUrl`, each loaded on first use) are served;
+ * geotiff.wasm (`geotiffUrl`), arrow.wasm (`arrowUrl`), parquet.wasm (`parquetUrl`) and zstd.wasm (`zstdUrl`, each loaded on first use) are served;
  * by default next to this module. */
 export interface DataOptions {
   workerUrl?: string | URL;
@@ -14,6 +14,7 @@ export interface DataOptions {
   geotiffUrl?: string | URL;
   arrowUrl?: string | URL;
   parquetUrl?: string | URL;
+  zstdUrl?: string | URL;
 }
 
 /**
@@ -55,6 +56,7 @@ export function startData(options: DataOptions): void {
     geotiff: wasmUrl(options.geotiffUrl ?? new URL("./geotiff.wasm", import.meta.url), page),
     arrow: wasmUrl(options.arrowUrl ?? new URL("./arrow.wasm", import.meta.url), page),
     parquet: wasmUrl(options.parquetUrl ?? new URL("./parquet.wasm", import.meta.url), page),
+    zstd: wasmUrl(options.zstdUrl ?? new URL("./zstd.wasm", import.meta.url), page),
   }));
 }
 

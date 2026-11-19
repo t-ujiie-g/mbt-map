@@ -32,11 +32,28 @@ pub(all) struct ArrowInfo {
 ///|
 /// Reads an Arrow IPC stream or file: a row per record, its geometry from the first GeoArrow
 /// column or the binary column `geo` names (docs/dev/FORMATS.md "Arrow"); columns of numbers,
-/// booleans, strings, dates and decimals are kept, others left out.
+/// booleans, strings, dates and decimals are kept. ZSTD buffers come inflated in `inflated`.
 pub fn read_arrow(
   bytes : BytesView,
+  inflated~ : ArrayView[BytesView] = [],
 ) -> (@geom.Table, ArrowInfo) raise ReadError {
-  arrow_table(bytes, @geom.MAX_TABLE_POINTS, @geom.MAX_TABLE_CELLS)
+  arrow_table(
+    bytes,
+    @geom.MAX_TABLE_POINTS,
+    @geom.MAX_TABLE_CELLS,
+    host=inflated,
+  )
+}
+
+///|
+/// The ZSTD frames `read_arrow` needs inflated (LZ4 it inflates itself): for each, in the order
+/// it takes them as `inflated`, its position in `bytes`, its length, -1 (the length it inflates
+/// to is not known) and 6 (ZSTD, as Parquet numbers codecs).
+pub fn arrow_packed_buffers(bytes : BytesView) -> Array[Int32] raise ReadError {
+  let wanted = []
+  arrow_table(bytes, @geom.MAX_TABLE_POINTS, @geom.MAX_TABLE_CELLS, wanted~)
+  |> ignore
+  wanted
 }
 
 ///|
@@ -339,7 +356,10 @@ priv struct Batch {
   nodes : (Int32, Int32)
   buffers : (Int32, Int32)
   compressed : Bool
+  lz4 : Bool
   inflated : Ref[Int64]
+  // Per buffer, what the host inflated of it (ZSTD), if anything.
+  held : Array[BytesView?]
   mut node : Int32
   mut buffer : Int32
   mut error : String?
@@ -386,7 +406,9 @@ fn Batch::take(self : Batch, least : Int64) -> BytesView {
     return empty
   }
   let stored = self.body[offset.to_int():(offset + length).to_int()]
-  let bytes = if self.compressed && length > 0L {
+  let bytes = if self.held.get(self.buffer - 1) is Some(Some(inflated)) {
+    inflated
+  } else if self.compressed && length > 0L {
     self.inflate(stored)
   } else {
     stored
@@ -410,6 +432,10 @@ fn Batch::inflate(self : Batch, stored : BytesView) -> BytesView {
   }
   if le_u64(stored, 0).reinterpret_as_int64() == -1L {
     return stored[8:]
+  }
+  guard self.lz4 else {
+    self.fail("a ZSTD buffer that was not inflated")
+    return empty
   }
   let left = MAX_ARROW_INFLATED - self.inflated.val
   match lz4_frame(stored[8:], left.to_int()) {
@@ -965,6 +991,10 @@ priv struct ArrowReader {
   rows : ArrowRows
   max_cells : Int32
   inflated : Ref[Int64]
+  // The buffers the host inflated (ZSTD), in the order they are met, or where to list them.
+  host : ArrayView[BytesView]
+  mut next_host : Int32
+  wanted : Array[Int32]?
   mut geometry : (Int32, Encoding)?
   mut geo : String
   mut seen_schema : Bool
@@ -1025,6 +1055,7 @@ fn ArrowReader::data(
   kind : Int32,
   body : BytesView,
   at : Int32,
+  body_at : Int32,
 ) -> Unit raise ReadError {
   guard self.seen_schema else {
     raise arrow_error(at, "data before the schema")
@@ -1033,13 +1064,56 @@ fn ArrowReader::data(
   let rows = self.rows
   let record = if kind == 2 { flat.child(header, 1) } else { header }
   let compression = flat.child(record, 3)
-  guard compression < 0 || flat.int(compression, 0, 1, 0) == 0 else {
-    raise arrow_error(at, "ZSTD-compressed buffers are not supported")
+  let codec = if compression < 0 { -1 } else { flat.int(compression, 0, 1, 0) }
+  guard codec <= 1 else {
+    raise arrow_error(at, "buffers compressed with a codec that is not read")
   }
+  // ZSTD buffers are inflated by the host: listed on one pass, taken in that order on the next.
+  let held : Array[BytesView?] = []
+  if codec == 1 {
+    let (list, count) = flat.vector(record, 2, 16)
+    for i in 0..<count {
+      let (offset, length) = (
+        flat.i64(list + i * 16),
+        flat.i64(list + i * 16 + 8),
+      )
+      guard offset >= 0L &&
+        length >= 0L &&
+        offset <= body.length().to_int64() - length else {
+        raise arrow_error(at, "a buffer outside the message body")
+      }
+      let stored = body[offset.to_int():(offset + length).to_int()]
+      if length <= 8L || le_u64(stored, 0).reinterpret_as_int64() == -1L {
+        held.push(None)
+      } else if self.wanted is Some(wanted) {
+        wanted.push(body_at + offset.to_int() + 8)
+        wanted.push(length.to_int() - 8)
+        wanted.push(-1)
+        wanted.push(6)
+      } else {
+        guard self.next_host < self.host.length() else {
+          raise arrow_error(at, "a ZSTD buffer that was not inflated")
+        }
+        let inflated = self.host[self.next_host]
+        self.next_host += 1
+        self.inflated.val += inflated.length().to_int64()
+        guard self.inflated.val <= MAX_ARROW_INFLATED else {
+          raise arrow_error(
+            at,
+            "buffers that inflate past \{MAX_ARROW_INFLATED} bytes",
+          )
+        }
+        held.push(Some(inflated))
+      }
+    }
+  }
+  guard self.wanted is None else { return }
   let batch : Batch = {
     flat,
     body,
-    compressed: compression >= 0,
+    compressed: codec >= 0,
+    lz4: codec == 0,
+    held,
     inflated: self.inflated,
     nodes: flat.vector(record, 1, 16),
     buffers: flat.vector(record, 2, 16),
@@ -1159,7 +1233,7 @@ fn ArrowReader::message(
   let body = bytes[start:start + body_length.to_int()]
   match flat.int(message, 1, 1, 0) {
     1 => self.schema(flat, header, pos)
-    2 | 3 as kind => self.data(flat, header, kind, body, pos)
+    2 | 3 as kind => self.data(flat, header, kind, body, pos, start)
     _ => ()
   }
   start + body_length.to_int()
@@ -1175,6 +1249,8 @@ fn arrow_table(
   bytes : BytesView,
   max_points : Int32,
   max_cells : Int32,
+  host~ : ArrayView[BytesView] = [],
+  wanted? : Array[Int32],
 ) -> (@geom.Table, ArrowInfo) raise ReadError {
   let reader : ArrowReader = {
     bytes,
@@ -1190,6 +1266,9 @@ fn arrow_table(
     },
     max_cells,
     inflated: Ref(0L),
+    host,
+    next_host: 0,
+    wanted,
     geometry: None,
     geo: "",
     seen_schema: false,

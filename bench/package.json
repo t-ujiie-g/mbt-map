@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:moon": "cd .. && for t in wasm-gc js; do moon build bench/entry --release --target $t || exit 1; done && moon build worker bench/worker/compile_entry analysis_worker geometry_worker relate_worker shapes_worker surface_worker viewshed_worker route_worker proj_worker table_worker geodesic_worker data_worker arrow_worker parquet_worker geotiff_worker services_worker --release --target wasm-gc && moon build bundle/main bench/expr --release --target js",
+    "build:moon": "cd .. && for t in wasm-gc js; do moon build bench/entry --release --target $t || exit 1; done && moon build worker bench/worker/compile_entry analysis_worker geometry_worker relate_worker shapes_worker surface_worker viewshed_worker route_worker proj_worker table_worker geodesic_worker data_worker arrow_worker parquet_worker zstd_worker geotiff_worker services_worker --release --target wasm-gc && moon build bundle/main bench/expr --release --target js",
     "test": "node --test lib/*.test.mjs",
     "moonbit:style": "node moonbit/gen-style.mjs",
     "fixtures": "node maplibre/fetch-tiles.mjs",
@@ -60,6 +60,7 @@
     "surface:golden": "npm run build:moon && node surface/golden.mjs",
     "arrow:golden": "npm run build:moon && node table/arrow-golden.mjs",
     "parquet:golden": "npm run build:moon && node table/parquet-golden.mjs",
+    "zstd:golden": "npm run build:moon && node table/zstd-golden.mjs",
     "table:golden": "npm run build:moon && node table/golden.mjs",
     "table:source": "npm run build:moon && node --max-old-space-size=8192 table/source.mjs",
     "viewshed:golden": "npm run build:moon && node viewshed/golden.mjs",

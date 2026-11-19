@@ -22,11 +22,40 @@ let last_info : Ref[@formats.ArrowInfo] = Ref({
 })
 
 ///|
-/// Reads the Arrow IPC stream or file placed as input into `@geom.Table::to_bytes` form at
-/// `output_addr`: its length, or minus the length of the UTF-8 error message written instead.
+/// What of the Arrow data placed as input `read` needs inflated (`@formats.arrow_packed_buffers`),
+/// as i32s at `output_addr`: their count, or minus an error message's length. The input stays.
+#export_name("pages")
+pub fn pages() -> Int32 {
+  let pages = @formats.arrow_packed_buffers(@wasmio.input_bytes()[:]) catch {
+    e => return @wasmio.fail_with(e.message())
+  }
+  @wasmio.write_i32s(pages[:])
+}
+
+///|
+/// Reads the Arrow IPC stream or file in the input's first `len_file` bytes, the buffers the
+/// host inflated after it (a u32 length and the bytes each, in `pages`' order), into
+/// `@geom.Table::to_bytes` form at `output_addr`: its length, or minus an error message's.
 #export_name("read")
-pub fn read() -> Int32 {
-  let (table, info) = @formats.read_arrow(@wasmio.input_bytes()[:]) catch {
+pub fn read(len_file : Int32) -> Int32 {
+  let input = @wasmio.input_bytes()
+  guard len_file >= 0 && len_file <= input.length() else {
+    return @wasmio.fail_with("malformed input")
+  }
+  let inflated = []
+  let mut at = len_file
+  while at < input.length() {
+    guard at <= input.length() - 4 else {
+      return @wasmio.fail_with("malformed input")
+    }
+    let n = @core.ByteReader::new(input[at:at + 4]).u32()
+    guard n >= 0 && n <= input.length() - at - 4 else {
+      return @wasmio.fail_with("malformed input")
+    }
+    inflated.push(input[at + 4:at + 4 + n])
+    at += 4 + n
+  }
+  let (table, info) = @formats.read_arrow(input[:len_file], inflated~) catch {
     e => return @wasmio.fail_with(e.message())
   }
   last_info.val = info

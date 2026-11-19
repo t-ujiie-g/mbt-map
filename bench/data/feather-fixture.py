@@ -33,3 +33,8 @@ feather.write_feather(table, "bench/npm/pages/data/stations.feather", compressio
 import pyarrow.parquet as pq
 
 pq.write_table(table, "bench/npm/pages/data/stations.parquet", compression="gzip", row_group_size=2)
+
+# bench/npm/pages/data/stations-zstd.parquet and stations-zstd.feather: the same rows with ZSTD pages and
+# buffers, for zstd.wasm.
+pq.write_table(table, "bench/npm/pages/data/stations-zstd.parquet", compression="zstd")
+feather.write_feather(table, "bench/npm/pages/data/stations-zstd.feather", compression="zstd")
