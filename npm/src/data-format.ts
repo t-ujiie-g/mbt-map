@@ -4,9 +4,9 @@
 /**
  * The formats `mbt-map/data` reads: CSV (or TSV), WKT or EWKT, WKB or EWKB (binary or hexadecimal), a
  * shapefile (a .shp with its .dbf, .prj and .cpg, or a .zip of them), TopoJSON, KML (or KMZ, a zip
- * holding it), GPX, FlatGeobuf, GeoJSON and Arrow IPC (a stream or a file, Feather included).
+ * holding it), GPX, FlatGeobuf, GeoJSON, Arrow IPC (a stream or a file, Feather included) and Parquet (GeoParquet).
  */
-export type DataFormat = "csv" | "wkt" | "wkb" | "shapefile" | "topojson" | "kml" | "gpx" | "flatgeobuf" | "geojson" | "arrow";
+export type DataFormat = "csv" | "wkt" | "wkb" | "shapefile" | "topojson" | "kml" | "gpx" | "flatgeobuf" | "geojson" | "arrow" | "parquet";
 
 /** The formats `mbt-map/data` writes. */
 export type WriteFormat = "geojson" | "csv" | "kml";
@@ -53,12 +53,12 @@ export interface CsvOptions {
 
 const EXTENSIONS: Record<string, DataFormat> = {
   csv: "csv", tsv: "csv", txt: "csv", wkt: "wkt", wkb: "wkb", ewkb: "wkb", shp: "shapefile", zip: "shapefile", topojson: "topojson",
-  kml: "kml", kmz: "kml", gpx: "gpx", fgb: "flatgeobuf", geojson: "geojson", arrow: "arrow", arrows: "arrow", feather: "arrow",
+  kml: "kml", kmz: "kml", gpx: "gpx", fgb: "flatgeobuf", geojson: "geojson", arrow: "arrow", arrows: "arrow", feather: "arrow", parquet: "parquet", geoparquet: "parquet",
 };
 
 /**
  * The format a file name or URL path ends in (`.csv`, `.tsv`, `.txt`, `.wkt`, `.wkb`, `.ewkb`, `.shp`,
- * `.zip`, `.topojson`, `.kml`, `.kmz`, `.gpx`, `.fgb`, `.geojson`, `.arrow`, `.arrows`, `.feather`), or null. TopoJSON in a `.json` is read only when `format` says so.
+ * `.zip`, `.topojson`, `.kml`, `.kmz`, `.gpx`, `.fgb`, `.geojson`, `.arrow`, `.arrows`, `.feather`, `.parquet`, `.geoparquet`), or null. TopoJSON in a `.json` is read only when `format` says so.
  */
 export function formatOf(name: string): DataFormat | null {
   const m = /\.([a-z]+)$/i.exec(name);

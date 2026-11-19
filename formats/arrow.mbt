@@ -31,9 +31,8 @@ pub(all) struct ArrowInfo {
 
 ///|
 /// Reads an Arrow IPC stream or file: a row per record, its geometry from the first GeoArrow
-/// column (`geoarrow.wkb`, or `point` to `multipolygon` with interleaved or separated
-/// coordinates), else from the binary column `geo` names or one named `geometry`. Columns of
-/// numbers, booleans, strings, dates and decimals are kept; others are left out.
+/// column or the binary column `geo` names (docs/dev/FORMATS.md "Arrow"); columns of numbers,
+/// booleans, strings, dates and decimals are kept, others left out.
 pub fn read_arrow(
   bytes : BytesView,
 ) -> (@geom.Table, ArrowInfo) raise ReadError {
@@ -641,16 +640,11 @@ fn number_at(kind : Kind, data : BytesView, i : Int32) -> Double {
           carry = if carry == 1UL && limbs[k] == 0UL { 1UL } else { 0UL }
         }
       }
-      let mut v = 0.0
+      let mut sum = 0.0
       for k = count - 1; k >= 0; k = k - 1 {
-        v = v * 18446744073709551616.0 + limbs[k].to_double()
+        sum = sum * 18446744073709551616.0 + limbs[k].to_double()
       }
-      for _ in 0..<scale.min(400) {
-        v = v / 10.0
-      }
-      for _ in 0..<(-scale).min(400) {
-        v = v * 10.0
-      }
+      let v = scaled(sum, scale)
       if negative {
         -v
       } else {

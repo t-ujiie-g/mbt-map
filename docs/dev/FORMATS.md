@@ -757,13 +757,39 @@ read by number). arrow.wasm (`arrow_worker`) exports `read()`, `info_out()` and 
   `FixedSizeList<xy: double>[2]`, with `ARROW:extension:name`, `ARROW:extension:metadata`
   `{"crs":"OGC:CRS84","crs_type":"authority_code"}` and the schema's `geo` metadata.
 
+## Parquet (`formats/parquet.mbt`)
+
+Parquet as parquet-format lays it out: `PAR1`, the column chunks' pages, a FileMetaData in
+Thrift's compact protocol, its length and `PAR1`. parquet.wasm (`parquet_worker`) exports
+`pages()`, `read(len_file)` and `info_out()` (as arrow.wasm's).
+
+- The footer gives the schema (flattened depth first; a leaf directly under the root that is
+  not `REPEATED` is a column of the rows, the others are passed over with their chunks), the row
+  groups (a row count and a chunk per leaf: its codec, where its pages start, `dictionary_page_offset`
+  if before `data_page_offset`, and `total_compressed_size`) and the key-value metadata (`geo`).
+- A chunk's pages each start with a PageHeader: a dictionary page (plain values), data pages of
+  version 1 (the whole body compressed: for an optional column a 4-byte length and its
+  definition levels as RLE, then the values) and of version 2 (the levels first, never
+  compressed, then the values, compressed unless `is_compressed` is false). Index pages are
+  passed over.
+- Values: `PLAIN` (0), `PLAIN_DICTIONARY` (2) and `RLE_DICTIONARY` (8: a bit width, then the RLE
+  and bit-packing hybrid), `RLE` (3, booleans), `DELTA_BINARY_PACKED` (5), `DELTA_LENGTH_BYTE_ARRAY`
+  (6), `DELTA_BYTE_ARRAY` (7) and `BYTE_STREAM_SPLIT` (9).
+- Codecs: 0 none, 1 Snappy (`snappy`, from its format description), 2 GZIP. GZIP is inflated by
+  the host: `pages()` lists, for the file placed as input (which stays), an i32 triple per page
+  body to inflate (its position, its length and the length it inflates to), and `read` takes the
+  file's `len_file` bytes followed by each inflated body, a u32 length before it, in that order.
+- The geometry column: a flat BYTE_ARRAY leaf of logical type GEOMETRY or GEOGRAPHY, else the one
+  `geo` names as `primary_column`, else one named `geometry`, `geom` or `wkb_geometry`; its cells
+  are WKB. `info_out()` gives its name, an empty string and the `geo` value.
+
 ## Data worker messages (`data_worker/js/worker.mjs`)
 
-In: `{type: "init", wasm, proj, prj, xml, geotiff, arrow, parts?}` (`parts`: the URLs of the files imported on
+In: `{type: "init", wasm, proj, prj, xml, geotiff, arrow, parquet, parts?}` (`parts`: the URLs of the files imported on
 first use, `{zip, crs, fgb, geotiff, reproject, arrow}`, else those beside the worker; data.wasm instantiated with `{ host: { number,
 decode, text_code, number_text } }` from `dataImports` in `data_worker/js/read.mjs`; `proj` the URL
 of proj.wasm, `prj` of prjwkt.js, `xml` of xml.wasm, the KML and GPX module `xml_worker` instantiated
-with `{ Math, host }` (`hostText`), `geotiff` of geotiff.wasm and `arrow` of arrow.wasm (the same imports as
+with `{ Math, host }` (`hostText`), `geotiff` of geotiff.wasm, `arrow` of arrow.wasm and `parquet` of parquet.wasm (the same imports as
 xml.wasm), each loaded on first use), then `{type: "call", id, op: "read",
 format, options, ...}` with the data as one of `url` (http(s), fetched with `init`'s string
 `headers` and `credentials`, none sent otherwise), `blob` or `bytes` (an ArrayBuffer), at most
@@ -773,7 +799,9 @@ coordinates the data does not tag; refused for KML and GPX, which are EPSG:4326)
 string), `encoding` (a .dbf's, a label or code page), `bbox` (FlatGeobuf only, four finite numbers):
 
 - `format` `"arrow"` ("Arrow"; `data-arrow.js`): arrow.wasm's `read()`, the CRS its geometry
-  column names taking the place of `options.crs`;
+  column names taking the place of `options.crs`; `"parquet"` ("Parquet"; `data-arrow.js`):
+  parquet.wasm's `pages()`, the listed bodies inflated with `DecompressionStream("gzip")`, then
+  `read(len_file)`, the CRS as for Arrow;
 - `format` `"csv"`, with `options` `{delimiter, header, dynamicTyping, latitude, longitude,
   geometry}` (`delimiter` a character code or -1 to guess; the column names optional). The wasm's
   `read_csv(names, delimiter, header, typing)` takes the three names, each ended by a NUL byte

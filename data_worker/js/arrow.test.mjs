@@ -62,3 +62,38 @@ test("writeArrow: the options as the wasm's flags", () => {
   assert.equal(writeArrow(wasm, Uint8Array.of(5), { native: 1, file: "yes" }, io(wasm, seen)), 0);
   assert.equal(seen.length, 5);
 });
+
+test("readParquet: GZIP pages are inflated to the size the wasm says and follow the file, sized", async () => {
+  const { readParquet } = await import("./arrow.mjs");
+  const gzip = async (bytes) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());
+  const page = await gzip(Uint8Array.of(1, 2, 3, 4, 5));
+  const data = new Uint8Array(4 + page.length);
+  data.set(page, 4);
+  const run = async (size) => {
+    const seen = [];
+    // Three i32s listed (12 bytes): the page's position, its length and the size it inflates to.
+    const wasm = { pages: () => 3, read: (n) => `read ${n}`, info_out: () => "info" };
+    const output = (w, n) => (n === 12 ? Int32Array.of(4, page.length, size).buffer : n === "info" ? new ArrayBuffer(0) : new TextEncoder().encode(n).buffer);
+    const r = await readParquet(wasm, data, {}, { writeInput: (w, parts) => seen.push(parts), output });
+    return [new TextDecoder().decode(r.table), seen];
+  };
+  const [read, seen] = await run(5);
+  assert.equal(read, `read ${data.length}`);
+  assert.equal(seen.length, 2);
+  assert.deepEqual(seen[1].map((p) => Array.from(p)), [Array.from(data), [5, 0, 0, 0], [1, 2, 3, 4, 5]]);
+  await assert.rejects(run(4), /larger than its header says/);
+  await assert.rejects(run(2 ** 30 + 1), /inflate past 1 GB/);
+  await assert.rejects(run(-1), /inflate past 1 GB/);
+  await assert.rejects(run(6), /smaller than its header says/);
+});
+
+test("readParquet: a file without GZIP pages is read as it was placed", async () => {
+  const { readParquet } = await import("./arrow.mjs");
+  const seen = [];
+  const wasm = { pages: () => 0, read: () => "table", info_out: () => "info" };
+  const output = (w, n) => (n === "table" ? Uint8Array.of(7).buffer : new ArrayBuffer(0));
+  const r = await readParquet(wasm, Uint8Array.of(1, 2), { crs: 6677 }, { writeInput: (w, parts) => seen.push(parts), output });
+  assert.deepEqual([...new Uint8Array(r.table)], [7]);
+  assert.equal(r.crs, 6677);
+  assert.equal(seen.length, 1);
+});

@@ -76,6 +76,10 @@ The libraries mbt-map is compared with (the `devDependencies` of `bench/package.
 `npm/package.json` and `examples/react/package.json`) are installed from npm under their own
 licenses and are not redistributed. Those whose terms ask for a notice where they are used:
 
+- hyparquet 1.33.1, hyparquet-writer 0.18.0 and hyparquet-compressors 1.1.3 (bench devDependencies,
+  not shipped): the reader and writer bench/table/parquet-golden.mjs compares parquet.wasm with.
+  MIT, © Hyperparam. The files in bench/table/parquet/ and bench/npm/pages/data/stations.parquet
+  were written by pyarrow 23.0.1 (bench/data/parquet-fixtures.py, feather-fixture.py).
 - apache-arrow 21.2.0 and lz4js 0.2.0 (bench devDependencies, not shipped): the reader and writer
   bench/table/arrow-golden.mjs compares arrow.wasm with, and the codec apache-arrow compresses
   with there. Apache-2.0, © The Apache Software Foundation; ISC, © John Chadwick.

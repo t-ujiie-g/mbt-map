@@ -23,12 +23,13 @@ const prj = () => load("prj", (url) => import(url));
 const xml = () => load("xml", (url) => instantiate(url, { Math, host: hostText() }));
 const geotiff = () => load("geotiff", (url) => instantiate(url, {}));
 const arrow = () => load("arrow", (url) => instantiate(url, { Math, host: hostText() }));
+const parquet = () => load("parquet", (url) => instantiate(url, { Math, host: hostText() }));
 
 function check(ok) {
   if (!ok) throw new Error("invalid arguments");
 }
 
-const FORMATS = ["csv", "wkt", "wkb", "shapefile", "topojson", "kml", "gpx", "flatgeobuf", "geojson", "arrow"];
+const FORMATS = ["csv", "wkt", "wkb", "shapefile", "topojson", "kml", "gpx", "flatgeobuf", "geojson", "arrow", "parquet"];
 const PARTS = ["shp", "dbf", "prj", "cpg"];
 
 // A source's bytes: fetched (http(s) only, no credentials unless `init` asks for them; null for
@@ -131,11 +132,12 @@ onmessage = (e) => {
     urls.xml = msg.xml;
     urls.geotiff = msg.geotiff;
     urls.arrow = msg.arrow;
+    urls.parquet = msg.parquet;
     let wasm = null;
     const imports = dataImports(() => wasm.memory);
     ready = instantiate(msg.wasm, imports).then((exports) => {
       wasm = exports;
-      reader = dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow });
+      reader = dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parquet });
     });
   } else if (msg?.type === "call" && ready && Number.isInteger(msg.id) && ["read", "write", "readRaster", "rasterInfo", "rasterTile", "reprojectTile"].includes(msg.op)) {
     // Reprojected tiles use proj.wasm and the browser, not data.wasm's output, so they need not wait their turn.

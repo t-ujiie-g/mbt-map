@@ -777,7 +777,7 @@ export interface ReadOptions extends DataOptions, CsvOptions {
   analysis?: AnalysisOptions;
 }
 
-const FORMATS: DataFormat[] = ["csv", "wkt", "wkb", "shapefile", "topojson", "kml", "gpx", "flatgeobuf", "geojson", "arrow"];
+const FORMATS: DataFormat[] = ["csv", "wkt", "wkb", "shapefile", "topojson", "kml", "gpx", "flatgeobuf", "geojson", "arrow", "parquet"];
 
 function formatFor(options: ReadOptions, name: string | null): DataFormat {
   const format = options.format ?? (name === null ? null : formatOf(name));
