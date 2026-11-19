@@ -15,9 +15,9 @@ pub fn derive_columns(@geom.Table, ArrayView[(String, Derived)], hooks? : @style
 
 pub fn filter(@geom.Table, @style.Expr, hooks? : @style.Hooks) -> @geom.Table
 
-pub fn join(@geom.Table, @geom.Table, ArrayView[(String, String)], keep_left? : Bool, suffix? : (String, String)) -> Result[@geom.Table, String]
+pub fn join(@geom.Table, @geom.Table, ArrayView[(String, String)], keep_left? : Bool, suffix? : (String, String), max_cells? : Int32) -> Result[@geom.Table, String]
 
-pub fn join_pairs(@geom.Table, @geom.Table, ArrayView[Int32], keep_left? : Bool, suffix? : (String, String)) -> Result[@geom.Table, String]
+pub fn join_pairs(@geom.Table, @geom.Table, ArrayView[Int32], keep_left? : Bool, suffix? : (String, String), max_cells? : Int32) -> Result[@geom.Table, String]
 
 pub fn orderby(@geom.Table, ArrayView[(@style.Expr, Bool)], hooks? : @style.Hooks) -> @geom.Table
 

@@ -15,6 +15,14 @@ const MAX_THRIFT_DEPTH : Int32 = 32
 const MAX_PARQUET_ITEMS : Int32 = 65536
 
 ///|
+/// The most bytes of text a read makes of what a file shares between rows (dictionary values,
+/// DELTA_BYTE_ARRAY prefixes): what other readers' input may hold at most.
+const MAX_PARQUET_TEXT : Int64 = 1L << 28
+
+///|
+let too_much_text : String = "more than \{MAX_PARQUET_TEXT} bytes of text"
+
+///|
 /// Thrift compact protocol type codes.
 const T_TRUE : Int32 = 1
 
@@ -205,6 +213,26 @@ fn Thrift::list(self : Thrift) -> (Int32, Int32) {
 }
 
 ///|
+/// The type code of a `kind` inside a list, set or map: a boolean takes a byte there.
+fn boxed(kind : Int32) -> Int32 {
+  if kind == T_TRUE || kind == T_FALSE {
+    T_BYTE
+  } else {
+    kind
+  }
+}
+
+///|
+/// One level further in (a struct, list, set or map); false (bad) past `MAX_THRIFT_DEPTH`.
+fn Thrift::deeper(self : Thrift) -> Bool {
+  self.depth += 1
+  if self.depth > MAX_THRIFT_DEPTH {
+    self.bad = true
+  }
+  !self.bad
+}
+
+///|
 /// Passes over a value of type `kind` (a compact protocol type code).
 fn Thrift::skip(self : Thrift, kind : Int32) -> Unit {
   match kind {
@@ -221,21 +249,16 @@ fn Thrift::skip(self : Thrift, kind : Int32) -> Unit {
     T_BINARY => self.binary() |> ignore
     T_LIST | T_SET => {
       let (element, n) = self.list()
+      guard self.deeper() else { return }
       for _ in 0..<n {
         guard !self.bad else { return }
-        // A boolean in a list takes a byte.
-        self.skip(
-          if element == T_TRUE || element == T_FALSE {
-            T_BYTE
-          } else {
-            element
-          },
-        )
+        self.skip(boxed(element))
       }
+      self.depth -= 1
     }
     T_MAP => {
       let n = self.varint()
-      guard n <= (self.b.length() - self.pos).to_uint64() else {
+      guard n <= (self.b.length() - self.pos).to_uint64() && self.deeper() else {
         self.bad = true
         return
       }
@@ -243,10 +266,11 @@ fn Thrift::skip(self : Thrift, kind : Int32) -> Unit {
         let kinds = self.byte()
         for _ in 0..<n.to_int() {
           guard !self.bad else { return }
-          self.skip(kinds >> 4)
-          self.skip(kinds & 15)
+          self.skip(boxed(kinds >> 4))
+          self.skip(boxed(kinds & 15))
         }
       }
+      self.depth -= 1
     }
     T_STRUCT => self.fields((_, kind) => self.skip(kind))
     _ => self.bad = true
@@ -257,11 +281,7 @@ fn Thrift::skip(self : Thrift, kind : Int32) -> Unit {
 /// Calls `each` with the id and type of every field of the struct at the position; `each`
 /// must read the value or `skip` it.
 fn Thrift::fields(self : Thrift, each : (Int32, Int32) -> Unit) -> Unit {
-  self.depth += 1
-  guard self.depth <= MAX_THRIFT_DEPTH else {
-    self.bad = true
-    return
-  }
+  guard self.deeper() else { return }
   let mut id = 0
   while !self.bad {
     let head = self.byte()
@@ -548,6 +568,9 @@ fn parquet_footer(bytes : BytesView) -> Footer? {
               leaves.push({ ..leaf, path, })
             }
             None => {
+              if open.length() >= MAX_THRIFT_DEPTH {
+                t.bad = true
+              }
               open.push(children.max(0))
               names.push(name)
             }
@@ -649,7 +672,10 @@ fn snappy(src : BytesView, limit : Int32) -> Bytes? {
   let n = src.length()
   let t : Thrift = { b: src, pos: 0, bad: false, depth: 0, }
   let size = t.varint()
-  guard !t.bad && size <= limit.to_uint64() else { return None }
+  // A copy of two bytes gives at most 64: nothing inflates further.
+  guard !t.bad && size <= limit.to_uint64() && size / 64UL <= n.to_uint64() else {
+    return None
+  }
   let out = Out::new()
   out.room(size.to_int())
   let mut pos = t.pos
@@ -832,16 +858,15 @@ fn delta_packed(
       guard out.length() < total else { break }
       let width = widths[m].to_int()
       guard width <= 64 else { return None }
+      // A miniblock is stored whole: the values past the last are passed over, never read.
+      let bytes = (per.to_int64() * width.to_int64() + 7L) / 8L
+      guard bytes <= (b.length() - t.pos).to_int64() else { return None }
       let bits = Bits::new(b, t.pos)
-      for _ in 0..<per {
-        let delta = bits.take(width).reinterpret_as_int64()
-        if out.length() < total {
-          last = last + min_delta + delta
-          out.push(last)
-        }
+      for _ in 0..<per.min(total - out.length()) {
+        last = last + min_delta + bits.take(width).reinterpret_as_int64()
+        out.push(last)
       }
-      guard !bits.bad else { return None }
-      t.pos = bits.pos
+      t.pos += bytes.to_int()
     }
   }
   Some((out, t.pos))
@@ -855,6 +880,17 @@ priv enum Values {
   Reals(Array[Double])
   Flags(Array[Bool])
   Blobs(Array[BytesView])
+}
+
+///|
+/// No values of the kind `self` holds.
+fn Values::none(self : Values) -> Values {
+  match self {
+    Ints(_) => Ints([])
+    Reals(_) => Reals([])
+    Flags(_) => Flags([])
+    Blobs(_) => Blobs([])
+  }
 }
 
 ///|
@@ -883,17 +919,19 @@ fn Leaf::width(self : Leaf) -> Int32 {
 /// `count` values of `leaf` stored plainly in `b`; None if `b` is too short.
 fn plain_values(leaf : Leaf, b : BytesView, count : Int32) -> Values? {
   let width = leaf.width()
-  guard width == 0 ||
-    (width > 0 && count.to_int64() * width.to_int64() <= b.length().to_int64()) else {
-    return None
+  // A count is the file's word: nothing is made before the bytes are seen to hold it.
+  let fits = match leaf.physical {
+    BOOLEAN => count.to_int64() <= b.length().to_int64() * 8L
+    BYTE_ARRAY => count.to_int64() * 4L <= b.length().to_int64()
+    _ =>
+      width > 0 && count.to_int64() * width.to_int64() <= b.length().to_int64()
   }
+  guard count >= 0 && fits else { return None }
   let found = match leaf.physical {
-    BOOLEAN => {
-      guard (count + 7) / 8 <= b.length() else { return None }
+    BOOLEAN =>
       Flags(
         Array::makei(count, i => ((b[i >> 3].to_int() >> (i & 7)) & 1) == 1),
       )
-    }
     INT32 => Ints(Array::makei(count, i => le_i32(b, i * 4).to_int64()))
     INT64 =>
       Ints(Array::makei(count, i => le_u64(b, i * 8).reinterpret_as_int64()))
@@ -946,7 +984,7 @@ fn page_values(
         return Err("a dictionary-encoded page without its dictionary")
       }
       if count == 0 {
-        return Ok(Blobs([]))
+        return Ok(dictionary.none())
       }
       guard b.length() >= 1 &&
         rle_hybrid(b, 1, b[0].to_int(), count) is Some(ids) else {
@@ -1004,6 +1042,7 @@ fn page_values(
       }
       let out : Array[BytesView] = Array(capacity=count)
       let mut at = start
+      let mut joined_bytes = 0L
       for i, length in lengths {
         guard length >= 0L && length <= (b.length() - at).to_int64() else {
           return short
@@ -1023,6 +1062,10 @@ fn page_values(
         if prefix == 0L {
           out.push(suffix)
         } else {
+          joined_bytes += prefix + suffix.length().to_int64()
+          guard joined_bytes <= MAX_PARQUET_TEXT else {
+            return Err(too_much_text)
+          }
           let joined = Bytes::makei(prefix.to_int() + suffix.length(), k => {
             if k < prefix.to_int() {
               out[i - 1][k]
@@ -1225,7 +1268,7 @@ fn ParquetReader::column(
   let mut dictionary : Values? = None
   // Every value of the chunk, and for each row its value's place (-1 for null).
   let mut all : Values? = None
-  let places : Array[Int32] = Array(capacity=rows)
+  let places : Array[Int32] = []
   let mut count = 0
   while pos < end && places.length() < rows {
     let t : Thrift = { b: bytes[pos:end], pos: 0, bad: false, depth: 0, }
@@ -1297,7 +1340,7 @@ fn ParquetReader::column(
     let defined = if !leaf.optional {
       None
     } else if page.kind == DATA_PAGE_V2 {
-      rle_hybrid(body, 0, 1, page.values)
+      rle_hybrid(body[:levels], 0, 1, page.values)
     } else {
       guard data.length() >= 4 else { return Err("a page without its levels") }
       let length = le_i32(data, 0)
@@ -1342,7 +1385,7 @@ fn ParquetReader::column(
         (Some(Reals(a)), Reals(b)) => Reals(a + b)
         (Some(Flags(a)), Flags(b)) => Flags(a + b)
         (Some(Blobs(a)), Blobs(b)) => Blobs(a + b)
-        (Some(a), _) => a
+        _ => return Err("pages of different kinds of values")
       },
     )
   }
@@ -1526,9 +1569,16 @@ fn ParquetFile::table(
   let wkb = Wkb::new(b"", max_points)
   let none = Shapes::new()
   let mut used = 0
+  let mut seen = 0L
+  let mut text = 0L
   let props = []
   for g in self.groups {
     let (rows, chunks) = self.footer.groups[g]
+    // Rows without a property column are no cells: the rows themselves are counted.
+    seen += rows
+    guard rows >= 0L && seen <= max_cells.to_int64() else {
+      raise parquet_error(0, "more than \{max_cells} rows")
+    }
     let rows = rows.to_int()
     let columns = []
     for c, leaf in leaves {
@@ -1562,6 +1612,12 @@ fn ParquetFile::table(
       props.clear()
       for c, column in columns {
         if column is Some((values, places)) && geometry != Some(c) {
+          if values is Blobs(v) && places[i] >= 0 {
+            text += v[places[i]].length().to_int64()
+            guard text <= MAX_PARQUET_TEXT else {
+              raise parquet_error(0, too_much_text)
+            }
+          }
           props.push(
             (
               leaves[c].name,

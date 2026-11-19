@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：テーブルの段階の T.8（リファクタリングとセキュリティの点検、0.2.0）。T.7（例・文書・移行、別名の削除）まで済み。その後 Phase 21。
+- **次**：0.2.0 の版上げ（版の番号と CHANGELOG。タグと公開はユーザー）。テーブルの段階は T.8（リファクタリングとセキュリティの点検）まで済み。その後 Phase 21。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -693,3 +693,27 @@ Where things stand, decisions and open issues. The development history before th
 - 文書：`docs/migrating.md`（0.1 → 0.2：移った名前、変わった戻り値、新しい機能、配るファイル）。`docs/analysis.md` を `Table`・`fromGeoJSON` の言葉に直し、`docs/data.md` の入口をテーブル中心（読む → 絞る → 結合 → 集計 → 描くの例）に書き直した。`CHANGELOG.md` に Unreleased の節。
 - チェック（`bench/npm/checks/analyze.mjs`）：5 つの公園が最寄りの 4 駅に数えられ（有楽町駅 2、ほか 1）、ソースの `getData()` がテーブルで、列が `name, kind, name_station, parks, first`、タイルに「有楽町駅 2」があること。
 - 確かめ：`moon check --target all --deny-warn`、npm のテスト（475）と大きさ、bench のテスト（23）、pack test の全部（Chromium）。
+
+## テーブルの段階 T.8：リファクタリングとセキュリティの点検（2026-11-20、Mac）
+
+- リファクタリング（AGENTS §7 の順）：
+  - 定数：`formats/parquet.mbt` の Thrift の型、parquet.thrift の `Type`・`Encoding`・`CompressionCodec`・`PageType` に名前を付けた（1 回だけ出る構造体のフィールド番号は、その構造体を読む `match` のまま）。
+  - 重複：`Hooks`（式が要るホストの関数）が `tableops` と `cluster_props` に同じ定義で 2 つあった → `@style.Hooks` に 1 つ（両方の `core` の import が要らなくなった）。
+  - 統合しなかったもの：FlatBuffers の読み手 2 つ（FlatGeobuf の `Fgb`、Arrow の `Flat`）。エラーの持ち方が違い（位置と文言・読んだ量の予算／フラグ 1 つ）、無いテーブルの扱いも違う。別の wasm に入るので大きさも減らない。`value_of`・`prop_of`（`@geom.Prop` ↔ `@style.Value`）も、`geom` と `style` の両方を知る下の層が無いのでそのまま。`read_parquet`・`parquet_packed_pages` はテストだけが呼ぶが、ファイル全体の入口としてブラックボックスのテストが使うので公開のまま。
+- 性能（空間結合の集計、GSI の建物 42,515 ポリゴン × 8,018 点。`analysis:node`・`analysis:browser`）：Node 51.7 → 40.9 ms、Chromium 39.2 → 29.1、Firefox 50.5 → 36.5、WebKit 48.0 → 34.8（旧 `collect` は 9〜12 ms、Turf は 18〜26 ms）。
+  - 内訳を段ごとに測り、wasm をデバッグ名つきでプロファイルした（Node）：relate.wasm の初回 29.7 ms（うち組を作る所 13.0）、table.wasm 18.4、解析の wasm からの書き出し 4.9。
+  - 効いたもの 1：relate.wasm が入力を `Bytes` に写してから 1 バイトずつ読んでいた（`BytesView::at` が最上位）→ ほかのモジュールと同じく線形メモリからその場で読む（`@wasmio.input_table`）。初回 29.7 → 26.1 → 17.5 ms（下の 2 と合わせて）。
+  - 効いたもの 2：組を作る所は `Index::search` が 37%。行の多い側（ポリゴン）を 1 行ずつ、少ない側（点）のインデックスで引いていた → 行の少ない側から多い側のインデックスを引き、組を第 1 のテーブルの順に並べてから同じ順で判定する（`indexed`）。13.0 → 2.75 ms。`relate:golden` は all identical、`analysis:golden` も all identical のまま。
+  - 効かなかったもの（戻した）：`Index::search` のスタック用の配列を検索ごとに作らず使い回す → 13.0 ms のまま（検索そのものの時間だった）。
+  - 残り：table.wasm の 18 ms は 1 か所に集まっていない（文字列の属性の復号と符号化、属性の読み書き、書き出し）。旧 `collect` との差は、テーブルを 2 つのモジュールへ渡して結果のテーブルを作る分。
+- セキュリティの点検（AGENTS §8。読み取り専用のサブエージェントが調べ、再現する入力を作って確かめた）：メモリの外への読み書き、XSS、プロトタイプ汚染、資格情報つきの取得、スキームの抜け道は無し。`npm audit` は `npm/`・`bench/` とも 0 件、この段階で足した開発用の依存はすべて版を固定、配る `npm/` の依存は増えていない。見つかったのは、小さい細工ファイルでワーカーを止める・メモリを使い切らせる類と、正しいファイルでも値を落とすバグ 1 件。すべて直した：
+  - Parquet のバグ：辞書で符号化したページに値が 1 つも無い（全部 null）と、その列の後のページの値が全部 null になった（数値の列。DECIMAL などではトラップ）。値の無いページが別の種類の空の配列を返し、ページをつなぐ所が後のページを黙って捨てていた → 辞書と同じ種類の空を返し、種類が合わないページはエラーにする。pyarrow は既定で辞書を使うので、先頭のページが全部 null の疎な列で実際に起きうる。
+  - 行数の上限が無かった（Arrow・Parquet）：属性の列が無いテーブルはセル数が 0 のままなので、160 バイトのストリームや 29 バイトのフッターが 4 千万行（200MB）のテーブルになった → 読んだ行を数える（3,200 万行）。
+  - Parquet の DELTA_BINARY_PACKED：ブロックの大きさ 2^24・幅 0 のミニブロックで、値が 1 つでも 1,600 万回まわった（26 バイトのページあたり約 15 ms、1MB のファイルで約 10 分）→ 残りの値の数だけ読み、ミニブロックの残りはバイト数で飛ばす。20 ページ 291 → 1 ms。
+  - 行の間で共有される文字列（Parquet の辞書の値、DELTA_BYTE_ARRAY の接頭辞）：1MB のファイルが 419MB のテーブルになった → 読む属性の文字列とバイト列を合計 256MB まで（ほかの読み手の入力の上限と同じ）。
+  - Arrow のスキーマとフッター：オフセットが同じ文字列を何度でも指せる（フィールド × メタデータの組 × キーの長さ）→ 1 メッセージで復号する名前とメタデータを 64MB まで。フッターのブロックはファイルの順（同じメッセージを何度も読ませない）。辞書は 3,200 万値まで。
+  - そのほか：Thrift の `skip` がリストとマップで深さを数えていなかった（20 万重のリストでスタックあふれ）、マップの中の真偽値を 0 バイトと数えていた、スキーマの入れ子に上限が無かった → 32 段。`(n + 7) / 8` が 2^31 近くで負になった（Arrow の列の長さを 2^30 まで、Parquet は 64 ビットで比べる）。Arrow の入れ子の列の有効ビットが子より短いとトラップした（ビット列の外は null）。Parquet の件数からの先取り確保（行数ぶんの配列、BYTE_ARRAY・真偽値・幅 0 の固定長）をバイト数と照らしてから作る。Snappy の展開後の長さを入力の 64 倍まで。v2 の定義レベルをレベルの範囲だけから読む。結合の結果（同じキーが n × m 行になる）をテーブルの上限（3,200 万セル、2,000 万点）で断る。Parquet の範囲リクエストを同時 8 本まで。`type in GRIDS` などの引数の確かめを自分のキーだけに（`Object.hasOwn`）。
+  - 直さなかったもの：GZIP のページは、ヘッダーの言う長さ（1GB の予算の内）ぶんを先に確保する。Parquet のフッターは 256MB まで読む。`nearestJoin` の組は行 × `k` で、`k` は呼び出し側の値。
+- T.7 の CI で 1 度だけ起きた失敗（WebKit の React ショーケースで、テーブルのソースのタイルに地物が出ない）：再現できていない。チェックに待ち時間・地図のエラー・再描画を促した後の結果を残すようにしてある。
+- 計測（gzip）：relate.wasm 26,866 → 27,685 バイト（30KB）、table.wasm 46,848 → 47,226（50KB）、arrow.wasm 29,466 → 29,663（30KB）、parquet.wasm 25,943 → 26,323（27KB）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1010、wasm-gc 1023、js 1069、native 1010）、npm のテスト（475）と大きさ、bench のテスト（23）、`arrow:golden`・`parquet:golden`・`table:golden`・`zstd:golden`（0 differ）、`relate:golden`・`analysis:golden`（all identical）、pack test の `npm,geojson,data,analysis,samples,showcase-html`（Chromium）。

@@ -14,6 +14,10 @@ const MAX_ARROW_FIELDS : Int32 = 65536
 const MAX_ARROW_INFLATED : Int64 = 1L << 30
 
 ///|
+/// The most bytes of names and metadata one message's strings are decoded from.
+const MAX_ARROW_TEXT : Int32 = 1 << 26
+
+///|
 /// The field metadata key naming an extension type, and the one with its parameters.
 const EXTENSION_NAME : String = "ARROW:extension:name"
 
@@ -61,6 +65,7 @@ pub fn arrow_packed_buffers(bytes : BytesView) -> Array[Int32] raise ReadError {
 priv struct Flat {
   b : BytesView
   mut bad : Bool
+  mut text : Int32
 }
 
 ///|
@@ -180,6 +185,12 @@ fn Flat::vector(
 ///|
 fn Flat::string(self : Flat, table : Int32, field : Int32) -> String {
   let (at, n) = self.vector(table, field, 1)
+  // Offsets may share one string: what is decoded is counted, not what is stored.
+  self.text += n
+  guard self.text <= MAX_ARROW_TEXT else {
+    self.bad = true
+    return ""
+  }
   @core.utf8_lossy(self.b[at:at + n])
 }
 
@@ -329,7 +340,12 @@ priv struct Validity {
 
 ///|
 fn Validity::has(self : Validity, i : Int32) -> Bool {
-  self.bits.length() == 0 || ((self.bits[i >> 3].to_int() >> (i & 7)) & 1) == 1
+  // Past the bitmap (a list's or struct's own, shorter than its children): null.
+  self.bits.length() == 0 ||
+  (
+    i >> 3 < self.bits.length() &&
+    ((self.bits[i >> 3].to_int() >> (i & 7)) & 1) == 1
+  )
 }
 
 ///|
@@ -381,7 +397,8 @@ fn Batch::length(self : Batch) -> Int32 {
   }
   let n = self.flat.i64(self.nodes.0 + self.node * 16)
   self.node += 1
-  guard n >= 0L && n <= 0x7fffffffL else {
+  // A bitmap of more rows would not count its bytes in an Int32.
+  guard n >= 0L && n <= 0x3fffffffL else {
     self.fail("a column's length out of range")
     return 0
   }
@@ -990,6 +1007,7 @@ priv struct ArrowReader {
   dictionaries : Map[Int64, Array[@geom.Prop]]
   rows : ArrowRows
   max_cells : Int32
+  mut seen : Int64
   inflated : Ref[Int64]
   // The buffers the host inflated (ZSTD), in the order they are met, or where to list them.
   host : ArrayView[BytesView]
@@ -1138,6 +1156,12 @@ fn ArrowReader::data(
       []
     }
     if column.is_property() {
+      guard column.length() <= self.max_cells - values.length() else {
+        raise arrow_error(
+          at,
+          "a dictionary of more than \{self.max_cells} values",
+        )
+      }
       for i in 0..<column.length() {
         values.push(column.prop(i))
       }
@@ -1150,6 +1174,11 @@ fn ArrowReader::data(
   let n = if length_at < 0 { 0L } else { flat.i64(length_at) }
   guard batch.error is None && !flat.bad && n >= 0L && n <= 0x7fffffffL else {
     raise arrow_error(at, batch.error.unwrap_or("a malformed record batch"))
+  }
+  // Rows without a property column are no cells: the rows themselves are counted.
+  self.seen += n
+  guard self.seen <= self.max_cells.to_int64() else {
+    raise arrow_error(at, "more than \{self.max_cells} rows")
   }
   for c, column in columns {
     guard column is Skipped || column.length() >= n.to_int() else {
@@ -1219,7 +1248,7 @@ fn ArrowReader::message(
   guard size > 0 && size <= bytes.length() - pos else {
     raise arrow_error(pos, "a message past the end of the data")
   }
-  let flat : Flat = { b: bytes[pos:pos + size], bad: false, }
+  let flat : Flat = { b: bytes[pos:pos + size], bad: false, text: 0, }
   let message = flat.indirect(0)
   let header = flat.child(message, 2)
   let length_at = flat.field(message, 3)
@@ -1265,6 +1294,7 @@ fn arrow_table(
       error: None,
     },
     max_cells,
+    seen: 0L,
     inflated: Ref(0L),
     host,
     next_host: 0,
@@ -1282,16 +1312,19 @@ fn arrow_table(
       raise arrow_error(n - 10, "a footer past the start of the file")
     }
     let at = n - 10 - size
-    let flat : Flat = { b: bytes[at:n - 10], bad: false, }
+    let flat : Flat = { b: bytes[at:n - 10], bad: false, text: 0, }
     let footer = flat.indirect(0)
     reader.schema(flat, flat.child(footer, 1), at)
     for blocks in [2, 3] {
       let (list, count) = flat.vector(footer, blocks, 24)
+      // In the file's order, so that no message is read twice.
+      let mut last = -1L
       for i in 0..<count {
         let offset = flat.i64(list + i * 24)
-        guard offset >= 0L && offset <= n.to_int64() else {
-          raise arrow_error(at, "a block outside the file")
+        guard offset > last && offset <= n.to_int64() else {
+          raise arrow_error(at, "a block outside the file, or out of order")
         }
+        last = offset
         reader.message(offset.to_int()) |> ignore
       }
     }

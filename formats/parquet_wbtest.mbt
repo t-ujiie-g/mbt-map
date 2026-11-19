@@ -133,3 +133,84 @@ test "listing GZIP pages charges what they say they inflate to" {
   assert_eq(wanted.length(), 4)
   assert_true(wanted[2] > 536870912)
 }
+
+///|
+fn leaf_of(physical : Int32, length~ : Int32 = 0) -> Leaf {
+  {
+    name: "n",
+    path: "n",
+    physical,
+    length,
+    optional: true,
+    logical: Plain,
+    flat: true,
+  }
+}
+
+///|
+test "Thrift skips lists and maps nested past the limit as bad, and booleans in a map by a byte" {
+  // Lists of one list, 200 deep.
+  let deep : Thrift = {
+    b: Bytes::make(200, b'\x19')[:],
+    pos: 0,
+    bad: false,
+    depth: 0,
+  }
+  deep.skip(T_LIST)
+  assert_true(deep.bad)
+  // A map of two entries from true to false: its count, its types, then a byte each.
+  let map : Thrift = {
+    b: b"\x02\x12\x01\x02\x01\x02",
+    pos: 0,
+    bad: false,
+    depth: 0,
+  }
+  map.skip(T_MAP)
+  assert_false(map.bad)
+  assert_eq(map.pos, 6)
+  assert_eq(map.depth, 0)
+}
+
+///|
+test "delta_packed passes over the rest of a miniblock without reading it" {
+  // Blocks of 2^24 values in one miniblock of width 0: two values, the second from a delta of 3.
+  let b : Bytes = b"\x80\x80\x80\x08\x01\x02\x0e\x06\x00"
+  assert_eq(delta_packed(b[:], 0, 10), Some(([7L, 10L], 9)))
+  // Of width 8, the miniblock's bytes must be there.
+  assert_true(
+    delta_packed(b"\x80\x80\x80\x08\x01\x02\x0e\x06\x08\x00", 0, 10) is None,
+  )
+}
+
+///|
+test "plain_values takes no count the bytes cannot hold" {
+  let huge = 0x7fffffff
+  assert_true(plain_values(leaf_of(BOOLEAN), b"\x05", huge) is None)
+  assert_true(plain_values(leaf_of(BOOLEAN), b"\x05", 8) is Some(Flags(_)))
+  assert_true(plain_values(leaf_of(BYTE_ARRAY), b"", huge) is None)
+  assert_true(plain_values(leaf_of(FIXED_LEN_BYTE_ARRAY), b"", huge) is None)
+  assert_true(plain_values(leaf_of(INT32), b"\x01\x00\x00\x00", -1) is None)
+  assert_true(
+    plain_values(leaf_of(FIXED_LEN_BYTE_ARRAY, length=2), b"ab", 1)
+    is Some(Blobs([_])),
+  )
+}
+
+///|
+test "a dictionary page of no values keeps the column's kind of values" {
+  let leaf = leaf_of(INT32)
+  assert_true(
+    page_values(leaf, b"", 0, RLE_DICTIONARY, Some(Ints([42L]))) is Ok(Ints([])),
+  )
+  assert_true(
+    page_values(leaf, b"", 0, PLAIN_DICTIONARY, Some(Reals([1.5])))
+    is Ok(Reals([])),
+  )
+}
+
+///|
+test "snappy refuses a length its bytes cannot inflate to" {
+  // 3 bytes claiming 1000: more than 64 times them.
+  assert_true(snappy(b"\xe8\x07\x00", 2000) is None)
+  assert_true(snappy(b"\x02\x04hi", 2000) is Some(b"hi"))
+}

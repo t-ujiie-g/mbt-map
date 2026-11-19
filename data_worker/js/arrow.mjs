@@ -9,6 +9,8 @@ const encoder = new TextEncoder();
 // to be fetched as one.
 const TAIL = 65536;
 const GAP = 16384;
+// The most range requests of one read under way at once.
+const MAX_REQUESTS = 8;
 // `MAX_ARROW_INFLATED` (formats/arrow.mbt): the most one input's compressed parts may inflate to.
 const MAX_INFLATED = 2 ** 30;
 
@@ -189,9 +191,9 @@ export async function readParquet(wasm, { data, remote }, options, io, zstd, ran
     else wanted.push([offset, length]);
   }
   if (wanted.reduce((n, [, length]) => n + length, 0) > MAX_DATA_BYTES) throw new Error(`more than ${MAX_DATA_BYTES} bytes to read: narrow bbox or columns`);
-  // The first range alone, which may bring the whole file; the others at once, each held to its length.
+  // The first range alone, which may bring the whole file; the others a few at once, each held to its length.
   const parts = wanted.length ? [await get(...wanted[0])] : [];
-  parts.push(...(await Promise.all(wanted.slice(1).map(([offset, length]) => get(offset, length, false)))));
+  for (let i = 1; i < wanted.length; i += MAX_REQUESTS) parts.push(...(await Promise.all(wanted.slice(i, i + MAX_REQUESTS).map(([offset, length]) => get(offset, length, false)))));
   // parquet.wasm's input: how many parts, where each is in the file and how long, then their bytes.
   const table = new DataView(new ArrayBuffer(4 + wanted.length * 12));
   table.setUint32(0, wanted.length, true);

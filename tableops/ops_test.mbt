@@ -490,3 +490,21 @@ test "column_groups groups rows as rollup does, null with a missing key" {
     @tableops.column_groups(sample(), []) is Ok(([0, 0, 0, 0, 0], [0])),
   )
 }
+
+///|
+test "join and join_pairs refuse a result past a table's cells" {
+  // 7 rows of 5 columns.
+  let on = [("kind", "kind")]
+  assert_true(@tableops.join(sample(), lookup(), on, max_cells=35) is Ok(_))
+  assert_true(@tableops.join(sample(), lookup(), on, max_cells=34) is Err(_))
+  assert_true(@tableops.join(sample(), lookup(), on, max_cells=6) is Err(_))
+  let pairs = [0, 0, 0, 1]
+  let cells = 2 * (sample().columns.length() + lookup().columns.length())
+  assert_true(
+    @tableops.join_pairs(sample(), lookup(), pairs, max_cells=cells) is Ok(_),
+  )
+  assert_true(
+    @tableops.join_pairs(sample(), lookup(), pairs, max_cells=cells - 1)
+    is Err(_),
+  )
+}
