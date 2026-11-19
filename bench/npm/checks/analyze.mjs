@@ -29,10 +29,19 @@ export async function analyzeChecks(page) {
     };
   });
   // The table pipeline: parks from the CSV, counted at their nearest station and drawn from the table.
+  await page.evaluate(() => { window.__tableErrors = []; window.__map.on("error", (e) => window.__tableErrors.push(String(e.error?.message ?? e.error))); });
   await page.click("#analysis-table button >> nth=0");
   await page.waitForFunction(() => { const t = window.__analysis.state.table; return (t && t !== "loading") || window.__analysis.state.error; }, null, { timeout: 30_000 });
   // The table's rows reach the source's worker after the state is set.
-  await page.waitForFunction(async () => (await window.__map.querySourceFeatures("analysis-table")).length > 0, null, { timeout: 15_000 }).catch(() => {});
+  const asked = Date.now();
+  await page.waitForFunction(async () => (await window.__map.querySourceFeatures("analysis-table")).length > 0, null, { timeout: 30_000 }).catch(() => {});
+  const tiledAfter = Date.now() - asked;
+  // When the tiles never came: whether a frame asked for brings them.
+  const late = tiledAfter < 30_000 ? null : await page.evaluate(async () => {
+    window.__map.triggerRepaint();
+    await new Promise((f) => setTimeout(f, 3000));
+    return { errors: window.__tableErrors, moving: window.__map.isMoving(), features: (await window.__map.querySourceFeatures("analysis-table")).length, geojson: (await (await window.__map.getSource("analysis-table").getData()).toGeoJSON()).features.length };
+  });
   const table = await page.evaluate(async () => {
     const data = await window.__map.getSource("analysis-table").getData();
     return {
@@ -90,7 +99,7 @@ export async function analyzeChecks(page) {
     !table.error && table.state?.parks === 5 && table.isTable && JSON.stringify(table.state.stations) === JSON.stringify(TALLY) &&
     JSON.stringify(table.columns) === JSON.stringify(["name", "kind", "name_station", "parks", "first"]) &&
     table.tiled.includes("有楽町駅 2") && table.layer === "circle" && table.rows.includes("Parks read5") && cleared.state.table === null;
-  return { ok, fixtures, table, cells, route, routeLine, clipped, sight, viewshed, target, rows, picked, cleared: cleared.layers };
+  return { ok, fixtures, table, tiledAfter, late, cells, route, routeLine, clipped, sight, viewshed, target, rows, picked, cleared: cleared.layers };
 }
 
 // The route's roads: each feature's tile, its lines cut to that tile (inside it, of the deepest
