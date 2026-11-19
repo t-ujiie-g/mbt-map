@@ -17,4 +17,5 @@
 - [Web services](./services.md) (`mbt-map/services`)
 - [Data](./data.md) (`mbt-map/table`, `mbt-map/data`)
 - [Analysis](./analysis.md) (`mbt-map/table`, `mbt-map/analysis`)
+- [Migrating from 0.1 to 0.2](./migrating.md)
 - [3D](./3d.md) (`mbt-map/3d`)

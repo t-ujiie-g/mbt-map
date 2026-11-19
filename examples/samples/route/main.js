@@ -1,5 +1,5 @@
 import { Map } from "mbt-map";
-import { load } from "mbt-map/analysis";
+import { fromGeoJSON } from "mbt-map/table";
 
 // A jittered 10 x 10 grid of streets near Tokyo Station, some blocks missing.
 const SIZE = 10;
@@ -48,7 +48,7 @@ const map = new Map({
 });
 await map.once("load");
 
-const network = await (await load(roads)).network({ snap: 2 });
+const network = await (await fromGeoJSON(roads)).network({ snap: 2 });
 const status = document.getElementById("status");
 let ends = [];
 

@@ -12,17 +12,9 @@ export { classBreaks, classStep, MAX_CKMEANS_CELLS, MAX_CLASS_VALUES, MAX_CLASSE
 export { defineCrs, grid, Network, type BBox, type BufferMode, type BufferOptions, type DbscanKind, type DensityOptions, type InterpolateOptions, type LoadOptions, type NearestOnLine, type Relation } from "./table";
 export { distance };
 export type { AnalysisOptions, Crs };
-/** `mbt-map/table`'s `Table`, by its earlier name. */
-export const Dataset = Table;
-export type Dataset = Table;
 
 const crsArg = (crs: Crs) => crsArgOf(crs, "analysis", named);
 const isPoint = (p: unknown): p is [number, number] => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
-
-/** `mbt-map/table`'s `fromGeoJSON`, by its earlier name; a table is read again from its GeoJSON. */
-export async function load(data: unknown, options: LoadOptions = {}): Promise<Table> {
-  return fromGeoJSON(data instanceof Table ? await data.toGeoJSON() : data, options);
-}
 
 /** `DemGrid.viewshed`'s options, as gdal_viewshed's `-oz`, `-tz`, `-md`, `-cc`, `-om`, `-vv`, `-iv`, `-ov`. */
 export interface ViewshedOptions {

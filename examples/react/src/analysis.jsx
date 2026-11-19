@@ -2,7 +2,7 @@
 import { analysisActions, analysisRows } from "../../shared/analyze.js";
 import { useController } from "./use-controller.js";
 
-const TOOLS = [["cells", "Choropleth"], ["route", "Route on roads"], ["sight", "Line of sight and viewshed"]];
+const TOOLS = [["cells", "Choropleth"], ["table", "Table: read, join, count, draw"], ["route", "Route on roads"], ["sight", "Line of sight and viewshed"]];
 
 export function Analysis({ map, a }) {
   const s = useController(a);

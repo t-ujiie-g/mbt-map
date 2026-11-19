@@ -1,7 +1,8 @@
 // What the showcase computes off the map, in mbt-map/analysis's worker: the
 // places within 5 km of the view's center (a geodesic buffer, then the places
 // it covers, DE-9IM's coveredBy) and the center in Japan's plane rectangular system.
-import { load, transform } from "mbt-map/analysis";
+import { transform } from "mbt-map/analysis";
+import { fromGeoJSON } from "mbt-map/table";
 import { PLACES } from "./places.js";
 
 export const RADIUS_METERS = 5000;
@@ -28,9 +29,9 @@ let places = null;
 
 /** The places near `center` and `center` in the nearest plane rectangular zone. */
 export async function describe(center) {
-  places ??= load(PLACES);
+  places ??= fromGeoJSON(PLACES);
   const all = await places;
-  const point = await load({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [center.lng, center.lat] } });
+  const point = await fromGeoJSON({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [center.lng, center.lat] } });
   const zone = await point.buffer(RADIUS_METERS);
   const pairs = await all.relate(zone, "coveredBy");
   const inside = pairs.filter((_, k) => k % 2 === 0);

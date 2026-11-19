@@ -4,5 +4,5 @@ if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(cdn)) throw new Error(`cdn page: bad ?cd
 const dist = `${cdn}/bench/npm/pages/npm/node_modules/mbt-map/dist/`;
 const map = document.createElement("script");
 map.type = "importmap";
-map.textContent = JSON.stringify({ imports: { "mbt-map": `${dist}index.js`, "mbt-map/analysis": `${dist}analysis.js` } });
+map.textContent = JSON.stringify({ imports: { "mbt-map": `${dist}index.js`, "mbt-map/table": `${dist}table.js` } });
 document.currentScript.after(map);

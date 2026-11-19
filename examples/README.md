@@ -38,8 +38,9 @@
 - データの読み込み（`mbt-map/data`）：ファイルの選択かドロップ、または「Open the sample」（東京の公園の CSV）。CSV、Shapefile（zip）、KML/KMZ、GPX、TopoJSON、FlatGeobuf、GeoJSON を GeoJSON ソースとして重ね、範囲に移動する。読んだデータは GeoJSON、CSV、KML に書き出せる。スタイルを切り替えても残る。
 - Web サービス（`mbt-map/services`、「Data」のタブ）：WMS・WMTS の GetCapabilities の URL か ArcGIS の MapServer・ImageServer・FeatureServer のレイヤーの URL を読み、レイヤーを選んで地図に重ねる（WMS・WMTS・ArcGIS はラスタのソース、Web メルカトル以外の座標系は `reprojected`、FeatureServer のレイヤーは地物）。「Open GSI tiles (WMTS)」は、同梱した地理院の淡色地図の WMTS の GetCapabilities を読む。重ねたラスタは地点などのベクトルの重ねの下に入り、スタイルを切り替えても残る。
 - 計測（`createMeasurement` と `mbt-map/geodesic` の `measure`）：距離と面積。距離を測り終えると、その線の断面図（`createProfile`。標高は `mbt-map/analysis` の `sampleDem` で国土地理院の標高タイルから。グラフの上のポインタの位置は地図にも点で出る）。
-- 解析（`mbt-map/analysis`、「Analyze」のタブ）：
+- 解析（`mbt-map/table` と `mbt-map/analysis`、「Analyze」のタブ）：
   - 階級区分図：東京の地点のボロノイ領域（`voronoi`）の面積（`areas`）をフィールド演算で列にし（関数で m²、式で km²）、自然分類（`classBreaks` の jenks）の 5 階級で塗る（`classStep`）。凡例に階級が出る。
+  - テーブルの流れ（読む → 絞る → 結合 → 集計 → 描く）：公園の CSV を読み（`read`）、地点から駅だけを絞り（`filter`）、公園ごとに最寄りの駅を付け（`nearestJoin`）、駅ごとに公園を数え（`groupby`・`rollup`）、駅に結合して戻し（`join`）、そのテーブルをソースの `data` にそのまま渡して円で描く。
   - 道路での経路：表示しているタイルの道路（`querySourceFeatures`）から網を作り（`network`）、クリックした 2 点に近い道路の頂点の間の最短経路を描く。
   - 見通しと可視域：地図の中心（地上 2 m）から 2 km 以内で見える範囲を国土地理院の標高タイル（`loadDem`）から計算し（`viewshed`）、canvas のソースで塗る。続けてクリックした地点が見えるか（`lineOfSight`）を線で示し、遮る地点に赤い点を置く。
 - 画像の保存（`toBlob`。画面の 2 倍の解像度の PNG）。

@@ -37,6 +37,7 @@ const TAB_BODIES = {
     <h2>Elevation profile</h2><figure id="profile"></figure>`,
   analysis: `
     <h2>Choropleth</h2><div id="analysis-cells" class="chips"></div><dl id="analysis-cells-rows" class="rows"></dl>
+    <h2>Table: read, join, count, draw</h2><div id="analysis-table" class="chips"></div><dl id="analysis-table-rows" class="rows"></dl>
     <h2>Route on roads</h2><div id="analysis-route" class="chips"></div><dl id="analysis-route-rows" class="rows"></dl>
     <h2>Line of sight and viewshed</h2><div id="analysis-sight" class="chips"></div><dl id="analysis-sight-rows" class="rows"></dl>
     <p id="analysis-error" class="hint" hidden></p>`,

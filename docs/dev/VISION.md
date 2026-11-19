@@ -187,7 +187,7 @@ T.1 で決めたこと（2026-11-17、ユーザー判断）：
 | `DataTable` と `Dataset` | `Table`（1 つの型） | T.1 |
 | `DataTable.toGeoJSON()`（同期） | `Table.toGeoJSON()`（Promise） | T.1 |
 | `DataTable.tableBytes()` | なし（テーブルをそのまま使う） | T.1 で消した |
-| `load(geojson)` | `fromGeoJSON(geojson)` | T.1。`mbt-map/analysis` の `load`・`Dataset` は T.7 まで別名として残す |
+| `load(geojson)` | `fromGeoJSON(geojson)` | T.1。`mbt-map/analysis` の別名 `load`・`Dataset` は T.7 で消した |
 | `load(dataTable)` | 要らない（`read` の結果がそのままテーブル） | T.1 |
 | `grid`・`defineCrs`・`Network` | `mbt-map/table`（`mbt-map/analysis` からも出す） | T.1 |
 | `areas`・`lengths`・`centroids`・`bboxes`（配列を返す） | そのまま。`derive({ area: await t.areas() })` で列にできる | T.2 |
