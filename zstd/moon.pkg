@@ -1,0 +1,5 @@
+// A Zstandard decoder (RFC 8878), ported from fzstd. Pure MoonBit, tested on every backend.
+
+import {
+  "moonbitlang/core/encoding/utf8",
+} for "test"

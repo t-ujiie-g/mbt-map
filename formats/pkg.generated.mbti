@@ -13,9 +13,11 @@ pub const MAX_GEOJSON_DEPTH : Int32 = 64
 
 pub const MAX_GEOJSON_KEYS : Int32 = 4096
 
-pub fn parquet_gzip_pages(BytesView) -> Array[Int32] raise ReadError
+pub fn arrow_packed_buffers(BytesView) -> Array[Int32] raise ReadError
 
-pub fn read_arrow(BytesView) -> (@geom.Table, ArrowInfo) raise ReadError
+pub fn parquet_packed_pages(BytesView) -> Array[Int32] raise ReadError
+
+pub fn read_arrow(BytesView, inflated? : ArrayView[BytesView]) -> (@geom.Table, ArrowInfo) raise ReadError
 
 pub fn read_csv(BytesView, CsvOptions, slow_number? : (Int32, Int32) -> Double, srids? : Array[Int32]) -> @geom.Table raise ReadError
 

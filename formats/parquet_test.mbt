@@ -26,7 +26,7 @@ test "read_parquet reads rows, nulls and the WKB column the geo metadata names" 
     ])
     assert_true(t.kinds is [Point, Point, NoGeometry])
     assert_eq(t.coords, [1.0, 2.0, 3.0, 4.0])
-    assert_eq(@formats.parquet_gzip_pages(bytes[:]), [])
+    assert_eq(@formats.parquet_packed_pages(bytes[:]), [])
   }
 }
 
@@ -58,7 +58,7 @@ test "read_parquet refuses what is no Parquet file, by where and why" {
     damaged[i] = (damaged[i].to_int() ^ 0x55).to_byte()
     ignore(message(Bytes::from_array(damaged)))
   }
-  let listed = try @formats.parquet_gzip_pages(b"PAR1") catch {
+  let listed = try @formats.parquet_packed_pages(b"PAR1") catch {
     _ => [-1]
   } noraise {
     pages => pages

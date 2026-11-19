@@ -140,7 +140,7 @@ export function rasterSource({ bytes, blob, url, init }, max) {
 
 /** A reader over data.wasm (`imports` from `dataImports`): `read`, `write` and `readRaster` as the worker's messages;
  * `proj()`, `prj()`, `xml()` and `geotiff()` load proj.wasm, npm/src/prjwkt.ts, xml.wasm and geotiff.wasm on first use. */
-export function dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parquet }) {
+export function dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parquet, zstd }) {
   async function shapefile(files, options) {
     const { shp, dbf, cpg, prj: prjBytes } = files;
     if (!shp) throw new Error("no .shp");
@@ -207,9 +207,9 @@ export function dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parq
       return { table, ids: idsOf(wasm), layer: null, layers: [] };
     }
     if (format === "parquet") {
-      result = await (await arrowModule()).readParquet(await parquet(), data, options, { writeInput, output });
+      result = await (await arrowModule()).readParquet(await parquet(), data, options, { writeInput, output }, zstd);
     } else if (format === "arrow") {
-      result = (await arrowModule()).readArrow(await arrow(), data, options, { writeInput, output });
+      result = await (await arrowModule()).readArrow(await arrow(), data, options, { writeInput, output }, zstd);
     } else if (format === "flatgeobuf") {
       result = await flatgeobuf(parts, options);
     } else if (format === "shapefile") {

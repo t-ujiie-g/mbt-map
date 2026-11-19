@@ -270,9 +270,9 @@ export async function dataChecks(page, requests) {
     JSON.stringify(g.near) === JSON.stringify([[1, "東京", 2], [2, "日本橋", 3]]) &&
     JSON.stringify(g.fromBytes) === JSON.stringify(g.near) &&
     /invalid bbox/.test(g.badBbox) && /bbox is for FlatGeobuf/.test(g.csvBbox);
-  // Arrow and Parquet (arrow.wasm, parquet.wasm and data-arrow.js, fetched with the first read of each): a Feather
+  // Arrow and Parquet (arrow.wasm, parquet.wasm, zstd.wasm and data-arrow.js, fetched with the first read that needs each): a Feather
   // file (LZ4) and a GeoParquet file (GZIP) pyarrow wrote as geopandas does (WKB in plane IX), then tables written and read back.
-  const arrowBefore = requests.filter((u) => /\/(arrow\.wasm|parquet\.wasm|data-arrow\.js)$/.test(u)).length;
+  const arrowBefore = requests.filter((u) => /\/(arrow\.wasm|parquet\.wasm|zstd\.wasm|data-arrow\.js)$/.test(u)).length;
   const ar = await page.evaluate(async () => {
     const { read, fromArrow, fromGeoJSON } = await import("mbt-map/table");
     const fail = (p) => Promise.resolve(p).then(() => "", (e) => e.message);
@@ -291,6 +291,7 @@ export async function dataChecks(page, requests) {
     return {
       feather: [feather.format, feather.columns, await rows(feather)],
       parquet: [parquet.format, parquet.columns, JSON.stringify(await rows(parquet)) === JSON.stringify(await rows(feather))],
+      zstd: [JSON.stringify(await rows(await read("./stations-zstd.parquet"))) === JSON.stringify(await rows(feather)), JSON.stringify(await rows(await read("./stations-zstd.feather"))) === JSON.stringify(await rows(feather))],
       notParquet: await fail(read(new TextEncoder().encode("PAR1 and nothing else PAR1"), { format: "parquet" })),
       stream: [stream instanceof Uint8Array, await rows(await fromArrow(stream))],
       file: [new TextDecoder().decode(file.subarray(0, 6)), await rows(await fromArrow(new Blob([file]))), JSON.stringify(await rows(await read(file, { format: "arrow" })))],
@@ -300,10 +301,10 @@ export async function dataChecks(page, requests) {
       garbage: await fail(fromArrow(new TextEncoder().encode("ARROW1 is not all it takes"))),
     };
   });
-  const arrowAfter = requests.filter((u) => /\/(arrow\.wasm|parquet\.wasm|data-arrow\.js)$/.test(u)).length;
+  const arrowAfter = requests.filter((u) => /\/(arrow\.wasm|parquet\.wasm|zstd\.wasm|data-arrow\.js)$/.test(u)).length;
   const mixedRows = [["LineString", [139.76, 35.68, 139.77, 35.69], { name: "線", n: 1 }], ["Polygon", [139.7, 35.6, 139.8, 35.6, 139.8, 35.7, 139.7, 35.6], { name: "面", n: 2.5 }], [null, null, { name: null, n: null }]];
   const okArrow =
-    arrowBefore === 0 && arrowAfter === 3 &&
+    arrowBefore === 0 && arrowAfter === 4 &&
     JSON.stringify(ar.feather) === JSON.stringify(["arrow", ["name", "riders", "opened"], [
       ["Point", [139.7671, 35.6812], { name: "東京", riders: 462589, opened: "1970-01-01T00:00:00" }],
       ["Point", [139.763, 35.6751], { name: "有楽町", riders: 169550, opened: "1971-01-01T00:00:00" }],
@@ -312,7 +313,7 @@ export async function dataChecks(page, requests) {
     JSON.stringify(ar.stream) === JSON.stringify([true, mixedRows]) &&
     ar.file[0] === "ARROW1" && JSON.stringify(ar.file[1]) === JSON.stringify(mixedRows) && ar.file[2] === JSON.stringify(mixedRows) &&
     JSON.stringify(ar.native) === JSON.stringify([["Point", [139.7671, 35.6812], { name: "東京" }], ["Point", [139.763, 35.6751], { name: "有楽町" }], ["Point", [139.7709, 35.6918], { name: "神田" }]]) &&
-    JSON.stringify(ar.parquet) === JSON.stringify(["parquet", ["name", "riders", "opened"], true]) && /^mbt-map: data: malformed Parquet at/.test(ar.notParquet) &&
+    JSON.stringify(ar.parquet) === JSON.stringify(["parquet", ["name", "riders", "opened"], true]) && /^mbt-map: data: malformed Parquet at/.test(ar.notParquet) && JSON.stringify(ar.zstd) === "[true,true]" &&
     /mixed geometry types/.test(ar.mixedNative) && /invalid Arrow options/.test(ar.badOption) && /^mbt-map: data: malformed Arrow at/.test(ar.garbage);
   // Writing: a DataTable as GeoJSON, CSV and KML, a GeoJSON object as KML, each read back.
   const w = await page.evaluate(async () => {

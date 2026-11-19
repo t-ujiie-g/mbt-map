@@ -33,6 +33,7 @@ const WASM = {
   xml_worker: "xml.wasm",
   arrow_worker: "arrow.wasm",
   parquet_worker: "parquet.wasm",
+  zstd_worker: "zstd.wasm",
   geotiff_worker: "geotiff.wasm",
   services_worker: "services.wasm",
 };

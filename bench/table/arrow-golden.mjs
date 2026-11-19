@@ -6,6 +6,9 @@ import path from "node:path";
 import * as arrow from "apache-arrow";
 import wkx from "wkx";
 import lz4 from "lz4js";
+import zlib from "node:zlib";
+import { readArrow } from "../../data_worker/js/arrow.mjs";
+import { writeInput } from "../../wasmio/js/host.mjs";
 import { hostNumber, hostText } from "../../wasmio/js/host.mjs";
 import { tableToGeoJSON } from "../../wasmio/js/table.mjs";
 import { ROOT } from "../lib/root.mjs";
@@ -14,6 +17,7 @@ import { arg } from "../lib/args.mjs";
 const TABLES = Number(arg("tables", 40));
 // apache-arrow compresses buffers with the codec it is given.
 arrow.compressionRegistry.set(arrow.CompressionType.LZ4_FRAME, { encode: (data) => lz4.compress(data), decode: (data) => lz4.decompress(data) });
+arrow.compressionRegistry.set(arrow.CompressionType.ZSTD, { encode: (data) => new Uint8Array(zlib.zstdCompressSync(data)), decode: (data) => new Uint8Array(zlib.zstdDecompressSync(data)) });
 const wasmOf = async (name, imports) =>
   (await WebAssembly.instantiate(await readFile(path.join(ROOT, `_build/wasm-gc/release/build/t-ujiie-g/mbtmap_engine/${name}/${name}.wasm`)), imports)).instance.exports;
 let a;
@@ -38,15 +42,18 @@ function tableOf(features) {
   a.dispose(id);
   return bytes;
 }
+const z = await wasmOf("zstd_worker", {});
+const outputOf = (e, n) => out(e, n).buffer;
 const FLAGS = { native: 1, file: 2 };
 function write(table, flags) {
   put(w, table);
   return out(w, w.write(flags));
 }
-// Arrow bytes read: the rows as GeoJSON features and what the geometry column told of itself.
-function read(bytes) {
-  put(w, bytes);
-  const features = tableToGeoJSON(out(w, w.read())).features;
+// Arrow bytes read as the data worker reads them (ZSTD buffers through zstd.wasm): the rows as GeoJSON features
+// and what the geometry column told of itself.
+async function read(bytes) {
+  const { table } = await readArrow(w, bytes, { crs: 4326 }, { writeInput, output: outputOf }, async () => z);
+  const features = tableToGeoJSON(new Uint8Array(table)).features;
   const info = out(w, w.info_out());
   const view = new DataView(info.buffer);
   const texts = [];
@@ -192,7 +199,7 @@ for (let k = 0; k < TABLES; k++) {
     check("write", `${label} ${how} geometry`, json(want), json(got));
 
     // Our own reader gives the rows back (a mixed column as text, as it was written).
-    const back = read(bytes);
+    const back = await read(bytes);
     // A kind written among its multis reads back as the multi.
     const promoted = (g) => (g && native && g.type.toLowerCase() !== uniform ? { type: `Multi${g.type}`, coordinates: [g.coordinates] } : g);
     const rows = features.map((f) => ({ geometry: promoted(f.geometry), properties: Object.fromEntries(names.map((n) => [n, written(features.map((g) => g.properties[n])).values[features.indexOf(f)]])) }));
@@ -287,10 +294,11 @@ for (let k = 0; k < TABLES; k++) {
   const twice = random() < 0.4;
   if (twice) t = new arrow.Table(t.schema, [...t.batches, ...t.batches]);
   const label = `arrow table ${k} (${rows} rows, ${type} as ${encoding}${twice ? ", two batches" : ""})`;
-  for (const format of ["stream", "file", "stream lz4", "file lz4"]) {
+  for (const format of ["stream", "file", "stream lz4", "file lz4", "stream zstd", "file zstd"]) {
     let got;
     try {
-      got = read(arrow.tableToIPC(t, format.split(" ")[0], format.endsWith("lz4") ? arrow.CompressionType.LZ4_FRAME : null));
+      const codec = format.endsWith("lz4") ? arrow.CompressionType.LZ4_FRAME : format.endsWith("zstd") ? arrow.CompressionType.ZSTD : null;
+      got = await read(arrow.tableToIPC(t, format.split(" ")[0], codec));
     } catch (e) {
       check("read", `${label} ${format}`, "read", e.message);
       continue;
@@ -313,36 +321,30 @@ const sample = write(tableOf(makeFeatures(["Polygon", "MultiPolygon"], 12)), 0);
 const native = write(tableOf(makeFeatures(["LineString"], 12)), FLAGS.native | FLAGS.file);
 const foreign = arrow.tableToIPC(tableWith(Object.fromEntries(Object.entries(typed(9)).map(([name, [v]]) => [name, v]))), "file");
 const packed = arrow.tableToIPC(tableWith(Object.fromEntries(Object.entries(typed(40)).map(([name, [v]]) => [name, v]))), "stream", arrow.CompressionType.LZ4_FRAME);
-function survives(bytes) {
+const zipped = arrow.tableToIPC(tableWith(Object.fromEntries(Object.entries(typed(40)).map(([name, [v]]) => [name, v]))), "file", arrow.CompressionType.ZSTD);
+async function survives(bytes) {
   try {
-    read(bytes);
+    await read(bytes);
     return true;
   } catch (e) {
     return !(e instanceof WebAssembly.RuntimeError) && !(e instanceof RangeError);
   }
 }
-for (const [name, bytes] of [["wkb stream", sample], ["native file", native], ["apache-arrow file", foreign], ["apache-arrow LZ4 stream", packed]]) {
+for (const [name, bytes] of [["wkb stream", sample], ["native file", native], ["apache-arrow file", foreign], ["apache-arrow LZ4 stream", packed], ["apache-arrow ZSTD file", zipped]]) {
   let trapped = 0;
-  for (let cut = 0; cut < bytes.length; cut += 1 + int(7)) if (!survives(bytes.subarray(0, cut))) trapped++;
+  for (let cut = 0; cut < bytes.length; cut += 1 + int(7)) if (!(await survives(bytes.subarray(0, cut)))) trapped++;
   check("damaged", `${name} cut short`, 0, trapped);
   trapped = 0;
   for (let i = 0; i < 4000; i++) {
     const damaged = bytes.slice();
     for (let n = 1 + int(3); n > 0; n--) damaged[int(damaged.length)] = pick([0, 1, 0x7f, 0x80, 0xff, int(256)]);
-    if (!survives(damaged)) trapped++;
+    if (!(await survives(damaged))) trapped++;
   }
   check("damaged", `${name} bytes changed`, 0, trapped);
 }
-const refusal = (bytes) => {
-  try {
-    read(bytes);
-    return "";
-  } catch (e) {
-    return e.message;
-  }
-};
-check("refused", "no schema", "true", String(/no schema/.test(refusal(new Uint8Array(0)))));
-check("refused", "text", "true", String(/^malformed Arrow at/.test(refusal(encoder.encode("not an arrow file at all")))));
+const refusal = (bytes) => read(bytes).then(() => "", (e) => e.message);
+check("refused", "no schema", "true", String(/no schema/.test(await refusal(new Uint8Array(0)))));
+check("refused", "text", "true", String(/^malformed Arrow at/.test(await refusal(encoder.encode("not an arrow file at all")))));
 
 console.table(Object.entries(results).map(([group, r]) => ({ group, cases: r.cases, differ: r.differ })));
 if (failures.length) console.log(JSON.stringify(failures, null, 1));

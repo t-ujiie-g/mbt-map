@@ -154,10 +154,11 @@ write("named", geometry="geom", geo=False, compression="snappy", n=40, only=("te
 write("other-name", geometry="shape", compression="snappy", n=40, only=("text",))
 write("no-geometry", shaped=False, compression="snappy", n=60)
 write("empty", n=0, compression="snappy", only=("text", "i32"))
-write("zstd", compression="zstd", n=40, only=("text",))
+write("zstd", compression="zstd", data_page_size=2000, row_group_size=120)
+write("zstd-v2", compression="zstd", data_page_version="2.0", use_dictionary=False, n=40, only=("text", "i32", "f64"))
 write("lz4", compression="lz4", n=40, only=("text",))
 write("brotli", compression="brotli", n=40, only=("text",))
-for name, why in (("zstd", "ZSTD-compressed pages are not supported"), ("lz4", "a codec that is not read (7)"), ("brotli", "a codec that is not read (4)")):
+for name, why in (("lz4", "a codec that is not read (7)"), ("brotli", "a codec that is not read (4)")):
     expected["files"][name] = {"refused": why}
 
 with open(OUT + "expected.json", "w") as f:

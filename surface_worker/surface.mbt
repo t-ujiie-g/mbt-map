@@ -39,7 +39,7 @@ fn input(len_t : Int32, len_s : Int32) -> Input? {
   let rest = if fit {
     @wasmio.input_slice(len_t + len_s, len - len_t - len_s)
   } else {
-    Bytes::new(0)
+    Bytes::make(0, b'\x00')
   }
   @wasmio.clear_input()
   guard fit && table is Some(table) else { return None }

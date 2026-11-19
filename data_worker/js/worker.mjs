@@ -24,6 +24,7 @@ const xml = () => load("xml", (url) => instantiate(url, { Math, host: hostText()
 const geotiff = () => load("geotiff", (url) => instantiate(url, {}));
 const arrow = () => load("arrow", (url) => instantiate(url, { Math, host: hostText() }));
 const parquet = () => load("parquet", (url) => instantiate(url, { Math, host: hostText() }));
+const zstd = () => load("zstd", (url) => instantiate(url, {}));
 
 function check(ok) {
   if (!ok) throw new Error("invalid arguments");
@@ -127,17 +128,12 @@ onmessage = (e) => {
   const msg = e.data;
   if (msg?.type === "init" && !ready && typeof msg.wasm === "string") {
     setDataParts(msg.parts);
-    urls.proj = msg.proj;
-    urls.prj = msg.prj;
-    urls.xml = msg.xml;
-    urls.geotiff = msg.geotiff;
-    urls.arrow = msg.arrow;
-    urls.parquet = msg.parquet;
+    for (const name of ["proj", "prj", "xml", "geotiff", "arrow", "parquet", "zstd"]) urls[name] = msg[name];
     let wasm = null;
     const imports = dataImports(() => wasm.memory);
     ready = instantiate(msg.wasm, imports).then((exports) => {
       wasm = exports;
-      reader = dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parquet });
+      reader = dataReader(wasm, imports, { proj, prj, xml, geotiff, arrow, parquet, zstd });
     });
   } else if (msg?.type === "call" && ready && Number.isInteger(msg.id) && ["read", "write", "readRaster", "rasterInfo", "rasterTile", "reprojectTile"].includes(msg.op)) {
     // Reprojected tiles use proj.wasm and the browser, not data.wasm's output, so they need not wait their turn.

@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 167170,
+      "bytes": 167081,
       "budget": 168000
     },
     {
@@ -86,7 +86,7 @@
     },
     {
       "name": "services worker (ArcGIS f=json and f=pbf; loaded by mbt-map/services on the first such read)",
-      "bytes": 20317,
+      "bytes": 20307,
       "budget": 21000
     },
     {
@@ -96,7 +96,7 @@
     },
     {
       "name": "display worker",
-      "bytes": 85382,
+      "bytes": 85399,
       "budget": 100000
     },
     {
@@ -116,17 +116,17 @@
     },
     {
       "name": "GeoJSON worker",
-      "bytes": 38309,
+      "bytes": 38255,
       "budget": 39000
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 57778,
+      "bytes": 57747,
       "budget": 59000
     },
     {
       "name": "worker clients (loaded by mbt-map/table, mbt-map/data and mbt-map/analysis)",
-      "bytes": 1799,
+      "bytes": 1810,
       "budget": 2000
     },
     {
@@ -146,47 +146,47 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 29526,
+      "bytes": 29519,
       "budget": 31000
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 45237,
+      "bytes": 45222,
       "budget": 50000
     },
     {
       "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
-      "bytes": 26881,
+      "bytes": 26866,
       "budget": 30000
     },
     {
       "name": "shapes (simplify, hulls, Delaunay, Voronoi, line slices; loaded by the analysis worker on first use)",
-      "bytes": 27963,
+      "bytes": 27964,
       "budget": 30000
     },
     {
       "name": "surfaces (grids, IDW, clusters, contours, density; loaded by the analysis worker on first use)",
-      "bytes": 29259,
+      "bytes": 29235,
       "budget": 30000
     },
     {
       "name": "viewshed (GDAL's; loaded by the analysis worker on first use)",
-      "bytes": 10747,
+      "bytes": 10737,
       "budget": 12000
     },
     {
       "name": "routing (geojson-path-finder; loaded by the analysis worker on first use)",
-      "bytes": 16061,
+      "bytes": 16068,
       "budget": 17000
     },
     {
       "name": "table operations (select, filter, derive, orderby, rollup, joins; loaded by the analysis worker on first use)",
-      "bytes": 46881,
+      "bytes": 46848,
       "budget": 50000
     },
     {
       "name": "coordinate systems (loaded by the analysis and data workers on first use)",
-      "bytes": 21650,
+      "bytes": 21641,
       "budget": 25000
     },
     {
@@ -196,7 +196,7 @@
     },
     {
       "name": "geodesic worker",
-      "bytes": 12070,
+      "bytes": 12060,
       "budget": 15000
     },
     {
@@ -221,7 +221,7 @@
     },
     {
       "name": "3d worker",
-      "bytes": 44150,
+      "bytes": 44102,
       "budget": 50000
     },
     {
@@ -231,7 +231,7 @@
     },
     {
       "name": "data worker",
-      "bytes": 40829,
+      "bytes": 40825,
       "budget": 41000
     },
     {
@@ -261,22 +261,32 @@
     },
     {
       "name": "KML and GPX (loaded by the data worker on the first such read)",
-      "bytes": 26777,
+      "bytes": 26782,
       "budget": 27000
     },
     {
+      "name": "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)",
+      "bytes": 1129,
+      "budget": 1500
+    },
+    {
       "name": "Arrow IPC (loaded by the data worker on the first Arrow read or write)",
-      "bytes": 29268,
+      "bytes": 29461,
       "budget": 30000
     },
     {
-      "name": "Parquet (loaded by the data worker on the first Parquet read, with data-arrow.js)",
-      "bytes": 22920,
+      "name": "Parquet (loaded by the data worker on the first Parquet read)",
+      "bytes": 22927,
       "budget": 24000
     },
     {
+      "name": "Zstandard (loaded by the data worker with the first ZSTD-compressed Parquet page or Arrow buffer)",
+      "bytes": 6665,
+      "budget": 7000
+    },
+    {
       "name": "GeoTIFF (loaded by the data worker on the first raster read)",
-      "bytes": 19807,
+      "bytes": 19781,
       "budget": 20000
     },
     {

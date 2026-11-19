@@ -1,0 +1,19 @@
+{
+  "node": "v22.23.4",
+  "zstd": "1.5.7",
+  "cases": 60,
+  "results": {
+    "inflate": {
+      "cases": 900,
+      "differ": 0
+    },
+    "frames": {
+      "cases": 6,
+      "differ": 0
+    },
+    "damaged": {
+      "cases": 8,
+      "differ": 0
+    }
+  }
+}

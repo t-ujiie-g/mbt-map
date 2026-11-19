@@ -125,7 +125,9 @@ pub fn input_byte_array() -> FixedArray[Byte] {
 /// Input bytes `[start, start + len)` copied into a `Bytes`, four bytes per
 /// load; empty unless they are all input.
 pub fn input_slice(start : Int32, len : Int32) -> Bytes {
-  guard lengths_fit(start, len, input_len.val) else { return Bytes::new(0) }
+  guard lengths_fit(start, len, input_len.val) else {
+    return Bytes::make(0, b'\x00')
+  }
   let arr = FixedArray::make(len, b'\x00')
   let words = len / 4
   let at = PAGE + start

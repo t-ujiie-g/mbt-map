@@ -520,6 +520,12 @@ under the Apache License 2.0 are under the terms in LICENSE.
     Copyright (c) 2011-2022, Charles Karney
     License: MIT License (text in section 2).
 
+- zstd/zstd.mbt: ported from fzstd 0.1.1 https://github.com/101arrowz/fzstd — MIT License:
+
+    Copyright (c) 2020 Arjun Barrett
+
+    License: MIT License (text in section 2).
+
 - tableops/rollup.mbt, tableops/join.mbt: the aggregates and the joined rows' order follow
   Arquero 8.0.3 (src/op/aggregate-functions.js, src/util/quantile.js, src/verbs/join.js)
 - tableops/orderby.mbt: the order of two values follows Arquero 8.0.3's comparator
