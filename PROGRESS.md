@@ -717,3 +717,10 @@ Where things stand, decisions and open issues. The development history before th
 - T.7 の CI で起きた失敗（WebKit のショーケースで、テーブルのソースのタイルに地物が出ない）：チェックの側の競合だった。この PR の CI でもう 1 度起き、残した記録で分かった（待ちは 5 ms で通り、直後に読み直した一覧が空）。GeoJSON ソースは行がワーカーに入るとタイルを作り直すので、その間 `querySourceFeatures` は空を返す。待つのと読むのを 1 回の呼び出しにまとめた。
 - 計測（gzip）：relate.wasm 26,866 → 27,685 バイト（30KB）、table.wasm 46,848 → 47,226（50KB）、arrow.wasm 29,466 → 29,663（30KB）、parquet.wasm 25,943 → 26,323（27KB）。
 - 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1010、wasm-gc 1023、js 1069、native 1010）、npm のテスト（475）と大きさ、bench のテスト（23）、`arrow:golden`・`parquet:golden`・`table:golden`・`zstd:golden`（0 differ）、`relate:golden`・`analysis:golden`（all identical）、pack test の `npm,geojson,data,analysis,samples,showcase-html`（Chromium）。
+
+## 0.2.0 の版上げと、MoonBit の固定版の引き上げ（2026-11-20、Mac）
+
+- 版：npm の `mbt-map`、`t-ujiie-g/mbtmap`、`t-ujiie-g/mbtmap_rabbita` を 0.1.1 → 0.2.0（`CHANGELOG.md` の Unreleased を `## 0.2.0` に）。`ports/` の 11 個はこの段階で変わっていないので 0.1.0 のまま。
+- MoonBit の固定版（`scripts/toolchain.env`）：moonc v0.10.20+65efd5b93・moon 0.1.20261104 → moonc v0.10.21+06da1ed44・moon 0.1.20261117（この Mac で T.6b から使っていた版）。Linux x86_64 のアーカイブの sha256 は配布元の `.tar.gz.sha256` と一致、コアのアーカイブは配布元にハッシュが無いので取得したものを記録した。
+- 新しい版で変わったこと：`moon fmt` が `style/expr.mbt`・`style/source.mbt` の末尾のカンマを 2 か所変える（その差分だけを入れた）。コアで `Bytes::new` が非推奨（T.6b で `Bytes::make` に直してある）。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1010、wasm-gc 1023、js 1069、native 1010）、npm のテスト（475）と大きさ、bench のテスト（23）、`node bench/lib/release.mjs v0.2.0`。

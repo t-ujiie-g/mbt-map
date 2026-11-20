@@ -4,7 +4,7 @@ Things learned about MoonBit, its backends and the benchmark setup. `AGENTS.md` 
 
 ## MoonBit toolchain
 
-- moon 0.1.20261104 uses the **new DSL config files `moon.mod` / `moon.pkg`**, not `moon.mod.json` / `moon.pkg.json`. MoonBit syntax and tooling change quickly: verify APIs with `moon ide doc`, generated `.mbti`, or docs.moonbitlang.com instead of guessing from memory.
+- moon 0.1.20261117 uses the **new DSL config files `moon.mod` / `moon.pkg`**, not `moon.mod.json` / `moon.pkg.json`. MoonBit syntax and tooling change quickly: verify APIs with `moon ide doc`, generated `.mbti`, or docs.moonbitlang.com instead of guessing from memory.
 - The workspace (`moon.work`), its modules and where build outputs sit: [ARCHITECTURE.md](ARCHITECTURE.md) "MoonBit workspace and API modules".
 - `bench/entry` shows the working patterns for exports (`pkgtype(kind: "foreign_library")` + `#export_name`), `export-memory-name`, and per-file conditional compilation (`options(targets: {...})`).
 - `moon info` writes `.mbti` from each module's canonical backend: `preferred_target` in `moon.mod`, else wasm. The js-only MoonBit API modules (`moonbit/mbtmap`, `moonbit/mbtmap_rabbita`) set `preferred_target = "js"`, so their public API is tracked like the rest; the engine module stays on wasm, so its js-only packages (`map`, `render_webgl2`, internal) get none (`moon info --target js` only prints the diff against wasm).
