@@ -512,7 +512,7 @@ fn Compiler::compile_at(
             Number(b, ..),
             Number(c, ..),
             Number(d, ..),
-          ]
+          ],
         ) if [a, b, c, d].iter().all(x => x >= 0.0 && x <= 1.0) =>
           CubicBezier(a, b, c, d)
         _ =>

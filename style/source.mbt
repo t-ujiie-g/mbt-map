@@ -82,7 +82,7 @@ pub fn Source::covers(self : Source, z : Int32, x : Int32, y : Int32) -> Bool {
 fn parse_bounds(s : Map[String, Json]) -> (Double, Double, Double, Double)? {
   guard s.get("bounds")
     is Some(
-      Array([Number(w, ..), Number(so, ..), Number(e, ..), Number(n, ..)])
+      Array([Number(w, ..), Number(so, ..), Number(e, ..), Number(n, ..)]),
     ) else {
     return None
   }

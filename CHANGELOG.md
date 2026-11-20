@@ -2,7 +2,7 @@
 
 All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujiie-g/mbtmap` and `t-ujiie-g/mbtmap_rabbita`. They share one version.
 
-## Unreleased
+## 0.2.0
 
 Reading, analysis and display share one table. Some names move or change: [docs/migrating.md](docs/migrating.md) has the list.
 

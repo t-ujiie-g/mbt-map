@@ -45,7 +45,7 @@ Or without installing, from a CDN in one HTML file:
 
 ```html
 <script type="importmap">
-  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.1.1/dist/index.js" } }
+  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.2.0/dist/index.js" } }
 </script>
 <script type="module">
   import { Map } from "mbt-map";

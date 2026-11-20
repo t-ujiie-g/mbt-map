@@ -62,7 +62,7 @@ Parallel work. Use parallel agents wherever the work splits: the user prefers st
 
 ## 3. Toolchain
 
-- moon 0.1.20261104 (pinned in `scripts/toolchain.env`) uses the DSL config files `moon.mod` / `moon.pkg`, not `moon.mod.json` / `moon.pkg.json`. MoonBit syntax and tooling change quickly: verify APIs with `moon ide doc`, the generated `.mbti` or docs.moonbitlang.com instead of guessing from memory.
+- moon 0.1.20261117 (pinned in `scripts/toolchain.env`) uses the DSL config files `moon.mod` / `moon.pkg`, not `moon.mod.json` / `moon.pkg.json`. MoonBit syntax and tooling change quickly: verify APIs with `moon ide doc`, the generated `.mbti` or docs.moonbitlang.com instead of guessing from memory.
 - The repository is a `moon.work` workspace, so build outputs sit under the module name: `_build/<target>/<mode>/build/t-ujiie-g/mbtmap_engine/<package>/`.
 - `moon info` writes `.mbti` from each module's `preferred_target` (else wasm): the engine's js-only packages (`map`, `render_webgl2`) get none.
 - Automation stays in Node scripts under `bench/` (script mode, `moon run x.mbtx`, currently fails).
