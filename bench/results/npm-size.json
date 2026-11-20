@@ -86,7 +86,7 @@
     },
     {
       "name": "services worker (ArcGIS f=json and f=pbf; loaded by mbt-map/services on the first such read)",
-      "bytes": 20307,
+      "bytes": 20318,
       "budget": 21000
     },
     {
@@ -116,12 +116,12 @@
     },
     {
       "name": "GeoJSON worker",
-      "bytes": 38255,
+      "bytes": 38258,
       "budget": 39000
     },
     {
       "name": "GeoJSON worker with expressions (loaded instead for sources with clusterProperties)",
-      "bytes": 57747,
+      "bytes": 57762,
       "budget": 59000
     },
     {
@@ -131,7 +131,7 @@
     },
     {
       "name": "mbt-map/table",
-      "bytes": 8134,
+      "bytes": 8129,
       "budget": 9000
     },
     {
@@ -146,17 +146,17 @@
     },
     {
       "name": "analysis worker",
-      "bytes": 29519,
+      "bytes": 29520,
       "budget": 31000
     },
     {
       "name": "geometry (loaded by the analysis worker on first use)",
-      "bytes": 45222,
+      "bytes": 45223,
       "budget": 50000
     },
     {
       "name": "spatial relations (DE-9IM; loaded by the analysis worker on first use)",
-      "bytes": 26866,
+      "bytes": 27685,
       "budget": 30000
     },
     {
@@ -181,7 +181,7 @@
     },
     {
       "name": "table operations (select, filter, derive, orderby, rollup, joins; loaded by the analysis worker on first use)",
-      "bytes": 46848,
+      "bytes": 47226,
       "budget": 50000
     },
     {
@@ -231,7 +231,7 @@
     },
     {
       "name": "data worker",
-      "bytes": 40865,
+      "bytes": 40878,
       "budget": 41000
     },
     {
@@ -266,17 +266,17 @@
     },
     {
       "name": "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)",
-      "bytes": 2667,
+      "bytes": 2688,
       "budget": 3000
     },
     {
       "name": "Arrow IPC (loaded by the data worker on the first Arrow read or write)",
-      "bytes": 29466,
+      "bytes": 29663,
       "budget": 30000
     },
     {
       "name": "Parquet (loaded by the data worker on the first Parquet read)",
-      "bytes": 25943,
+      "bytes": 26323,
       "budget": 27000
     },
     {

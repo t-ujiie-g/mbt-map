@@ -21,7 +21,7 @@ pub fn select(
 pub fn filter(
   t : @geom.Table,
   keep : @style.Expr,
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> @geom.Table {
   let ctx : Row = { table: t, row: 0, hooks, }
   let rows : Array[Int32] = []
@@ -56,7 +56,7 @@ pub(all) enum Derived {
 pub fn derive_columns(
   t : @geom.Table,
   columns : ArrayView[(String, Derived)],
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> Result[@geom.Table, String] {
   let ctx : Row = { table: t, row: 0, hooks, }
   let out = t.columns.map(c => (c.name, c.values))

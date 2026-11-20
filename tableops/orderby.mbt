@@ -22,7 +22,11 @@ fn key_of(v : @style.Value) -> Key {
 
 ///|
 /// `e` in every row of `t`.
-fn keys_of(t : @geom.Table, e : @style.Expr, hooks : Hooks) -> FixedArray[Key] {
+fn keys_of(
+  t : @geom.Table,
+  e : @style.Expr,
+  hooks : @style.Hooks,
+) -> FixedArray[Key] {
   let ctx : Row = { table: t, row: 0, hooks, }
   FixedArray::makei(t.length(), i => {
     ctx.row = i
@@ -45,7 +49,7 @@ fn code_unit_order(a : String, b : String) -> Int32 {
 
 ///|
 /// JavaScript's `ToNumber` of a key that is not null.
-fn Key::number(self : Key, hooks : Hooks) -> Double {
+fn Key::number(self : Key, hooks : @style.Hooks) -> Double {
   match self {
     Number(n) => n
     Flag(b) => if b { 1.0 } else { 0.0 }
@@ -57,7 +61,7 @@ fn Key::number(self : Key, hooks : Hooks) -> Double {
 ///|
 /// -1, 0 or 1 as JavaScript's `<` and `>` order two keys that are not null: two strings by code
 /// units, else as numbers (0 where neither holds).
-fn loose_order(u : Key, v : Key, hooks : Hooks) -> Int32 {
+fn loose_order(u : Key, v : Key, hooks : @style.Hooks) -> Int32 {
   if u is Text(a) && v is Text(b) {
     return code_unit_order(a, b)
   }
@@ -73,7 +77,7 @@ fn loose_order(u : Key, v : Key, hooks : Hooks) -> Int32 {
 
 ///|
 /// Arquero's comparison of two values (`compare.js`): null first, then NaN, then `loose_order`.
-fn order(u : Key, v : Key, hooks : Hooks) -> Int32 {
+fn order(u : Key, v : Key, hooks : @style.Hooks) -> Int32 {
   match (u, v) {
     (Nothing, Nothing) => return 0
     (Nothing, _) => return -1
@@ -140,7 +144,7 @@ fn stable_sort(
 pub fn orderby(
   t : @geom.Table,
   keys : ArrayView[(@style.Expr, Bool)],
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> @geom.Table {
   let n = t.length()
   let values = keys.map(k => keys_of(t, k.0, hooks))

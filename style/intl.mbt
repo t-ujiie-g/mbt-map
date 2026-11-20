@@ -17,3 +17,24 @@ pub fn Intl::fallback() -> Intl {
     resolved_locale: intl_resolved_locale,
   }
 }
+
+///|
+/// The host hooks an expression's context hands on (`FeatureContext`'s `trig`, `number_text`,
+/// `text_number` and `intl`), for packages that evaluate over their own rows.
+pub(all) struct Hooks {
+  trig : @core.Trig
+  number_text : (Double) -> String
+  text_number : (String) -> Double
+  intl : Intl
+}
+
+///|
+/// MoonBit's own, for tests and the js backend.
+pub fn Hooks::default() -> Hooks {
+  {
+    trig: @core.Trig::moonbit(),
+    number_text: Double::to_string,
+    text_number: js_number,
+    intl: Intl::fallback(),
+  }
+}

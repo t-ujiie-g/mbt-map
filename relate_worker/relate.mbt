@@ -26,8 +26,8 @@ pub fn output_addr() -> Int32 {
 }
 
 ///|
-/// The two tables of the last call that read them, and the second's index once
-/// built. Datasets never change, so the worker reuses them for the same pair.
+/// The two tables of the last call that read them, and the index of `indexed` of them
+/// once built. Datasets never change, so the worker reuses them for the same pair.
 priv struct Kept {
   a : @geom.Table
   b : @geom.Table
@@ -45,14 +45,17 @@ fn tables(len_a : Int32) -> Kept? {
     return kept.val
   }
   kept.val = None
-  let input = @wasmio.input_bytes()
-  @wasmio.clear_input()
-  guard len_a >= 0 &&
-    len_a <= input.length() &&
-    @geom.Table::from_bytes(input[:len_a]) is Some(a) &&
-    @geom.Table::from_bytes(input[len_a:]) is Some(b) else {
+  let n = @wasmio.input_length()
+  guard len_a >= 0 && len_a <= n else {
+    @wasmio.clear_input()
     return None
   }
+  let read = (
+    @wasmio.input_table(0, len_a),
+    @wasmio.input_table(len_a, n - len_a),
+  )
+  @wasmio.clear_input()
+  guard read is (Some(a), Some(b)) else { return None }
   let k = { a, b, index: None, }
   kept.val = Some(k)
   Some(k)
@@ -63,7 +66,7 @@ fn Kept::index(self : Kept) -> @analysis.Index {
   match self.index {
     Some(i) => i
     None => {
-      let i = @analysis.Index::of_table(self.b)
+      let i = @analysis.Index::of_table(indexed(self.a, self.b))
       self.index = Some(i)
       i
     }
@@ -126,13 +129,24 @@ pub fn relate_pairs(len_a : Int32, code : Int32, pattern : Int32) -> Int32 {
 }
 
 ///|
-/// `relate_pairs`' pairs of `a` and `b`, or why there are none.
+/// The table `pairs` searches by an index while it walks the other: the one with more rows
+/// (`b` when they have as many), since a search costs more than a row's box.
+fn indexed(a : @geom.Table, b : @geom.Table) -> @geom.Table {
+  if a.length() > b.length() {
+    a
+  } else {
+    b
+  }
+}
+
+///|
+/// `relate_pairs`' pairs of `a` and `b`, or why there are none; `index` is `indexed`'s.
 fn pairs(
   a : @geom.Table,
   b : @geom.Table,
   code : Int32,
   pattern : String?,
-  index~ : @analysis.Index = @analysis.Index::of_table(b),
+  index~ : @analysis.Index = @analysis.Index::of_table(indexed(a, b)),
   max_candidates~ : Int32 = MAX_RELATE_CANDIDATES,
   max_points~ : Int32 = MAX_RELATE_TESTED_POINTS,
 ) -> Result[Array[Int32], String] {
@@ -140,6 +154,57 @@ fn pairs(
   let found : Array[Int32] = []
   let mut candidates = 0L
   let mut points = 0L
+  // Why the pair (i, j) stops the call, if it does; a pair that holds goes to `out`.
+  fn test_pair(i : Int32, j : Int32) -> String? {
+    if !@relate.within_limit(a, i, b, j) {
+      return Some(too_many_points)
+    }
+    points += @relate.pair_points(a, i, b, j).to_int64()
+    if points > max_points.to_int64() {
+      return Some("more than \{max_points} points to test in pairs")
+    }
+    let holds = match pattern {
+      Some(p) =>
+        match @relate.relate_checked(a, i, b, j) {
+          Some(m) => m.matches(p)
+          None => return Some(unrelated(i, j))
+        }
+      None => @relate.predicate(a, i, b, j, predicates[code])
+    }
+    if holds {
+      if out.length() >= MAX_RELATE_PAIRS * 2 {
+        return Some("more than \{MAX_RELATE_PAIRS} pairs")
+      }
+      out.push(i)
+      out.push(j)
+    }
+    None
+  }
+
+  let too_many = "more than \{max_candidates} pairs of features to test"
+  if a.length() > b.length() {
+    // The rows of `b` look their candidates up among `a`'s; the pairs are tested in `a`'s order all the same.
+    let keys : Array[Int64] = []
+    for j in 0..<b.length() {
+      let (x0, y0, x1, y1) = @analysis.bbox(b, j)
+      found.clear()
+      index.search(x0, y0, x1, y1, found)
+      candidates += found.length().to_int64()
+      if candidates > max_candidates.to_int64() {
+        return Err(too_many)
+      }
+      for i in found {
+        keys.push((i.to_int64() << 32) | j.to_int64())
+      }
+    }
+    keys.sort()
+    for key in keys {
+      if test_pair((key >> 32).to_int(), key.to_int()) is Some(why) {
+        return Err(why)
+      }
+    }
+    return Ok(out)
+  }
   for i in 0..<a.length() {
     let (x0, y0, x1, y1) = @analysis.bbox(a, i)
     found.clear()
@@ -147,30 +212,11 @@ fn pairs(
     found.sort()
     candidates += found.length().to_int64()
     if candidates > max_candidates.to_int64() {
-      return Err("more than \{max_candidates} pairs of features to test")
+      return Err(too_many)
     }
     for j in found {
-      if !@relate.within_limit(a, i, b, j) {
-        return Err(too_many_points)
-      }
-      points += @relate.pair_points(a, i, b, j).to_int64()
-      if points > max_points.to_int64() {
-        return Err("more than \{max_points} points to test in pairs")
-      }
-      let holds = match pattern {
-        Some(p) =>
-          match @relate.relate_checked(a, i, b, j) {
-            Some(m) => m.matches(p)
-            None => return Err(unrelated(i, j))
-          }
-        None => @relate.predicate(a, i, b, j, predicates[code])
-      }
-      if holds {
-        if out.length() >= MAX_RELATE_PAIRS * 2 {
-          return Err("more than \{MAX_RELATE_PAIRS} pairs")
-        }
-        out.push(i)
-        out.push(j)
+      if test_pair(i, j) is Some(why) {
+        return Err(why)
       }
     }
   }

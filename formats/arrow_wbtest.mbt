@@ -106,3 +106,45 @@ test "a batch whose buffers lie outside its body, or are too short, fails withou
     assert_true(arrow_reads(many, 3))
   }
 }
+
+///|
+test "rows are counted where a table has no property to count cells by" {
+  let points = @geom.TableBuilder::new()
+  for i in 0..<3 {
+    points.point(i.to_double(), 0.0)
+    points.end_ring()
+    points.end_part()
+    points.end_feature(Point)
+  }
+  let bytes = write_arrow(points.finish()).unwrap()
+  let reads = (max_cells : Int32) => {
+    try arrow_table(bytes[:], 100, max_cells) catch {
+      _ => false
+    } noraise {
+      _ => true
+    }
+  }
+  assert_false(reads(2))
+  assert_true(reads(3))
+}
+
+///|
+test "Validity::has reads a row past its bitmap as null" {
+  let valid : Validity = { bits: b"\x01", }
+  assert_true(valid.has(0))
+  assert_false(valid.has(1))
+  assert_false(valid.has(8))
+  assert_true({ bits: b"", }.has(8))
+}
+
+///|
+test "Flat::string counts what it decodes, however often one string is pointed to" {
+  // A table with one string field: its vtable, the table, then "hi".
+  let b : Bytes = b"\x06\x00\x08\x00\x04\x00\x06\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00\x00hi"
+  let flat : Flat = { b: b[:], bad: false, text: 0, }
+  assert_eq(flat.string(6, 0), "hi")
+  assert_eq(flat.text, 2)
+  flat.text = MAX_ARROW_TEXT - 1
+  assert_eq(flat.string(6, 0), "")
+  assert_true(flat.bad)
+}

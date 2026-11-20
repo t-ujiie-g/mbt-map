@@ -222,6 +222,14 @@ pub struct HillshadePaint {
   nearest : Bool
 }
 
+pub(all) struct Hooks {
+  trig : @trig.Trig
+  number_text : (Double) -> String
+  text_number : (String) -> Double
+  intl : Intl
+}
+pub fn Hooks::default() -> Self
+
 pub struct IconLayout {
   layout : @json.Json
   image : Array[Expr]

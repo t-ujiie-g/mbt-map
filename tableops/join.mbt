@@ -40,15 +40,16 @@ fn join_keys(
 }
 
 ///|
-/// The rows of `left` beside the rows of `right` whose columns `on.1` equal `left`'s `on.0` in
-/// type and value, in Arquero's order, put as `beside` puts them; with `keep_left`, also the
-/// rows without a match. Errors: no key, a column that is missing, a name twice in the result.
+/// The rows of `left` beside the rows of `right` whose columns `on.1` equal `left`'s `on.0` in type and
+/// value, in Arquero's order, put as `beside` puts them; with `keep_left`, also the rows without a match.
+/// Errors: no key, a missing column, a name twice in the result, more than `max_cells` cells.
 pub fn join(
   left : @geom.Table,
   right : @geom.Table,
   on : ArrayView[(String, String)],
   keep_left~ : Bool = false,
   suffix~ : (String, String) = ("_1", "_2"),
+  max_cells~ : Int32 = @geom.MAX_TABLE_CELLS,
 ) -> Result[@geom.Table, String] {
   guard on.length() > 0 else { return Err("no key to join on") }
   let keys_l = match join_keys(left, on.map(k => k.0)) {
@@ -85,6 +86,9 @@ pub fn join(
   let hit_l = FixedArray::make(n_l, false)
   for j, key in scanned {
     guard key is Some(key) && lookup.get(key) is Some(k) else { continue }
+    guard lists[k].length() <= max_cells - rows_l.length() else {
+      return Err(too_large)
+    }
     for i in lists[k] {
       let (l, r) = if scans_left { (j, i) } else { (i, j) }
       rows_l.push(l)
@@ -100,7 +104,7 @@ pub fn join(
       }
     }
   }
-  beside(left, right, rows_l, rows_r, on, suffix)
+  beside(left, right, rows_l, rows_r, on, suffix, max_cells)
 }
 
 ///|
@@ -114,6 +118,7 @@ fn beside(
   rows_r : Array[Int32],
   on : ArrayView[(String, String)],
   suffix : (String, String),
+  max_cells : Int32,
 ) -> Result[@geom.Table, String] {
   let from_right = right.columns.filter(c => {
     on.search_by(k => k.0 == c.name && k.1 == c.name) is None
@@ -124,6 +129,17 @@ fn beside(
     } else {
       name
     }
+  }
+  // Rows repeat in a join: the result is held to a table's limits before it is made.
+  let width = (left.columns.length() + from_right.length()).max(1).to_int64()
+  let mut points = 0L
+  for l in rows_l {
+    let (from, to) = left.feature_points(l)
+    points += (to - from).to_int64()
+  }
+  guard rows_l.length().to_int64() * width <= max_cells.to_int64() &&
+    points <= @geom.MAX_TABLE_POINTS.to_int64() else {
+    return Err(too_large)
   }
   let rows = left.take(rows_l).unwrap()
   let columns = rows.columns.map(c => {
@@ -142,6 +158,9 @@ fn beside(
     None => Err("a column twice in the joined table")
   }
 }
+
+///|
+let too_large : String = "a joined table of more than \{@geom.MAX_TABLE_CELLS} cells or \{@geom.MAX_TABLE_POINTS} points"
 
 ///|
 /// Whether `pairs` (a row of `left`, then a row of `right`, and so on) are whole and in the tables.
@@ -169,6 +188,7 @@ pub fn join_pairs(
   pairs : ArrayView[Int32],
   keep_left~ : Bool = false,
   suffix~ : (String, String) = ("_1", "_2"),
+  max_cells~ : Int32 = @geom.MAX_TABLE_CELLS,
 ) -> Result[@geom.Table, String] {
   guard pairs_fit(left, right, pairs) else {
     return Err("a pair out of the tables")
@@ -188,7 +208,7 @@ pub fn join_pairs(
       }
     }
   }
-  beside(left, right, rows_l, rows_r, [], suffix)
+  beside(left, right, rows_l, rows_r, [], suffix, max_cells)
 }
 
 ///|
@@ -199,7 +219,7 @@ pub fn rollup_pairs(
   right : @geom.Table,
   pairs : ArrayView[Int32],
   outputs : ArrayView[(String, Aggregate, @style.Expr)],
-  hooks~ : Hooks = Hooks::default(),
+  hooks~ : @style.Hooks = @style.Hooks::default(),
 ) -> Result[@geom.Table, String] {
   guard pairs_fit(left, right, pairs) else {
     return Err("a pair out of the tables")

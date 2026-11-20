@@ -173,7 +173,7 @@ Part of the architecture reference ([index](ARCHITECTURE.md)). The entry points 
 ### Spatial relations
 
 - `relate` ports JSTS 2.12.1's `RelateOp` (GeometryGraph, monotone-chain sweep, `RobustLineIntersector` with its DD orientation; OGC SFS boundary rule) and its `Geometry` predicates over `@geom.Table` rows.
-- `relate_worker` (relate.wasm, its own size row, loaded by the analysis worker on the first `relate`) finds candidate pairs by their boxes and keeps those in the relation or matching a DE-9IM pattern (`npm/src/relate-pattern.ts` packs it and refuses patterns disjoint pairs match).
+- `relate_worker` (relate.wasm, its own size row, loaded by the analysis worker on the first `relate`) finds candidate pairs by their boxes (the rows of the table with fewer rows searched in an index of the other, the pairs then tested in the first table's order; tables read in place from linear memory) and keeps those in the relation or matching a DE-9IM pattern (`npm/src/relate-pattern.ts` packs it and refuses patterns disjoint pairs match).
 - `npm run relate:golden` must stay all identical.
 
 ### Shapes

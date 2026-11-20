@@ -174,7 +174,7 @@ const GRIDS = { point: 0, square: 1, hex: 2, triangle: 3 } as const;
  * (squareGrid), `hex` (hexGrid; `triangles` splits each hexagon in six) or `triangle` (triangleGrid).
  */
 export async function grid(bbox: BBox, cellSide: number, type: keyof typeof GRIDS = "square", options: AnalysisOptions & { triangles?: boolean } = {}): Promise<Table> {
-  if (!isBox(bbox) || !(cellSide > 0 && cellSide < Infinity) || !(type in GRIDS)) throw new Error("mbt-map: analysis: invalid grid");
+  if (!isBox(bbox) || !(cellSide > 0 && cellSide < Infinity) || !Object.hasOwn(GRIDS, type)) throw new Error("mbt-map: analysis: invalid grid");
   startAnalysis(options);
   const fn = ["point_grid", "square_grid", "hex_grid", "triangle_grid"][GRIDS[type]];
   return tableOf(analysisCall("surface", { dataset: -1, fn, args: [...bbox, cellSide, options.triangles ? 1 : 0] }));
@@ -412,7 +412,7 @@ export class Table {
    * `point`, `hex` or `triangle`, `cellSize` in kilometers, `weight` the power of the distance.
    */
   async interpolate(cellSize: number, { gridType = "square", property = "elevation", weight = 1 }: InterpolateOptions = {}): Promise<Table> {
-    if (!(cellSize > 0 && cellSize < Infinity) || !(gridType in GRIDS) || !Number.isFinite(weight)) throw new Error("mbt-map: analysis: invalid interpolation options");
+    if (!(cellSize > 0 && cellSize < Infinity) || !Object.hasOwn(GRIDS, gridType) || !Number.isFinite(weight)) throw new Error("mbt-map: analysis: invalid interpolation options");
     return this.#surface("interpolate", [cellSize, GRIDS[gridType], weight], property);
   }
 
@@ -493,7 +493,7 @@ export class Table {
    * most 10,000 km, a planar one 1e9 of the CRS's units.
    */
   async buffer(meters: number, { mode = "geodesic", join = "round", cap = "round", arcTolerance = 0, crs = 3857 }: BufferOptions = {}): Promise<Table> {
-    if (!(mode in { geodesic: 0, planar: 1 }) || !(join in JOIN) || !(cap in CAP) || !Number.isFinite(meters) || !(arcTolerance >= 0)) {
+    if (!["geodesic", "planar"].includes(mode) || !Object.hasOwn(JOIN, join) || !Object.hasOwn(CAP, cap) || !Number.isFinite(meters) || !(arcTolerance >= 0)) {
       throw new Error("mbt-map: analysis: invalid buffer options");
     }
     const code = await crsArg(crs);

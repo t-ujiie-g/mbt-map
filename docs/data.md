@@ -552,8 +552,10 @@ map.addSource("temp", {
 | Points | 20 million |
 | CSV | 4096 fields per row, 16 MB per field |
 | Property cells (rows × columns: CSV, `.dbf`, TopoJSON, FlatGeobuf, KML, GPX, Arrow, Parquet) | 32 million |
-| Arrow | 65 536 fields nested 32 deep; compressed buffers inflating to 1 GB in all. |
-| Parquet | 65 536 schema elements, row groups and columns; pages inflating to 1 GB in all. |
+| Rows (Arrow, Parquet; a table without property columns has no cells to count) | 32 million |
+| Arrow | 65 536 fields nested 32 deep; 64 MB of names and metadata per message; a dictionary of 32 million values; compressed buffers inflating to 1 GB in all. A file's footer lists its blocks in the file's order. |
+| Parquet | 65 536 schema elements, row groups and columns; groups nested 32 deep; pages inflating to 1 GB in all; 256 MB of text and bytes in the properties read; 8 range requests at once. |
+| Joins (`join`, `spatialJoin`, `nearestJoin`) | A result of 32 million cells and 20 million points |
 | ZSTD | No dictionaries; a match reaches back within its frame. |
 | Zip | 10 000 entries, 256 MB inflated in total |
 | XML (KML, GPX) | 256 levels deep, 1024 attributes per element, 4 million nodes. KML/GPX feature properties and GPX extension names per track: 4096. |

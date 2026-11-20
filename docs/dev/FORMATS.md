@@ -797,6 +797,9 @@ steps by `data_worker/js/arrow.mjs`, which fetches only what a read needs:
   position in the input, its length, the length it inflates to and its codec), and `read` takes
   the parts' `len_parts` bytes followed by each inflated body, a u32 length before it, in that order. What
   the listed bodies inflate to counts against the 1 GB of one input while they are listed.
+  Counts the file gives (rows, values of a page or dictionary) are held to what their bytes can hold
+  before anything is made of them, and what rows share (dictionary values, DELTA_BYTE_ARRAY prefixes)
+  is counted as text per row (`MAX_PARQUET_TEXT`).
 - The geometry column: a flat BYTE_ARRAY leaf of logical type GEOMETRY or GEOGRAPHY, else the one
   `geo` names as `primary_column`, else one named `geometry`, `geom` or `wkb_geometry`; its cells
   are WKB. `info_out()` gives its name, an empty string and the `geo` value.

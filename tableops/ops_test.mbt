@@ -199,14 +199,6 @@ test "orderby compares strings by code units and other pairs as JavaScript numbe
 }
 
 ///|
-test "Hooks::default computes with MoonBit's functions" {
-  let hooks = @tableops.Hooks::default()
-  assert_eq((hooks.number_text)(1.5), "1.5")
-  assert_eq((hooks.text_number)("2"), 2.0)
-  assert_true(((hooks.trig.sin)(0.0) - 0.0).abs() < @double.min_positive)
-}
-
-///|
 fn cells(t : @geom.Table, name : String) -> Array[@geom.Prop?] {
   t.column(name).unwrap().values
 }
@@ -496,5 +488,23 @@ test "column_groups groups rows as rollup does, null with a missing key" {
   )
   assert_true(
     @tableops.column_groups(sample(), []) is Ok(([0, 0, 0, 0, 0], [0])),
+  )
+}
+
+///|
+test "join and join_pairs refuse a result past a table's cells" {
+  // 7 rows of 5 columns.
+  let on = [("kind", "kind")]
+  assert_true(@tableops.join(sample(), lookup(), on, max_cells=35) is Ok(_))
+  assert_true(@tableops.join(sample(), lookup(), on, max_cells=34) is Err(_))
+  assert_true(@tableops.join(sample(), lookup(), on, max_cells=6) is Err(_))
+  let pairs = [0, 0, 0, 1]
+  let cells = 2 * (sample().columns.length() + lookup().columns.length())
+  assert_true(
+    @tableops.join_pairs(sample(), lookup(), pairs, max_cells=cells) is Ok(_),
+  )
+  assert_true(
+    @tableops.join_pairs(sample(), lookup(), pairs, max_cells=cells - 1)
+    is Err(_),
   )
 }
