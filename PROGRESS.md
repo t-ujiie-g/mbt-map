@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：0.2.0 は公開済み（ユーザー）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1 が済み、次は P.2（`map` と描画、MapLibre とのピクセル比較）。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
+- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1 が済み、次は P.2（`map` と描画、MapLibre とのピクセル比較）。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -37,8 +37,15 @@ Where things stand, decisions and open issues. The development history before th
 - `map` はまだ padding を渡さない（P.2）。padding 0 では行列も制約も前と同じ値。
 - 計測（`bench/results/camera-golden.json`、`globe-golden.json`）：`camera:golden` は padding つきの 20 ビューを足して 42 ビュー・1073 比較、最大の差 8.43e-9 px・3.86e-8°・1.39e-9 zoom・4.51e-7 ms。`globe:golden` は 19 ビューを足して 47 ビュー・1668 比較、1.68e-9 px・3.87e-8°・1.33e-9 zoom、タイル被覆の差 0。どちらも許容差（1e-6 px、1e-7°、1e-8 zoom）は変えていない。
 - 外したケース 1 つ：padding つきのビューでの世界を横切る `flyTo`（[-170, 10] へ、`offset` つき）。padding 0,0,0,320・ピッチ 80° で 6.2e-7°・2.2e-8 zoom の差が出た。始点の `unproject` は 1e-12° で合っていて、差は `flyTo` の式の `ln(sqrt(b² + 1) - b)`（b が約 1e4）が始点の最後の 1 ビットの違いを 1e-9 の経路の違いに広げるため（ほかの padding のビューでは所要時間が 1e-15 で合う）。padding なしのビューでは前のとおり比べている。
-- 大きさ：`mbt-map` の予算を 168KB から 170KB に上げた（2026-11-22 ユーザー判断）。P.1 で gzip が 964 B 増える（この Mac で main 168,406 B → 169,370 B。変換と制約と移動のすべてに padding が通るため）。固定した版のツールチェーンでの main は 167,081 B（`bench/results/npm-size.json`）で、余りは 919 B だった。P.2・P.3 でさらに 1KB 前後増える見込み。この Mac の moon は 0.1.20261119 で固定の版（0.1.20261117）より新しく、同じコードで 1.3KB ほど大きく出る（データのワーカーと Arrow IPC は main でもこの Mac では予算を超える）ので、`npm-size.json` は CI の値を待って更新する。
+- 大きさ：`mbt-map` の予算を 168KB から 170KB に上げた（2026-11-22 ユーザー判断）。P.1 で gzip が 964 B 増える（この Mac で main 168,406 B → 169,370 B。変換と制約と移動のすべてに padding が通るため）。固定した版のツールチェーンでの main は 167,081 B（`bench/results/npm-size.json`）で、余りは 919 B だった。P.2・P.3 でさらに 1KB 前後増える見込み。この Mac の moon は 0.1.20261119 で固定の版（0.1.20261117）より新しく、同じコードで 1.3KB ほど大きく出る（データのワーカーと Arrow IPC は main でもこの Mac では予算を超える）ので、`npm-size.json` はこの PR では更新しなかった（固定版を上げた PR で更新した。下の節）。
 - 描画の CPU 時間は P.2 で `map` が padding を渡すようにしてから測る（P.1 が足したのはフレームごとの行列 1 つへの代入 2 つと far 面の式の項）。
+
+## MoonBit の固定版の引き上げ（2026-11-22、Mac）
+
+- 固定版（`scripts/toolchain.env`）：moonc v0.10.21+06da1ed44・moon 0.1.20261117 → moonc v0.10.22+124d61d05・moon 0.1.20261119（この Mac が使っていた版。CI と手元の大きさの値をそろえるため）。Linux x86_64 のアーカイブの sha256 は配布元の `.tar.gz.sha256` と一致、コアのアーカイブは配布元にハッシュが無いので取得したものを記録した。
+- 新しい版で変わったこと：`moon fmt` と `moon info` の差分はなし。出力は全体に大きくなる（`bench/results/npm-size.json`。前の値は固定の版で padding の前、今の値は padding の P.1 込み）：`mbt-map` 167,081 → 169,391 B（うち P.1 が 964 B、残り約 1.35KB がコンパイラ）、表示ワーカー +573 B、GeoJSON ワーカー +268 B（式つき +486 B）、データのワーカー 40,878 → 41,301 B、Arrow IPC 29,663 → 30,389 B、Parquet 26,323 → 26,964 B、Zstandard 6,665 → 6,941 B。小さくなったのは geometry（-91 B）など少し。何が大きくなったかは調べていない。
+- 予算（2026-11-22 ユーザー判断）：`mbt-map` 170 → 172KB（padding の P.2・P.3 に約 1KB 要る）、データのワーカー 41 → 42KB、Arrow IPC 30 → 31KB、Parquet 27 → 28KB。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1023、wasm-gc 1036、js 1082、native 1023）、npm のテスト（475）と大きさ、bench のテスト（23）。
 
 ## 進め方と名前の決定（2026-11-15、ユーザー判断）
 
