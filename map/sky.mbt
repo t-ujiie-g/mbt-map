@@ -20,16 +20,16 @@ fn fog_opacity(pitch : Double) -> Double {
 
 ///|
 /// Draws the style's sky above the horizon line, if it has one and the line is
-/// on screen.
+/// on screen. The line follows the padded center, where the ground ends
+/// (MapLibre 6.16 keeps the sky's at the viewport's middle).
 fn Map::draw_sky(self : Map, dpr : Double) -> Unit {
   let t = self.transform
-  guard self.style.sky is Some(sky) && t.horizon() < t.height / 2.0 else {
-    return
-  }
+  let center_y = t.center_point().1
+  guard self.style.sky is Some(sky) && t.horizon() < center_y else { return }
   let zoom = t.camera.zoom
   let bottom = self.window.map(w => w.bottom).unwrap_or(0.0)
   self.renderer.draw_sky(
-    (t.height / 2.0 + t.horizon()) * dpr - bottom,
+    (t.height - center_y + t.horizon()) * dpr - bottom,
     blend_of(sky.sky_horizon_blend, zoom, 0.8) * t.height / 2.0 * dpr,
     premultiplied(color_of(sky.sky, zoom, JsProps::none())),
     premultiplied(color_of(sky.horizon, zoom, JsProps::none())),

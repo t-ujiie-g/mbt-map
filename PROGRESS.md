@@ -13,13 +13,14 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1 が済み、次は P.2（`map` と描画、MapLibre とのピクセル比較）。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
+- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1・P.2 が済み、次は P.3（`fitBounds` の `absolutePadding`、`<mbt-map>`、MoonBit の API、例、文書）。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
   - 3D の断面の枠の半径（6371008.8 m）とモデルの位置の半径（6378137 m）が楕円体の値とそれぞれ 0.23%・0.11% ずれる（100 m で約 0.2 m）。直すなら緯度で半径を決める。
   - Mac で回すもの：`style:public`・`style:compat`、`render` の変種（`--labels` など）、MapLibre の基準の取り直し。
   - Linux の WebKit で `antialias: false` のキャンバスの最後のフレームが出ない件が headless だけのことか。Linux の headless Firefox に WebGL2 がない（pack test は飛ばす）。
+  - 押し出しの屋根の色が MapLibre と違う建物がある（`style:golden` のピッチ 60° の押し出しで、画面に入る建物によって 1,100〜2,300 px。原因は未調査）。地形は `style:golden` の環境で MapLibre と比べられない（遠くの DEM タイルを描かず、カメラも合わない）。
   - 世界が画面より狭い（ズーム約 1 未満）とき、同じタイルの別のコピーにはラベルが出ない（MapLibre はコピーごとに配置する）。
   - 地形の上では `background-pattern` を描かない（色の背景は地形のテクスチャに順番どおり入る）。地形つきの背景の順は MapLibre とのピクセル比較に入っていない（`style:golden` の環境で MapLibre 側が地形の上の hillshade を描かず、比べる絵にならなかった）。
   - @maplibre/geojson-vt の `applyPropertyUpdates` は 6.3.1 と main でも `removeAllProperties` のとき足す属性を捨てる（上流へは未報告）。
@@ -39,6 +40,18 @@ Where things stand, decisions and open issues. The development history before th
 - 外したケース 1 つ：padding つきのビューでの世界を横切る `flyTo`（[-170, 10] へ、`offset` つき）。padding 0,0,0,320・ピッチ 80° で 6.2e-7°・2.2e-8 zoom の差が出た。始点の `unproject` は 1e-12° で合っていて、差は `flyTo` の式の `ln(sqrt(b² + 1) - b)`（b が約 1e4）が始点の最後の 1 ビットの違いを 1e-9 の経路の違いに広げるため（ほかの padding のビューでは所要時間が 1e-15 で合う）。padding なしのビューでは前のとおり比べている。
 - 大きさ：`mbt-map` の予算を 168KB から 170KB に上げた（2026-11-22 ユーザー判断）。P.1 で gzip が 964 B 増える（この Mac で main 168,406 B → 169,370 B。変換と制約と移動のすべてに padding が通るため）。固定した版のツールチェーンでの main は 167,081 B（`bench/results/npm-size.json`）で、余りは 919 B だった。P.2・P.3 でさらに 1KB 前後増える見込み。この Mac の moon は 0.1.20261119 で固定の版（0.1.20261117）より新しく、同じコードで 1.3KB ほど大きく出る（データのワーカーと Arrow IPC は main でもこの Mac では予算を超える）ので、`npm-size.json` はこの PR では更新しなかった（固定版を上げた PR で更新した。下の節）。
 - 描画の CPU 時間は P.2 で `map` が padding を渡すようにしてから測る（P.1 が足したのはフレームごとの行列 1 つへの代入 2 つと far 面の式の項）。
+
+**P.2：`map`、ファサードの入口、描画の比較（2026-11-22、Mac）**
+
+- `map`：padding は変換が持つ（`Map::padding`）。`set_camera`（`jumpTo`）がカメラの後に padding を置き、アニメーションはフレームごとにカメラと padding を返す。回す・傾けるジェスチャーの軸、地面に当たるかの判定、問い合わせのカメラの足元は中心の点から。投影の切り替えと `set_limits` は padding を引き継ぐ。地形の中心の標高は中心の経緯度で取るので変えていない。
+- ファサード（段階の割り振りを変えた：ピクセル比較のページがファサードで地図を作るので、P.3 の予定だった入口をここで入れた）：`setPadding`・`getPadding`、`jumpTo`・`easeTo`・`flyTo` の `padding`。辺を省くとその辺は今の値のまま、数値 1 つは 4 辺とも。有限で 0 以上でない値は TypeError（MapLibre は確かめない）。エンジンが始まる前の `setPadding` は始まってから置く。エンジンの export は `map_padding` と `map_jump_to`、移動の配列の後ろに 4 辺。
+- MapLibre と違えたところ：空の地平線は padding 込みの中心から測る（地面の終わる線）。MapLibre 6.16 の空は画面の中央から測るので、縦の padding があると地面の端と空の線がずれる。`jumpTo` は何も変わらなければ `move` を出さない（MapLibre はいつも出す。前からの作り）。
+- MapLibre とのピクセル比較（`style:golden`、`bench/results/style-golden.json`）：`padding-extrusions`（ピッチ 60°、上 240・下 40・右 100）mean 0.052・p99 0（限度 0.12・1、押し出しのいまのシーンと同じ）、`padding-globe`（左 320・上 100）mean 0.003・p99 0（限度 0.05・1）、`padding-pitched`（ピッチ 60°、左 320、線と面）mean 1.143・p99 33。線はピッチ 60° で padding なしでも mean 1.298・p99 32（`pitched-60` として足した。ピッチ 45° の `turned` は 0.7・21 が限度）なので、この 2 つの限度は 1.4・35 にした。
+- 地形は MapLibre と比べられなかった：この環境の MapLibre は padding なしでも遠くの DEM タイルを描かず、カメラも合わない（ピッチ 60° で mean 31）。代わりに `padding:golden`（新設、`bench/results/padding-golden.json`）：主点をずらすことは絵の平行移動なので、padding つきのフレームを padding なしのフレームをずらしたものと重なる範囲で比べる。地形・押し出し・globe × 3 つの padding で mean 0〜0.025・p99 0（限度 0.05・1）、中心は padding 込みの中心に 1e-13 px 以内、`getPadding` が合う。`easeTo`・`flyTo` で padding へ動いた後の値と中心、`fitBounds` が地図の padding を空けること（地形では高さがあるので外した）も見る。
+- 見つけた前からの差（padding と関係ない）：押し出しの屋根が MapLibre と 8 階調より大きく違う建物がある（ピッチ 60° の東京駅付近で 1,100〜2,300 px、画面に入る建物による）。最初の padding（上 40・下 240）ではその建物が入って mean 0.306 になったので、絵が下へ動く padding にした。原因は調べていない（未解決に足した）。
+- 描画の CPU 時間（`render/run.mjs --uncapped`、padding 0、`bench/results/render-chromium-uncapped.json`）：pan 2.10 ms（main 2.135）、pan-back 2.07（2.015）、zoom-in 1.95（1.96）、zoom-out 2.125（2.08）。差は回ごとの揺れの中。
+- 大きさ：`mbt-map` 169.4 → 169.9KB（予算 172KB）。
+- ほかのゴールデン：`query:golden` 750/750、`labels:golden`、`export:golden`、`raster:golden`、`camera:golden`、`globe:golden` は前のとおり。
 
 ## MoonBit の固定版の引き上げ（2026-11-22、Mac）
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { LngLatBounds, MAX_PITCH, MAX_ZOOM_LIMIT, checkLimits, fitArray, flyArray, limitsArray, targetArray, toPadding } from "../src/camera.ts";
+import { LngLatBounds, MAX_PITCH, MAX_ZOOM_LIMIT, checkLimits, fitArray, flyArray, limitsArray, paddingSides, targetArray, toPadding } from "../src/camera.ts";
 
 test("LngLatBounds converts the shapes MapLibre takes", () => {
   for (const b of [[[139, 35], [140, 36]], [139, 35, 140, 36], [{ lng: 139, lat: 35 }, { lng: 140, lat: 36 }]] as const) {
@@ -44,4 +44,20 @@ test("checkLimits takes ranges inside zoom 0-24 and pitch 0-85, min not above ma
   assert.throws(() => checkLimits({ ...ok, maxPitch: MAX_PITCH + 1 }), RangeError);
   assert.throws(() => checkLimits({ ...ok, minZoom: 5, maxZoom: 4 }), RangeError);
   assert.throws(() => checkLimits({ ...ok, minPitch: NaN }), /must be finite numbers: NaN/);
+});
+
+test("paddingSides: a number is every side, sides left out are NaN, and bad sides throw", () => {
+  assert.deepEqual(paddingSides(12), [12, 12, 12, 12]);
+  assert.deepEqual(paddingSides({ top: 1, right: 2, bottom: 3, left: 4 }), [1, 2, 3, 4]);
+  assert.deepEqual(paddingSides({ left: 320 }), [NaN, NaN, NaN, 320]);
+  assert.throws(() => paddingSides({ top: -1 }), /0 or more/);
+  assert.throws(() => paddingSides(Infinity), /finite/);
+  assert.throws(() => paddingSides({ left: "10" as unknown as number }), /finite/);
+});
+
+test("targetArray: a padding adds its sides after the offset", () => {
+  assert.equal(targetArray({ zoom: 3 }).length, 9);
+  assert.deepEqual(targetArray({ zoom: 3, padding: { left: 320, top: 0 } }).slice(9), [0, NaN, NaN, 320]);
+  assert.deepEqual(targetArray({ padding: 10 }).slice(9), [10, 10, 10, 10]);
+  assert.throws(() => targetArray({ padding: { bottom: NaN } }), /finite/);
 });

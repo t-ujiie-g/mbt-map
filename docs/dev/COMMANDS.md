@@ -61,6 +61,7 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 ### Styles, sources and the map
 
 - `npm run style:golden`: style rendering vs MapLibre 6.16 pixel by pixel, a small style per scene (bench/style/scenes.mjs; each scene's limits must hold).
+- `npm run padding:golden`: map padding (`setPadding`) moves the picture: mbt-map's frame under a padding vs its frame without, moved by the padded center's offset, on terrain, with extrusions and on the globe; the center drawn at the padded center, `getPadding`, and eased, flown and fitted moves under padding (mean 0.05, p99 1, 1e-6 px must hold).
 - `npm run style:public`: the public styles vs MapLibre 6.16 pixel by pixel on tiles of their schema for the GSI area: OpenMapTiles' on OpenFreeMap's (bench/fixtures/ofm-planet), @protomaps/basemaps' five flavors on a Protomaps build (bench/fixtures/protomaps); symbol layers left out; each scene's limits must hold.
 - `npm run style:compat`: public styles (bench/style/public-styles.mjs, pinned by sha256) read with every request refused: what mbt-map leaves out of each.
 - `npm run expression:golden`: expressions vs style-spec 26.5.0's createExpression on GSI features, legacy filters/functions vs its convertFilter/convertFunction (must stay 0 problems).

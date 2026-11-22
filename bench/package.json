@@ -84,6 +84,7 @@
     "xml:golden": "cd .. && moon build xml_worker --release --target wasm-gc && cd bench && node data/xml-golden.mjs",
     "draw:setdata": "npm --prefix ../npm run build && node draw/run.mjs",
     "style:golden": "npm --prefix ../npm run build && node style/golden.mjs",
+    "padding:golden": "npm --prefix ../npm run build && node style/padding.mjs",
     "style:public": "npm --prefix ../npm run build && node style/public.mjs",
     "style:compat": "npm --prefix ../npm run build && node style/compat.mjs",
     "labels:golden": "npm --prefix ../npm run build && node labels/golden.mjs",

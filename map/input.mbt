@@ -168,10 +168,10 @@ fn Map::on_pointer_move(self : Map, e : JsValue) -> Unit {
     guard self.handler_enabled(DragRotate) else { return }
     let bearing = -(after[0].0 - before[0].0) * ROTATE_RATE
     let pitch = -(after[0].1 - before[0].1) * PITCH_RATE
+    let (cx, cy) = t.center_point()
     self.move_camera(
       match self.globe {
-        Some(g) =>
-          self.globe_gesture(g, t.width / 2.0, t.height / 2.0, bearing~, pitch~)
+        Some(g) => self.globe_gesture(g, cx, cy, bearing~, pitch~)
         None => { ..c, bearing: c.bearing + bearing, pitch: c.pitch + pitch, }
       },
       event,
@@ -183,7 +183,7 @@ fn Map::on_pointer_move(self : Map, e : JsValue) -> Unit {
       zoom: 0.0,
       bearing,
       pitch,
-      around: (t.width / 2.0, t.height / 2.0),
+      around: (cx, cy),
     })
     return
   }
@@ -593,7 +593,7 @@ fn Map::attach_input(self : Map) -> Unit {
             None
           }
         None =>
-          if y > t.height / 2.0 - t.horizon() {
+          if y > t.center_point().1 - t.horizon() {
             Some(t.unproject(x, y))
           } else {
             None

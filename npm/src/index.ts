@@ -10,6 +10,8 @@ import {
   type LngLatBoundsLike,
   type LngLatLike,
   type Limits,
+  type Padding,
+  type PaddingOptions,
   type PointLike,
   MAX_PITCH,
   MAX_ZOOM,
@@ -19,6 +21,7 @@ import {
   fitArray,
   flyArray,
   limitsArray,
+  paddingSides,
   targetArray,
   toLngLat,
   toPoint,
@@ -73,6 +76,7 @@ export type {
   LngLat,
   LngLatBoundsLike,
   LngLatLike,
+  Padding,
   PaddingOptions,
   PointLike,
 } from "./camera";
@@ -201,6 +205,8 @@ export class Map {
   #tilejson = new globalThis.Map<string, unknown>();
   #transform: RequestTransformFunction | null = null;
   #camera: Camera;
+  /** The padding set before the engine starts: top, right, bottom, left. */
+  #padding = [0, 0, 0, 0];
   #events = new Events(this, (p, layers) => this.#query([p.x, p.y], layers, undefined));
   #tracked = new Set<Tracked>();
   #loaded = false;
@@ -1182,8 +1188,11 @@ export class Map {
     return this.#current().pitch;
   }
 
-  /** Moves the camera at once; fires `move` unless nothing changes. Throws a TypeError on non-finite values. */
-  jumpTo(options: { center?: LngLatLike; zoom?: number; bearing?: number; pitch?: number }): this {
+  /**
+   * Moves the camera at once, then sets `padding` if given; fires `move` unless nothing changes.
+   * Throws a TypeError on non-finite values.
+   */
+  jumpTo(options: { center?: LngLatLike; zoom?: number; bearing?: number; pitch?: number; padding?: PaddingOptions }): this {
     const c = this.#current();
     const center = options.center ? toLngLat(options.center) : c;
     const next = checkCamera({
@@ -1193,9 +1202,33 @@ export class Map {
       bearing: options.bearing ?? c.bearing,
       pitch: options.pitch ?? c.pitch,
     });
-    if (this.#engine) engine.map_set_camera(this.#engine, next.lng, next.lat, next.zoom, next.bearing, next.pitch);
-    else this.#camera = next;
+    const sides = options.padding === undefined ? [] : paddingSides(options.padding);
+    if (this.#engine) engine.map_jump_to(this.#engine, next.lng, next.lat, next.zoom, next.bearing, next.pitch, sides);
+    else {
+      this.#camera = next;
+      if (sides.length) {
+        this.#padding = sides.map((v, i) => (Number.isNaN(v) ? this.#padding[i] : v));
+        this.#withEngine((m) => {
+          const c = engine.map_camera(m);
+          engine.map_jump_to(m, c.lng, c.lat, c.zoom, c.bearing, c.pitch, sides);
+        });
+      }
+    }
     return this;
+  }
+
+  /**
+   * The map's padding (MapLibre's `getPadding`): pixels kept free along each edge. The center is drawn
+   * at the middle of what they leave, and a tilted map's vanishing point follows it.
+   */
+  getPadding(): Padding {
+    const [top, right, bottom, left] = this.#engine ? engine.map_padding(this.#engine) : this.#padding;
+    return { top, right, bottom, left };
+  }
+
+  /** Sets the map's padding at once (MapLibre's `setPadding`): sides left out keep theirs; a number sets all four. */
+  setPadding(padding: PaddingOptions): this {
+    return this.jumpTo({ padding });
   }
 
   setCenter(center: LngLatLike): this {

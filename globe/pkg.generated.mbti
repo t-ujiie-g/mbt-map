@@ -50,7 +50,7 @@ pub fn Globe::projection(Self) -> Projection
 pub fn Globe::projection_matrix(Self) -> (@core.Mat4, Double, Double)
 pub fn Globe::radius_correction(Self) -> Double
 pub fn Globe::resize(Self, Double, Double) -> Unit
-pub fn Globe::set_camera(Self, @core.Camera) -> Unit
+pub fn Globe::set_camera(Self, @core.Camera, padding? : @core.Padding) -> Unit
 pub fn Globe::set_location_at_point(Self, @core.LngLat, Double, Double) -> Unit
 pub fn Globe::set_padding(Self, @core.Padding) -> Unit
 pub fn Globe::set_pitch(Self, Double) -> Unit

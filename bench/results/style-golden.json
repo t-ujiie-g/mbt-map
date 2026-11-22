@@ -6,6 +6,46 @@
   },
   "results": [
     {
+      "scene": "pitched-60",
+      "ok": true,
+      "mean": 1.298,
+      "p99": 32,
+      "limits": {
+        "mean": 1.4,
+        "p99": 35
+      }
+    },
+    {
+      "scene": "padding-pitched",
+      "ok": true,
+      "mean": 1.143,
+      "p99": 33,
+      "limits": {
+        "mean": 1.4,
+        "p99": 35
+      }
+    },
+    {
+      "scene": "padding-extrusions",
+      "ok": true,
+      "mean": 0.052,
+      "p99": 0,
+      "limits": {
+        "mean": 0.12,
+        "p99": 1
+      }
+    },
+    {
+      "scene": "padding-globe",
+      "ok": true,
+      "mean": 0.003,
+      "p99": 0,
+      "limits": {
+        "mean": 0.05,
+        "p99": 1
+      }
+    },
+    {
       "scene": "globe-vectors",
       "ok": true,
       "mean": 0.008,
@@ -562,7 +602,7 @@
     {
       "scene": "line-patterns",
       "ok": true,
-      "mean": 0.143,
+      "mean": 0.144,
       "p99": 1,
       "limits": {
         "mean": 0.2,
