@@ -48,6 +48,22 @@ export function parsePitch(value: string): number | null {
   return DECIMAL.test(value) ? checkPitch(Number(value)) : null;
 }
 
+export type Padding = { top: number; right: number; bottom: number; left: number };
+
+/** Pixels, finite and 0 or more, on every side (a number is all four). */
+export function checkPadding(p: number | Padding): Padding | null {
+  const sides = typeof p === "number" ? { top: p, right: p, bottom: p, left: p } : { top: p.top, right: p.right, bottom: p.bottom, left: p.left };
+  return Object.values(sides).every((v) => typeof v === "number" && Number.isFinite(v) && v >= 0) ? sides : null;
+}
+
+/** `"top,right,bottom,left"` or one number for all four. */
+export function parsePadding(value: string): Padding | null {
+  const parts = value.split(",");
+  if ((parts.length !== 1 && parts.length !== 4) || !parts.every((p) => DECIMAL.test(p))) return null;
+  const [top, right, bottom, left] = parts.length === 1 ? Array(4).fill(Number(parts[0])) : parts.map(Number);
+  return checkPadding({ top, right, bottom, left });
+}
+
 export function checkBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
 }

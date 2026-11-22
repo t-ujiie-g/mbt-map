@@ -21,7 +21,8 @@ const TAB_BODIES = {
     <h2>Go to</h2><div id="destinations" class="chips"></div>
     <h2>Clicked feature</h2><dl id="picked" class="rows"><dt>—</dt><dd>Click the map</dd></dl>
     <h2>Places within 5 km of the center</h2><ul id="near" class="plain-list"></ul>
-    <h2>Camera</h2><dl id="camera" class="rows"></dl>`,
+    <h2>Camera</h2><dl id="camera" class="rows"></dl>
+    <div class="chips"><button id="clear-panel" aria-pressed="false">Keep the center clear of the panel</button></div>`,
   layers: `
     <h2>Basemap</h2><div id="basemaps" class="segmented"></div>
     <h2>Layers</h2><div id="layers" class="toggles"></div>

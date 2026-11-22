@@ -649,6 +649,18 @@ async function showcase(page) {
   await page.click("#save");
   await page.waitForFunction(() => window.__saved, null, { timeout: 30000 });
   const saved = await page.evaluate(() => window.__saved);
+  crumb("showcase: padding");
+  // The map's padding follows the panel: the center is drawn in the middle of what the panel leaves.
+  await page.click("#clear-panel");
+  await page.waitForFunction(() => window.__map.getPadding().left > 0 && !window.__map.isMoving(), null, { timeout: 30000 });
+  const padded = await page.evaluate(() => {
+    const map = window.__map;
+    const c = map.project(map.getCenter());
+    const panelRight = Math.round(document.querySelector(".panel-card").getBoundingClientRect().right);
+    return { padding: map.getPadding(), panelRight, off: [c.x - (map.getCanvas().clientWidth + panelRight) / 2, c.y - map.getCanvas().clientHeight / 2] };
+  });
+  await page.click("#clear-panel");
+  await page.waitForFunction(() => window.__map.getPadding().left === 0 && !window.__map.isMoving(), null, { timeout: 30000 });
   crumb("controlChecks");
   const controls = await controlChecks(page);
   crumb("searchChecks");
@@ -741,9 +753,10 @@ async function showcase(page) {
     osaka.plane.zone === "第VI系" &&
     shown.includes("135.49590") && shown.includes("第VI系") &&
     atCentre(tokyoPin) && atCentre(osakaPin) &&
+    padded.padding.left === padded.panelRight && padded.padding.top === 0 && Math.abs(padded.off[0]) < 0.5 && Math.abs(padded.off[1]) < 0.5 &&
     globe.projection === "globe" && globe.pitch === 0 && Math.abs(globe.centre[0]) < 1e-6 && Math.abs(globe.centre[1]) < 1e-6 && globe.ring && globe.model === true &&
     saved.type === "image/png" && saved.size > 0 && controls.ok && searched.ok && tabled.ok && tabled.marked && analyzed.ok && read.ok && services.ok && measured.ok && drew.ok && edited.ok && cut.ok && clustered.ok;
-  return [ok, { first, picked, identified, coordinates, hovered, tilted, osaka: osaka.near, shown, styled, globe, wide, tokyoPin, osakaPin, saved, controls, searched, tabled, analyzed, read, services, measured, drew, edited, cut, clustered }];
+  return [ok, { first, picked, identified, coordinates, hovered, tilted, osaka: osaka.near, shown, padded, styled, globe, wide, tokyoPin, osakaPin, saved, controls, searched, tabled, analyzed, read, services, measured, drew, edited, cut, clustered }];
 }
 
 async function engineStarted(page) {

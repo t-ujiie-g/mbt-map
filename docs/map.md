@@ -139,9 +139,9 @@ map.fitBounds([[139.73, 35.66], [139.79, 35.70]], { padding: 40, maxZoom: 16 });
 | `panBy(offset, options?)`, `panTo(center, options?)` | |
 | `zoomTo(zoom, options?)`, `zoomIn(options?)`, `zoomOut(options?)` | One zoom level in or out. |
 | `rotateTo(bearing, options?)`, `resetNorth(options?)`, `resetNorthPitch(options?)`, `snapToNorth(options?)` | `resetNorth*` take 1000 ms by default; `snapToNorth` resets only within 7° of north. |
-| `fitBounds(bounds, options?)` | A flight, or an ease with `linear: true`. |
+| `fitBounds(bounds, options?)` | A flight, or an ease with `linear: true`. `offset` places the bounds' middle that far from the center once, as `cameraForBounds` does (MapLibre 6.16's `fitBounds` applies it twice). |
 | `fitScreenCoordinates(p0, p1, bearing, options?)` | Shows the box between two screen points, turned to `bearing`. |
-| `cameraForBounds(bounds, options?)` | Returns `{ center, zoom, bearing }`, or `undefined` when the padding leaves no room or the map has not started. |
+| `cameraForBounds(bounds, options?)` | Returns `{ center, zoom, bearing }` (and `padding` with `absolutePadding`), or `undefined` when the padding leaves no room or the map has not started. |
 | `stop()` | Stops an animation. |
 | `isMoving()`, `isEasing()`, `isZooming()`, `isRotating()` | |
 
@@ -156,6 +156,22 @@ const b = new LngLatBounds(139.73, 35.66, 139.79, 35.70);
 b.getCenter(); // { lng: 139.76, lat: 35.68 }
 b.toArray();   // [[139.73, 35.66], [139.79, 35.70]]
 ```
+
+### Padding
+
+The map's padding keeps part of the view free for what lies over it, a side panel or a bottom sheet, while the map still draws underneath:
+
+```ts
+map.setPadding({ left: 320 });                               // at once; sides left out keep their value
+map.easeTo({ padding: { left: 0, bottom: 280 }, duration: 300 }); // animated, with any camera move
+map.getPadding();                                            // { top, right, bottom, left }
+```
+
+- The center is drawn at the middle of what the padding leaves: `getCenter()` and `setCenter()` refer to that point, moves end there, and gestures rotate and pitch around it.
+- On a tilted map the vanishing point moves with it (the projection is shifted, not the camera), on the globe and on terrain too.
+- `getBounds()`, tile loading and label placement still cover the whole view.
+- `padding` on `jumpTo`, `easeTo`, `flyTo` and the moves built on them becomes the map's padding and stays after the move. A number sets all four sides. A side that is not a finite number, 0 or more throws a `TypeError`.
+- `fitBounds` and `cameraForBounds` fit inside the map's padding; their own `padding` option is added to it for that fit only. With `absolutePadding: true` the option replaces the map's padding and the move ends with it.
 
 Camera moves follow MapLibre's camera math: the default constraint (the zoom is raised until the view stays within ±85.051129° latitude and `maxBounds`), `easeTo`, `flyTo` and `cameraForBounds`.
 
@@ -174,8 +190,6 @@ With terrain, `project` and `unproject` use the ground height. Before the map ha
 `setRenderWorldCopies(bool)` turns the world copies on or off (undefined means true and null false, as MapLibre's) and `getRenderWorldCopies()` reads it. Tiles shown in several copies are loaded once and drawn in each; a tile's labels are placed in the copy nearest the center only, so when the world is narrower than the view (zoom below about 1) the other copies of a tile show no labels. Queries hit features in every copy (each feature once per tile, as MapLibre); `queryRenderedFeatures` gives their coordinates in the main world.
 
 `setMinZoom`, `setMaxZoom`, `setMinPitch`, `setMaxPitch` and `setMaxBounds` change the limits (null or nothing restores the default; `setMaxBounds(null)` lifts the bounds), and `getMinZoom()`, `getMaxZoom()`, `getMinPitch()`, `getMaxPitch()` and `getMaxBounds()` read them. `getMinZoom(true)` gives the zoom the camera can actually go down to at this place, as the latitude limits and `maxBounds` raise it. Limits outside 0-24 (zoom) or 0-85 (pitch), or a minimum above its maximum, throw.
-
-Map padding (`setPadding`) is not supported.
 
 ## Events
 

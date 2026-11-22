@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import "mbt-map/element";
 import { describe } from "../../shared/analysis.js";
 import { pinDestinations, saveImage } from "../../shared/overlay.js";
+import { NO_PADDING, watchPanel } from "../../shared/padding.js";
 import { panelControllers } from "../../shared/panel.js";
 import { hoverPlaces } from "../../shared/pick.js";
 import { DESTINATIONS, PLACES } from "../../shared/places.js";
@@ -33,6 +34,7 @@ function App() {
   const [mode, setMode] = useState("2d");
   const [tab, setTab] = useState("explore");
   const [collapsed, setCollapsed] = useState(false);
+  const [clearPanel, setClearPanel] = useState(false);
   const [camera, setCamera] = useState({ center: { lng: 139.7671, lat: 35.6812 }, zoom: 15, bearing: 0, pitch: 0 });
   const [described, setDescribed] = useState(null);
   const [panel, setPanel] = useState(null);
@@ -58,6 +60,15 @@ function App() {
   useEffect(() => {
     ref.current.mapStyle = style;
   }, [style]);
+
+  // The map's padding eases to the panel's while the button is pressed, and back to none.
+  useEffect(() => {
+    if (!map) return undefined;
+    const ease = (padding) => map.easeTo({ padding, duration: 300 });
+    if (clearPanel) return watchPanel(ease);
+    ease(NO_PADDING);
+    return undefined;
+  }, [map, clearPanel]);
 
   const switchMode = (m) => {
     if (m === mode) return;
@@ -131,6 +142,7 @@ function App() {
               <ul id="near" className="plain-list">{nearLines(described?.near ?? []).map((n) => <li key={n}>{n}</li>)}</ul>
               <h2>Camera</h2>
               <dl id="camera" className="rows">{rows.map(([k, v], i) => [<dt key={`k${i}`}>{k}</dt>, <dd key={`v${i}`}>{v}</dd>])}</dl>
+              <div className="chips"><button id="clear-panel" aria-pressed={clearPanel} onClick={() => setClearPanel(!clearPanel)}>Keep the center clear of the panel</button></div>
             </Tab>
             <Tab id="layers" tab={tab}>
               <h2>Basemap</h2>

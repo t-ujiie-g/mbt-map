@@ -239,4 +239,4 @@ These are reported as warnings (or refused with `strict`):
 - `lights` entries other than `ambient` and `directional`, and a `direction` that is not two numbers.
 - Layer types outside the ones listed above.
 
-Other differences in behavior: text at points always faces the viewer (`text-pitch-alignment` and `text-rotation-alignment` are not read for point labels), patterns are not cross-faded between zooms, raster tiles do not fade in, map padding (`setPadding`) is not supported, and tiles beyond a source's `maxzoom` are drawn and queried as the source serves them (MapLibre cuts them further).
+Other differences in behavior: text at points always faces the viewer (`text-pitch-alignment` and `text-rotation-alignment` are not read for point labels), patterns are not cross-faded between zooms, raster tiles do not fade in, and tiles beyond a source's `maxzoom` are drawn and queried as the source serves them (MapLibre cuts them further).

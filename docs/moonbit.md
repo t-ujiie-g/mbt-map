@@ -128,7 +128,7 @@ fn main {
 | Group | Methods |
 |---|---|
 | Create and remove | `Map::new(container, style~, center?, zoom?, bearing?, pitch?, min_zoom?, max_zoom?, min_pitch?, max_pitch?, interactive?, attribution?)`, `remove` |
-| Camera | `center`, `zoom`, `bearing`, `pitch`, `jump_to`, `ease_to`, `fly_to`, `fit_bounds`, `project`, `unproject` |
+| Camera | `center`, `zoom`, `bearing`, `pitch`, `jump_to`, `ease_to`, `fly_to`, `fit_bounds`, `project`, `unproject`; `padding`, `set_padding` and `padding?` on the three moves (`Padding::new(left=320.0)`: pixels kept free along the edges, see [The map](./map.md#padding)) |
 | Style | `set_style`, `style` (the style drawn, as `Json`), `add_source`, `remove_source`, `set_data`, `add_layer(layer, before?)`, `remove_layer`, `move_layer`, `layer_ids` |
 | Properties | `set_paint(id, name, Expr?)`, `set_layout(id, name, Expr?)`, `set_filter(id, Expr?)`: `None` goes back to the default |
 | Feature state | `set_feature_state(source, id, state, source_layer?)` |
@@ -146,7 +146,7 @@ The rest of the npm package's API (data, analysis, 3D, …) is not wrapped yet; 
 | Function | Kind | What it does |
 |---|---|---|
 | `view(id, css?, class?)` | view | the `<mbt-map>` element; give it a height |
-| `setup(id, style, center?, zoom?, bearing?, pitch?)` | Cmd | gives the map its style and camera once the view is on the page (the map is made then); run it again to change the style |
+| `setup(id, style, center?, zoom?, bearing?, pitch?, padding?)` | Cmd | gives the map its style and camera once the view is on the page (the map is made then); run it again to change the style |
 | `events(id, on_load?, on_idle?, on_move?, on_moveend?, on_click?, on_error?)` | Sub | the element's events as messages: `Camera` (center, zoom, bearing, pitch), `Click` (point, place, camera), the error message |
 | `with_map(id, f)` | Cmd | runs `f` on the typed `@mbtmap.Map` (once it has loaded) and then the command `f` returns |
 | `query_features(id, point, layers?, emit)` | Cmd | sends the features drawn at a point as a message |

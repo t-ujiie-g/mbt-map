@@ -1,7 +1,6 @@
-// Map padding (`setPadding`) moves the picture: mbt-map's frame under a padding against its frame
-// without, moved by the padded center's offset, pixel by pixel where they overlap, on terrain, with
-// extrusions and on the globe (bench/query/index.html). The center must be drawn at the padded center.
-// Usage: node style/padding.mjs [--shots=dir]; writes bench/results/padding-golden.json.
+// Map padding (`setPadding`) moves the picture: mbt-map's frame under a padding against its frame without, moved by
+// the padded center's offset, where they overlap, on terrain, with extrusions and on the globe; the center at the
+// padded center; moves under padding. Usage: node style/padding.mjs [--shots=dir]; writes bench/results/padding-golden.json.
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
@@ -22,7 +21,8 @@ const VIEWS = {
 const PADDINGS = [{ top: 0, right: 0, bottom: 0, left: 320 }, { top: 200, right: 0, bottom: 0, left: 0 }, { top: 0, right: 100, bottom: 60, left: 0 }];
 
 // An eased and a flown move to a padding end with it and with their center at the padded center, and
-// a fit leaves the map's padding free (`relief`: not checked where the ground is not at sea level).
+// a fit leaves the map's padding free (`relief`: not checked where the ground is not at sea level)
+// or, with `absolutePadding`, ends with its own.
 async function moves(page, camera, relief) {
   const r = await page.evaluate(async (camera) => {
     const mb = window.__mb;
@@ -45,12 +45,17 @@ async function moves(page, camera, relief) {
     end = ended();
     mb.fitBounds(box, { duration: 0 });
     await end;
-    return { eased, flown, fit: [at(box[0]), at(box[1])], padding: mb.getPadding() };
+    const fit = [at(box[0]), at(box[1])];
+    const kept = mb.getPadding();
+    end = ended();
+    mb.fitBounds(box, { duration: 0, padding: { top: 20, right: 30, bottom: 40, left: 50 }, absolutePadding: true });
+    await end;
+    return { eased, flown, fit, padding: kept, absolute: mb.getPadding() };
   }, camera);
   const [[x0, y0], [x1, y1]] = r.fit;
   const inside = Math.min(x0, x1) >= 320 - 1e-6 && Math.max(x0, x1) <= W + 1e-6 && Math.min(y0, y1) >= 100 - 1e-6 && Math.max(y0, y1) <= H + 1e-6;
   const px = Math.max(Math.abs(r.flown.center[0] - (W / 2 + 100)), Math.abs(r.flown.center[1] - H / 2));
-  const kept = JSON.stringify(r.eased) === JSON.stringify({ top: 0, right: 0, bottom: 0, left: 0 }) && JSON.stringify(r.flown.padding) === JSON.stringify({ top: 0, right: 0, bottom: 0, left: 200 }) && r.padding.left === 320;
+  const kept = JSON.stringify(r.eased) === JSON.stringify({ top: 0, right: 0, bottom: 0, left: 0 }) && JSON.stringify(r.flown.padding) === JSON.stringify({ top: 0, right: 0, bottom: 0, left: 200 }) && r.padding.left === 320 && JSON.stringify(r.absolute) === JSON.stringify({ top: 20, right: 30, bottom: 40, left: 50 });
   return { ok: kept && (inside || relief) && px <= LIMITS.px, mean: 0, p99: 0, "center px": px, getPadding: kept };
 }
 

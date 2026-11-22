@@ -15,7 +15,7 @@ pub fn events(String, on_load? : @cmd.Cmd, on_idle? : @cmd.Cmd, on_move? : @cmd.
 
 pub fn query_features(String, @mbtmap.Point, layers? : Array[String], @cmd.Emit[Array[@mbtmap.Feature]]) -> @cmd.Cmd
 
-pub fn setup(String, @style.Style, center? : @mbtmap.LngLat, zoom? : Double, bearing? : Double, pitch? : Double) -> @cmd.Cmd
+pub fn setup(String, @style.Style, center? : @mbtmap.LngLat, zoom? : Double, bearing? : Double, pitch? : Double, padding? : @mbtmap.Padding) -> @cmd.Cmd
 
 pub fn view(String, css? : String, class? : String) -> @html.Html
 

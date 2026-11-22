@@ -24,6 +24,7 @@ import {
   paddingSides,
   targetArray,
   toLngLat,
+  toPadding,
   toPoint,
 } from "./camera";
 import type { ClusterQuery, GeoJSONSource, GeoJSONSourceDiff, GeoJSONTiles } from "./geojson";
@@ -1346,13 +1347,19 @@ export class Map {
   }
 
   /**
-   * The camera that shows `bounds` (MapLibre's `cameraForBounds`), or undefined when the
-   * padding leaves no room or the map has not started.
+   * The camera that shows `bounds` inside the map's padding (MapLibre's `cameraForBounds`), or undefined
+   * when the padding leaves no room or the map has not started. With `absolutePadding` it comes with
+   * the `padding` to set.
    */
-  cameraForBounds(bounds: LngLatBoundsLike, options: FitBoundsOptions = {}): { center: LngLat; zoom: number; bearing: number } | undefined {
+  cameraForBounds(
+    bounds: LngLatBoundsLike,
+    options: FitBoundsOptions = {},
+  ): { center: LngLat; zoom: number; bearing: number; padding?: Padding } | undefined {
     if (!this.#engine) return undefined;
     const c = engine.map_camera_for_bounds(this.#engine, fitArray(LngLatBounds.convert(bounds), options));
-    return c.length ? { center: { lng: c[0], lat: c[1] }, zoom: c[2], bearing: c[3] } : undefined;
+    if (!c.length) return undefined;
+    const [top, right, bottom, left] = toPadding(options.padding);
+    return { center: { lng: c[0], lat: c[1] }, zoom: c[2], bearing: c[3], ...(options.absolutePadding ? { padding: { top, right, bottom, left } } : {}) };
   }
 
   /** Moves to show `bounds`: a flight, or an ease with `linear: true` (MapLibre's `fitBounds`). */
@@ -1361,8 +1368,8 @@ export class Map {
     return this.#withEngine(() => {
       const c = this.cameraForBounds(b, options);
       if (!c) return;
-      const { padding: _, maxZoom: __, linear, ...rest } = options;
-      const target = { ...rest, center: c.center, zoom: c.zoom, bearing: c.bearing, offset: undefined };
+      const { padding: _, absolutePadding: ___, maxZoom: __, linear, ...rest } = options;
+      const target = { ...rest, ...c, offset: undefined };
       if (linear) this.easeTo(target);
       else this.flyTo(target);
     });
