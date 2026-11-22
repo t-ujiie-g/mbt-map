@@ -13,7 +13,7 @@ The quickest start is one HTML file that loads mbt-map from a CDN through an imp
 <title>A map</title>
 <style>html, body, #map { height: 100%; margin: 0; }</style>
 <script type="importmap">
-  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.2.0/dist/index.js" } }
+  { "imports": { "mbt-map": "https://cdn.jsdelivr.net/npm/mbt-map@0.2.1/dist/index.js" } }
 </script>
 <div id="map"></div>
 <script type="module">
@@ -41,7 +41,7 @@ The quickest start is one HTML file that loads mbt-map from a CDN through an imp
 </html>
 ```
 
-Open it from any http server (module scripts and workers do not load from `file:` URLs), for example with `npx serve`. Other entry points go into the import map the same way, one line each: `"mbt-map/analysis": "https://cdn.jsdelivr.net/npm/mbt-map@0.2.0/dist/analysis.js"`. Pin the version in the URL; every file the modules load next (workers, wasm, parts) comes from the same folder of the CDN. Each [example](https://t-ujiie-g.github.io/mbt-map/examples/) shows its page in this form.
+Open it from any http server (module scripts and workers do not load from `file:` URLs), for example with `npx serve`. Other entry points go into the import map the same way, one line each: `"mbt-map/analysis": "https://cdn.jsdelivr.net/npm/mbt-map@0.2.1/dist/analysis.js"`. Pin the version in the URL; every file the modules load next (workers, wasm, parts) comes from the same folder of the CDN. Each [example](https://t-ujiie-g.github.io/mbt-map/examples/) shows its page in this form.
 
 ## Install from npm
 

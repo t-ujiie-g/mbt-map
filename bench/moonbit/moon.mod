@@ -5,5 +5,5 @@ name = "t-ujiie-g/mbtmap_check"
 version = "0.0.1"
 
 import {
-  "t-ujiie-g/mbtmap@0.2.0",
+  "t-ujiie-g/mbtmap@0.2.1",
 }
