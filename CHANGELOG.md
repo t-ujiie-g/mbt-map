@@ -2,7 +2,7 @@
 
 All notable changes to the npm package `mbt-map` and the MoonBit modules `t-ujiie-g/mbtmap` and `t-ujiie-g/mbtmap_rabbita`. They share one version.
 
-## Unreleased
+## 0.2.1
 
 - `mbt-map`: map padding, as MapLibre's. `setPadding` and `getPadding`, and `padding` on `jumpTo`, `easeTo`, `flyTo` and the moves built on them, keep part of the view free for a panel over the map: the center is drawn at the middle of what is left, and a tilted map's vanishing point moves with it, on the globe and on terrain too. `fitBounds` and `cameraForBounds` fit inside the map's padding; `absolutePadding: true` makes their `padding` the map's.
 - `mbt-map/element`: the `padding` attribute (`top,right,bottom,left` or one number) and property.

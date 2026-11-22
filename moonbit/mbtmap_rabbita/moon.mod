@@ -2,7 +2,7 @@
 
 name = "t-ujiie-g/mbtmap_rabbita"
 
-version = "0.2.0"
+version = "0.2.1"
 
 readme = "README.md"
 
@@ -16,7 +16,7 @@ description = "Maps in rabbita apps: the mbt-map element as a view, its events a
 
 import {
   "moonbit-community/rabbita@0.16.7",
-  "t-ujiie-g/mbtmap@0.2.0",
+  "t-ujiie-g/mbtmap@0.2.1",
 }
 
 supported_targets = "js"

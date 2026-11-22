@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1〜P.3 と点検が済み、次は 0.2.1 の版上げ。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
+- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1〜P.3 と点検が済み、版の番号と CHANGELOG を 0.2.1 にした（2026-11-22）。次は 0.2.1 の公開（タグ、npm の承認、`moon publish` はユーザー）。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
