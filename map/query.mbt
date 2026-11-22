@@ -256,9 +256,10 @@ pub fn Map::query_rendered(
   let mercator = points.map(p => self.screen_mercator(p.0, p.1))
   // MapLibre's camera query geometry: the query's box grown to the point
   // under the camera, so that buildings standing between are found.
+  let (cx, cy) = t.center_point()
   let camera_point = (
-    t.width / 2.0,
-    t.height / 2.0 + @math.tan(@core.radians(t.camera.pitch)) * t.center_depth(),
+    cx,
+    cy + @math.tan(@core.radians(t.camera.pitch)) * t.center_depth(),
   )
   let camera_screen = if points.length() == 1 {
     [points[0], camera_point]

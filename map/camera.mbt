@@ -1,9 +1,9 @@
 ///|
-/// A camera move in progress: `at` gives the camera at an eased fraction, `easing`
+/// A camera move in progress: `at` gives the camera and padding at an eased fraction, `easing`
 /// maps elapsed time (of `duration` ms) to it; a move with the same `id` replaces
 /// it without ending the movement (MapLibre's `easeId`).
 priv struct Animation {
-  at : (Double) -> @core.Camera
+  at : (Double) -> (@core.Camera, @core.Padding)
   start : Double
   duration : Double
   easing : (Double) -> Double
@@ -89,9 +89,11 @@ pub fn Map::camera_for_bounds(
   padding~ : @core.Padding = @core.Padding::uniform(0.0),
   offset~ : (Double, Double) = (0.0, 0.0),
   max_zoom? : Double,
+  absolute~ : Bool = false,
 ) -> @core.Camera? {
   match self.globe {
-    Some(g) => g.camera_for_bounds(b, bearing~, padding~, offset~, max_zoom?)
+    Some(g) =>
+      g.camera_for_bounds(b, bearing~, padding~, offset~, max_zoom?, absolute~)
     None =>
       self.transform.camera_for_bounds(
         b,
@@ -99,6 +101,7 @@ pub fn Map::camera_for_bounds(
         padding~,
         offset~,
         max_zoom?,
+        absolute~,
       )
   }
 }
@@ -131,6 +134,7 @@ pub fn Map::set_limits(self : Map, limits : @core.Limits) -> Unit {
       self.transform.height,
       limits~,
       projection=g.projection(),
+      padding=g.padding(),
     )
     let moved = h.camera() != g.camera()
     self.globe = Some(h)
@@ -293,7 +297,7 @@ fn Map::stop_animation(self : Map, keep : Bool, id : String) -> Unit {
 /// Runs `at` over `duration` ms; 0 jumps to its end.
 fn Map::animate(
   self : Map,
-  at : (Double) -> @core.Camera,
+  at : (Double) -> (@core.Camera, @core.Padding),
   duration : Double,
   easing : (Double) -> Double,
   id : String,
@@ -303,7 +307,8 @@ fn Map::animate(
   self.begin_move(event)
   if duration <= 0.0 || duration.is_nan() {
     self.input_event = event
-    self.apply_camera(at(1.0))
+    let (camera, padding) = at(1.0)
+    self.apply_view(camera, padding)
     self.input_event = no_event()
     self.end_move(event)
     return
@@ -318,7 +323,8 @@ fn Map::step_animation(self : Map) -> Unit {
   guard self.animation is Some(a) else { return }
   let t = @cmp.minimum((now() - a.start) / a.duration, 1.0)
   self.input_event = a.event
-  self.apply_camera((a.at)((a.easing)(t)))
+  let (camera, padding) = (a.at)((a.easing)(t))
+  self.apply_view(camera, padding)
   self.input_event = no_event()
   if t >= 1.0 {
     // `apply_camera`'s listeners may have started another animation.
@@ -345,11 +351,17 @@ pub fn Map::ease_to(
   match self.globe {
     Some(g) => {
       let e = g.ease_to(target)
-      self.animate(k => e.at(k), duration, easing, id, event)
+      self.animate(
+        k => (e.at(k), e.transform().padding()),
+        duration,
+        easing,
+        id,
+        event,
+      )
     }
     None => {
       let e = self.transform.ease_to(target)
-      self.animate(k => e.at(k), duration, easing, id, event)
+      self.animate(k => (e.at(k), e.padding_at(k)), duration, easing, id, event)
     }
   }
 }
@@ -370,15 +382,16 @@ pub fn Map::fly_to(
   easing~ : (Double) -> Double = ease,
   event~ : Event = no_event(),
 ) -> Unit {
-  let flight : ((Double) -> @core.Camera, Double)? = match self.globe {
+  let flight : ((Double) -> (@core.Camera, @core.Padding), Double)? = match
+    self.globe {
     Some(g) =>
       g
       .fly_to(target, curve~, speed~, screen_speed?, min_zoom?)
-      .map(f => (k => f.at(k), f.duration))
+      .map(f => (k => (f.at(k), f.transform().padding()), f.duration))
     None =>
       self.transform
       .fly_to(target, curve~, speed~, screen_speed?, min_zoom?)
-      .map(f => (k => f.at(k), f.duration))
+      .map(f => (k => (f.at(k), f.padding_at(k)), f.duration))
   }
   guard flight is Some((at, natural)) else {
     self.ease_to(target, duration=duration.unwrap_or(500.0), easing~, event~)

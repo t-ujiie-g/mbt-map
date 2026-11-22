@@ -68,6 +68,63 @@ pub fn map_camera(map : @map.Map) -> JsCamera {
 }
 
 ///|
+/// The map's padding: top, right, bottom, left.
+#export_name("map_padding")
+pub fn map_padding(map : @map.Map) -> FixedArray[Double] {
+  let p = map.padding()
+  [p.top, p.right, p.bottom, p.left]
+}
+
+///|
+/// The padding of `sides` (top, right, bottom, left) over the map's: a NaN
+/// side keeps the map's (MapLibre's `PaddingOptions`). None when a side is
+/// not a finite number, 0 or more.
+fn padding_over(
+  map : @map.Map,
+  top : Double,
+  right : Double,
+  bottom : Double,
+  left : Double,
+) -> @core.Padding? {
+  let own = map.padding()
+  let side = (v : Double, kept : Double) => if v.is_nan() { kept } else { v }
+  let p : @core.Padding = {
+    top: side(top, own.top),
+    right: side(right, own.right),
+    bottom: side(bottom, own.bottom),
+    left: side(left, own.left),
+  }
+  if p.valid() {
+    Some(p)
+  } else {
+    None
+  }
+}
+
+///|
+/// `@map.Map::set_camera` from the camera's numbers and the padding `sides`
+/// (as `padding_over`; none when empty, and an invalid one is left out).
+#export_name("map_jump_to")
+pub fn map_jump_to(
+  map : @map.Map,
+  lng : Double,
+  lat : Double,
+  zoom : Double,
+  bearing : Double,
+  pitch : Double,
+  sides : FixedArray[Double],
+) -> Unit {
+  map.set_camera(
+    { center: { lng, lat, }, zoom, bearing, pitch, },
+    padding?=if sides.length() == 4 {
+      padding_over(map, sides[0], sides[1], sides[2], sides[3])
+    } else {
+      None
+    },
+  )
+}
+
+///|
 /// `@map.Map::set_camera` from the camera's numbers.
 #export_name("map_set_camera")
 pub fn map_set_camera(
@@ -151,8 +208,9 @@ pub fn map_set_limits(map : @map.Map, limits : FixedArray[Double]) -> Unit {
 
 ///|
 /// A move target from center (lng, lat), zoom, bearing, pitch, around (lng,
-/// lat), each NaN for none, and the offset (x, y).
-fn target_of(g : FixedArray[Double]) -> @core.CameraTarget {
+/// lat), each NaN for none, the offset (x, y) and, if 13 long, the padding
+/// (as `padding_over`).
+fn target_of(map : @map.Map, g : FixedArray[Double]) -> @core.CameraTarget {
   let some = (v : Double) => if v.is_nan() { None } else { Some(v) }
   @core.CameraTarget::new(
     center?=if g[0].is_nan() { None } else { Some({ lng: g[0], lat: g[1], }) },
@@ -161,6 +219,11 @@ fn target_of(g : FixedArray[Double]) -> @core.CameraTarget {
     pitch?=some(g[4]),
     around?=if g[5].is_nan() { None } else { Some({ lng: g[5], lat: g[6], }) },
     offset=(g[7], g[8]),
+    padding?=if g.length() < 13 {
+      None
+    } else {
+      padding_over(map, g[9], g[10], g[11], g[12])
+    },
   )
 }
 
@@ -174,7 +237,7 @@ pub fn map_ease_to(
   easing : (Double) -> Double,
   id : String,
 ) -> Unit {
-  map.ease_to(target_of(g), duration~, easing~, id~)
+  map.ease_to(target_of(map, g), duration~, easing~, id~)
 }
 
 ///|
@@ -189,7 +252,7 @@ pub fn map_fly_to(
 ) -> Unit {
   let some = (v : Double) => if v.is_nan() { None } else { Some(v) }
   map.fly_to(
-    target_of(g),
+    target_of(map, g),
     duration?=some(o[0]),
     curve=some(o[1]).unwrap_or(1.42),
     speed=some(o[2]).unwrap_or(1.2),
@@ -276,9 +339,9 @@ pub fn map_bounds(map : @map.Map) -> FixedArray[Double] {
 }
 
 ///|
-/// `camera_for_bounds` of `b` (west, south, east, north, bearing, padding
-/// top, right, bottom, left, offset x, y, max zoom or NaN): lng, lat, zoom,
-/// bearing, pitch, or empty when it does not fit.
+/// `camera_for_bounds` of `b` (west, south, east, north, bearing, padding top, right, bottom, left,
+/// offset x, y, max zoom or NaN, and if 13 long 1 for absolute padding): lng, lat, zoom, bearing,
+/// pitch, or empty when it does not fit.
 #export_name("map_camera_for_bounds")
 pub fn map_camera_for_bounds(
   map : @map.Map,
@@ -290,6 +353,7 @@ pub fn map_camera_for_bounds(
     padding={ top: b[5], right: b[6], bottom: b[7], left: b[8], },
     offset=(b[9], b[10]),
     max_zoom?=if b[11].is_nan() { None } else { Some(b[11]) },
+    absolute=b.length() > 12 && b[12] == 1.0,
   )
   match fit {
     Some(c) => [c.center.lng, c.center.lat, c.zoom, c.bearing, c.pitch]

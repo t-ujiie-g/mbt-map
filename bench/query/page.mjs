@@ -8,12 +8,17 @@ const load = async (url) => JSON.parse((await (await fetch(url)).text()).replace
 const style = await load(params.get("style"));
 // MapLibre may draw the same data from elsewhere (`mlstyle`): files where mbtmap reads a PMTiles archive.
 const mlStyle = params.get("mlstyle") ? await load(params.get("mlstyle")) : style;
-const camera = JSON.parse(params.get("camera"));
+// `padding` is the map's (`setPadding`), set on both once they exist.
+const { padding, ...camera } = JSON.parse(params.get("camera"));
 
 const mb = new MbtMap({ container: "mbtmap", style: structuredClone(style), ...camera, maxPitch: 85, attributionControl: false });
 // MapLibre 6 splits tiles deeper than a source's maxzoom by default, which changes what
 // queries return (`zoomLevelsToOverscale`); mbtmap draws, and queries, the source's own tiles.
 const ml = new maplibregl.Map({ container: "maplibre", style: structuredClone(mlStyle), ...camera, maxPitch: 85, attributionControl: false, pixelRatio: Number(params.get("ratio") ?? 1), fadeDuration: 0, zoomLevelsToOverscale: undefined });
+if (padding) {
+  mb.setPadding(padding);
+  ml.setPadding(padding);
+}
 await Promise.all([mb.once("idle"), new Promise((r) => ml.once("idle", r))]);
 // Both have every tile and have placed their labels.
 await new Promise((r) => setTimeout(r, 500));

@@ -19,6 +19,9 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
 /** Pixels on each side, or the same on all four. */
 export type PaddingOptions = number | { top?: number; right?: number; bottom?: number; left?: number };
 
+/** The map's padding, every side given (what `getPadding` returns). */
+export type Padding = { top: number; right: number; bottom: number; left: number };
+
 /** A box in longitude and latitude, as MapLibre's `LngLatBounds` (west may exceed east across the antimeridian). */
 export class LngLatBounds {
   readonly west: number;
@@ -82,13 +85,30 @@ export function toPadding(p: PaddingOptions | undefined): [number, number, numbe
   return [p.top ?? 0, p.right ?? 0, p.bottom ?? 0, p.left ?? 0];
 }
 
-/** What every camera move takes, as in MapLibre's `CameraOptions` (`around` keeps that point still). */
+/**
+ * The engine's sides of a map padding (top, right, bottom, left): NaN for a side left out, which keeps
+ * the map's. Throws a TypeError on a side that is not a finite number, 0 or more.
+ */
+export function paddingSides(p: PaddingOptions): number[] {
+  const sides = typeof p === "number" ? [p, p, p, p] : [p.top, p.right, p.bottom, p.left];
+  return sides.map((v) => {
+    if (v === undefined || v === null) return NaN;
+    if (!Number.isFinite(v) || v < 0) throw new TypeError(`mbt-map: padding must be finite numbers, 0 or more: ${String(v)}`);
+    return v;
+  });
+}
+
+/**
+ * What every camera move takes, as in MapLibre's `CameraOptions` (`around` keeps that point still).
+ * `padding` becomes the map's padding (`setPadding`): sides left out keep theirs.
+ */
 export interface CameraOptions {
   center?: LngLatLike;
   zoom?: number;
   bearing?: number;
   pitch?: number;
   around?: LngLatLike;
+  padding?: PaddingOptions;
 }
 
 /**
@@ -132,12 +152,13 @@ function num(v: number | undefined): number {
   return v;
 }
 
-/** The engine's move target: center, zoom, bearing, pitch, around (NaN for none), offset. */
+/** The engine's move target: center, zoom, bearing, pitch, around (NaN for none), offset, then the padding's sides if given. */
 export function targetArray(o: EaseToOptions): number[] {
   const c = o.center === undefined ? undefined : toLngLat(o.center);
   const a = o.around === undefined ? undefined : toLngLat(o.around);
   const off = o.offset === undefined ? { x: 0, y: 0 } : toPoint(o.offset);
-  return [num(c?.lng), num(c?.lat), num(o.zoom), num(o.bearing), num(o.pitch), num(a?.lng), num(a?.lat), num(off.x), num(off.y)];
+  const padding = o.padding === undefined ? [] : paddingSides(o.padding);
+  return [num(c?.lng), num(c?.lat), num(o.zoom), num(o.bearing), num(o.pitch), num(a?.lng), num(a?.lat), num(off.x), num(off.y), ...padding];
 }
 
 /** The engine's fly options: duration, curve, speed, screen speed, max duration, min zoom. */

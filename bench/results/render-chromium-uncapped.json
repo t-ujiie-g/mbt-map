@@ -13,8 +13,8 @@
   },
   "sizes": {
     "mbtmap": {
-      "main": 152288,
-      "worker": 96813
+      "main": 155120,
+      "worker": 97690
     },
     "maplibre": {
       "main": 295496,
@@ -23,68 +23,68 @@
   },
   "summary": {
     "mbtmap": {
-      "idle": 138.9200000166893,
+      "idle": 144.08999998867512,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 1.5840897097751145,
-          "frameP95Ms": 2.790000021457672,
+          "frameMeanMs": 1.4158372641453203,
+          "frameP95Ms": 2.550000011920929,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.2850000262260437,
-          "rafCpuP95Ms": 2.689999997615814
+          "rafCpuP50Ms": 2.0999999791383743,
+          "rafCpuP95Ms": 2.449999988079071
         },
         "pan-back": {
-          "frameMeanMs": 1.548908668713427,
-          "frameP95Ms": 2.7699999809265137,
+          "frameMeanMs": 1.38007586207198,
+          "frameP95Ms": 2.540000006556511,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.2700000405311584,
-          "rafCpuP95Ms": 2.674999952316284
+          "rafCpuP50Ms": 2.070000007748604,
+          "rafCpuP95Ms": 2.439999997615814
         },
         "zoom-in": {
-          "frameMeanMs": 1.4046724380094646,
-          "frameP95Ms": 2.6700000166893005,
+          "frameMeanMs": 1.3157675438544207,
+          "frameP95Ms": 2.4449999928474426,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.0350000262260437,
-          "rafCpuP95Ms": 2.584999978542328
+          "rafCpuP50Ms": 1.9500000029802322,
+          "rafCpuP95Ms": 2.3499999940395355
         },
         "zoom-out": {
-          "frameMeanMs": 1.5209528636763197,
-          "frameP95Ms": 2.7850000262260437,
+          "frameMeanMs": 1.4350454110873019,
+          "frameP95Ms": 2.5799999982118607,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.2549999952316284,
-          "rafCpuP95Ms": 2.674999952316284
+          "rafCpuP50Ms": 2.125,
+          "rafCpuP95Ms": 2.455000013113022
         }
       }
     },
     "maplibre": {
-      "idle": 228.2750000357628,
+      "idle": 246.87999999523163,
       "scenarios": {
         "pan": {
-          "frameMeanMs": 1.4880084325337695,
-          "frameP95Ms": 2.824999988079071,
+          "frameMeanMs": 1.3619246482105078,
+          "frameP95Ms": 2.5900000035762787,
           "over20ms": 0,
-          "rafCpuP50Ms": 0.5700000524520874,
-          "rafCpuP95Ms": 2.715000033378601
+          "rafCpuP50Ms": 0.35500000417232513,
+          "rafCpuP95Ms": 2.480000004172325
         },
         "pan-back": {
-          "frameMeanMs": 1.5914774535821667,
-          "frameP95Ms": 2.824999988079071,
+          "frameMeanMs": 1.4571588149619021,
+          "frameP95Ms": 2.604999989271164,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.2300000190734863,
-          "rafCpuP95Ms": 2.7350000143051147
+          "rafCpuP50Ms": 1.7349999994039536,
+          "rafCpuP95Ms": 2.4949999898672104
         },
         "zoom-in": {
-          "frameMeanMs": 1.5701830543920585,
-          "frameP95Ms": 2.900000035762787,
+          "frameMeanMs": 1.4465139826459732,
+          "frameP95Ms": 2.6749999970197678,
           "over20ms": 0,
-          "rafCpuP50Ms": 2.0700000524520874,
-          "rafCpuP95Ms": 2.7450000047683716
+          "rafCpuP50Ms": 1.75,
+          "rafCpuP95Ms": 2.5049999952316284
         },
         "zoom-out": {
-          "frameMeanMs": 1.6099544480235375,
-          "frameP95Ms": 2.9550000429153442,
-          "over20ms": 1,
-          "rafCpuP50Ms": 2.0800000429153442,
-          "rafCpuP95Ms": 2.8299999833106995
+          "frameMeanMs": 1.5143746848260882,
+          "frameP95Ms": 2.7450000047683716,
+          "over20ms": 0,
+          "rafCpuP50Ms": 1.969999998807907,
+          "rafCpuP95Ms": 2.5999999940395355
         }
       }
     }

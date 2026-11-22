@@ -1,0 +1,121 @@
+{
+  "env": {
+    "browser": "chromium",
+    "viewport": "800x600"
+  },
+  "limits": {
+    "mean": 0.05,
+    "p99": 1,
+    "px": 0.000001
+  },
+  "results": [
+    {
+      "view": "terrain",
+      "padding": "0,0,0,320",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "terrain",
+      "padding": "200,0,0,0",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "terrain",
+      "padding": "0,100,60,0",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "terrain",
+      "padding": "moves",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "extrusions",
+      "padding": "0,0,0,320",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "extrusions",
+      "padding": "200,0,0,0",
+      "ok": true,
+      "mean": 0.008,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "extrusions",
+      "padding": "0,100,60,0",
+      "ok": true,
+      "mean": 0.006,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "extrusions",
+      "padding": "moves",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    },
+    {
+      "view": "globe",
+      "padding": "0,0,0,320",
+      "ok": true,
+      "mean": 0.016,
+      "p99": 0,
+      "center px": 5.684341886080802e-14,
+      "getPadding": true
+    },
+    {
+      "view": "globe",
+      "padding": "200,0,0,0",
+      "ok": true,
+      "mean": 0.025,
+      "p99": 0,
+      "center px": 5.684341886080802e-14,
+      "getPadding": true
+    },
+    {
+      "view": "globe",
+      "padding": "0,100,60,0",
+      "ok": true,
+      "mean": 0.011,
+      "p99": 0,
+      "center px": 5.684341886080802e-14,
+      "getPadding": true
+    },
+    {
+      "view": "globe",
+      "padding": "moves",
+      "ok": true,
+      "mean": 0,
+      "p99": 0,
+      "center px": 0,
+      "getPadding": true
+    }
+  ]
+}

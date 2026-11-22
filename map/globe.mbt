@@ -33,6 +33,7 @@ fn Map::follow_projection(self : Map, camera? : @core.Camera) -> Unit {
         t.height,
         limits=t.limits,
         projection=p,
+        padding=t.padding,
       )
       self.globe = Some(g)
       self.transform = g.mercator()

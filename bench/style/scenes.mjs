@@ -827,7 +827,38 @@ const COPIES_SCENES = {
   },
 };
 
+// The map's padding (`setPadding`): the center and the vanishing point at the padded center, on the
+// tilted map, with extrusions and on the globe. Lines at 60° differ as without padding (`pitched-60`).
+const PITCHED_LINES = style([
+  { id: "water", type: "fill", source: "gsi", "source-layer": "waterarea", paint: { "fill-color": "#a8d4f0" } },
+  { id: "road", type: "line", source: "gsi", "source-layer": "road", paint: { "line-color": "#999999", "line-width": 3 } },
+]);
+const PADDING_SCENES = {
+  "pitched-60": {
+    style: PITCHED_LINES,
+    camera: { center: [139.7671, 35.6812], zoom: 15.4, bearing: 30, pitch: 60 },
+    limits: { mean: 1.4, p99: 35 },
+  },
+  "padding-pitched": {
+    style: PITCHED_LINES,
+    camera: { center: [139.7671, 35.6812], zoom: 15.4, bearing: 30, pitch: 60, padding: { left: 320 } },
+    limits: { mean: 1.4, p99: 35 },
+  },
+  "padding-extrusions": {
+    style: style([{ id: "building-3d", type: "fill-extrusion", source: "gsi", "source-layer": "building",
+      paint: { "fill-extrusion-color": "#1e8c46", "fill-extrusion-height": ["match", ["get", "ftCode"], 3103, 40, 12], "fill-extrusion-opacity": 0.9 } }]),
+    camera: { center: [139.7671, 35.6812], zoom: 15.5, bearing: 30, pitch: 60, padding: { top: 240, bottom: 40, right: 100 } },
+    limits: { mean: 0.12, p99: 1 },
+  },
+  "padding-globe": {
+    style: globe(GLOBE_LAYERS),
+    camera: { center: [120, 40], zoom: 2.5, bearing: 30, pitch: 45, padding: { left: 320, top: 100 } },
+    limits: { mean: 0.05, p99: 1 },
+  },
+};
+
 export const SCENES = {
+  ...PADDING_SCENES,
   ...GLOBE_SCENES,
   ...COPIES_SCENES,
   ...FILLS_SCENES,

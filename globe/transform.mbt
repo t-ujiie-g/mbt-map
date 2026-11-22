@@ -670,9 +670,17 @@ fn Globe::globe_location_at_point(
 }
 
 ///|
-/// Puts the camera at `camera` as it is, unconstrained (MapLibre's
-/// `applyUpdatedTransform` taking an animation's or gesture's transform).
-pub fn Globe::set_camera(self : Globe, camera : @core.Camera) -> Unit {
+/// Puts the camera at `camera`, and the padding at `padding` if given, as they
+/// are, unconstrained (MapLibre's `applyUpdatedTransform` taking an animation's
+/// or gesture's transform).
+pub fn Globe::set_camera(
+  self : Globe,
+  camera : @core.Camera,
+  padding? : @core.Padding,
+) -> Unit {
+  if padding is Some(p) && p.valid() {
+    self.padding = p
+  }
   self.center = camera.center
   self.zoom = camera.zoom
   self.bearing = camera.bearing * @math.PI / 180.0

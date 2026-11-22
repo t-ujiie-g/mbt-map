@@ -330,12 +330,22 @@ pub fn Map::camera(self : Map) -> @core.Camera {
 }
 
 ///|
-/// Moves the camera at once, stopping an animation. Like any camera change it
-/// fires `move` (between `move_start` and `move_end`), unless the value is
-/// unchanged, so an outside state store can echo cameras back safely.
-pub fn Map::set_camera(self : Map, camera : @core.Camera) -> Unit {
+/// The map's padding (MapLibre's `getPadding`).
+pub fn Map::padding(self : Map) -> @core.Padding {
+  self.transform.padding
+}
+
+///|
+/// Moves the camera at once, then sets `padding` if given (MapLibre's `jumpTo`),
+/// stopping an animation. Like any camera change it fires `move` (between
+/// `move_start` and `move_end`), unless nothing changes.
+pub fn Map::set_camera(
+  self : Map,
+  camera : @core.Camera,
+  padding? : @core.Padding,
+) -> Unit {
   self.stop()
-  let camera = match self.globe {
+  match self.globe {
     Some(g) => {
       let h = g.copy()
       h.jump_to(
@@ -343,17 +353,29 @@ pub fn Map::set_camera(self : Map, camera : @core.Camera) -> Unit {
         zoom=camera.zoom,
         bearing=camera.bearing,
         pitch=camera.pitch,
+        padding?,
       )
-      h.camera()
+      if h.camera() == g.camera() && h.padding() == g.padding() {
+        return
+      }
+      self.begin_move(no_event())
+      self.apply_view(h.camera(), h.padding())
+      self.end_move(no_event())
     }
-    None => camera
+    None => {
+      let t = self.transform.with_camera(camera)
+      let t = match padding {
+        Some(p) => t.with_padding(p)
+        None => t
+      }
+      if same_view(t, self.transform) {
+        return
+      }
+      self.begin_move(no_event())
+      self.commit(t)
+      self.end_move(no_event())
+    }
   }
-  if self.constrained(camera) == self.transform.camera {
-    return
-  }
-  self.begin_move(no_event())
-  self.apply_camera(camera)
-  self.end_move(no_event())
 }
 
 ///|
@@ -426,18 +448,40 @@ pub fn Map::destroy(self : Map) -> Unit {
 
 ///|
 fn Map::apply_camera(self : Map, camera : @core.Camera) -> Unit {
-  let next = match self.globe {
-    // Globe moves come constrained by the globe's own camera.
-    Some(g) => {
-      if camera == self.transform.camera {
-        return
+  self.apply_view(camera, self.transform.padding)
+}
+
+///|
+fn same_view(a : @core.Transform, b : @core.Transform) -> Bool {
+  a.camera == b.camera && a.padding == b.padding
+}
+
+///|
+fn Map::apply_view(
+  self : Map,
+  camera : @core.Camera,
+  padding : @core.Padding,
+) -> Unit {
+  let t = self.transform
+  self.commit(
+    match self.globe {
+      // Globe moves come constrained by the globe's own camera.
+      Some(g) => {
+        if camera == t.camera && padding == t.padding {
+          return
+        }
+        g.set_camera(camera, padding~)
+        g.mercator()
       }
-      g.set_camera(camera)
-      g.mercator()
-    }
-    None => self.transform.with_camera(camera)
-  }
-  if next.camera == self.transform.camera {
+      None => t.with_view(camera, padding)
+    },
+  )
+}
+
+///|
+/// Takes `next` as the view and fires `move`, unless it is the current one.
+fn Map::commit(self : Map, next : @core.Transform) -> Unit {
+  if same_view(next, self.transform) {
     return
   }
   self.transform = next
