@@ -3,9 +3,9 @@
 // src/ui/handler_manager.ts), BSD-3-Clause, Copyright (c) 2020 MapLibre contributors; see NOTICE.
 
 ///|
-/// The camera showing `b` as large as the viewport less `padding` allows at
-/// `bearing`, up to `max_zoom`, shifted by `offset` (MapLibre's
-/// `cameraForBounds`; pitch kept). None when it does not fit.
+/// The camera showing `b` as large as the viewport less `padding` and the map's own padding allows at
+/// `bearing`, up to `max_zoom`, shifted by `offset` (MapLibre's `cameraForBounds`; pitch kept; `absolute`
+/// as `@core.Transform::camera_for_bounds`). None when it does not fit.
 pub fn Globe::camera_for_bounds(
   self : Globe,
   b : @core.LngLatBounds,
@@ -13,8 +13,14 @@ pub fn Globe::camera_for_bounds(
   padding~ : @core.Padding = @core.Padding::uniform(0.0),
   offset~ : (Double, Double) = (0.0, 0.0),
   max_zoom? : Double,
+  absolute~ : Bool = false,
 ) -> @core.Camera? {
   let max_zoom = max_zoom.unwrap_or(self.limits.max_zoom)
+  let (padding, map_padding) = @core.fit_paddings(
+    self.padding,
+    padding,
+    absolute,
+  )
   guard @core.fit_box(
       b,
       self.zoom,
@@ -22,6 +28,7 @@ pub fn Globe::camera_for_bounds(
       self.height,
       bearing~,
       padding~,
+      map_padding~,
       offset~,
       max_zoom~,
     )
@@ -45,6 +52,7 @@ pub fn Globe::camera_for_bounds(
   let mid_lat = north + angle_difference(north, south) * 0.5
   let cloned = self.copy()
   cloned.set_center(center)
+  cloned.set_padding(map_padding)
   cloned.set_bearing(bearing)
   cloned.set_pitch(0.0)
   cloned.set_zoom(zoom)
@@ -134,7 +142,7 @@ pub fn Globe::apply_controls(
   bearing~ : Double = 0.0,
   pitch~ : Double = 0.0,
 ) -> Unit {
-  let (cx, cy) = (self.width / 2.0, self.height / 2.0)
+  let (cx, cy) = self.center_point()
   if self.is_globe() {
     self.globe_rotate_zoom(x, y, zoom, bearing, pitch)
     if pan != (0.0, 0.0) {

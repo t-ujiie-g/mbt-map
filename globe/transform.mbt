@@ -13,6 +13,7 @@ pub struct Globe {
   priv mut pitch : Double
   priv mut width : Double
   priv mut height : Double
+  priv mut padding : @core.Padding
   priv limits : @core.Limits
   priv projection : Projection
   priv mut globeness : Double
@@ -37,14 +38,15 @@ priv struct Vp {
 
 ///|
 /// A globe camera on a `width` x `height` viewport as MapLibre's `jumpTo` gives it
-/// once the style sets `projection` (a new globe transform starts as a globe);
-/// the transition then follows the zoom it ends at.
+/// once the style sets `projection` (a new globe transform starts as a globe),
+/// under `padding`; the transition then follows the zoom it ends at.
 pub fn Globe::new(
   camera : @core.Camera,
   width : Double,
   height : Double,
   limits~ : @core.Limits = @core.Limits::default(),
   projection~ : Projection = Globe,
+  padding~ : @core.Padding = @core.Padding::uniform(0.0),
 ) -> Globe {
   let g = {
     center: { lng: 0.0, lat: 0.0, },
@@ -53,6 +55,7 @@ pub fn Globe::new(
     pitch: @core.radians(limits.min_pitch),
     width: 0.0,
     height: 0.0,
+    padding: @core.Padding::uniform(0.0),
     limits,
     projection,
     globeness: if projection is Mercator {
@@ -69,6 +72,7 @@ pub fn Globe::new(
     zoom=camera.zoom,
     bearing=camera.bearing,
     pitch=camera.pitch,
+    padding~,
   )
   g.update_transition()
   g
@@ -140,7 +144,32 @@ pub fn Globe::mercator(self : Globe) -> @core.Transform {
     self.width,
     self.height,
     limits=self.limits,
+    padding=self.padding,
   )
+}
+
+///|
+/// The map's padding (MapLibre's `getPadding`).
+pub fn Globe::padding(self : Globe) -> @core.Padding {
+  self.padding
+}
+
+///|
+/// The screen point the center is drawn at (MapLibre's `centerPoint`).
+pub fn Globe::center_point(self : Globe) -> (Double, Double) {
+  self.padding.center(self.width, self.height)
+}
+
+///|
+/// Sets the padding, then constrains the camera (MapLibre's `setPadding`);
+/// one that is not finite and 0 or more on every side is left out.
+pub fn Globe::set_padding(self : Globe, padding : @core.Padding) -> Unit {
+  if padding == self.padding || !padding.valid() {
+    return
+  }
+  self.padding = padding
+  self.constrain_state()
+  self.changed()
 }
 
 ///|
@@ -162,6 +191,7 @@ fn Globe::constrain(
       self.limits,
       self.width,
       self.height,
+      padding=self.padding,
     )
   }
   let zoom = clamp(
@@ -303,12 +333,7 @@ fn Globe::calc_vp(self : Globe) -> Vp {
   let d = self.center_distance()
   let near = 0.5
   let far = d + r * 2.0
-  let projection = @core.Mat4::perspective(
-    @core.FIELD_OF_VIEW,
-    self.width / self.height,
-    near,
-    far,
-  )
+  let projection = self.padding.perspective(self.width, self.height, near, far)
   let lng = self.center.lng * @math.PI / 180.0
   let lat = self.center.lat * @math.PI / 180.0
   let view = projection
@@ -445,7 +470,7 @@ fn Globe::ray_direction(self : Globe, x : Double, y : Double) -> Vec3 {
 /// Whether the ray through screen point (x, y) meets the globe.
 pub fn Globe::on_surface(self : Globe, x : Double, y : Double) -> Bool {
   if !self.is_globe() {
-    return y > self.height / 2.0 - self.mercator().horizon()
+    return y > self.center_point().1 - self.mercator().horizon()
   }
   ray_sphere(self.vp().camera, self.ray_direction(x, y)) is Some(_)
 }
@@ -562,7 +587,8 @@ fn Globe::mercator_location_at_point(
 ) -> (@core.LngLat, Double)? {
   let t = self.mercator()
   let a = t.ray_ground(x, y)
-  let b = t.ray_ground(self.width / 2.0, self.height / 2.0)
+  let (cx, cy) = self.center_point()
+  let b = t.ray_ground(cx, cy)
   let loc = p.to_mercator()
   let center = (
     { x: loc.x - (a.x - b.x), y: loc.y - (a.y - b.y), } : @core.MercatorCoord).to_lnglat()

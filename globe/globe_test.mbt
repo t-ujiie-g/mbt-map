@@ -251,3 +251,108 @@ test "the sun turns with the globe only when the light is on the map" {
   assert_eq(g.sun(v, map=false), { x: -0.0, y: -0.0, z: -1.0, })
   assert_true(g.sun(v, map=true) != g.sun(v, map=false))
 }
+
+///|
+test "padding moves the globe's center point, in mercator too" {
+  let padding : @core.Padding = {
+    top: 0.0,
+    right: 0.0,
+    bottom: 0.0,
+    left: 320.0,
+  }
+  for zoom in [3.0, 13.0] {
+    let g = @globe.Globe::new(
+      {
+        center: { lng: 139.7671, lat: 35.6812, },
+        zoom,
+        bearing: 30.0,
+        pitch: 40.0,
+      },
+      800.0,
+      600.0,
+      padding~,
+    )
+    assert_eq(g.padding(), padding)
+    assert_eq(g.center_point(), (560.0, 300.0))
+    let (x, y) = g.project(g.camera().center)
+    assert_true(near(x, 560.0, tol=1.0e-6) && near(y, 300.0, tol=1.0e-6))
+    assert_eq(g.mercator().padding, padding)
+    assert_true(g.on_surface(560.0, 300.0))
+  }
+}
+
+///|
+test "set_padding and jump_to take a padding; an invalid one is left out" {
+  let g = tokyo_globe()
+  let center = g.camera().center
+  let padding : @core.Padding = {
+    top: 50.0,
+    right: 0.0,
+    bottom: 250.0,
+    left: 0.0,
+  }
+  g.set_padding(padding)
+  assert_eq(g.padding(), padding)
+  assert_eq(g.camera().center, center)
+  assert_eq(g.center_point(), (400.0, 200.0))
+  g.set_padding({ ..padding, left: @double.not_a_number, })
+  assert_eq(g.padding(), padding)
+  g.jump_to(zoom=4.0, padding=@core.Padding::uniform(0.0))
+  assert_eq(g.padding(), @core.Padding::uniform(0.0))
+  assert_eq(g.camera().zoom, 4.0)
+}
+
+///|
+test "moves on the globe carry the padding to the target's" {
+  let padding : @core.Padding = {
+    top: 0.0,
+    right: 0.0,
+    bottom: 200.0,
+    left: 300.0,
+  }
+  let target = @core.CameraTarget::new(
+    center={ lng: 100.0, lat: 10.0, },
+    zoom=4.0,
+    padding~,
+  )
+  let e = tokyo_globe().ease_to(target)
+  let _ = e.at(0.5)
+  assert_eq(e.transform().padding(), {
+    top: 0.0,
+    right: 0.0,
+    bottom: 100.0,
+    left: 150.0,
+  })
+  let _ = e.at(1.0)
+  assert_eq(e.transform().padding(), padding)
+  let f = tokyo_globe().fly_to(target).unwrap()
+  let _ = f.at(1.0)
+  assert_eq(f.transform().padding(), padding)
+  let c = f.transform().camera().center
+  assert_true(near(c.lng, 100.0) && near(c.lat, 10.0))
+}
+
+///|
+test "a fit on the globe leaves the map's padding free, and absolute padding stands for it" {
+  let b : @core.LngLatBounds = {
+    west: 100.0,
+    south: -40.0,
+    east: 160.0,
+    north: 50.0,
+  }
+  let padding : @core.Padding = {
+    top: 250.0,
+    right: 0.0,
+    bottom: 0.0,
+    left: 0.0,
+  }
+  let plain = tokyo_globe().camera_for_bounds(b).unwrap()
+  let g = tokyo_globe()
+  g.set_padding(padding)
+  let fit = g.camera_for_bounds(b).unwrap()
+  assert_true(fit.zoom < plain.zoom)
+  assert_eq(
+    tokyo_globe().camera_for_bounds(b, padding~, absolute=true),
+    Some(fit),
+  )
+}

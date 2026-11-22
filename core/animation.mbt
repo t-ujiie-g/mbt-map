@@ -101,9 +101,9 @@ fn normalize_center(p : LngLat, from : LngLat) -> LngLat {
 }
 
 ///|
-/// Where a camera move ends: what is left out stays as it is. `around` keeps
-/// that point at its screen position through the move; `offset` (pixels)
-/// places the new center that far from the screen center.
+/// Where a camera move ends: what is left out stays as it is. `around` keeps that point at its screen
+/// position through the move; `offset` (pixels) places the new center that far from the center's screen
+/// point; `padding` is the map padding the move ends with.
 #derive(Debug, Eq)
 pub(all) struct CameraTarget {
   center : LngLat?
@@ -112,6 +112,7 @@ pub(all) struct CameraTarget {
   pitch : Double?
   around : LngLat?
   offset : (Double, Double)
+  padding : Padding?
 }
 
 ///|
@@ -122,30 +123,38 @@ pub fn CameraTarget::new(
   pitch? : Double,
   around? : LngLat,
   offset~ : (Double, Double) = (0.0, 0.0),
+  padding? : Padding,
 ) -> CameraTarget {
-  { center, zoom, bearing, pitch, around, offset, }
+  { center, zoom, bearing, pitch, around, offset, padding, }
 }
 
 ///|
-/// What `ease_to` and `fly_to` start from: the screen point the center goes to,
-/// the end camera, the start and the way to the end in world pixels, and the
-/// end bearing and pitch.
+/// What `ease_to` and `fly_to` start from: the end camera, the start and the way
+/// to the end in world pixels, the end bearing and pitch, and the padding to
+/// move to (None to keep the start's).
 priv struct Move {
-  point : (Double, Double)
   to : Camera
   from : (Double, Double)
   delta : (Double, Double)
   end_bearing : Double
   end_pitch : Double
+  end_padding : Padding?
+}
+
+///|
+/// The screen point `offset` pixels from where `self` draws the center.
+fn Transform::offset_point(
+  self : Transform,
+  offset : (Double, Double),
+) -> (Double, Double) {
+  let (x, y) = self.center_point()
+  (x + offset.0, y + offset.1)
 }
 
 ///|
 fn Transform::move_to(self : Transform, target : CameraTarget) -> Move {
   let c = self.camera
-  let point = (
-    self.width / 2.0 + target.offset.0,
-    self.height / 2.0 + target.offset.1,
-  )
+  let point = self.offset_point(target.offset)
   let at_offset = self.unproject(point.0, point.1)
   let to = constrain_once(
     {
@@ -156,6 +165,7 @@ fn Transform::move_to(self : Transform, target : CameraTarget) -> Move {
     self.limits,
     self.width,
     self.height,
+    self.padding,
   )
   let ws = self.world_size()
   let f = at_offset.to_mercator()
@@ -166,7 +176,6 @@ fn Transform::move_to(self : Transform, target : CameraTarget) -> Move {
   }).to_mercator()
   let tx = t.x
   {
-    point,
     to,
     from: (f.x * ws, f.y * ws),
     delta: ((tx - f.x) * ws, (t.y - f.y) * ws),
@@ -175,6 +184,15 @@ fn Transform::move_to(self : Transform, target : CameraTarget) -> Move {
       None => c.bearing
     },
     end_pitch: target.pitch.unwrap_or(c.pitch),
+    end_padding: target.padding.filter(p => p != self.padding && p.valid()),
+  }
+}
+
+///|
+fn padding_at(start : Transform, end : Padding?, k : Double) -> Padding {
+  match end {
+    Some(p) => start.padding.toward(p, k)
+    None => start.padding
   }
 }
 
@@ -191,7 +209,8 @@ pub struct Ease {
   priv around : (LngLat, Double, Double)?
   priv from : (Double, Double)
   priv delta : (Double, Double)
-  priv point : (Double, Double)
+  priv offset : (Double, Double)
+  priv end_padding : Padding?
 }
 
 ///|
@@ -215,8 +234,15 @@ pub fn Transform::ease_to(self : Transform, target : CameraTarget) -> Ease {
     }),
     from: m.from,
     delta: m.delta,
-    point: m.point,
+    offset: target.offset,
+    end_padding: m.end_padding,
   }
+}
+
+///|
+/// The map padding at eased fraction `k` of the move.
+pub fn Ease::padding_at(self : Ease, k : Double) -> Padding {
+  padding_at(self.start, self.end_padding, k)
 }
 
 ///|
@@ -233,12 +259,15 @@ pub fn Ease::at(self : Ease, k : Double) -> Camera {
   } else {
     c.zoom
   }
-  let tr = self.start.with_camera({
-    ..c,
-    zoom,
-    bearing: lerp(self.start_bearing, self.end_bearing, k),
-    pitch: lerp(self.start_pitch, self.end_pitch, k),
-  })
+  let tr = self.start.with_view(
+    {
+      ..c,
+      zoom,
+      bearing: lerp(self.start_bearing, self.end_bearing, k),
+      pitch: lerp(self.start_pitch, self.end_pitch, k),
+    },
+    self.padding_at(k),
+  )
   match self.around {
     Some((a, x, y)) => tr.at_point(a, x, y)
     None => {
@@ -254,11 +283,8 @@ pub fn Ease::at(self : Ease, k : Double) -> Camera {
       let x = (self.from.0 + self.delta.0 * k * speedup) * scale
       let y = (self.from.1 + self.delta.1 * k * speedup) * scale
       let p = ({ x: x / ws, y: y / ws, } : MercatorCoord).to_lnglat()
-      tr.at_point(
-        { lng: wrap180(p.lng), lat: p.lat, },
-        self.point.0,
-        self.point.1,
-      )
+      let (px, py) = tr.offset_point(self.offset)
+      tr.at_point({ lng: wrap180(p.lng), lat: p.lat, }, px, py)
     }
   }
 }
@@ -277,7 +303,8 @@ pub struct Flight {
   priv from : (Double, Double)
   priv delta : (Double, Double)
   priv start_world : Double
-  priv point : (Double, Double)
+  priv offset : (Double, Double)
+  priv end_padding : Padding?
   priv rho : Double
   priv r0 : Double
   priv length : Double
@@ -331,6 +358,7 @@ pub fn Transform::fly_to(
       self.limits,
       self.width,
       self.height,
+      self.padding,
     ).zoom
   let scale_of_min = @math.pow(2.0, lowest - c.zoom)
   let w0 = @cmp.maximum(self.width, self.height)
@@ -371,7 +399,8 @@ pub fn Transform::fly_to(
     from: m.from,
     delta,
     start_world: self.world_size(),
-    point: m.point,
+    offset: target.offset,
+    end_padding: m.end_padding,
     rho,
     r0,
     length,
@@ -379,6 +408,12 @@ pub fn Transform::fly_to(
     dir,
     duration: 1000.0 * length / v,
   })
+}
+
+///|
+/// The map padding at eased fraction `k` of the flight.
+pub fn Flight::padding_at(self : Flight, k : Double) -> Padding {
+  padding_at(self.start, self.end_padding, k)
 }
 
 ///|
@@ -405,12 +440,15 @@ pub fn Flight::at(self : Flight, k : Double) -> Camera {
   } else {
     self.start_zoom + @math.log2(1.0 / w)
   }
-  let tr = self.start.with_camera({
-    ..c,
-    zoom,
-    bearing: lerp(self.start_bearing, self.end_bearing, k),
-    pitch: lerp(self.start_pitch, self.end_pitch, k),
-  })
+  let tr = self.start.with_view(
+    {
+      ..c,
+      zoom,
+      bearing: lerp(self.start_bearing, self.end_bearing, k),
+      pitch: lerp(self.start_pitch, self.end_pitch, k),
+    },
+    self.padding_at(k),
+  )
   let center = if k == 1.0 {
     self.target.center
   } else {
@@ -420,5 +458,6 @@ pub fn Flight::at(self : Flight, k : Double) -> Camera {
       { x: x / self.start_world, y: y / self.start_world, } : MercatorCoord).to_lnglat()
     { lng: wrap180(p.lng), lat: p.lat, }
   }
-  tr.at_point(center, self.point.0, self.point.1)
+  let (px, py) = tr.offset_point(self.offset)
+  tr.at_point(center, px, py)
 }

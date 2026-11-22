@@ -70,15 +70,16 @@ pub fn Limits::default() -> Limits {
 }
 
 ///|
-/// A camera on a `width` x `height` CSS-pixel viewport, kept to `limits` and the
-/// latitude limits as MapLibre keeps it, in world pixels relative to the center;
-/// `elevation` (meters) lifts the center onto terrain.
+/// A camera on a `width` x `height` CSS-pixel viewport, kept to `limits` and the latitude limits as MapLibre
+/// keeps it, in world pixels relative to the center; `elevation` (meters) lifts the center onto terrain;
+/// `padding` moves the center's screen point and the vanishing point (MapLibre's `setPadding`).
 pub struct Transform {
   camera : Camera
   width : Double
   height : Double
   limits : Limits
   elevation : Double
+  padding : Padding
   priv view : Mat4
   priv inverse : Mat4
 }
@@ -89,13 +90,22 @@ pub fn Transform::new(
   width : Double,
   height : Double,
   limits~ : Limits = Limits::default(),
+  padding~ : Padding = Padding::uniform(0.0),
 ) -> Transform {
   let camera = if finite(camera) {
     camera
   } else {
     { center: { lng: 0.0, lat: 0.0, }, zoom: 0.0, bearing: 0.0, pitch: 0.0, }
   }
-  make(constrain(camera, limits, width, height), width, height, limits, 0.0)
+  let padding = if padding.valid() { padding } else { Padding::uniform(0.0) }
+  make(
+    constrain(camera, limits, width, height, padding),
+    width,
+    height,
+    limits,
+    0.0,
+    padding,
+  )
 }
 
 ///|
@@ -106,8 +116,9 @@ pub fn Transform::exact(
   width : Double,
   height : Double,
   limits~ : Limits = Limits::default(),
+  padding~ : Padding = Padding::uniform(0.0),
 ) -> Transform {
-  make(camera, width, height, limits, 0.0)
+  make(camera, width, height, limits, 0.0, padding)
 }
 
 ///|
@@ -117,15 +128,17 @@ fn make(
   height : Double,
   limits : Limits,
   elevation : Double,
+  padding : Padding,
 ) -> Transform {
   let lift = elevation * pixels_per_meter(camera.zoom, camera.center.lat)
-  let view = view_projection(camera, width, height, lift)
+  let view = view_projection(camera, width, height, lift, padding)
   {
     camera,
     width,
     height,
     limits,
     elevation,
+    padding,
     view,
     inverse: view.invert().unwrap_or(Mat4::identity()),
   }
@@ -151,10 +164,13 @@ fn view_projection(
   width : Double,
   height : Double,
   lift : Double,
+  padding : Padding,
 ) -> Mat4 {
   let d = center_distance(height)
-  let far = far_distance(camera.pitch, height, lift)
-  Mat4::perspective(FIELD_OF_VIEW, width / height, height / 50.0, far)
+  let offset_y = center_offset(width, height, padding).1
+  let far = far_distance(camera.pitch, height, lift, offset_y)
+  padding
+  .perspective(width, height, height / 50.0, far)
   .scale(1.0, -1.0, 1.0)
   .translate(0.0, 0.0, -d)
   .rotate_x(radians(camera.pitch))
@@ -163,10 +179,69 @@ fn view_projection(
 }
 
 ///|
-/// Depth (CSS pixels along the view axis) of the farthest ground drawn, as
-/// MapLibre's `_calculateNearFarZ`: the screen's top or the horizon line on the
-/// sea-level plane (the center's, when `lift` is below sea level).
-fn far_distance(pitch : Double, height : Double, lift : Double) -> Double {
+/// The screen point a `width` x `height` viewport draws its center at: the
+/// middle of what the padding leaves, kept on screen (MapLibre's
+/// `EdgeInsets.getCenter`).
+pub fn Padding::center(
+  self : Padding,
+  width : Double,
+  height : Double,
+) -> (Double, Double) {
+  let clamp = (v : Double, max : Double) => {
+    @cmp.maximum(0.0, @cmp.minimum(max, v))
+  }
+  (
+    clamp((self.left + width - self.right) / 2.0, width),
+    clamp((self.top + height - self.bottom) / 2.0, height),
+  )
+}
+
+///|
+/// `Padding::center` from the middle of the viewport (MapLibre's `centerOffset`).
+fn center_offset(
+  width : Double,
+  height : Double,
+  padding : Padding,
+) -> (Double, Double) {
+  let (x, y) = padding.center(width, height)
+  (x - width / 2.0, y - height / 2.0)
+}
+
+///|
+/// MapLibre's projection matrix for a `width` x `height` viewport under
+/// `padding`: the perspective's principal point moved to the padded center, so
+/// the vanishing point follows it.
+pub fn Padding::perspective(
+  self : Padding,
+  width : Double,
+  height : Double,
+  near : Double,
+  far : Double,
+) -> Mat4 {
+  let offset = center_offset(width, height, self)
+  let p = Mat4::perspective(FIELD_OF_VIEW, width / height, near, far)
+  p.m[8] = -offset.0 * 2.0 / width
+  p.m[9] = offset.1 * 2.0 / height
+  p
+}
+
+///|
+/// The screen point (CSS pixels) the center is drawn at (MapLibre's
+/// `centerPoint`): the viewport's middle without padding.
+pub fn Transform::center_point(self : Transform) -> (Double, Double) {
+  self.padding.center(self.width, self.height)
+}
+
+///|
+/// Depth (CSS pixels along the view axis) of the farthest ground drawn, as MapLibre's `_calculateNearFarZ`:
+/// the screen's top or the horizon line on the sea-level plane (the center's, when `lift` is below sea
+/// level), with the center `offset_y` pixels below the viewport's middle.
+fn far_distance(
+  pitch : Double,
+  height : Double,
+  lift : Double,
+  offset_y : Double,
+) -> Double {
   let d = center_distance(height)
   let limited = radians(@cmp.minimum(pitch, MAX_HORIZON_ANGLE))
   let sea = @cmp.maximum(d / 2.0, d + lift / @math.cos(limited))
@@ -182,11 +257,16 @@ fn far_distance(pitch : Double, height : Double, lift : Double) -> Double {
       ),
     )
   }
-  let to_horizon = @cmp.maximum(
-    @math.atan(horizon_distance(pitch, height) / d),
-    radians(90.0 - MAX_HORIZON_ANGLE),
-  )
-  let top = @cmp.minimum(surface(FIELD_OF_VIEW / 2.0), surface(to_horizon))
+  let horizon = horizon_distance(pitch, height)
+  let horizon_angle = @math.atan(horizon / d)
+  let least = radians(90.0 - MAX_HORIZON_ANGLE)
+  let to_horizon = if horizon_angle > least {
+    2.0 * horizon_angle * (0.5 + offset_y / (horizon * 2.0))
+  } else {
+    least
+  }
+  let above = FIELD_OF_VIEW * (0.5 + offset_y / height)
+  let top = @cmp.minimum(surface(above), surface(to_horizon))
   (@math.sin(limited) * top + lowest) * 1.01
 }
 
@@ -200,8 +280,13 @@ pub fn Transform::fog_range(self : Transform) -> (Double, Double) {
   let pitch = radians(@cmp.minimum(self.camera.pitch, MAX_HORIZON_ANGLE))
   (
     @cmp.maximum(d / 2.0, d + lift / @math.cos(pitch)),
-    far_distance(self.camera.pitch, self.height, lift),
+    far_distance(self.camera.pitch, self.height, lift, self.center_offset().1),
   )
+}
+
+///|
+fn Transform::center_offset(self : Transform) -> (Double, Double) {
+  center_offset(self.width, self.height, self.padding)
 }
 
 ///|
@@ -251,21 +336,59 @@ pub fn Transform::with_elevation(
   if elevation == self.elevation || elevation.is_nan() || elevation.is_inf() {
     return self
   }
-  make(self.camera, self.width, self.height, self.limits, elevation)
+  make(
+    self.camera,
+    self.width,
+    self.height,
+    self.limits,
+    elevation,
+    self.padding,
+  )
 }
 
 ///|
 /// The same viewport looking through another camera.
 pub fn Transform::with_camera(self : Transform, camera : Camera) -> Transform {
-  if !finite(camera) {
+  self.with_view(camera, self.padding)
+}
+
+///|
+/// The same viewport looking through another camera under another padding.
+pub fn Transform::with_view(
+  self : Transform,
+  camera : Camera,
+  padding : Padding,
+) -> Transform {
+  if !finite(camera) || !padding.valid() {
     return self
   }
   make(
-    constrain(camera, self.limits, self.width, self.height),
+    constrain(camera, self.limits, self.width, self.height, padding),
     self.width,
     self.height,
     self.limits,
     self.elevation,
+    padding,
+  )
+}
+
+///|
+/// The same view under another padding, the camera kept to the limits once as
+/// MapLibre's `setPadding` does (the center's position stays, so the picture moves).
+pub fn Transform::with_padding(
+  self : Transform,
+  padding : Padding,
+) -> Transform {
+  if padding == self.padding || !padding.valid() {
+    return self
+  }
+  make(
+    constrain_once(self.camera, self.limits, self.width, self.height, padding),
+    self.width,
+    self.height,
+    self.limits,
+    self.elevation,
+    padding,
   )
 }
 
@@ -273,11 +396,12 @@ pub fn Transform::with_camera(self : Transform, camera : Camera) -> Transform {
 /// The same view under other `limits` (the camera kept to them).
 pub fn Transform::with_limits(self : Transform, limits : Limits) -> Transform {
   make(
-    constrain(self.camera, limits, self.width, self.height),
+    constrain(self.camera, limits, self.width, self.height, self.padding),
     self.width,
     self.height,
     limits,
     self.elevation,
+    self.padding,
   )
 }
 
@@ -292,11 +416,12 @@ pub fn Transform::resize(
     return self
   }
   make(
-    constrain(self.camera, self.limits, width, height),
+    constrain(self.camera, self.limits, width, height, self.padding),
     width,
     height,
     self.limits,
     self.elevation,
+    self.padding,
   )
 }
 
@@ -330,7 +455,7 @@ fn Transform::ground(
   x : Double,
   y : Double,
 ) -> (Double, Double) {
-  let y = @cmp.maximum(y, self.height / 2.0 - self.horizon())
+  let y = @cmp.maximum(y, self.center_point().1 - self.horizon())
   let (ax, ay, az, bx, by, bz) = self.screen_ray(x, y)
   if az == bz {
     return (0.0, 0.0)
@@ -372,6 +497,7 @@ pub fn Transform::panned(
     self.limits,
     self.width,
     self.height,
+    self.padding,
   )
 }
 
@@ -397,6 +523,7 @@ pub fn Transform::keeping(
     self.limits,
     self.width,
     self.height,
+    self.padding,
   )
 }
 
@@ -435,12 +562,13 @@ pub fn Transform::world_matrix(self : Transform) -> Mat4 {
 pub fn Transform::projection(self : Transform) -> (Mat4, Double, Double) {
   let lift = self.elevation * self.pixels_per_meter()
   let near = self.height / 50.0
-  let far = far_distance(self.camera.pitch, self.height, lift)
-  (
-    Mat4::perspective(FIELD_OF_VIEW, self.width / self.height, near, far),
-    near,
-    far,
+  let far = far_distance(
+    self.camera.pitch,
+    self.height,
+    lift,
+    self.center_offset().1,
   )
+  (self.padding.perspective(self.width, self.height, near, far), near, far)
 }
 
 ///|
