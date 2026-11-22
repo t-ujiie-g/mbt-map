@@ -3,11 +3,14 @@ import {
   checkBearing,
   checkBoolean,
   checkCenter,
+  checkPadding,
   checkPitch,
   checkZoom,
   parseBearing,
   parseCenter,
+  parsePadding,
   parsePitch,
+  type Padding,
   parseBoolean,
   parseWorkerCount,
   parseZoom,
@@ -28,7 +31,7 @@ export interface MbtMapEventDetail {
   lngLat?: LngLat;
 }
 
-const ATTRIBUTES = ["style-url", "center", "zoom", "bearing", "pitch", "worker-count", "worker-url", "wasm-url", "attribution-control", "render-world-copies", "aria-label"] as const;
+const ATTRIBUTES = ["style-url", "center", "zoom", "bearing", "pitch", "padding", "worker-count", "worker-url", "wasm-url", "attribution-control", "render-world-copies", "aria-label"] as const;
 
 // Lets the module load where HTMLElement does not exist (server rendering);
 // the element is only defined in browsers.
@@ -49,6 +52,7 @@ export class MbtMapElement extends Base {
   #zoom = 0;
   #bearing = 0;
   #pitch = 0;
+  #padding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
   #copies = true;
 
   /** The underlying map, or null before it is created or after removal. */
@@ -126,6 +130,24 @@ export class MbtMapElement extends Base {
     this.#map?.jumpTo({ pitch });
   }
 
+  get padding(): Padding {
+    return this.#map?.getPadding() ?? { ...this.#padding };
+  }
+
+  /**
+   * Pixels kept free along each edge (the map's `setPadding`): `{top, right, bottom, left}`, a number
+   * for all four, or the attribute form `"top,right,bottom,left"`.
+   */
+  set padding(value: number | Padding | string) {
+    const padding = typeof value === "string" ? parsePadding(value) : checkPadding(value);
+    if (padding === null) {
+      this.#reject("padding", typeof value === "string" ? value : JSON.stringify(value));
+      return;
+    }
+    this.#padding = padding;
+    this.#map?.setPadding(padding);
+  }
+
   get renderWorldCopies(): boolean {
     return this.#map?.getRenderWorldCopies() ?? this.#copies;
   }
@@ -173,6 +195,8 @@ export class MbtMapElement extends Base {
       this.bearing = value;
     } else if (name === "pitch") {
       this.pitch = value;
+    } else if (name === "padding") {
+      this.padding = value;
     } else if (name === "worker-count") {
       if (parseWorkerCount(value) === null) this.#reject(name, value);
     } else if (name === "render-world-copies") {
@@ -216,6 +240,7 @@ export class MbtMapElement extends Base {
       return;
     }
     this.#map = map;
+    map.setPadding(this.#padding);
     this.#label();
     map.on("load", () => this.#dispatch("mbt-map-load"));
     map.on("idle", () => this.#dispatch("mbt-map-idle"));
@@ -238,6 +263,7 @@ export class MbtMapElement extends Base {
     this.#zoom = this.#map.getZoom();
     this.#bearing = this.#map.getBearing();
     this.#pitch = this.#map.getPitch();
+    this.#padding = this.#map.getPadding();
     this.#copies = this.#map.getRenderWorldCopies();
     this.#map.remove();
     this.#map = null;

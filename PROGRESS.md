@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1・P.2 が済み、次は P.3（`fitBounds` の `absolutePadding`、`<mbt-map>`、MoonBit の API、例、文書）。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
+- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1〜P.3 が済み、次は点検（リファクタリングとセキュリティ）と 0.2.1 の版上げ。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -52,6 +52,16 @@ Where things stand, decisions and open issues. The development history before th
 - 描画の CPU 時間（`render/run.mjs --uncapped`、padding 0、`bench/results/render-chromium-uncapped.json`）：pan 2.10 ms（main 2.135）、pan-back 2.07（2.015）、zoom-in 1.95（1.96）、zoom-out 2.125（2.08）。差は回ごとの揺れの中。
 - 大きさ：`mbt-map` 169.4 → 169.9KB（予算 172KB）。
 - ほかのゴールデン：`query:golden` 750/750、`labels:golden`、`export:golden`、`raster:golden`、`camera:golden`、`globe:golden` は前のとおり。
+
+**P.3：`absolutePadding`、`<mbt-map>`、MoonBit の API、例、文書（2026-11-22、Mac）**
+
+- ファサード：`fitBounds`・`cameraForBounds` の `absolutePadding`（引数の `padding` が地図の padding に代わり、移動の後も残る。`cameraForBounds` は `padding` つきで返す）。
+- `<mbt-map>`：`padding` 属性（`top,right,bottom,left` か数値 1 つ。厳密に読み、負や指数表記は断る）とプロパティ。地図を作り直すときも引き継ぐ。
+- MoonBit：`@mbtmap.Padding`（`Padding::new(left=320.0)`）、`Map::padding`・`set_padding`、`jump_to`・`ease_to`・`fly_to` の `padding?`。rabbita の `setup` に `padding?`。
+- 例（3 つのショーケース）：Explore タブの「Keep the center clear of the panel」。押している間、パネルの右端（狭い画面では下のシートの高さ）を地図の padding にして、パネルの開閉や画面の幅に追う（`examples/shared/padding.js`）。HTML は `easeTo({ padding })`、Element は `el.padding`、React は effect から。初めから padding を掛けないのは、pack test が画面の決まった点（中央の東京駅など）を押すため。
+- 確かめ：pack test のショーケースに、押すと `getPadding().left` がパネルの右端になり中心が残りの中央に来る（0.5 px 以内）ことを足した（3 つとも通る）。`padding:golden` に `absolutePadding` の fit を足した。npm のテスト 479、要素の属性の読み取りのテスト、MoonBit のテスト（js 1083）。
+- `fitBounds` の `offset`：MapLibre 6.16 は `cameraForBounds` で一度効かせた `offset` を移動にもう一度渡すので、範囲の中央が `offset` の 2 倍ずれる（Node で確かめた：`offset: [100, 0]` で画面の中央から 200 px）。こちらは前から 1 度だけ。変えずに `docs/map.md` に違いを書いた。
+- 大きさ：`mbt-map` 169.9KB のまま（予算 172KB）、`mbt-map/element` は予算内。
 
 ## MoonBit の固定版の引き上げ（2026-11-22、Mac）
 

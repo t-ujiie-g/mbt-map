@@ -34,7 +34,7 @@ test("padding, limits and fits take the engine's layout", () => {
   assert.deepEqual(limitsArray({ minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, maxBounds: new LngLatBounds(1, 2, 3, 4) }).slice(4), [1, 2, 3, 4, 1]);
   assert.equal(limitsArray({ minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, maxBounds: null, renderWorldCopies: false })[8], 0);
   const fit = fitArray(new LngLatBounds(1, 2, 3, 4), { padding: 20, bearing: 45, offset: [1, 2], maxZoom: 9 });
-  assert.deepEqual(fit, [1, 2, 3, 4, 45, 20, 20, 20, 20, 1, 2, 9]);
+  assert.deepEqual(fit, [1, 2, 3, 4, 45, 20, 20, 20, 20, 1, 2, 9, 0]);
 });
 
 test("checkLimits takes ranges inside zoom 0-24 and pitch 0-85, min not above max", () => {
@@ -60,4 +60,11 @@ test("targetArray: a padding adds its sides after the offset", () => {
   assert.deepEqual(targetArray({ zoom: 3, padding: { left: 320, top: 0 } }).slice(9), [0, NaN, NaN, 320]);
   assert.deepEqual(targetArray({ padding: 10 }).slice(9), [10, 10, 10, 10]);
   assert.throws(() => targetArray({ padding: { bottom: NaN } }), /finite/);
+});
+
+test("fitArray: absolutePadding is the last number", () => {
+  const b = new LngLatBounds(1, 2, 3, 4);
+  assert.equal(fitArray(b, {}).at(-1), 0);
+  assert.equal(fitArray(b, { padding: 10, absolutePadding: true }).at(-1), 1);
+  assert.equal(fitArray(b, {}).length, 13);
 });

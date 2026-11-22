@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MAX_PITCH, MAX_ZOOM, checkBoolean, parseBearing, parseBoolean, parseCenter, parsePitch, parseWorkerCount, parseZoom } from "./parse.ts";
+import { MAX_PITCH, MAX_ZOOM, checkBoolean, checkPadding, parseBearing, parseBoolean, parseCenter, parsePadding, parsePitch, parseWorkerCount, parseZoom } from "./parse.ts";
 
 test("center is two in-range decimals", () => {
   assert.deepEqual(parseCenter("139.7671,35.6812"), { lng: 139.7671, lat: 35.6812 });
@@ -45,4 +45,17 @@ test("checkBoolean: the render-world-copies property takes booleans only", () =>
   assert.equal(checkBoolean(true), true);
   assert.equal(checkBoolean(false), false);
   for (const bad of [0, 1, null, undefined, "yes", {}]) assert.equal(checkBoolean(bad), null);
+});
+
+test("padding is four pixel counts, 0 or more, or one for all four", () => {
+  assert.deepEqual(parsePadding("0, 20,40,320"), { top: 0, right: 20, bottom: 40, left: 320 });
+  assert.deepEqual(parsePadding("12.5"), { top: 12.5, right: 12.5, bottom: 12.5, left: 12.5 });
+  for (const bad of ["", "1,2", "1,2,3", "1,2,3,4,5", "-1", "0,0,0,-5", "1e2", "10px", "a,b,c,d", "Infinity", "1,,2,3"]) {
+    assert.equal(parsePadding(bad), null, bad);
+  }
+  assert.deepEqual(checkPadding(8), { top: 8, right: 8, bottom: 8, left: 8 });
+  assert.deepEqual(checkPadding({ top: 1, right: 2, bottom: 3, left: 4 }), { top: 1, right: 2, bottom: 3, left: 4 });
+  assert.equal(checkPadding({ top: 1, right: 2, bottom: 3 } as never), null);
+  assert.equal(checkPadding({ top: NaN, right: 0, bottom: 0, left: 0 }), null);
+  assert.equal(checkPadding(-1), null);
 });

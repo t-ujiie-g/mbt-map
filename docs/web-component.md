@@ -37,6 +37,7 @@ If you use GSI tiles, credit 国土地理院 (Geospatial Information Authority o
 | `zoom` | 0 to 22. |
 | `bearing` | Degrees clockwise from north. |
 | `pitch` | 0 to 85. |
+| `padding` | Pixels kept free along the edges, `top,right,bottom,left` or one number for all four, e.g. `0,0,0,320` (the map's `setPadding`; see [The map](./map.md#padding)). |
 | `worker-count` | One digit, 0 to 4 (0 picks automatically). |
 | `worker-url`, `wasm-url` | Where `worker.js` and `mbt-map.wasm` are served; see [The map](./map.md#where-the-workers-and-wasm-come-from). |
 | `attribution-control` | `true` (default) or `false`. Use `false` to show attributions yourself, for instance with `createAttribution` of [mbt-map/ui](./ui.md). |
@@ -53,6 +54,7 @@ Attributes are parsed strictly: numbers must be plain decimals (`14`, `-3.5`; no
 | `mapStyle` | A style object. It takes precedence over `style-url`. Setting a new one swaps it in with `setStyle`, so sources and layers that stay alike keep their tiles; setting `null` falls back to `style-url` (or removes the map if there is none). |
 | `center` | `{ lng, lat }`, or the attribute's string form. |
 | `zoom`, `bearing`, `pitch` | A number, or the attribute's string form. |
+| `padding` | `{ top, right, bottom, left }`, a number for all four, or the attribute's string form. Setting it sets the map's padding at once. |
 | `renderWorldCopies` | A boolean, or the attribute's string form (`"true"`, `"false"`). |
 
 The camera properties read the map's current camera, and setting them jumps the camera there (`jumpTo`). They accept the attribute strings too, because React 19 sets props as properties when the element has a property of that name. Invalid values are rejected with `mbt-map-error`, as for attributes.

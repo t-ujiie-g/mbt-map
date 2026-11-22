@@ -1,6 +1,7 @@
 // The showcase with the npm package's `Map` and the DOM.
 import { Map } from "mbt-map";
 import { mountApp } from "../shared/app.js";
+import { mountPanelPadding } from "../shared/padding.js";
 import { DESTINATIONS } from "../shared/places.js";
 import { mountShell } from "../shared/shell.js";
 import { createStyle } from "../shared/style.js";
@@ -13,4 +14,6 @@ map.once("load").then(() => {
   const app = mountApp(map, status, (style) => map.setStyle(style));
   map.on("move", app.showCamera);
   map.on("moveend", app.update);
+  // The map's padding eases to the panel's: the center and the vanishing point move beside it.
+  mountPanelPadding((padding) => map.easeTo({ padding, duration: 300 }));
 });

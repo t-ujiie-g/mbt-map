@@ -6,7 +6,7 @@
   "rows": [
     {
       "name": "mbt-map",
-      "bytes": 169872,
+      "bytes": 169893,
       "budget": 172000
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "name": "mbt-map/element (on top of mbt-map)",
-      "bytes": 1850,
+      "bytes": 2079,
       "budget": 5000
     },
     {

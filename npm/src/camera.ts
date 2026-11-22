@@ -139,9 +139,14 @@ export interface FlyToOptions extends EaseToOptions {
   minZoom?: number;
 }
 
-/** `padding` around the box, `bearing` to look at it with, `maxZoom` to stop at; `linear: true` eases instead of flying. */
+/**
+ * `padding` around the box, on top of the map's own; `bearing` to look at it with, `maxZoom` to stop at;
+ * `linear: true` eases instead of flying. With `absolutePadding`, `padding` replaces the map's padding
+ * and the move ends with it (MapLibre's `absolutePadding`).
+ */
 export interface FitBoundsOptions extends FlyToOptions {
   padding?: PaddingOptions;
+  absolutePadding?: boolean;
   maxZoom?: number;
   linear?: boolean;
 }
@@ -205,7 +210,7 @@ export function limitsArray(l: Limits): number[] {
 /** The engine's `camera_for_bounds` input. */
 export function fitArray(b: LngLatBounds, o: FitBoundsOptions & { bearing?: number }): number[] {
   const off = o.offset === undefined ? { x: 0, y: 0 } : toPoint(o.offset);
-  return [b.west, b.south, b.east, b.north, num(o.bearing ?? 0), ...toPadding(o.padding).map(num), num(off.x), num(off.y), num(o.maxZoom)];
+  return [b.west, b.south, b.east, b.north, num(o.bearing ?? 0), ...toPadding(o.padding).map(num), num(off.x), num(off.y), num(o.maxZoom), o.absolutePadding ? 1 : 0];
 }
 
 /** The handlers the engine knows, in the order of bundle/main/main.mbt `handlers`. */

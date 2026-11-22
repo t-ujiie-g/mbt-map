@@ -50,7 +50,7 @@ extern "js" fn configure(
 ) -> Unit =
   #|(el, id, camera, url, style) => {
   #|  if (!el) { console.error(new Error(`mbt-map: no <mbt-map> with id ${JSON.stringify(id)}`)); return; }
-  #|  for (const k of ["center", "zoom", "bearing", "pitch"]) if (k in camera) el[k] = camera[k];
+  #|  for (const k of ["center", "zoom", "bearing", "pitch", "padding"]) if (k in camera) el[k] = camera[k];
   #|  if (url) { el.mapStyle = null; el.setAttribute("style-url", url); } else el.mapStyle = style;
   #|}
 
@@ -64,6 +64,7 @@ pub fn setup(
   zoom? : Double,
   bearing? : Double,
   pitch? : Double,
+  padding? : @mbtmap.Padding,
 ) -> Cmd {
   let camera : Map[String, Json] = Map([])
   if center is Some(c) {
@@ -77,6 +78,9 @@ pub fn setup(
   }
   if pitch is Some(p) {
     camera["pitch"] = Json::number(p)
+  }
+  if padding is Some(p) {
+    camera["padding"] = p.to_json()
   }
   let (url, json) = match style.to_url() {
     Some(u) => (u, Json::null())

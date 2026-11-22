@@ -1,6 +1,7 @@
 // The showcase with <mbt-map>: attributes and properties in, CustomEvents out.
 import "mbt-map/element";
 import { mountApp } from "../shared/app.js";
+import { mountPanelPadding } from "../shared/padding.js";
 import { mountShell } from "../shared/shell.js";
 import { createStyle } from "../shared/style.js";
 
@@ -13,5 +14,7 @@ el.addEventListener("mbt-map-load", () => {
   const app = mountApp(el.map, status, (style) => (el.mapStyle = style));
   el.addEventListener("mbt-map-move", app.showCamera);
   el.addEventListener("mbt-map-moveend", app.update);
+  // The element's `padding` property (or attribute) sets the map's padding at once.
+  mountPanelPadding((padding) => (el.padding = padding));
 });
 el.mapStyle = createStyle("2d");

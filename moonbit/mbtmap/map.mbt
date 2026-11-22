@@ -38,6 +38,39 @@ pub(all) struct Bounds {
 }
 
 ///|
+/// Pixels kept free along the map's edges (MapLibre's `setPadding`): the center is drawn at the middle
+/// of what they leave, and a tilted map's vanishing point follows it.
+#derive(Eq, Debug)
+pub(all) struct Padding {
+  top : Double
+  right : Double
+  bottom : Double
+  left : Double
+}
+
+///|
+/// `Padding` with what is left out at 0.
+pub fn Padding::new(
+  top~ : Double = 0.0,
+  right~ : Double = 0.0,
+  bottom~ : Double = 0.0,
+  left~ : Double = 0.0,
+) -> Padding {
+  { top, right, bottom, left, }
+}
+
+///|
+/// The padding as the JSON the map's `setPadding` takes.
+pub fn Padding::to_json(self : Padding) -> Json {
+  {
+    "top": self.top,
+    "right": self.right,
+    "bottom": self.bottom,
+    "left": self.left,
+  }
+}
+
+///|
 fn lnglat_json(p : LngLat) -> Json {
   [p.lng, p.lat]
 }
@@ -49,6 +82,7 @@ fn camera_json(
   zoom : Double?,
   bearing : Double?,
   pitch : Double?,
+  padding : Padding?,
 ) -> @builtin.Map[String, Json] {
   let o : @builtin.Map[String, Json] = @builtin.Map([])
   if center is Some(c) {
@@ -62,6 +96,9 @@ fn camera_json(
   }
   if pitch is Some(p) {
     o["pitch"] = Json::number(p)
+  }
+  if padding is Some(p) {
+    o["padding"] = p.to_json()
   }
   o
 }
@@ -102,7 +139,7 @@ pub fn Map::new(
   interactive? : Bool,
   attribution? : Bool,
 ) -> Map {
-  let o = camera_json(center, zoom, bearing, pitch)
+  let o = camera_json(center, zoom, bearing, pitch, None)
   o["container"] = Json::string(container)
   put_number(o, "minZoom", min_zoom)
   put_number(o, "maxZoom", max_zoom)
@@ -148,29 +185,51 @@ pub fn Map::pitch(self : Map) -> Double {
 }
 
 ///|
-/// Moves the camera at once to what is given.
+/// The map's padding (MapLibre's `getPadding`).
+pub fn Map::padding(self : Map) -> Padding {
+  let p = self.call("getPadding", [])
+  let side = (key : String) => js_as_number(js_get(p, key))
+  {
+    top: side("top"),
+    right: side("right"),
+    bottom: side("bottom"),
+    left: side("left"),
+  }
+}
+
+///|
+/// Sets the map's padding at once (MapLibre's `setPadding`).
+pub fn Map::set_padding(self : Map, padding : Padding) -> Unit {
+  self.jump_to(padding~)
+}
+
+///|
+/// Moves the camera at once to what is given; `padding` becomes the map's.
 pub fn Map::jump_to(
   self : Map,
   center? : LngLat,
   zoom? : Double,
   bearing? : Double,
   pitch? : Double,
+  padding? : Padding,
 ) -> Unit {
-  let o = camera_json(center, zoom, bearing, pitch)
+  let o = camera_json(center, zoom, bearing, pitch, padding)
   self.call("jumpTo", [json_to_js(Json::object(o))]) |> ignore
 }
 
 ///|
-/// Moves the camera to what is given over `duration` milliseconds (MapLibre's `easeTo`, default 500).
+/// Moves the camera, and the map's padding to `padding`, to what is given over `duration` milliseconds
+/// (MapLibre's `easeTo`, default 500).
 pub fn Map::ease_to(
   self : Map,
   center? : LngLat,
   zoom? : Double,
   bearing? : Double,
   pitch? : Double,
+  padding? : Padding,
   duration? : Double,
 ) -> Unit {
-  let o = camera_json(center, zoom, bearing, pitch)
+  let o = camera_json(center, zoom, bearing, pitch, padding)
   put_number(o, "duration", duration)
   self.call("easeTo", [json_to_js(Json::object(o))]) |> ignore
 }
@@ -184,11 +243,12 @@ pub fn Map::fly_to(
   zoom? : Double,
   bearing? : Double,
   pitch? : Double,
+  padding? : Padding,
   duration? : Double,
   speed? : Double,
   curve? : Double,
 ) -> Unit {
-  let o = camera_json(center, zoom, bearing, pitch)
+  let o = camera_json(center, zoom, bearing, pitch, padding)
   put_number(o, "duration", duration)
   put_number(o, "speed", speed)
   put_number(o, "curve", curve)
@@ -196,8 +256,8 @@ pub fn Map::fly_to(
 }
 
 ///|
-/// Moves the camera to show `bounds` with `padding` pixels around them, zooming in no further than
-/// `max_zoom`; at once when `duration` is 0.
+/// Moves the camera to show `bounds` with `padding` pixels around them, inside the map's own padding,
+/// zooming in no further than `max_zoom`; at once when `duration` is 0.
 pub fn Map::fit_bounds(
   self : Map,
   bounds : Bounds,
