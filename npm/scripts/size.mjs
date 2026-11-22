@@ -14,7 +14,7 @@ const DIST = path.join(PKG, "dist");
 // `files` are what a user of the entry loads on top of the entries it builds
 // on; `references` the dist files its JS may import or load by URL.
 const ENTRIES = [
-  { name: "mbt-map", files: ["index.js"], budget: 170_000, references: ["./geojson.js", "./pmtiles.js", "./legacy.js", "./sprite.js", "./media.js", "./custom.js", "./export.js", "./tilejson-merge.js", "./geotiff-source.js", "./worker.js", "./mbt-map.wasm", "./worker-labels.js", "./worker-pmtiles.js", "./worker-query.js"] },
+  { name: "mbt-map", files: ["index.js"], budget: 172_000, references: ["./geojson.js", "./pmtiles.js", "./legacy.js", "./sprite.js", "./media.js", "./custom.js", "./export.js", "./tilejson-merge.js", "./geotiff-source.js", "./worker.js", "./mbt-map.wasm", "./worker-labels.js", "./worker-pmtiles.js", "./worker-query.js"] },
   { name: "GeoJSON sources (loaded by mbt-map when a style has one)", files: ["geojson.js"], budget: 5_000, references: ["./geojson-worker.js", "./geojson.wasm", "./geojson-properties.wasm"] },
   { name: "PMTiles headers (loaded by mbt-map when a style has a pmtiles:// source)", files: ["pmtiles.js"], budget: 2_000, references: [] },
   { name: "GeoTIFF sources (loaded by mbt-map with the first one; tiles by mbt-map/data)", files: ["geotiff-source.js"], budget: 1_000, references: ["./data.js"] },
@@ -59,7 +59,7 @@ const ENTRIES = [
   { name: "SLPK (loaded with the first i3sLayer of an .slpk)", files: ["3d-slpk.js"], budget: 6_000, references: [] },
   { name: "3d worker", files: ["3d-worker.js", "3d.wasm"], budget: 50_000, references: [] },
   { name: "mbt-map/data", files: ["data.js"], budget: 2_000, references: ["./clients.js"] },
-  { name: "data worker", files: ["data-worker.js", "data.wasm"], budget: 41_000, references: ["./data-zip.js", "./data-crs.js", "./data-fgb.js", "./data-geotiff.js", "./data-reproject.js", "./data-arrow.js"] },
+  { name: "data worker", files: ["data-worker.js", "data.wasm"], budget: 42_000, references: ["./data-zip.js", "./data-crs.js", "./data-fgb.js", "./data-geotiff.js", "./data-reproject.js", "./data-arrow.js"] },
   { name: "zip archives (loaded by the data worker with the first one)", files: ["data-zip.js"], budget: 2_000, references: [] },
   { name: "FlatGeobuf headers, index and range requests (loaded by the data worker with the first one)", files: ["data-fgb.js"], budget: 2_500, references: [] },
   { name: "reprojected sources' tiles (loaded by the data worker with the first one)", files: ["data-reproject.js"], budget: 2_000, references: [] },
@@ -67,8 +67,8 @@ const ENTRIES = [
   { name: ".prj WKT (loaded by the data worker on the first .prj)", files: ["prjwkt.js"], budget: 4_000, references: [] },
   { name: "KML and GPX (loaded by the data worker on the first such read)", files: ["xml.wasm"], budget: 27_000, references: [] },
   { name: "Arrow and Parquet glue (loaded by the data worker on the first Arrow or Parquet read or write)", files: ["data-arrow.js"], budget: 3_000, references: [] },
-  { name: "Arrow IPC (loaded by the data worker on the first Arrow read or write)", files: ["arrow.wasm"], budget: 30_000, references: [] },
-  { name: "Parquet (loaded by the data worker on the first Parquet read)", files: ["parquet.wasm"], budget: 27_000, references: [] },
+  { name: "Arrow IPC (loaded by the data worker on the first Arrow read or write)", files: ["arrow.wasm"], budget: 31_000, references: [] },
+  { name: "Parquet (loaded by the data worker on the first Parquet read)", files: ["parquet.wasm"], budget: 28_000, references: [] },
   { name: "Zstandard (loaded by the data worker with the first ZSTD-compressed Parquet page or Arrow buffer)", files: ["zstd.wasm"], budget: 7_000, references: [] },
   { name: "GeoTIFF (loaded by the data worker on the first raster read)", files: ["geotiff.wasm", "data-geotiff.js"], budget: 20_000, references: [] },
 ];

@@ -35,7 +35,7 @@ MoonBit で書いた、**サーバーに頼らない WebGIS の実行基盤**（
 
 | 入口 | 予算 |
 |---|---|
-| `mbt-map`（表示、メインスレッド側） | 170KB |
+| `mbt-map`（表示、メインスレッド側） | 172KB |
 | 表示用 Worker（Wasm 含む） | 100KB |
 | `mbt-map/element` | 5KB（`mbt-map` の上に） |
 | `mbt-map/ui` | 全部入りで 10KB、コントローラ 1 つ 2KB |
