@@ -1,7 +1,7 @@
 {
   "reference": "maplibre-gl 6.16.0",
-  "views": 28,
-  "comparisons": 794,
+  "views": 47,
+  "comparisons": 1668,
   "worst": {
     "px": 1.6759713616920635e-9,
     "deg": 3.865329745167401e-8,

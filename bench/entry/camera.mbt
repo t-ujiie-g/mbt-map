@@ -1,7 +1,7 @@
 ///|
-/// The transform `a` describes: viewport width and height, camera (lng, lat,
-/// zoom, bearing, pitch), limits (min/max zoom, min/max pitch), bounds (west,
-/// south, east, north; NaN west for none) and world copies (0 for none).
+/// The transform `a` describes: viewport width and height, camera (lng, lat, zoom, bearing, pitch),
+/// limits (min/max zoom, min/max pitch), bounds (west, south, east, north; NaN west for none), world
+/// copies (0 for none) and the padding set once the camera is (top, right, bottom, left).
 fn transform_of(a : FixedArray[Double]) -> @core.Transform {
   let bounds : @core.LngLatBounds? = if a[11].is_nan() {
     None
@@ -25,7 +25,15 @@ fn transform_of(a : FixedArray[Double]) -> @core.Transform {
       bounds,
       world_copies: a.length() < 16 || a[15] != 0.0,
     },
-  )
+  ).with_padding(padding_of(a))
+}
+
+///|
+fn padding_of(a : FixedArray[Double]) -> @core.Padding {
+  if a.length() < 20 {
+    return @core.Padding::uniform(0.0)
+  }
+  { top: a[16], right: a[17], bottom: a[18], left: a[19], }
 }
 
 ///|
@@ -109,7 +117,7 @@ pub fn camera_bounds(a : FixedArray[Double]) -> String {
 ///|
 /// `camera_for_bounds` of `b`: west, south, east, north, bearing, padding
 /// (top, right, bottom, left), offset x and y, max zoom (NaN for the
-/// limit); empty when it does not fit.
+/// limit), absolute padding (0 for none); empty when it does not fit.
 #export_name("camera_fit")
 pub fn camera_fit(a : FixedArray[Double], b : FixedArray[Double]) -> String {
   let t = transform_of(a)
@@ -119,6 +127,7 @@ pub fn camera_fit(a : FixedArray[Double], b : FixedArray[Double]) -> String {
     padding={ top: b[5], right: b[6], bottom: b[7], left: b[8], },
     offset=(b[9], b[10]),
     max_zoom?=if b[11].is_nan() { None } else { Some(b[11]) },
+    absolute=b[12] != 0.0,
   )
   match fit {
     Some(c) => {
@@ -132,7 +141,8 @@ pub fn camera_fit(a : FixedArray[Double], b : FixedArray[Double]) -> String {
 
 ///|
 /// The target `g` gives: center (lng, lat), zoom, bearing, pitch, around
-/// (lng, lat), each NaN for none, then the offset x and y.
+/// (lng, lat), each NaN for none, the offset x and y, then the padding (top,
+/// right, bottom, left; NaN top for none).
 fn target_of(g : FixedArray[Double]) -> @core.CameraTarget {
   let some = (v : Double) => if v.is_nan() { None } else { Some(v) }
   @core.CameraTarget::new(
@@ -142,7 +152,43 @@ fn target_of(g : FixedArray[Double]) -> @core.CameraTarget {
     pitch?=some(g[4]),
     around?=if g[5].is_nan() { None } else { Some({ lng: g[5], lat: g[6], }) },
     offset=(g[7], g[8]),
+    padding?=if g.length() < 13 || g[9].is_nan() {
+      None
+    } else {
+      Some({ top: g[9], right: g[10], bottom: g[11], left: g[12], })
+    },
   )
+}
+
+///|
+fn padding_numbers(p : @core.Padding, out : Array[Double]) -> Unit {
+  out.push(p.top)
+  out.push(p.right)
+  out.push(p.bottom)
+  out.push(p.left)
+}
+
+///|
+/// The paddings of `ease_to(target_of(g))`, then of `fly_to(target_of(g))`
+/// (none when it is too short to fly), at the eased fractions `ks`.
+#export_name("camera_paddings")
+pub fn camera_paddings(
+  a : FixedArray[Double],
+  g : FixedArray[Double],
+  ks : FixedArray[Double],
+) -> String {
+  let t = transform_of(a)
+  let e = t.ease_to(target_of(g))
+  let out = []
+  for k in ks {
+    padding_numbers(e.padding_at(k), out)
+  }
+  if t.fly_to(target_of(g)) is Some(f) {
+    for k in ks {
+      padding_numbers(f.padding_at(k), out)
+    }
+  }
+  joined(out)
 }
 
 ///|

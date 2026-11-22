@@ -38,6 +38,16 @@ views.push({ w: 1200, h: 500, center: [-100, 40], zoom: 5.5, pitch: 75, bearing:
 views.push({ w: 800, h: 600, center: [179.9, -20], zoom: 6, pitch: 65, bearing: -90, projection: "globe" });
 views.push({ w: 800, h: 600, center: TOKYO, zoom: 13, pitch: 50, bearing: 20, projection: "vertical-perspective" });
 views.push({ w: 800, h: 600, center: TOKYO, zoom: 3, pitch: 10, bearing: 0, projection: "mercator" });
+// Map padding (`setPadding`): top, right, bottom, left.
+for (const padding of [[0, 0, 0, 320], [50, 0, 300, 0], [100, 20, 40, 200]]) {
+  for (const [zoom, pitch, bearing] of [[2, 0, 0], [3.5, 40, 30], [6, 60, -120], [11.5, 30, 10], [1, 75, 170]]) {
+    views.push({ w: 800, h: 600, center: TOKYO, zoom, pitch, bearing, projection: "globe", padding });
+  }
+}
+views.push({ w: 800, h: 600, center: [-30, 88], zoom: 4, pitch: 20, bearing: 60, projection: "globe", padding: [0, 0, 0, 320] });
+views.push({ w: 800, h: 600, center: TOKYO, zoom: 4, pitch: 0, bearing: 0, bounds: [139, 35, 140, 36], projection: "globe", padding: [40, 10, 200, 0] });
+views.push({ w: 800, h: 600, center: TOKYO, zoom: 13, pitch: 50, bearing: 20, projection: "vertical-perspective", padding: [0, 300, 0, 0] });
+views.push({ w: 800, h: 600, center: TOKYO, zoom: 3, pitch: 10, bearing: 0, projection: "mercator", padding: [0, 0, 0, 320] });
 
 function maplibre(v) {
   const frames = [];
@@ -55,6 +65,7 @@ function maplibre(v) {
   tr.resize(v.w, v.h);
   if (v.bounds) tr.setMaxBounds(new LngLatBounds([v.bounds[0], v.bounds[1]], [v.bounds[2], v.bounds[3]]));
   cam.jumpTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing });
+  if (v.padding) cam.setPadding(sides(v.padding));
   // The map evaluates the projection at the zoom of each frame it draws.
   cam.render = () => {
     projection?.recalculate?.(new EvaluationParameters(cam.transform.zoom));
@@ -70,7 +81,8 @@ function maplibre(v) {
   return cam;
 }
 const transitionOf = (tr) => tr._globeness ?? (tr.getClippingPlane() ? 1 : 0);
-const ours = (v) => [v.w, v.h, v.center[0], v.center[1], v.zoom, v.bearing, v.pitch, v.minZoom ?? 0, v.maxZoom ?? 22, v.minPitch ?? 0, v.maxPitch ?? 85, ...(v.bounds ?? [NaN, 0, 0, 0]), PROJECTIONS[v.projection]];
+const ours = (v) => [v.w, v.h, v.center[0], v.center[1], v.zoom, v.bearing, v.pitch, v.minZoom ?? 0, v.maxZoom ?? 22, v.minPitch ?? 0, v.maxPitch ?? 85, ...(v.bounds ?? [NaN, 0, 0, 0]), PROJECTIONS[v.projection], ...(v.padding ?? [0, 0, 0, 0])];
+const sides = ([top, right, bottom, left]) => ({ top, right, bottom, left });
 const state = (tr) => [tr.center.lng, tr.center.lat, tr.zoom, tr.bearing, tr.pitch, transitionOf(tr)];
 
 const rows = [];
@@ -90,7 +102,7 @@ function cameraDiff(a, b, n = 6) {
   return { deg: a.length === b.length ? deg : Infinity, zoom: a.length === b.length ? zoom : Infinity };
 }
 function record(op, v, d) {
-  rows.push({ op, view: `${v.projection} ${v.w}x${v.h} ${v.center} z${v.zoom} p${v.pitch} b${v.bearing}${v.bounds ? " bounds" : ""}${v.minZoom !== undefined ? " limits" : ""}`, ...d });
+  rows.push({ op, view: `${v.projection} ${v.w}x${v.h} ${v.center} z${v.zoom} p${v.pitch} b${v.bearing}${v.bounds ? " bounds" : ""}${v.minZoom !== undefined ? " limits" : ""}${v.padding ? ` padding ${v.padding}` : ""}`, ...d });
   for (const k of Object.keys(d)) worst[k] = Math.max(worst[k], d[k]);
 }
 const maxAbs = (a, b) => (a.length === b.length ? Math.max(0, ...a.map((r, i) => Math.abs(r - b[i]))) : Infinity);
@@ -176,10 +188,11 @@ function runView(v) {
     { bounds: [139.5, 35.5, 140, 35.8], bearing: 30, padding: [20, 40, 10, 80], offset: [15, -25], maxZoom: 9 },
     { bounds: [170, -10, -170, 10], bearing: -60, padding: [5, 5, 5, 5], offset: [0, 0] },
     { bounds: [100, -40, 160, 50], bearing: 0, padding: [10, 10, 10, 10], offset: [0, 0] },
+    { bounds: [130, 30, 145, 42], bearing: 20, padding: [30, 0, 60, 250], offset: [0, 0], absolute: true },
   ]) {
     const [w, s, e, n] = fit.bounds;
-    const r = cam.cameraForBounds([[w, s], [e, n]], { bearing: fit.bearing, padding: { top: fit.padding[0], right: fit.padding[1], bottom: fit.padding[2], left: fit.padding[3] }, offset: fit.offset, ...(fit.maxZoom === undefined ? {} : { maxZoom: fit.maxZoom }) });
-    const g = nums(mbt.globe_fit(ours(v), [w, s, e, n, fit.bearing, ...fit.padding, ...fit.offset, fit.maxZoom ?? NaN]));
+    const r = cam.cameraForBounds([[w, s], [e, n]], { bearing: fit.bearing, padding: { top: fit.padding[0], right: fit.padding[1], bottom: fit.padding[2], left: fit.padding[3] }, offset: fit.offset, ...(fit.maxZoom === undefined ? {} : { maxZoom: fit.maxZoom }), ...(fit.absolute ? { absolutePadding: true } : {}) });
+    const g = nums(mbt.globe_fit(ours(v), [w, s, e, n, fit.bearing, ...fit.padding, ...fit.offset, fit.maxZoom ?? NaN, fit.absolute ? 1 : 0]));
     const want = r ? [r.center.lng, r.center.lat, r.zoom, r.bearing] : [];
     const d = cameraDiff([...want, 0], g.length ? [g[0], g[1], g[2], g[3], 0] : [], 5);
     record("cameraForBounds", v, r || g.length ? d : { deg: 0, zoom: 0 });
@@ -192,17 +205,21 @@ function runView(v) {
     { center: [-170, 10], bearing: -170, offset: [30, -20] },
     { center: [-74, 40.7], zoom: 12.5 },
     { center: [2.35, 48.85], zoom: 4, pitch: 0 },
+    { center: [139.9, 35.5], zoom: v.zoom + 1, pitch: 50, padding: [10, 20, 30, 150] },
+    { center: [139.8, 35.7], bearing: 40, offset: [30, -20], padding: [0, 0, 250, 0] },
+    { center: [-74, 40.7], zoom: 12.5, padding: [0, 0, 0, 0] },
   ]) {
     const D = 1000;
     const m = maplibre(v);
     setNow(0);
-    m.easeTo({ ...target, duration: D, easing: (t) => t });
+    const options = { ...target, ...(target.padding ? { padding: sides(target.padding) } : {}) };
+    m.easeTo({ ...options, duration: D, easing: (t) => t });
     const ref2 = [];
     for (const k of KS) {
       m.frameAt(k * D);
       ref2.push(...state(m.transform));
     }
-    const g = [NaN, NaN, NaN, NaN, NaN, NaN, NaN, 0, 0];
+    const g = [NaN, NaN, NaN, NaN, NaN, NaN, NaN, 0, 0, ...(target.padding ?? [NaN, 0, 0, 0])];
     if (target.center) [g[0], g[1]] = target.center;
     if (target.zoom !== undefined) g[2] = target.zoom;
     if (target.bearing !== undefined) g[3] = target.bearing;
@@ -214,7 +231,7 @@ function runView(v) {
     if (target.around) continue;
     const f = maplibre(v);
     setNow(0);
-    f.flyTo({ ...target, easing: (t) => t });
+    f.flyTo({ ...options, easing: (t) => t });
     const duration = f._easeOptions?.duration ?? 0;
     const ref3 = [];
     for (const k of KS) {

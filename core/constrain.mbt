@@ -3,13 +3,14 @@
 
 ///|
 /// `camera` kept to `limits` on a `width` x `height` viewport, as MapLibre's
-/// `defaultConstrain` (no padding): zoom and pitch clamped, bearing and longitude
-/// wrapped, the center moved or the zoom raised to keep the view in bounds.
+/// `defaultConstrain`: zoom and pitch clamped, bearing and longitude wrapped, the
+/// center moved or the zoom raised to keep the view less `padding` in bounds.
 fn constrain(
   camera : Camera,
   limits : Limits,
   width : Double,
   height : Double,
+  padding : Padding,
 ) -> Camera {
   let zoom = @cmp.maximum(
     limits.min_zoom,
@@ -31,13 +32,27 @@ fn constrain(
   }
   let mut zoom = zoom
   for _ in 0..<3 {
-    let (_, z) = constrain_center(camera.center, zoom, limits, width, height)
+    let (_, z) = constrain_center(
+      camera.center,
+      zoom,
+      limits,
+      width,
+      height,
+      padding,
+    )
     if clamp(z) == zoom {
       break
     }
     zoom = clamp(z)
   }
-  let (center, _) = constrain_center(camera.center, zoom, limits, width, height)
+  let (center, _) = constrain_center(
+    camera.center,
+    zoom,
+    limits,
+    width,
+    height,
+    padding,
+  )
   { ..camera, center: { lng: wrap180(center.lng), lat: center.lat, }, zoom, }
 }
 
@@ -50,6 +65,7 @@ fn constrain_once(
   limits : Limits,
   width : Double,
   height : Double,
+  padding : Padding,
 ) -> Camera {
   let zoom = @cmp.maximum(
     limits.min_zoom,
@@ -61,22 +77,25 @@ fn constrain_once(
     limits,
     width,
     height,
+    padding,
   )
   { ..camera, center: { lng: wrap180(center.lng), lat: center.lat, }, zoom, }
 }
 
 ///|
 /// MapLibre's mercator `defaultConstrain`: the zoom clamped, then raised or the
-/// center moved so a `width` x `height` view stays in the limits' bounds.
+/// center moved so a `width` x `height` view less `padding` stays in the limits'
+/// bounds.
 pub fn mercator_constrain(
   center : LngLat,
   zoom : Double,
   limits : Limits,
   width : Double,
   height : Double,
+  padding~ : Padding = Padding::uniform(0.0),
 ) -> (LngLat, Double) {
   let zoom = @cmp.maximum(limits.min_zoom, @cmp.minimum(limits.max_zoom, zoom))
-  constrain_center(center, zoom, limits, width, height)
+  constrain_center(center, zoom, limits, width, height, padding)
 }
 
 ///|
@@ -91,8 +110,11 @@ fn constrain_center(
   limits : Limits,
   width : Double,
   height : Double,
+  padding : Padding,
 ) -> (LngLat, Double) {
   let world = TILE_SIZE * @math.pow(2.0, zoom)
+  let width = width - padding.left - padding.right
+  let height = height - padding.top - padding.bottom
   let (south, north, lng_range) = match limits.bounds {
     Some(b) => (b.south, b.north, Some((b.west, b.east)))
     // One world only: the view stays within the antimeridian.

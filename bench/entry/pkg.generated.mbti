@@ -16,6 +16,8 @@ pub fn camera_fit(FixedArray[Double], FixedArray[Double]) -> String
 
 pub fn camera_fly(FixedArray[Double], FixedArray[Double], FixedArray[Double], FixedArray[Double]) -> String
 
+pub fn camera_paddings(FixedArray[Double], FixedArray[Double], FixedArray[Double]) -> String
+
 pub fn camera_project(FixedArray[Double], FixedArray[Double]) -> String
 
 pub fn camera_unproject(FixedArray[Double], FixedArray[Double]) -> String

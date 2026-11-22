@@ -121,20 +121,49 @@ pub fn Transform::at_point(
   y : Double,
 ) -> Camera {
   let a = self.ray_ground(x, y)
-  let b = self.ray_ground(self.width / 2.0, self.height / 2.0)
+  let (cx, cy) = self.center_point()
+  let b = self.ray_ground(cx, cy)
   let m = p.to_mercator()
   let center = ({ x: m.x - (a.x - b.x), y: m.y - (a.y - b.y), } : MercatorCoord).to_lnglat()
-  constrain({ ..self.camera, center, }, self.limits, self.width, self.height)
+  constrain(
+    { ..self.camera, center, },
+    self.limits,
+    self.width,
+    self.height,
+    self.padding,
+  )
 }
 
 ///|
-/// Space around a box fitted to the screen, in CSS pixels.
+/// Space kept free along the viewport's edges, in CSS pixels: around a box
+/// fitted to the screen, or the map's own (`Transform::with_padding`).
 #derive(Debug, Eq)
 pub(all) struct Padding {
   top : Double
   right : Double
   bottom : Double
   left : Double
+}
+
+///|
+/// Whether every side is a finite number of pixels, 0 or more (what MapLibre's
+/// `EdgeInsets` takes).
+pub fn Padding::valid(self : Padding) -> Bool {
+  let ok = (v : Double) => v >= 0.0 && !v.is_inf()
+  ok(self.top) && ok(self.right) && ok(self.bottom) && ok(self.left)
+}
+
+///|
+/// The padding `k` (0 to 1) of the way from `self` to `to`, as MapLibre's
+/// `EdgeInsets.interpolate`.
+pub fn Padding::toward(self : Padding, to : Padding, k : Double) -> Padding {
+  let mix = (a : Double, b : Double) => a + k * (b - a)
+  {
+    top: mix(self.top, to.top),
+    right: mix(self.right, to.right),
+    bottom: mix(self.bottom, to.bottom),
+    left: mix(self.left, to.left),
+  }
 }
 
 ///|
@@ -150,9 +179,9 @@ fn rotate(x : Double, y : Double, rad : Double) -> (Double, Double) {
 }
 
 ///|
-/// The camera showing `b` as large as the viewport less `padding` allows at
-/// `bearing`, up to `max_zoom`, shifted by `offset` (MapLibre's `cameraForBounds`,
-/// pitch kept). None when the padding leaves no room.
+/// The camera showing `b` as large as the viewport less `padding` and the map's own padding allows at
+/// `bearing`, up to `max_zoom`, shifted by `offset` (MapLibre's `cameraForBounds`, pitch kept). With
+/// `absolute`, `padding` stands for the map's. None when the padding leaves no room.
 pub fn Transform::camera_for_bounds(
   self : Transform,
   b : LngLatBounds,
@@ -160,7 +189,9 @@ pub fn Transform::camera_for_bounds(
   padding~ : Padding = Padding::uniform(0.0),
   offset~ : (Double, Double) = (0.0, 0.0),
   max_zoom? : Double,
+  absolute~ : Bool = false,
 ) -> Camera? {
+  let (padding, map_padding) = fit_paddings(self.padding, padding, absolute)
   guard fit_box(
       b,
       self.camera.zoom,
@@ -168,6 +199,7 @@ pub fn Transform::camera_for_bounds(
       self.height,
       bearing~,
       padding~,
+      map_padding~,
       offset~,
       max_zoom=max_zoom.unwrap_or(self.limits.max_zoom),
     )
@@ -178,9 +210,24 @@ pub fn Transform::camera_for_bounds(
 }
 
 ///|
-/// The center and zoom MapLibre's `cameraForBoxAndBearing` gives for `b` on a
-/// `width` x `height` mercator view at `zoom`; None when the padding leaves
-/// no room.
+/// The fit padding and the map padding MapLibre's `cameraForBounds` fits with:
+/// `padding` on top of the map's `own`, or with `absolute` in its place.
+pub fn fit_paddings(
+  own : Padding,
+  padding : Padding,
+  absolute : Bool,
+) -> (Padding, Padding) {
+  if absolute {
+    (Padding::uniform(0.0), padding)
+  } else {
+    (padding, own)
+  }
+}
+
+///|
+/// The center and zoom MapLibre's `cameraForBoxAndBearing` gives for `b` on a `width` x `height` mercator
+/// view at `zoom`, None when the paddings leave no room. Both shrink the room; only `padding` moves the
+/// center (the projection moves it by `map_padding`).
 pub fn fit_box(
   b : LngLatBounds,
   zoom : Double,
@@ -188,6 +235,7 @@ pub fn fit_box(
   height : Double,
   bearing~ : Double,
   padding~ : Padding,
+  map_padding~ : Padding = Padding::uniform(0.0),
   offset~ : (Double, Double),
   max_zoom~ : Double,
 ) -> (LngLat, Double)? {
@@ -211,8 +259,10 @@ pub fn fit_box(
     max_x = @cmp.maximum(max_x, x)
     max_y = @cmp.maximum(max_y, y)
   }
-  let available_w = width - (padding.left + padding.right)
-  let available_h = height - (padding.top + padding.bottom)
+  let available_w = width -
+    (map_padding.left + map_padding.right + padding.left + padding.right)
+  let available_h = height -
+    (map_padding.top + map_padding.bottom + padding.top + padding.bottom)
   let scale_x = available_w / (max_x - min_x)
   let scale_y = available_h / (max_y - min_y)
   guard scale_x >= 0.0 && scale_y >= 0.0 && !(max_x - min_x).is_inf() else {

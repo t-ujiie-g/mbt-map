@@ -9,6 +9,7 @@ pub fn Globe::jump_to(
   zoom? : Double,
   bearing? : Double,
   pitch? : Double,
+  padding? : @core.Padding,
 ) -> Unit {
   if self.is_globe() {
     let start_lat = self.center.lat
@@ -35,6 +36,9 @@ pub fn Globe::jump_to(
   }
   if pitch is Some(p) && self.camera().pitch != p {
     self.set_pitch(p)
+  }
+  if padding is Some(p) {
+    self.set_padding(p)
   }
 }
 
@@ -87,10 +91,52 @@ fn Globe::offset_point(
   self : Globe,
   offset : (Double, Double),
 ) -> (Double, Double) {
-  (
-    clamp(self.width / 2.0 + offset.0, 0.0, self.width),
-    clamp(self.height / 2.0 + offset.1, 0.0, self.height),
-  )
+  let (x, y) = self.center_point()
+  (clamp(x + offset.0, 0.0, self.width), clamp(y + offset.1, 0.0, self.height))
+}
+
+///|
+/// The padding `target` moves to, None to keep the camera's (`doPadding`).
+fn Globe::end_padding(
+  self : Globe,
+  target : @core.CameraTarget,
+) -> @core.Padding? {
+  target.padding.filter(p => p != self.padding && p.valid())
+}
+
+///|
+/// Sets the padding `k` of the way from `start` to `end` and constrains
+/// (`interpolatePadding`).
+fn Globe::interpolate_padding(
+  self : Globe,
+  start : @core.Padding,
+  end : @core.Padding?,
+  k : Double,
+) -> Unit {
+  if end is Some(p) {
+    self.padding = start.toward(p, k)
+    self.constrain_state()
+    self.changed()
+  }
+}
+
+///|
+/// The center's screen point moved by `offset`, as the mercator moves take it.
+fn Globe::plain_offset_point(
+  self : Globe,
+  offset : (Double, Double),
+) -> (Double, Double) {
+  let (x, y) = self.center_point()
+  (x + offset.0, y + offset.1)
+}
+
+///|
+fn Globe::unproject_offset(
+  self : Globe,
+  offset : (Double, Double),
+) -> @core.LngLat {
+  let (x, y) = self.plain_offset_point(offset)
+  self.unproject(x, y)
 }
 
 ///|
@@ -192,8 +238,11 @@ fn Globe::globe_ease(
   let d_lat = angle_difference(start_center.lat, end_center.lat)
   let final_scale = zoom_scale(end_norm - start_norm)
   let zooming = end_zoom != start_zoom
+  let start_padding = tr.padding
+  let end_padding = tr.end_padding(target)
   fn(k) {
     tr.rotate_by(from_angles, to_angles, k)
+    tr.interpolate_padding(start_padding, end_padding, k)
     match around {
       Some((a, (x, y))) => tr.set_location_at_point(a, x, y)
       None => {
@@ -228,11 +277,7 @@ fn Globe::mercator_ease(
   to_angles : (Double, Double),
 ) -> (Double) -> Unit {
   let start_zoom = tr.zoom
-  let point = (
-    tr.width / 2.0 + target.offset.0,
-    tr.height / 2.0 + target.offset.1,
-  )
-  let at_offset = tr.unproject(point.0, point.1)
+  let at_offset = tr.unproject_offset(target.offset)
   let (c, end_zoom) = tr.constrain(
     target.center.unwrap_or(at_offset),
     target.zoom.unwrap_or(start_zoom),
@@ -244,11 +289,14 @@ fn Globe::mercator_ease(
   let delta = (to.0 - from.0, to.1 - from.1)
   let final_scale = zoom_scale(end_zoom - start_zoom)
   let zooming = end_zoom != start_zoom
+  let start_padding = tr.padding
+  let end_padding = tr.end_padding(target)
   fn(k) {
     if zooming {
       tr.set_zoom(lerp(start_zoom, end_zoom, k))
     }
     tr.rotate_by(from_angles, to_angles, k)
+    tr.interpolate_padding(start_padding, end_padding, k)
     match around {
       Some((a, (x, y))) => tr.set_location_at_point(a, x, y)
       None => {
@@ -262,7 +310,8 @@ fn Globe::mercator_ease(
         let x = (from.0 + delta.0 * f) * scale
         let y = (from.1 + delta.1 * f) * scale
         let c = wrapped(world_lnglat(tr.world_size(), x, y))
-        tr.set_location_at_point(c, point.0, point.1)
+        let (px, py) = tr.plain_offset_point(target.offset)
+        tr.set_location_at_point(c, px, py)
       }
     }
   }
@@ -320,11 +369,9 @@ pub fn Globe::fly_to(
     None => start.bearing
   }
   let end_pitch = target.pitch.unwrap_or(start.pitch)
-  let point = (
-    tr.width / 2.0 + target.offset.0,
-    tr.height / 2.0 + target.offset.1,
-  )
-  let at_offset = tr.unproject(point.0, point.1)
+  let at_offset = tr.unproject_offset(target.offset)
+  let start_padding = tr.padding
+  let end_padding = tr.end_padding(target)
   let plan = if tr.is_globe() {
     tr.globe_fly(target, at_offset, end_bearing, min_zoom)
   } else {
@@ -385,6 +432,7 @@ pub fn Globe::fly_to(
     if pitching {
       tr.set_pitch(lerp(start.pitch, end_pitch, k))
     }
+    tr.interpolate_padding(start_padding, end_padding, k)
     (plan.step)(k, 1.0 / w(s), u(s))
   }
   Some({ tr, frame, duration: 1000.0 * length / v, })
@@ -422,10 +470,6 @@ fn Globe::mercator_fly(
   let to = world_point(ws, center)
   let delta = (to.0 - from.0, to.1 - from.1)
   let lowest = tr.lowest_zoom(min_zoom, start_zoom, target_zoom)
-  let point = (
-    tr.width / 2.0 + target.offset.0,
-    tr.height / 2.0 + target.offset.1,
-  )
   {
     scale_of_zoom: zoom_scale(target_zoom - start_zoom),
     scale_of_min_zoom: zoom_scale(tr.constrain(center, lowest).1 - start_zoom),
@@ -443,7 +487,8 @@ fn Globe::mercator_fly(
       } else {
         world_lnglat(ws, from.0 + delta.0 * share, from.1 + delta.1 * share)
       }
-      tr.set_location_at_point(wrapped(c), point.0, point.1)
+      let (px, py) = tr.plain_offset_point(target.offset)
+      tr.set_location_at_point(wrapped(c), px, py)
     },
   }
 }

@@ -230,7 +230,7 @@ fn Transform::footprint(
     1.0
   let z0 = @cmp.minimum(lo * ppm, camera)
   let z1 = @cmp.minimum(hi * ppm, camera)
-  let top = @cmp.maximum(0.0, self.height / 2.0 - self.horizon())
+  let top = @cmp.maximum(0.0, self.center_point().1 - self.horizon())
   let points = []
   for i in 0..<(if z0 == z1 { 4 } else { 8 }) {
     let k = i % 4

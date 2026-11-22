@@ -32,6 +32,17 @@ views.push({ w: 800, h: 600, center: TOKYO, zoom: 9, pitch: 0, bearing: 0, minZo
 views.push({ w: 800, h: 600, center: [175, 20], zoom: 3, pitch: 0, bearing: 0, copies: false });
 views.push({ w: 800, h: 600, center: [179.5, 70], zoom: 4, pitch: 30, bearing: -45, copies: false });
 views.push({ w: 800, h: 600, center: [-170, 10], zoom: 0.5, pitch: 0, bearing: 0, copies: false });
+// Map padding (`setPadding`): top, right, bottom, left.
+for (const padding of [[0, 0, 0, 320], [50, 0, 300, 0], [100, 20, 40, 200]]) {
+  for (const [zoom, pitch, bearing] of [[14, 0, 0], [14, 60, 30], [12.5, 70, -120], [16, 80, 170], [0.5, 0, 0]]) {
+    views.push({ w: 800, h: 600, center: TOKYO, zoom, pitch, bearing, padding });
+  }
+}
+views.push({ w: 600, h: 900, center: TOKYO, zoom: 15, pitch: 85, bearing: 45, padding: [0, 0, 420, 0] });
+views.push({ w: 800, h: 600, center: [150, 20], zoom: 9, pitch: 10, bearing: 0, bounds: [139, 35, 140, 36], padding: [0, 0, 0, 320] });
+views.push({ w: 800, h: 600, center: TOKYO, zoom: 3, pitch: 0, bearing: 0, bounds: [139, 35, 140, 36], padding: [40, 10, 200, 0] });
+views.push({ w: 800, h: 600, center: [175, 20], zoom: 3, pitch: 0, bearing: 0, copies: false, padding: [0, 300, 0, 0] });
+views.push({ w: 800, h: 600, center: TOKYO, zoom: 10, pitch: 30, bearing: 0, padding: [0, 0, 0, 900] });
 
 function maplibre(v) {
   const frames = [];
@@ -47,6 +58,7 @@ function maplibre(v) {
   cam.transform.resize(v.w, v.h);
   if (v.bounds) cam.transform.setMaxBounds(new LngLatBounds([v.bounds[0], v.bounds[1]], [v.bounds[2], v.bounds[3]]));
   cam.jumpTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing });
+  if (v.padding) cam.setPadding(sides(v.padding));
   // Runs the frame MapLibre asked for at `t` ms.
   cam.frameAt = (t) => {
     setNow(t);
@@ -55,7 +67,9 @@ function maplibre(v) {
   };
   return cam;
 }
-const ours = (v) => [v.w, v.h, v.center[0], v.center[1], v.zoom, v.bearing, v.pitch, v.minZoom ?? 0, v.maxZoom ?? 22, v.minPitch ?? 0, v.maxPitch ?? 85, ...(v.bounds ?? [NaN, 0, 0, 0]), v.copies === false ? 0 : 1];
+const ours = (v) => [v.w, v.h, v.center[0], v.center[1], v.zoom, v.bearing, v.pitch, v.minZoom ?? 0, v.maxZoom ?? 22, v.minPitch ?? 0, v.maxPitch ?? 85, ...(v.bounds ?? [NaN, 0, 0, 0]), v.copies === false ? 0 : 1, ...(v.padding ?? [0, 0, 0, 0])];
+const sides = ([top, right, bottom, left]) => ({ top, right, bottom, left });
+const paddingOf = (tr) => [tr.padding.top, tr.padding.right, tr.padding.bottom, tr.padding.left];
 const state = (tr) => [tr.center.lng, tr.center.lat, tr.zoom, tr.bearing, tr.pitch];
 
 const rows = [];
@@ -73,7 +87,7 @@ function cameraDiff(a, b) {
   return { deg: a.length === b.length ? deg : Infinity, zoom: a.length === b.length ? zoom : Infinity };
 }
 function record(op, v, d) {
-  rows.push({ op, view: `${v.w}x${v.h} z${v.zoom} p${v.pitch} b${v.bearing}${v.bounds ? " bounds" : ""}${v.minZoom !== undefined ? " limits" : ""}${v.copies === false ? " one world" : ""}`, ...d });
+  rows.push({ op, view: `${v.w}x${v.h} z${v.zoom} p${v.pitch} b${v.bearing}${v.bounds ? " bounds" : ""}${v.minZoom !== undefined ? " limits" : ""}${v.copies === false ? " one world" : ""}${v.padding ? ` padding ${v.padding}` : ""}`, ...d });
   for (const k of Object.keys(d)) worst[k] = Math.max(worst[k], d[k]);
 }
 
@@ -143,10 +157,11 @@ function runView(v) {
     { bounds: [139.5, 35.5, 140, 35.8], bearing: 0, padding: [0, 0, 0, 0], offset: [0, 0] },
     { bounds: [139.5, 35.5, 140, 35.8], bearing: 30, padding: [20, 40, 10, 80], offset: [15, -25], maxZoom: 9 },
     { bounds: [170, -10, -170, 10], bearing: -60, padding: [5, 5, 5, 5], offset: [0, 0] },
+    { bounds: [139.5, 35.5, 140, 35.8], bearing: 20, padding: [30, 0, 60, 250], offset: [0, 0], absolute: true },
   ]) {
     const [w, s, e, n] = fit.bounds;
-    const r = cam.cameraForBounds([[w, s], [e, n]], { bearing: fit.bearing, padding: { top: fit.padding[0], right: fit.padding[1], bottom: fit.padding[2], left: fit.padding[3] }, offset: fit.offset, ...(fit.maxZoom === undefined ? {} : { maxZoom: fit.maxZoom }) });
-    const g = nums(mbt.camera_fit(ours(v), [w, s, e, n, fit.bearing, ...fit.padding, ...fit.offset, fit.maxZoom ?? NaN]));
+    const r = cam.cameraForBounds([[w, s], [e, n]], { bearing: fit.bearing, padding: { top: fit.padding[0], right: fit.padding[1], bottom: fit.padding[2], left: fit.padding[3] }, offset: fit.offset, ...(fit.maxZoom === undefined ? {} : { maxZoom: fit.maxZoom }), ...(fit.absolute ? { absolutePadding: true } : {}) });
+    const g = nums(mbt.camera_fit(ours(v), [w, s, e, n, fit.bearing, ...fit.padding, ...fit.offset, fit.maxZoom ?? NaN, fit.absolute ? 1 : 0]));
     const want = r ? [r.center.lng, r.center.lat, r.zoom, r.bearing] : [];
     const d = cameraDiff([...want, 0], g.length ? [g[0], g[1], g[2], g[3], 0] : []);
     record("cameraForBounds", v, r || g.length ? d : { deg: 0, zoom: 0 });
@@ -157,17 +172,24 @@ function runView(v) {
     { center: [140.5, 36.5], zoom: v.zoom - 3 },
     { zoom: v.zoom + 1.5, around: [tr.center.lng + 0.001, tr.center.lat - 0.001] },
     { center: [-170, 10], bearing: -170, offset: [30, -20] },
+    { center: [139.9, 35.5], zoom: v.zoom + 1, pitch: 50, padding: [10, 20, 30, 150] },
+    { center: [139.8, 35.7], bearing: 40, offset: [30, -20], padding: [0, 0, 250, 0] },
+    { zoom: v.zoom + 1.5, around: [tr.center.lng + 0.001, tr.center.lat - 0.001], padding: [0, 300, 0, 0] },
+    { center: [140.5, 36.5], zoom: v.zoom - 3, padding: [0, 0, 0, 0] },
   ]) {
     const D = 1000;
     const m = maplibre(v);
     setNow(0);
-    m.easeTo({ ...target, duration: D, easing: (t) => t });
+    const options = { ...target, ...(target.padding ? { padding: sides(target.padding) } : {}) };
+    m.easeTo({ ...options, duration: D, easing: (t) => t });
     const ref2 = [];
+    const pads = [];
     for (const k of KS) {
       m.frameAt(k * D);
       ref2.push(...state(m.transform));
+      pads.push(...paddingOf(m.transform));
     }
-    const g = [NaN, NaN, NaN, NaN, NaN, NaN, NaN, 0, 0];
+    const g = [NaN, NaN, NaN, NaN, NaN, NaN, NaN, 0, 0, ...(target.padding ?? [NaN, 0, 0, 0])];
     if (target.center) [g[0], g[1]] = target.center;
     if (target.zoom !== undefined) g[2] = target.zoom;
     if (target.bearing !== undefined) g[3] = target.bearing;
@@ -176,15 +198,22 @@ function runView(v) {
     if (target.offset) [g[7], g[8]] = target.offset;
     record("easeTo", v, cameraDiff(ref2, nums(mbt.camera_ease(ours(v), g, KS))));
 
-    if (target.around) continue;
+    // The flight across the world is left to the views without padding: its `ln(sqrt(b² + 1) - b)` turns
+    // a last-bit difference of the start point into 1e-9 of the path (seen at padding 0,0,0,320, pitch 80°).
+    if (target.around || (v.padding && target.center?.[0] === -170)) continue;
     const f = maplibre(v);
     setNow(0);
-    f.flyTo({ ...target, easing: (t) => t });
+    f.flyTo({ ...options, easing: (t) => t });
     const duration = f._easeOptions?.duration ?? 0;
     const ref3 = [];
     for (const k of KS) {
       f.frameAt(k * duration);
       ref3.push(...state(f.transform));
+      pads.push(...paddingOf(f.transform));
+    }
+    if (target.padding) {
+      const pg = nums(mbt.camera_paddings(ours(v), g, KS));
+      record("padding of moves", v, { px: pg.length === pads.length ? Math.max(...pads.map((r, i) => Math.abs(r - pg[i]))) : Infinity });
     }
     const fg = nums(mbt.camera_fly(ours(v), g, [NaN, NaN, NaN, NaN], KS));
     if (fg.length === 0) {

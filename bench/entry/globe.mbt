@@ -1,6 +1,6 @@
 ///|
-/// The globe camera `a` describes: `transform_of`'s numbers, then the
-/// projection (0 mercator, 1 globe, 2 vertical perspective).
+/// The globe camera `a` describes: `transform_of`'s numbers, with the
+/// projection (0 mercator, 1 globe, 2 vertical perspective) for the world copies.
 fn globe_of(a : FixedArray[Double]) -> @globe.Globe {
   let t = transform_of(a)
   @globe.Globe::new(
@@ -19,6 +19,7 @@ fn globe_of(a : FixedArray[Double]) -> @globe.Globe {
       2.0 => VerticalPerspective
       _ => Globe
     },
+    padding=padding_of(a),
   )
 }
 
@@ -119,6 +120,7 @@ pub fn globe_fit(a : FixedArray[Double], b : FixedArray[Double]) -> String {
     padding={ top: b[5], right: b[6], bottom: b[7], left: b[8], },
     offset=(b[9], b[10]),
     max_zoom?=if b[11].is_nan() { None } else { Some(b[11]) },
+    absolute=b[12] != 0.0,
   )
   match fit {
     Some(c) => {

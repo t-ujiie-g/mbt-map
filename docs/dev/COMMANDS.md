@@ -73,8 +73,8 @@ Run from `bench/` (Node + Playwright), after `npm ci && npx playwright install c
 - `npm run query:golden`: queryRenderedFeatures / querySourceFeatures vs MapLibre 6.16 in Chromium, same tiles and camera (must stay all identical).
 - `npm run track:golden`: project / unproject / Map.track's `covered` on terrain vs MapLibre 6.16 (Mt Fuji DEM as Terrarium; must stay within 1e-6 px and agree).
 - `npm run export:golden`: Map.toBlob: parts joined vs drawn whole, pixelRatio 1 vs the canvas, 2x raster vs MapLibre on a 2x screen.
-- `npm run camera:golden`: core's camera math vs MapLibre's Camera in Node with frozen time (constrain, project, getBounds, cameraForBounds, easeTo, flyTo).
-- `npm run globe:golden`: globe's camera vs MapLibre 6.16's globe projection in Node with frozen time (constrain, project, occlusion, unproject, matrices, getBounds, cameraForBounds, easeTo, flyTo, gestures, inertia, coveringTiles; the transition taken from the zoom each frame; must stay within 1e-6 px, 1e-7°, 1e-8 zoom and give the same tiles).
+- `npm run camera:golden`: core's camera math vs MapLibre's Camera in Node with frozen time (constrain, project, unproject, custom layer matrices, getBounds, cameraForBounds, easeTo, flyTo, each also under map padding, and the padding of moves; must stay within 1e-6 px, 1e-7°, 1e-8 zoom).
+- `npm run globe:golden`: globe's camera vs MapLibre 6.16's globe projection in Node with frozen time (constrain, project, occlusion, unproject, matrices, getBounds, cameraForBounds, easeTo, flyTo, gestures, inertia, coveringTiles, each also under map padding; the transition taken from the zoom each frame; must stay within 1e-6 px, 1e-7°, 1e-8 zoom and give the same tiles).
 
 ### GeoJSON sources
 
