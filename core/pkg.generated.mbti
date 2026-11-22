@@ -218,6 +218,7 @@ pub(all) struct CameraTarget {
 pub fn CameraTarget::equal(Self, Self) -> Bool
 pub fn CameraTarget::new(center? : LngLat, zoom? : Double, bearing? : Double, pitch? : Double, around? : LngLat, offset? : (Double, Double), padding? : Padding) -> Self
 pub fn CameraTarget::not_equal(Self, Self) -> Bool
+pub fn CameraTarget::padding_from(Self, Padding) -> Padding?
 pub fn CameraTarget::to_repr(Self) -> @debug.Repr
 
 pub struct Ease {
@@ -305,6 +306,7 @@ pub(all) struct Padding {
 }
 pub fn Padding::center(Self, Double, Double) -> (Double, Double)
 pub fn Padding::equal(Self, Self) -> Bool
+pub fn Padding::none() -> Self
 pub fn Padding::not_equal(Self, Self) -> Bool
 pub fn Padding::perspective(Self, Double, Double, Double, Double) -> Mat4
 pub fn Padding::to_repr(Self) -> @debug.Repr

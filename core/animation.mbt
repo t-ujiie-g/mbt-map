@@ -129,6 +129,16 @@ pub fn CameraTarget::new(
 }
 
 ///|
+/// The padding a move from `start` goes to, None to keep it: the target's if
+/// it is a valid one and another (MapLibre's `doPadding`).
+pub fn CameraTarget::padding_from(
+  self : CameraTarget,
+  start : Padding,
+) -> Padding? {
+  self.padding.filter(p => p != start && p.valid())
+}
+
+///|
 /// What `ease_to` and `fly_to` start from: the end camera, the start and the way
 /// to the end in world pixels, the end bearing and pitch, and the padding to
 /// move to (None to keep the start's).
@@ -184,7 +194,7 @@ fn Transform::move_to(self : Transform, target : CameraTarget) -> Move {
       None => c.bearing
     },
     end_pitch: target.pitch.unwrap_or(c.pitch),
-    end_padding: target.padding.filter(p => p != self.padding && p.valid()),
+    end_padding: target.padding_from(self.padding),
   }
 }
 

@@ -4,7 +4,7 @@ Where things stand, decisions and open issues. The development history before th
 
 ## 現在の状況（2026-11-15）
 
-- **いま**：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）、T.6b（zstd の展開の移植）、T.6c（Parquet を `bbox` と `columns` で絞って範囲リクエストで読む）まで済んだ。
+- **いま**（2026-11-22）：0.2.0 を公開した後、0.2.1 の地図の padding（下の「次」）。その前の段：単独で使える移植を mooncakes に出す段（VISION §8「単独の移植」）。(1) `clipper`、(2) `draco`・`lepcc`・`meshopt`・`robust`・`tiff`、(3) `pbf`・`mvt`、(4) `proj`・`geodesic` と共有の `trig` を `ports/` に切り出した、(5) 点検まで済み、11 個とも 0.1.0 を mooncakes に公開した（2026-11-17、ユーザー）。0.1.1 は 2026-11-16 に公開済み。次はテーブルの段階（VISION §8）で、T.1（新しい入口 `mbt-map/table` と 1 つの型 `Table`）、T.2（属性の操作：`select`・`filter`・`derive`・`orderby`・`slice`）、T.3（集計と結合：`groupby`・`rollup`・`join`）、T.4（空間結合と揃え直し：`spatialJoin`・`nearestJoin`・`dissolve({ by })`）、T.4b（描画への直結：ソースの `data` にテーブルを渡す）、T.5（Arrow IPC の読み書き：`fromArrow`・`toArrowIPC`）、T.6（GeoParquet の読み込み：ファイル全体、snappy と gzip）、T.6b（zstd の展開の移植）、T.6c（Parquet を `bbox` と `columns` で絞って範囲リクエストで読む）まで済んだ。
 - **済んだ段階**（どれも下に日付つきの節がある。決めたことは次の節「進め方と名前の決定」）：
   - 移行：mbmap の Phase 0〜20 とその後の点検（mbmap #165 まで）を、このリポジトリへ移して改名した。
   - MoonBit の API：`mbt-map/moonbit` の入口、型付きの `mbtmap`（地図、カメラ、イベント、生成したスタイルと式）、rabbita の部品 `mbtmap_rabbita` とデモ。
@@ -13,7 +13,7 @@ Where things stand, decisions and open issues. The development history before th
   - 公開の流れ：タグで npm への段階公開と GitHub のリリース、mooncakes は手で。
   - 公開前の直し：3D Tiles の読み直しの繰り返し、出典の HTML、地形で手前の低い土地が描かれない件、CDN から HTML 1 枚で読む、グリフのアトラスがあふれる件、世界のコピー（`renderWorldCopies`）、トップの地図、Firefox と WebKit での pack test、タッチ操作がページに漏れる件と `idle`（公開前の QA）、`updateData` の「全部消して足す」で描画側の属性が消える件・背景レイヤーの描く順・DEM より大きく引いた地形でページが固まる件。
   - 0.1.1：公開後の小さい直し（`interactive: false` の tabindex、属性テーブルの `reveal` と 180° またぎの `zoomTo`、値が 1 つのクラスの凡例、`protomaps` のフィクスチャ）、3D レイヤーの半球光（`hemisphere`）、測地バッファを日付変更線と極で切る・MultiPoint は点ごとの円、サンプルの import map を使う入口だけに。
-- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1〜P.3 が済み、次は点検（リファクタリングとセキュリティ）と 0.2.1 の版上げ。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
+- **次**：0.2.0 は公開済み（ユーザー）。MoonBit の固定版を moonc v0.10.22・moon 0.1.20261119 に上げた（2026-11-22、下の節）。いまは 0.2.1 の地図の padding（`setPadding`、VISION §8、下の節）：P.1〜P.3 と点検が済み、次は 0.2.1 の版上げ。その後 Phase 21（範囲・段階・完了条件をユーザーと確認してから）。
 - **未解決**：
   - 実機のスマホ（iOS の Safari、Android の Chrome）でのタッチ操作は未確認。
   - `npm:pack` の `showcase-element` がこの Mac でときどき 180 s で落ちる（表の行のクリックの後に地図が止まらない。CI では通る）。2026-11-16 に単独で 8 回、全項目で 1 回回しても再現せず、原因は分かっていない。
@@ -62,6 +62,19 @@ Where things stand, decisions and open issues. The development history before th
 - 確かめ：pack test のショーケースに、押すと `getPadding().left` がパネルの右端になり中心が残りの中央に来る（0.5 px 以内）ことを足した（3 つとも通る）。`padding:golden` に `absolutePadding` の fit を足した。npm のテスト 479、要素の属性の読み取りのテスト、MoonBit のテスト（js 1083）。
 - `fitBounds` の `offset`：MapLibre 6.16 は `cameraForBounds` で一度効かせた `offset` を移動にもう一度渡すので、範囲の中央が `offset` の 2 倍ずれる（Node で確かめた：`offset: [100, 0]` で画面の中央から 200 px）。こちらは前から 1 度だけ。変えずに `docs/map.md` に違いを書いた。
 - 大きさ：`mbt-map` 169.9KB のまま（予算 172KB）、`mbt-map/element` は予算内。
+
+**点検：リファクタリングとセキュリティ（2026-11-22、Mac）**
+
+padding の段階が足したもの（`core`・`globe`・`map`・`bundle/main`・ファサード・要素・MoonBit の API・例）を AGENTS.md §7・§8 の順に見た。
+
+- 定数（§7.1）：「padding なし」を `Padding::uniform(0.0)` と 12 か所に書いていた → `Padding::none()`。
+- 重複と使われないもの（§7.2）：移動が padding を動かすかの判定（MapLibre の `doPadding`）が `core` と `globe` に 1 つずつあった → `CameraTarget::padding_from`。エンジンの export `map_set_camera` はファサードが `map_jump_to` を呼ぶようになって bench のページだけが使っていた → 外して、そのページも `map_jump_to` に。
+- ファイルの分け方（§7.3）：`Padding` とその関数が `core/camera.mbt` と `core/transform.mbt`（623 行）に分かれていた → `core/padding.mbt`（107 行）に集めた（`transform.mbt` 576 行）。
+- テスト（§7.4）：直接のテストが無かった `mercator_constrain` の `padding`、`fit_box` の `map_padding`、`Globe::set_camera` の `padding` を足した。画面より大きい padding（1e300、1.7e308）でもカメラと中心の点が有限で画面内にあること。
+- 性能（§7.5）：候補なし。padding が足したのはフレームごとの行列への代入 2 つと far 面の式の項で、P.2 の計測（pan 2.10 ms、main 2.135）は揺れの中だった。`Globe::mercator()` が呼ばれるたびに変換を作るのは前からで、ここでは触っていない。
+- 文書とコメント（§7.6、§7.7）：3 行を超えるコメントは段階の前と同じ 47。`.mbti` の差分は `Padding::none` と `CameraTarget::padding_from` だけ。
+- セキュリティ（§8）：`npm audit` は `npm/`・`bench/` とも 0 件、Dependabot の開いている警告 0 件。依存は足していない。padding はファサード（TypeError）と要素（厳密な読み取り）とエンジン（`Padding::valid`：有限で 0 以上）の 3 か所で確かめる。例の追加は `textContent` と属性だけで、データから HTML を作らない。
+- 確かめ：`moon check --target all --deny-warn`、`moon test --target all`（wasm 1026、wasm-gc 1039、js 1086、native 1026）、npm のテスト 479、bench のテスト 23、`camera:golden`・`globe:golden`・`padding:golden`、pack test。`mbt-map` 169.9KB（予算 172KB）。
 
 ## MoonBit の固定版の引き上げ（2026-11-22、Mac）
 

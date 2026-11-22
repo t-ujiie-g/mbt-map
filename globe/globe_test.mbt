@@ -242,6 +242,18 @@ test "set_camera takes a camera as it is" {
     pitch: 0.0,
   })
   assert_true(near(g.camera().center.lat, 89.9) && g.camera().zoom == -5.0)
+  assert_eq(g.padding(), @core.Padding::none())
+  let padding : @core.Padding = {
+    top: 0.0,
+    right: 0.0,
+    bottom: 0.0,
+    left: 320.0,
+  }
+  g.set_camera(g.camera(), padding~)
+  assert_eq(g.padding(), padding)
+  assert_true(g.camera().zoom == -5.0)
+  g.set_camera(g.camera(), padding={ ..padding, left: -1.0, })
+  assert_eq(g.padding(), padding)
 }
 
 ///|

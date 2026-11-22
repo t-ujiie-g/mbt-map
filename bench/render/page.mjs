@@ -33,7 +33,7 @@ async function createMbtmap() {
   mbtmap.map_on_idle(map, () => idle?.());
   return {
     nextIdle: () => new Promise((r) => { idle = r; }),
-    set: (c) => mbtmap.map_set_camera(map, c.lng, c.lat, c.zoom, 0, pitch),
+    set: (c) => mbtmap.map_jump_to(map, c.lng, c.lat, c.zoom, 0, pitch, []),
     get: () => mbtmap.map_camera(map),
   };
 }

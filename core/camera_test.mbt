@@ -420,3 +420,96 @@ test "covering tiles of a padded, tilted view still reach the screen's corners" 
     )
   }
 }
+
+///|
+test "padding: none is 0 on every side, and oversized paddings leave a finite view" {
+  assert_eq(@core.Padding::none(), @core.Padding::uniform(0.0))
+  let bounded : @core.Limits = {
+    ..@core.Limits::default(),
+    bounds: Some({ west: 139.0, south: 35.0, east: 140.0, north: 36.0, }),
+  }
+  for limits in [bounded, @core.Limits::default()] {
+    for
+      padding in [
+        @core.Padding::uniform(1.0e300),
+        { top: 0.0, right: 0.0, bottom: 5000.0, left: 1.7e308, },
+      ] {
+      let v = @core.Transform::new(
+        {
+          center: { lng: 139.5, lat: 35.5, },
+          zoom: 12.0,
+          bearing: 20.0,
+          pitch: 40.0,
+        },
+        800.0,
+        600.0,
+        limits~,
+        padding~,
+      )
+      let c = v.camera
+      let (x, y) = v.center_point()
+      for n in [c.center.lng, c.center.lat, c.zoom, x, y] {
+        assert_false(n.is_nan() || n.is_inf())
+      }
+      assert_true(x >= 0.0 && x <= 800.0 && y >= 0.0 && y <= 600.0)
+    }
+  }
+}
+
+///|
+test "mercator_constrain and fit_box see the viewport less the map's padding" {
+  let limits : @core.Limits = {
+    ..@core.Limits::default(),
+    bounds: Some({ west: 139.0, south: 35.0, east: 140.0, north: 36.0, }),
+  }
+  let center : @core.LngLat = { lng: 139.5, lat: 35.5, }
+  let (_, plain) = @core.mercator_constrain(center, 3.0, limits, 800.0, 600.0)
+  let (_, padded) = @core.mercator_constrain(
+    center,
+    3.0,
+    limits,
+    800.0,
+    600.0,
+    padding={ top: 0.0, right: 0.0, bottom: 0.0, left: 200.0, },
+  )
+  assert_true(within(plain - padded, @math.log2(800.0 / 600.0), 1.0e-9))
+  let b : @core.LngLatBounds = {
+    west: 139.5,
+    south: 35.5,
+    east: 140.0,
+    north: 35.8,
+  }
+  let fit = (map_padding : @core.Padding) => {
+    @core.fit_box(
+      b,
+      10.0,
+      800.0,
+      600.0,
+      bearing=0.0,
+      padding=@core.Padding::none(),
+      map_padding~,
+      offset=(0.0, 0.0),
+      max_zoom=22.0,
+    ).unwrap()
+  }
+  let (c0, z0) = fit(@core.Padding::none())
+  let (c1, z1) = fit({ top: 0.0, right: 0.0, bottom: 0.0, left: 400.0, })
+  assert_eq(c1, c0)
+  assert_true(within(z0 - z1, 1.0, 1.0e-9))
+}
+
+///|
+test "a move's padding is the target's when it is a valid one and another" {
+  let padding : @core.Padding = {
+    top: 0.0,
+    right: 0.0,
+    bottom: 0.0,
+    left: 320.0,
+  }
+  let target = @core.CameraTarget::new(padding~)
+  assert_eq(target.padding_from(@core.Padding::none()), Some(padding))
+  assert_eq(target.padding_from(padding), None)
+  assert_eq(@core.CameraTarget::new().padding_from(padding), None)
+  let bad = @core.CameraTarget::new(padding={ ..padding, top: -1.0, })
+  assert_eq(bad.padding_from(@core.Padding::none()), None)
+}

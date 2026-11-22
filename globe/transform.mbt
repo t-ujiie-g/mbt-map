@@ -46,7 +46,7 @@ pub fn Globe::new(
   height : Double,
   limits~ : @core.Limits = @core.Limits::default(),
   projection~ : Projection = Globe,
-  padding~ : @core.Padding = @core.Padding::uniform(0.0),
+  padding~ : @core.Padding = @core.Padding::none(),
 ) -> Globe {
   let g = {
     center: { lng: 0.0, lat: 0.0, },
@@ -55,7 +55,7 @@ pub fn Globe::new(
     pitch: @core.radians(limits.min_pitch),
     width: 0.0,
     height: 0.0,
-    padding: @core.Padding::uniform(0.0),
+    padding: @core.Padding::none(),
     limits,
     projection,
     globeness: if projection is Mercator {

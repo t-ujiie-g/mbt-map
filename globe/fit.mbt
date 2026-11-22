@@ -10,7 +10,7 @@ pub fn Globe::camera_for_bounds(
   self : Globe,
   b : @core.LngLatBounds,
   bearing~ : Double = 0.0,
-  padding~ : @core.Padding = @core.Padding::uniform(0.0),
+  padding~ : @core.Padding = @core.Padding::none(),
   offset~ : (Double, Double) = (0.0, 0.0),
   max_zoom? : Double,
   absolute~ : Bool = false,
