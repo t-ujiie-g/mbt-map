@@ -92,7 +92,7 @@ pub fn mercator_constrain(
   limits : Limits,
   width : Double,
   height : Double,
-  padding~ : Padding = Padding::uniform(0.0),
+  padding~ : Padding = Padding::none(),
 ) -> (LngLat, Double) {
   let zoom = @cmp.maximum(limits.min_zoom, @cmp.minimum(limits.max_zoom, zoom))
   constrain_center(center, zoom, limits, width, height, padding)

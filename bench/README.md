@@ -82,7 +82,7 @@ npm run fixtures          # タイルなどを取得し、fixtures/*.manifest.js
 
 - 初回描画：ナビゲーション開始から最初の `idle`（見えているタイルが揃って描かれた）まで。import 完了・
   地図生成の時刻も記録する。mbt-map は `bundle/main` を esbuild で minify したもの（アプリが配信する形）を読む。
-- フレーム：毎フレーム rAF でカメラを設定し（mbt-map は `map_set_camera`、MapLibre は `jumpTo`）、
+- フレーム：毎フレーム rAF でカメラを設定し（mbt-map は `map_jump_to`、MapLibre は `jumpTo`）、
   パン・ズームの各 3 秒間の rAF 間隔と、フレームごとの rAF コールバック CPU 時間の合計を測る（両エンジンとも
   描画は rAF 内）。`--uncapped`（vsync なし）では rAF に GPU 同期待ちが入るので CPU 時間は比較に使わない。
 - サイズ：mbt-map は minify 後の main bundle と、Worker（グルー JS＋wasm-gc）の gzip -9。

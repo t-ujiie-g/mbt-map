@@ -135,43 +135,6 @@ pub fn Transform::at_point(
 }
 
 ///|
-/// Space kept free along the viewport's edges, in CSS pixels: around a box
-/// fitted to the screen, or the map's own (`Transform::with_padding`).
-#derive(Debug, Eq)
-pub(all) struct Padding {
-  top : Double
-  right : Double
-  bottom : Double
-  left : Double
-}
-
-///|
-/// Whether every side is a finite number of pixels, 0 or more (what MapLibre's
-/// `EdgeInsets` takes).
-pub fn Padding::valid(self : Padding) -> Bool {
-  let ok = (v : Double) => v >= 0.0 && !v.is_inf()
-  ok(self.top) && ok(self.right) && ok(self.bottom) && ok(self.left)
-}
-
-///|
-/// The padding `k` (0 to 1) of the way from `self` to `to`, as MapLibre's
-/// `EdgeInsets.interpolate`.
-pub fn Padding::toward(self : Padding, to : Padding, k : Double) -> Padding {
-  let mix = (a : Double, b : Double) => a + k * (b - a)
-  {
-    top: mix(self.top, to.top),
-    right: mix(self.right, to.right),
-    bottom: mix(self.bottom, to.bottom),
-    left: mix(self.left, to.left),
-  }
-}
-
-///|
-pub fn Padding::uniform(p : Double) -> Padding {
-  { top: p, right: p, bottom: p, left: p, }
-}
-
-///|
 fn rotate(x : Double, y : Double, rad : Double) -> (Double, Double) {
   let c = @math.cos(rad)
   let s = @math.sin(rad)
@@ -186,7 +149,7 @@ pub fn Transform::camera_for_bounds(
   self : Transform,
   b : LngLatBounds,
   bearing~ : Double = 0.0,
-  padding~ : Padding = Padding::uniform(0.0),
+  padding~ : Padding = Padding::none(),
   offset~ : (Double, Double) = (0.0, 0.0),
   max_zoom? : Double,
   absolute~ : Bool = false,
@@ -210,21 +173,6 @@ pub fn Transform::camera_for_bounds(
 }
 
 ///|
-/// The fit padding and the map padding MapLibre's `cameraForBounds` fits with:
-/// `padding` on top of the map's `own`, or with `absolute` in its place.
-pub fn fit_paddings(
-  own : Padding,
-  padding : Padding,
-  absolute : Bool,
-) -> (Padding, Padding) {
-  if absolute {
-    (Padding::uniform(0.0), padding)
-  } else {
-    (padding, own)
-  }
-}
-
-///|
 /// The center and zoom MapLibre's `cameraForBoxAndBearing` gives for `b` on a `width` x `height` mercator
 /// view at `zoom`, None when the paddings leave no room. Both shrink the room; only `padding` moves the
 /// center (the projection moves it by `map_padding`).
@@ -235,7 +183,7 @@ pub fn fit_box(
   height : Double,
   bearing~ : Double,
   padding~ : Padding,
-  map_padding~ : Padding = Padding::uniform(0.0),
+  map_padding~ : Padding = Padding::none(),
   offset~ : (Double, Double),
   max_zoom~ : Double,
 ) -> (LngLat, Double)? {

@@ -31,7 +31,7 @@ fn transform_of(a : FixedArray[Double]) -> @core.Transform {
 ///|
 fn padding_of(a : FixedArray[Double]) -> @core.Padding {
   if a.length() < 20 {
-    return @core.Padding::uniform(0.0)
+    return @core.Padding::none()
   }
   { top: a[16], right: a[17], bottom: a[18], left: a[19], }
 }

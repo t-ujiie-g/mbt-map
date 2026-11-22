@@ -90,14 +90,14 @@ pub fn Transform::new(
   width : Double,
   height : Double,
   limits~ : Limits = Limits::default(),
-  padding~ : Padding = Padding::uniform(0.0),
+  padding~ : Padding = Padding::none(),
 ) -> Transform {
   let camera = if finite(camera) {
     camera
   } else {
     { center: { lng: 0.0, lat: 0.0, }, zoom: 0.0, bearing: 0.0, pitch: 0.0, }
   }
-  let padding = if padding.valid() { padding } else { Padding::uniform(0.0) }
+  let padding = if padding.valid() { padding } else { Padding::none() }
   make(
     constrain(camera, limits, width, height, padding),
     width,
@@ -116,7 +116,7 @@ pub fn Transform::exact(
   width : Double,
   height : Double,
   limits~ : Limits = Limits::default(),
-  padding~ : Padding = Padding::uniform(0.0),
+  padding~ : Padding = Padding::none(),
 ) -> Transform {
   make(camera, width, height, limits, 0.0, padding)
 }
@@ -176,53 +176,6 @@ fn view_projection(
   .rotate_x(radians(camera.pitch))
   .rotate_z(-radians(camera.bearing))
   .translate(0.0, 0.0, -lift)
-}
-
-///|
-/// The screen point a `width` x `height` viewport draws its center at: the
-/// middle of what the padding leaves, kept on screen (MapLibre's
-/// `EdgeInsets.getCenter`).
-pub fn Padding::center(
-  self : Padding,
-  width : Double,
-  height : Double,
-) -> (Double, Double) {
-  let clamp = (v : Double, max : Double) => {
-    @cmp.maximum(0.0, @cmp.minimum(max, v))
-  }
-  (
-    clamp((self.left + width - self.right) / 2.0, width),
-    clamp((self.top + height - self.bottom) / 2.0, height),
-  )
-}
-
-///|
-/// `Padding::center` from the middle of the viewport (MapLibre's `centerOffset`).
-fn center_offset(
-  width : Double,
-  height : Double,
-  padding : Padding,
-) -> (Double, Double) {
-  let (x, y) = padding.center(width, height)
-  (x - width / 2.0, y - height / 2.0)
-}
-
-///|
-/// MapLibre's projection matrix for a `width` x `height` viewport under
-/// `padding`: the perspective's principal point moved to the padded center, so
-/// the vanishing point follows it.
-pub fn Padding::perspective(
-  self : Padding,
-  width : Double,
-  height : Double,
-  near : Double,
-  far : Double,
-) -> Mat4 {
-  let offset = center_offset(width, height, self)
-  let p = Mat4::perspective(FIELD_OF_VIEW, width / height, near, far)
-  p.m[8] = -offset.0 * 2.0 / width
-  p.m[9] = offset.1 * 2.0 / height
-  p
 }
 
 ///|

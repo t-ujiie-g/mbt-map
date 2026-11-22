@@ -96,15 +96,6 @@ fn Globe::offset_point(
 }
 
 ///|
-/// The padding `target` moves to, None to keep the camera's (`doPadding`).
-fn Globe::end_padding(
-  self : Globe,
-  target : @core.CameraTarget,
-) -> @core.Padding? {
-  target.padding.filter(p => p != self.padding && p.valid())
-}
-
-///|
 /// Sets the padding `k` of the way from `start` to `end` and constrains
 /// (`interpolatePadding`).
 fn Globe::interpolate_padding(
@@ -239,7 +230,7 @@ fn Globe::globe_ease(
   let final_scale = zoom_scale(end_norm - start_norm)
   let zooming = end_zoom != start_zoom
   let start_padding = tr.padding
-  let end_padding = tr.end_padding(target)
+  let end_padding = target.padding_from(tr.padding)
   fn(k) {
     tr.rotate_by(from_angles, to_angles, k)
     tr.interpolate_padding(start_padding, end_padding, k)
@@ -290,7 +281,7 @@ fn Globe::mercator_ease(
   let final_scale = zoom_scale(end_zoom - start_zoom)
   let zooming = end_zoom != start_zoom
   let start_padding = tr.padding
-  let end_padding = tr.end_padding(target)
+  let end_padding = target.padding_from(tr.padding)
   fn(k) {
     if zooming {
       tr.set_zoom(lerp(start_zoom, end_zoom, k))
@@ -371,7 +362,7 @@ pub fn Globe::fly_to(
   let end_pitch = target.pitch.unwrap_or(start.pitch)
   let at_offset = tr.unproject_offset(target.offset)
   let start_padding = tr.padding
-  let end_padding = tr.end_padding(target)
+  let end_padding = target.padding_from(tr.padding)
   let plan = if tr.is_globe() {
     tr.globe_fly(target, at_offset, end_bearing, min_zoom)
   } else {

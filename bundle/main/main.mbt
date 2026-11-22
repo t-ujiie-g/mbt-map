@@ -115,27 +115,13 @@ pub fn map_jump_to(
   sides : FixedArray[Double],
 ) -> Unit {
   map.set_camera(
-    { center: { lng, lat, }, zoom, bearing, pitch, },
+    camera_of(lng, lat, zoom, bearing, pitch),
     padding?=if sides.length() == 4 {
       padding_over(map, sides[0], sides[1], sides[2], sides[3])
     } else {
       None
     },
   )
-}
-
-///|
-/// `@map.Map::set_camera` from the camera's numbers.
-#export_name("map_set_camera")
-pub fn map_set_camera(
-  map : @map.Map,
-  lng : Double,
-  lat : Double,
-  zoom : Double,
-  bearing : Double,
-  pitch : Double,
-) -> Unit {
-  map.set_camera(camera_of(lng, lat, zoom, bearing, pitch))
 }
 
 ///|
